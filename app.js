@@ -118,7 +118,9 @@ function drawNumbersCircle(nails, cx, cy, r) {
 
   for (let i = 0; i < nails; i++) {
     const label = i + startAt;
-    const isShown = (i % every === 0) || (i === 0);
+    const isShown =
+  label === 1 ||
+  (every > 1 && label % every === 0);
     if (!isShown) continue;
     const t = (Math.PI * 2 * i) / nails;
     const a = t - Math.PI/2;
@@ -142,7 +144,10 @@ function drawNumbersSquare(nails, cx, cy, size) {
 
   // Compute normal direction from centre for each nail point
   for (let i = 0; i < nails; i++) {
-    const isShown = (i % every === 0) || (i === 0);
+    const label = i + startAt;
+    const isShown =
+  label === 1 ||
+  (every > 1 && label % every === 0);
     if (!isShown) continue;
     const [x0, y0] = pts[i];
     const dx = x0 - cx;
