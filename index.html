@@ -1,170 +1,415 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Steph String Art Studio </title>
-  <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#fff; color:#111; }
-    header { padding: 12px 14px; border-bottom: 1px solid #e8e8e8; display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
-    header h1 { font-size: 15px; margin:0; }
-    header .sub { font-size: 12px; color:#666; }
-    .wrap { display:grid; grid-template-columns: 400px 1fr; gap: 14px; padding: 14px; }
-    .panel { border:1px solid #e5e5e5; border-radius: 14px; padding: 12px; background:#fff; }
-    .panel h2 { font-size: 14px; margin: 6px 0 10px; }
-    label { font-size: 12px; color:#333; display:block; margin: 8px 0 4px; }
-    input, select, textarea { width: 100%; padding: 9px 10px; border:1px solid #cfcfcf; border-radius: 12px; font-size: 14px; box-sizing:border-box; }
-    input[type="color"] { padding:0; height: 40px; border-radius: 10px; }
-    button { padding: 10px 12px; border:1px solid #cfcfcf; border-radius: 12px; background:#fff; cursor:pointer; font-size: 14px; }
-    button:hover { background:#f6f6f6; }
-    .btns { display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px; }
-    .row { display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-    .row3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; }
-   canvas {
-  width: 100%;
-  max-height: 650px;
-} border:1px solid #e5e5e5; border-radius: 14px; background:#fff; touch-action: manipulation; }
-    .hint { font-size: 12px; color:#666; line-height:1.35; margin-top:10px; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; white-space: pre-wrap; background:#fafafa; border:1px solid #eee; border-radius: 10px; padding: 10px; }
-    .pill { display:inline-block; padding:2px 8px; border:1px solid #e5e5e5; border-radius:999px; font-size: 11px; color:#555; margin-right:6px; }
-    @media (max-width: 980px) {
-      .wrap { grid-template-columns: 1fr; }
-     
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <div>
-      <h1>Interactive String Art Board Designer</h1>
-<p class="tagline">
-Create precise, print-ready numbered layouts in seconds
-</p>
-      <div class="sub">Tap nails to draw thread • numbers around outside • undo • layers</div>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Steph String Art Studio</title>
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          Arial,
+          sans-serif;
+        margin: 0;
+        background: #fff;
+        color: #111;
+      }
+
+      header {
+        padding: 12px 14px;
+        border-bottom: 1px solid #e8e8e8;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+
+      header h1 {
+        font-size: 15px;
+        margin: 0;
+      }
+
+      .tagline {
+        margin: 4px 0 0;
+        font-size: 12px;
+        color: #666;
+      }
+
+      .wrap {
+        display: grid;
+        grid-template-columns: 400px 1fr;
+        gap: 14px;
+        padding: 14px;
+      }
+
+      .panel {
+        border: 1px solid #e5e5e5;
+        border-radius: 14px;
+        padding: 12px;
+        background: #fff;
+      }
+
+      .panel h2 {
+        font-size: 14px;
+        margin: 6px 0 10px;
+      }
+
+      label {
+        font-size: 12px;
+        color: #333;
+        display: block;
+        margin: 8px 0 4px;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 9px 10px;
+        border: 1px solid #cfcfcf;
+        border-radius: 12px;
+        font-size: 14px;
+        box-sizing: border-box;
+      }
+
+      input[type="color"] {
+        padding: 0;
+        height: 40px;
+        border-radius: 10px;
+      }
+
+      button {
+        padding: 10px 12px;
+        border: 1px solid #cfcfcf;
+        border-radius: 12px;
+        background: #fff;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      button:hover {
+        background: #f6f6f6;
+      }
+
+      .btns {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .row3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 10px;
+      }
+
+      /* FIXED canvas styling */
+      canvas {
+        width: 100%;
+        height: 650px;
+        border: 1px solid #e5e5e5;
+        border-radius: 14px;
+        background: #fff;
+        touch-action: manipulation;
+      }
+
+      .hint {
+        font-size: 12px;
+        color: #666;
+        line-height: 1.35;
+        margin-top: 10px;
+      }
+
+      .mono {
+        font-family:
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+        font-size: 12px;
+        white-space: pre-wrap;
+        background: #fafafa;
+        border: 1px solid #eee;
+        border-radius: 10px;
+        padding: 10px;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border: 1px solid #e5e5e5;
+        border-radius: 999px;
+        font-size: 11px;
+        color: #555;
+        margin-right: 6px;
+      }
+
+      .howto {
+        padding: 0 14px;
+      }
+
+      .howto details {
+        border-bottom: 1px solid #eee;
+        padding: 10px 0;
+      }
+
+      .howto summary {
+        cursor: pointer;
+        font-size: 13px;
+      }
+
+      .howto ul {
+        margin: 10px 0 0 18px;
+        font-size: 12px;
+        color: #555;
+        line-height: 1.5;
+      }
+
+      /* little help ? */
+      .q {
+        display: inline-block;
+        margin-left: 6px;
+        width: 18px;
+        height: 18px;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 0, 0, 0.25);
+        line-height: 18px;
+        text-align: center;
+        font-size: 12px;
+        cursor: help;
+        user-select: none;
+      }
+
+      /* zoom row */
+      .zoomRow {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .zoomBtn {
+        width: 36px;
+        height: 40px;
+        border-radius: 12px;
+        border: 1px solid #cfcfcf;
+        background: #fff;
+        cursor: pointer;
+        font-size: 18px;
+        padding: 0;
+      }
+
+      .zoomBtn:hover {
+        background: #f6f6f6;
+      }
+
+      @media (max-width: 980px) {
+        .wrap {
+          grid-template-columns: 1fr;
+        }
+        canvas {
+          height: 520px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <div>
+        <h1>Interactive String Art Board Designer</h1>
+        <p class="tagline">
+          Create precise, print-ready numbered layouts in seconds
+        </p>
+      </div>
+    </header>
+
+    <div class="howto">
+      <details open>
+        <summary>How to use</summary>
+        <ul>
+          <li>Choose a board shape and number of nails.</li>
+          <li>
+            Turn numbering on/off and set <b>Number every</b> (e.g. 10 or 20).
+          </li>
+          <li>Click/tap nails to draw your thread path.</li>
+          <li>
+            Use layers to separate colours, and undo if you make a mistake.
+          </li>
+          <li>Copy your sequence or download a PNG for printing.</li>
+        </ul>
+      </details>
     </div>
-  </header>
- <div class="howto">
-  <details open>
-    <summary>How to use</summary>
-    <ul>
-      <li>Choose board shape and number of nails</li>
-      <li>Toggle numbering options</li>
-      <li>Click nails to draw thread</li>
-      <li>Use layers and undo as needed</li>
-      <li>Export or print your layout</li>
-    </ul>
-  </details>
-</div>
-  <div class="wrap">
-   
-    <div class="panel">
-      <h2>Board</h2>
-      <div class="row">
-        <div>
-          <label>Shape</label>
-          <select id="board">
-            <option value="circle" selected>Circle</option>
-            <option value="square">Square (perimeter nails)</option>
-          </select>
+
+    <div class="wrap">
+      <div class="panel">
+        <h2>Board</h2>
+
+        <div class="row">
+          <div>
+            <label>Shape</label>
+            <select id="board">
+              <option value="circle" selected>Circle</option>
+              <option value="square">Square (perimeter nails)</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Nails</label>
+            <input id="nails" type="number" min="10" step="1" value="150" />
+          </div>
         </div>
-        <div>
-          <label>Nails</label>
-          <input id="nails" type="number" min="10" step="1" value="150" />
+
+        <div class="row">
+          <div>
+            <label>
+              Zoom
+              <span
+                class="q"
+                title="Changes the on-screen preview size (does not change nail count)."
+                >?</span
+              >
+            </label>
+
+            <div class="zoomRow">
+              <button type="button" id="zoomOut" class="zoomBtn">−</button>
+              <input id="radius" type="number" min="80" step="10" value="320" />
+              <button type="button" id="zoomIn" class="zoomBtn">+</button>
+            </div>
+          </div>
+
+          <div>
+            <label>
+              Selection sensitivity
+              <span
+                class="q"
+                title="How close your click/tap must be to a nail before it selects it."
+                >?</span
+              >
+            </label>
+            <input id="snap" type="number" min="6" step="1" value="18" />
+          </div>
         </div>
+
+        <div class="row3">
+          <div>
+            <label>
+              <input id="showNums" type="checkbox" checked />
+              Show numbers
+            </label>
+          </div>
+
+          <div>
+            <label>
+              Number every
+              <span
+                class="q"
+                title="Show a number on every Nth nail (e.g. 10 = 10, 20, 30…)."
+                >?</span
+              >
+            </label>
+            <input id="numEvery" type="number" min="1" step="1" value="10" />
+          </div>
+
+          <div>
+            <label>Start at</label>
+            <select id="numStart">
+              <option value="0">0 (0–149)</option>
+              <option value="1" selected>1 (1–150)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Number size</label>
+            <input id="numSize" type="number" min="8" step="1" value="12" />
+          </div>
+
+          <div>
+            <label>
+              Label distance
+              <span
+                class="q"
+                title="Moves the labels further out from the board edge."
+                >?</span
+              >
+            </label>
+            <input id="numOffset" type="number" min="6" step="1" value="22" />
+          </div>
+        </div>
+
+        <div class="btns">
+          <button id="fit">Fit preview to screen</button>
+          <button id="redraw">Redraw board</button>
+        </div>
+
+        <h2 style="margin-top: 16px">Manual draw</h2>
+
+        <div class="row">
+          <div>
+            <label>Current layer colour</label>
+            <input id="color" type="color" value="#000000" />
+          </div>
+
+          <div>
+            <label>Opacity (0–1)</label>
+            <input
+              id="opacity"
+              type="number"
+              min="0"
+              max="1"
+              step="0.05"
+              value="0.35"
+            />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Thickness</label>
+            <input id="lw" type="number" min="0.1" step="0.1" value="0.7" />
+          </div>
+
+          <div>
+            <label>Active layer</label>
+            <select id="layerSel"></select>
+          </div>
+        </div>
+
+        <div class="btns">
+          <button id="newLayer">New layer</button>
+          <button id="undo">Undo</button>
+          <button id="clearLayer">Clear layer</button>
+          <button id="clearAll">Clear all</button>
+        </div>
+
+        <div class="btns">
+          <button id="exportSeq">Copy sequence</button>
+          <button id="downloadPng">Download PNG</button>
+        </div>
+
+        <div class="hint">
+          <span class="pill">Tip</span>
+          If selecting nails feels fiddly, increase
+          <b>Selection sensitivity</b>. If the labels feel crowded, set
+          <b>Number every</b> to 20, or increase <b>Label distance</b>.
+        </div>
+
+        <h2 style="margin-top: 16px">Sequence output</h2>
+        <div id="seqOut" class="mono">Nothing yet — start tapping nails.</div>
       </div>
 
-      <div class="row">
-        <div>
-          <label>Preview size (px)</label>
-          <input id="radius" type="number" min="80" step="1" value="320" />
-        </div>
-        <div>
-          <label>Snap tolerance (px)</label>
-          <input id="snap" type="number" min="6" step="1" value="18" />
-        </div>
-      </div>
-
-      <div class="row3">
-        <div>
-          <label><input id="showNums" type="checkbox" checked /> Show numbers</label>
-        </div>
-        <div>
-          <label>Every N nails</label>
-          <input id="numEvery" type="number" min="1" step="1" value="10" />
-        </div>
-        <div>
-          <label>Start at</label>
-          <select id="numStart">
-            <option value="0">0 (0–149)</option>
-            <option value="1" selected>1 (1–150)</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="row">
-        <div>
-          <label>Number size</label>
-          <input id="numSize" type="number" min="8" step="1" value="12" />
-        </div>
-        <div>
-          <label>Number offset</label>
-          <input id="numOffset" type="number" min="6" step="1" value="16" />
-        </div>
-      </div>
-
-      <div class="btns">
-        <button id="fit">Fit preview to screen</button>
-        <button id="redraw">Redraw board</button>
-      </div>
-
-      <h2 style="margin-top:16px;">Manual draw</h2>
-      <div class="row">
-        <div>
-          <label>Current layer colour</label>
-          <input id="color" type="color" value="#000000" />
-        </div>
-        <div>
-          <label>Opacity (0–1)</label>
-          <input id="opacity" type="number" min="0" max="1" step="0.05" value="0.35" />
-        </div>
-      </div>
-
-      <div class="row">
-        <div>
-          <label>Thickness</label>
-          <input id="lw" type="number" min="0.1" step="0.1" value="0.7" />
-        </div>
-        <div>
-          <label>Active layer</label>
-          <select id="layerSel"></select>
-        </div>
-      </div>
-
-      <div class="btns">
-        <button id="newLayer">New layer</button>
-        <button id="undo">Undo</button>
-        <button id="clearLayer">Clear layer</button>
-        <button id="clearAll">Clear all</button>
-      </div>
-
-      <div class="btns">
-        <button id="exportSeq">Copy sequence</button>
-        <button id="downloadPng">Download PNG</button>
-      </div>
-
-      <div class="hint">
-        <span class="pill">How to use</span>
-        Tap a nail → tap another nail → a thread is drawn. Keep tapping to continue the path.<br/>
-        Tip: on phone, set <b>Every N nails</b> to 10 or 20 so it’s readable.
-      </div>
-
-      <h2 style="margin-top:16px;">Sequence output</h2>
-      <div id="seqOut" class="mono">Nothing yet — start tapping nails.</div>
+      <canvas id="cv"></canvas>
     </div>
 
-    <canvas id="cv"></canvas>
-  </div>
-
-  <script src="app.js"></script>
-</body>
+    <script src="app.js"></script>
+  </body>
 </html>
