@@ -2,8 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Steph String Art Studio</title>
+
     <style>
       body {
         font-family:
@@ -43,6 +44,7 @@
         grid-template-columns: 400px 1fr;
         gap: 14px;
         padding: 14px;
+        align-items: start;
       }
 
       .panel {
@@ -113,14 +115,17 @@
         gap: 10px;
       }
 
-      /* FIXED canvas styling */
+      /* ✅ responsive square canvas */
       canvas {
         width: 100%;
-        height: 650px;
+        max-width: 650px;
+        aspect-ratio: 1 / 1;
         border: 1px solid #e5e5e5;
         border-radius: 14px;
         background: #fff;
-        touch-action: manipulation;
+        display: block;
+        margin: 0 auto;
+        touch-action: none;
       }
 
       .hint {
@@ -132,8 +137,8 @@
 
       .mono {
         font-family:
-          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-          "Liberation Mono", "Courier New", monospace;
+          ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New",
+          monospace;
         font-size: 12px;
         white-space: pre-wrap;
         background: #fafafa;
@@ -173,7 +178,7 @@
         line-height: 1.5;
       }
 
-      /* little help ? */
+      /* help "?" */
       .q {
         display: inline-block;
         margin-left: 6px;
@@ -184,11 +189,10 @@
         line-height: 18px;
         text-align: center;
         font-size: 12px;
-        cursor: help;
+        cursor: pointer;
         user-select: none;
       }
 
-      /* zoom row */
       .zoomRow {
         display: flex;
         gap: 8px;
@@ -210,12 +214,16 @@
         background: #f6f6f6;
       }
 
+      /* ✅ mobile layout */
       @media (max-width: 980px) {
         .wrap {
           grid-template-columns: 1fr;
         }
+        .panel {
+          order: 2;
+        }
         canvas {
-          height: 520px;
+          order: 1;
         }
       }
     </style>
@@ -273,7 +281,7 @@
               Zoom
               <span
                 class="q"
-                title="Changes the on-screen preview size (does not change nail count)."
+                data-tip="Changes the on-screen preview size (does not change nail count)."
                 >?</span
               >
             </label>
@@ -290,7 +298,7 @@
               Selection sensitivity
               <span
                 class="q"
-                title="How close your click/tap must be to a nail before it selects it."
+                data-tip="How close your click/tap must be to a nail before it selects it."
                 >?</span
               >
             </label>
@@ -311,7 +319,7 @@
               Number every
               <span
                 class="q"
-                title="Show a number on every Nth nail (e.g. 10 = 10, 20, 30…)."
+                data-tip="Show a number on every Nth nail (e.g. 10 = 10, 20, 30…)."
                 >?</span
               >
             </label>
@@ -338,7 +346,7 @@
               Label distance
               <span
                 class="q"
-                title="Moves the labels further out from the board edge."
+                data-tip="Moves the labels further out from the board edge."
                 >?</span
               >
             </label>
@@ -347,8 +355,8 @@
         </div>
 
         <div class="btns">
-          <button id="fit">Fit preview to screen</button>
-          <button id="redraw">Redraw board</button>
+          <button id="fit" type="button">Fit preview to screen</button>
+          <button id="redraw" type="button">Redraw board</button>
         </div>
 
         <h2 style="margin-top: 16px">Manual draw</h2>
@@ -385,21 +393,21 @@
         </div>
 
         <div class="btns">
-          <button id="newLayer">New layer</button>
-          <button id="undo">Undo</button>
-          <button id="clearLayer">Clear layer</button>
-          <button id="clearAll">Clear all</button>
+          <button id="newLayer" type="button">New layer</button>
+          <button id="undo" type="button">Undo</button>
+          <button id="clearLayer" type="button">Clear layer</button>
+          <button id="clearAll" type="button">Clear all</button>
         </div>
 
         <div class="btns">
-          <button id="exportSeq">Copy sequence</button>
-          <button id="downloadPng">Download PNG</button>
+          <button id="exportSeq" type="button">Copy sequence</button>
+          <button id="downloadPng" type="button">Download PNG</button>
         </div>
 
         <div class="hint">
           <span class="pill">Tip</span>
           If selecting nails feels fiddly, increase
-          <b>Selection sensitivity</b>. If the labels feel crowded, set
+          <b>Selection sensitivity</b>. If labels feel crowded, set
           <b>Number every</b> to 20, or increase <b>Label distance</b>.
         </div>
 
