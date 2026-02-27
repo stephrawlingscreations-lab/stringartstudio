@@ -13,6 +13,9 @@ let lastNail = null;
 let hoverNail = null;
 let rafHover = 0;
 
+// Pointer tracking (helps mobile)
+let isPointerDown = false;
+
 /* -----------------------------
    Helpers
 ----------------------------- */
@@ -40,25 +43,29 @@ function rgba(hex, a) {
   return `rgba(${r},${g},${b},${a})`;
 }
 
+/* -----------------------------
+   Canvas sizing (mobile-safe)
+   (Your CSS now makes canvas square via aspect-ratio)
+----------------------------- */
 function resizeCanvas() {
   const dpr = window.devicePixelRatio || 1;
+
+  // Force square based on rendered width (works with aspect-ratio)
   const cssW = cv.clientWidth || 800;
-  const cssH = cv.clientHeight || 650;
+  const size = cssW;
 
-  cv.width = Math.floor(cssW * dpr);
-  cv.height = Math.floor(cssH * dpr);
+  cv.width = Math.floor(size * dpr);
+  cv.height = Math.floor(size * dpr);
 
-  // Draw using CSS pixel coords
+  // Draw in CSS pixel coordinates
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return { cssW, cssH };
+  return { cssW: size, cssH: size };
 }
 
 /* -----------------------------
    Zoom / “Preview size”
-   (board size inside canvas, does NOT shrink canvas box)
 ----------------------------- */
 function getZoomInput() {
-  // Your HTML uses id="radius"
   return (
     $("radius") ||
     $("zoom") ||
@@ -70,7 +77,7 @@ function getZoomInput() {
 function applyZoomFromUI() {
   const el = getZoomInput();
   if (!el) return;
-  el.value = String(clampInt(el.value, 80, 4000, 320));
+  el.value = String(clampInt(el.value, 80, 5000, 320));
   redrawAll();
   updateSeqOutput();
 }
@@ -80,7 +87,7 @@ function nudgeZoom(dir) {
 
   const step = clampInt(el.step || 10, 1, 200, 10);
   const min = clampInt(el.min || 80, 50, 5000, 80);
-  const max = clampInt(el.max || 4000, min, 5000, 4000);
+  const max = clampInt(el.max || 4000, min, 8000, 4000);
 
   const cur = clampInt(el.value, min, max, min);
   const next = Math.max(min, Math.min(max, cur + dir * step));
@@ -104,25 +111,21 @@ function pointsCircle(n, cx, cy, r) {
 
 function pointsSquarePerimeter(n, cx, cy, size) {
   const out = [];
-  const perim = 8 * size; // 4 sides * length(2*size)
+  const perim = 8 * size;
   for (let i = 0; i < n; i++) {
     const d = (perim * i) / n;
     let x, y;
 
     if (d < 2 * size) {
-      // top, left -> right
       x = cx - size + d;
       y = cy - size;
     } else if (d < 4 * size) {
-      // right, top -> bottom
       x = cx + size;
       y = cy - size + (d - 2 * size);
     } else if (d < 6 * size) {
-      // bottom, right -> left
       x = cx + size - (d - 4 * size);
       y = cy + size;
     } else {
-      // left, bottom -> top
       x = cx - size;
       y = cy + size - (d - 6 * size);
     }
@@ -173,10 +176,10 @@ function getStartAt() {
   return $("numStart")?.value === "1" ? 1 : 0;
 }
 
-// ✅ FIX: never show the last label (e.g. 150)
+// never show the last label (e.g. 150)
 function isLabelShown(label, every, nails) {
-  if (label === nails) return false; // always hide last number
-  if (label === 1) return true; // always show 1
+  if (label === nails) return false;
+  if (label === 1) return true;
   return every > 1 && label % every === 0;
 }
 
@@ -189,7 +192,7 @@ function drawNumbersCircle(nails, cx, cy, r) {
   const every = clampInt($("numEvery")?.value, 1, nails, 10);
   const startAt = getStartAt();
   const fontSize = clampInt($("numSize")?.value, 8, 40, 12);
-  const offset = clampInt($("numOffset")?.value, 6, 80, 22);
+  const offset = clampInt($("numOffset")?.value, 6, 120, 22);
 
   ctx.font = `${fontSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
   ctx.fillStyle = "rgba(0,0,0,0.75)";
@@ -203,7 +206,6 @@ function drawNumbersCircle(nails, cx, cy, r) {
     const t = (Math.PI * 2 * i) / nails;
     const baseA = t - Math.PI / 2;
 
-    // Slight nudge near the top so 1 doesn't feel cramped with nearby label
     let a = baseA;
     if (label === 1) a -= 0.02;
 
@@ -220,7 +222,7 @@ function drawNumbersSquare(nails, cx, cy, size) {
   const every = clampInt($("numEvery")?.value, 1, nails, 10);
   const startAt = getStartAt();
   const fontSize = clampInt($("numSize")?.value, 8, 40, 12);
-  const offset = clampInt($("numOffset")?.value, 6, 80, 22);
+  const offset = clampInt($("numOffset")?.value, 6, 120, 22);
 
   ctx.font = `${fontSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
   ctx.fillStyle = "rgba(0,0,0,0.75)";
@@ -235,7 +237,6 @@ function drawNumbersSquare(nails, cx, cy, size) {
     const dx = x0 - cx;
     const dy = y0 - cy;
 
-    // outward normal
     const len = Math.hypot(dx, dy) || 1;
     const nx = dx / len;
     const ny = dy / len;
@@ -251,7 +252,7 @@ function drawNumbersSquare(nails, cx, cy, size) {
    Nail picking
 ----------------------------- */
 function nearestNail(x, y) {
-  const tol = clampFloat($("snap")?.value, 6, 150, 18);
+  const tol = clampFloat($("snap")?.value, 6, 200, 18);
   let bestIdx = null;
   let bestD2 = Infinity;
 
@@ -270,18 +271,19 @@ function nearestNail(x, y) {
 }
 
 /* -----------------------------
-   Hover handling (✅ FIX)
+   Pointer -> canvas coords
 ----------------------------- */
-function updateHoverFromEvent(ev) {
+function canvasXYFromPointerEvent(ev) {
   const rect = cv.getBoundingClientRect();
-  const clientX =
-    ev.touches && ev.touches[0] ? ev.touches[0].clientX : ev.clientX;
-  const clientY =
-    ev.touches && ev.touches[0] ? ev.touches[0].clientY : ev.clientY;
+  const x = ev.clientX - rect.left;
+  const y = ev.clientY - rect.top;
+  return { x, y };
+}
 
-  const x = clientX - rect.left;
-  const y = clientY - rect.top;
-
+/* -----------------------------
+   Hover handling (pointer-safe)
+----------------------------- */
+function updateHoverAt(x, y) {
   const idx = nearestNail(x, y);
   if (idx === hoverNail) return;
   hoverNail = idx;
@@ -322,8 +324,8 @@ function redrawAll() {
   ctx.clearRect(0, 0, cssW, cssH);
 
   const board = $("board")?.value || "circle";
-  const radius = clampInt(getZoomInput()?.value, 80, 4000, 320);
-  const nails = clampInt($("nails")?.value, 10, 5000, 150);
+  const radius = clampInt(getZoomInput()?.value, 80, 5000, 320);
+  const nails = clampInt($("nails")?.value, 10, 8000, 150);
   const cx = cssW / 2;
   const cy = cssH / 2;
 
@@ -361,7 +363,6 @@ function redrawAll() {
     const selected = activeSeqSet.has(i);
     const isLast = lastNail === i;
 
-    // make selected nails stand out
     let rDot = 1.35;
     let alpha = 0.55;
 
@@ -384,43 +385,37 @@ function redrawAll() {
     ctx.fill();
   }
 
-  // ✅ hover highlight + number label
+  // hover highlight + label
   if (hoverNail !== null && pts[hoverNail]) {
     const [hx, hy] = pts[hoverNail];
-    const startAt = getStartAt();
-    const label = hoverNail + startAt;
+    const startAt2 = getStartAt();
+    const label = hoverNail + startAt2;
 
     ctx.save();
 
-    // ring
     ctx.beginPath();
     ctx.arc(hx, hy, 6, 0, Math.PI * 2);
     ctx.strokeStyle = "rgba(0,0,0,0.45)";
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // label bubble (white background)
     const text = String(label);
     ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
 
     const padX = 6;
-    const padY = 4;
     const textW = ctx.measureText(text).width;
 
-    // position bubble slightly up/right of nail
     const bx = hx + 10;
     const by = hy - 12;
     const bw = textW + padX * 2;
     const bh = 18;
 
-    // bubble
     ctx.fillStyle = "rgba(255,255,255,0.92)";
     ctx.strokeStyle = "rgba(0,0,0,0.18)";
     ctx.lineWidth = 1;
 
-    // rounded rect (simple)
     const r = 6;
     ctx.beginPath();
     ctx.moveTo(bx + r, by - bh / 2);
@@ -436,7 +431,6 @@ function redrawAll() {
     ctx.fill();
     ctx.stroke();
 
-    // text
     ctx.fillStyle = "rgba(0,0,0,0.9)";
     ctx.fillText(text, bx + padX, by);
 
@@ -469,27 +463,13 @@ function redrawAll() {
 ----------------------------- */
 function fitToScreen() {
   const { cssW, cssH } = resizeCanvas();
-  const margin = 28; // room for outside labels
+  const margin = 28;
   const r = Math.floor(Math.min(cssW, cssH) / 2 - margin);
   const el = getZoomInput();
   if (el) el.value = String(Math.max(80, r));
 }
 
-function onTap(ev) {
-  ev.preventDefault();
-
-  const rect = cv.getBoundingClientRect();
-  const clientX =
-    ev.touches && ev.touches[0] ? ev.touches[0].clientX : ev.clientX;
-  const clientY =
-    ev.touches && ev.touches[0] ? ev.touches[0].clientY : ev.clientY;
-
-  const x = clientX - rect.left;
-  const y = clientY - rect.top;
-
-  const idx = nearestNail(x, y);
-  if (idx === null) return;
-
+function addNailToSequence(idx) {
   ensureLayerExists();
   const L = currentLayer();
 
@@ -502,9 +482,6 @@ function onTap(ev) {
     L.seq.push(idx);
     lastNail = idx;
   }
-
-  redrawAll();
-  updateSeqOutput();
 }
 
 function undo() {
@@ -582,11 +559,176 @@ function onAnyChangeRedraw() {
 }
 
 /* -----------------------------
+   Tooltip system for "?"
+   Works on mobile (tap) + desktop (hover)
+----------------------------- */
+function initHelpTooltips() {
+  // Build tooltip element
+  const tip = document.createElement("div");
+  tip.id = "helpTip";
+  tip.style.position = "fixed";
+  tip.style.zIndex = "9999";
+  tip.style.maxWidth = "260px";
+  tip.style.padding = "10px 12px";
+  tip.style.borderRadius = "12px";
+  tip.style.border = "1px solid rgba(0,0,0,0.18)";
+  tip.style.background = "rgba(255,255,255,0.96)";
+  tip.style.boxShadow = "0 8px 24px rgba(0,0,0,0.12)";
+  tip.style.fontSize = "12px";
+  tip.style.lineHeight = "1.35";
+  tip.style.color = "#111";
+  tip.style.display = "none";
+
+  document.body.appendChild(tip);
+
+  let openFor = null;
+
+  function showTip(el, clientX, clientY) {
+    const text = el.getAttribute("data-tip") || el.getAttribute("title") || "";
+    if (!text) return;
+
+    tip.textContent = text;
+    tip.style.display = "block";
+
+    // Position near the "?"
+    const pad = 10;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    // Measure after display
+    const tw = tip.offsetWidth;
+    const th = tip.offsetHeight;
+
+    let x = clientX + 12;
+    let y = clientY + 12;
+
+    if (x + tw + pad > vw) x = vw - tw - pad;
+    if (y + th + pad > vh) y = vh - th - pad;
+
+    tip.style.left = `${x}px`;
+    tip.style.top = `${y}px`;
+    openFor = el;
+  }
+
+  function hideTip() {
+    tip.style.display = "none";
+    openFor = null;
+  }
+
+  // Convert existing title="" into data-tip="" so we can control it
+  document.querySelectorAll(".q[title]").forEach((el) => {
+    el.setAttribute("data-tip", el.getAttribute("title"));
+    el.removeAttribute("title");
+  });
+
+  // Desktop hover
+  document.addEventListener("pointerover", (e) => {
+    const el = e.target.closest(".q");
+    if (!el) return;
+    if (e.pointerType === "touch") return; // touch uses tap behaviour
+    showTip(el, e.clientX, e.clientY);
+  });
+
+  document.addEventListener("pointermove", (e) => {
+    if (tip.style.display !== "block") return;
+    if (e.pointerType === "touch") return;
+    // keep tip following the pointer a bit
+    showTip(openFor, e.clientX, e.clientY);
+  });
+
+  document.addEventListener("pointerout", (e) => {
+    const el = e.target.closest(".q");
+    if (!el) return;
+    if (e.pointerType === "touch") return;
+    hideTip();
+  });
+
+  // Mobile tap (toggle)
+  document.addEventListener(
+    "pointerdown",
+    (e) => {
+      const el = e.target.closest(".q");
+      if (el) {
+        // toggle same one
+        if (openFor === el && tip.style.display === "block") {
+          hideTip();
+          return;
+        }
+        showTip(el, e.clientX, e.clientY);
+        return;
+      }
+
+      // tap anywhere else closes it
+      if (tip.style.display === "block") hideTip();
+    },
+    { passive: true },
+  );
+
+  // Close on scroll/resize
+  window.addEventListener("scroll", hideTip, { passive: true });
+  window.addEventListener("resize", hideTip);
+}
+
+/* -----------------------------
+   Pointer-based canvas interactions
+   (Fixes mobile tap issues + double triggering)
+----------------------------- */
+function initCanvasPointerControls() {
+  // Prevent gestures on canvas
+  cv.style.touchAction = "none";
+
+  cv.addEventListener("pointerdown", (ev) => {
+    ev.preventDefault();
+    isPointerDown = true;
+    try {
+      cv.setPointerCapture(ev.pointerId);
+    } catch (_) {}
+
+    const { x, y } = canvasXYFromPointerEvent(ev);
+    updateHoverAt(x, y);
+
+    const idx = nearestNail(x, y);
+    if (idx === null) return;
+
+    addNailToSequence(idx);
+    redrawAll();
+    updateSeqOutput();
+  });
+
+  cv.addEventListener("pointermove", (ev) => {
+    if (!pts.length) return;
+    const { x, y } = canvasXYFromPointerEvent(ev);
+    updateHoverAt(x, y);
+  });
+
+  function endPointer(ev) {
+    isPointerDown = false;
+    hoverNail = null;
+    redrawAll();
+    try {
+      cv.releasePointerCapture(ev.pointerId);
+    } catch (_) {}
+  }
+
+  cv.addEventListener("pointerup", endPointer);
+  cv.addEventListener("pointercancel", endPointer);
+  cv.addEventListener("pointerleave", () => {
+    if (!isPointerDown) {
+      hoverNail = null;
+      redrawAll();
+    }
+  });
+}
+
+/* -----------------------------
    Init / Wiring
 ----------------------------- */
 function init() {
   ensureLayerExists();
   syncLayerSelect();
+
+  // Tooltips for ?
+  initHelpTooltips();
 
   // Buttons
   $("fit")?.addEventListener("click", () => {
@@ -618,32 +760,10 @@ function init() {
     updateSeqOutput();
   });
 
-  // Canvas interactions
-  cv.addEventListener("click", onTap);
-  cv.addEventListener("touchstart", onTap, { passive: false });
+  // Canvas interactions (pointer events)
+  initCanvasPointerControls();
 
-  // ✅ Hover highlight wiring
-  cv.addEventListener("mousemove", updateHoverFromEvent);
-  cv.addEventListener("mouseleave", () => {
-    hoverNail = null;
-    redrawAll();
-  });
-
-  cv.addEventListener(
-    "touchmove",
-    (ev) => {
-      ev.preventDefault();
-      updateHoverFromEvent(ev);
-    },
-    { passive: false },
-  );
-
-  cv.addEventListener("touchend", () => {
-    hoverNail = null;
-    redrawAll();
-  });
-
-  // Zoom buttons (optional, only if you add them in HTML)
+  // Zoom buttons
   $("zoomIn")?.addEventListener("click", () => nudgeZoom(1));
   $("zoomOut")?.addEventListener("click", () => nudgeZoom(-1));
   getZoomInput()?.addEventListener("change", applyZoomFromUI);
@@ -658,8 +778,13 @@ function init() {
     "numStart",
     "numSize",
     "numOffset",
+    "radius",
   ].forEach((id) => {
     $(id)?.addEventListener("change", onAnyChangeRedraw);
+    $(id)?.addEventListener("input", () => {
+      // live feedback without breaking performance
+      redrawAll();
+    });
   });
 
   // Redraw when draw style changes
@@ -670,6 +795,7 @@ function init() {
     });
   });
 
+  // Resize
   window.addEventListener("resize", () => {
     redrawAll();
   });
@@ -680,3 +806,9 @@ function init() {
 }
 
 init();
+
+// Auto-fit on first load
+window.addEventListener("load", () => {
+  fitToScreen();
+  redrawAll();
+});
