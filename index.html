@@ -3,13 +3,6 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-<<<<<<< HEAD
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0"
-    />
-    <title>Steph String Art Studio</title>
-=======
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
@@ -19,7 +12,6 @@
       href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&display=swap"
       rel="stylesheet"
     />
->>>>>>> ae11d63 (Added Pro modal and polished layout V1.0)
 
     <style>
       :root {
@@ -37,9 +29,6 @@
       }
 
       body {
-<<<<<<< HEAD
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-=======
         font-family:
           system-ui,
           -apple-system,
@@ -48,7 +37,6 @@
           Arial,
           sans-serif;
 
->>>>>>> ae11d63 (Added Pro modal and polished layout V1.0)
         margin: 0;
 
         background: var(--bg-soft);
@@ -430,13 +418,8 @@
       }
 
       .mono {
-<<<<<<< HEAD
-        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New",
-          monospace;
-=======
         font-family: ui-monospace, monospace;
 
->>>>>>> ae11d63 (Added Pro modal and polished layout V1.0)
         font-size: 12px;
 
         white-space: pre-wrap;
@@ -473,27 +456,6 @@
   </head>
 
   <body>
-<<<<<<< HEAD
-    <header>
-      <div>
-        <h1>Interactive String Art Board Designer</h1>
-        <p class="tagline">Create precise, print-ready numbered layouts in seconds</p>
-      </div>
-    </header>
-
-    <div class="howto">
-      <details open>
-        <summary>How to use</summary>
-        <ul>
-          <li>Choose a board shape and number of nails.</li>
-          <li>Turn numbering on/off and set <b>Number every</b> (e.g. 10 or 20).</li>
-          <li>Click/tap nails to draw your thread path.</li>
-          <li>Use layers to separate colours, and undo if you make a mistake.</li>
-          <li>Copy your sequence or download a PNG for printing.</li>
-        </ul>
-      </details>
-    </div>
-=======
     <header class="site-header">
       <div class="header-inner">
         <img src="logo.png" alt="Steph Rawlings Creations" class="logo" />
@@ -512,7 +474,6 @@
 
     <section class="hero">
       <h1>Interactive String Art Board Designer</h1>
->>>>>>> ae11d63 (Added Pro modal and polished layout V1.0)
 
       <div class="version-badge">V1.0</div>
 
@@ -527,18 +488,9 @@
         <div class="panel">
           <h2>Board Settings</h2>
 
-<<<<<<< HEAD
-        <div class="row">
-          <div>
-            <label>
-              Zoom
-              <span class="q" data-tip="Changes the on-screen preview size (does not change nail count).">?</span>
-            </label>
-=======
           <div class="row">
             <div>
               <label>Shape</label>
->>>>>>> ae11d63 (Added Pro modal and polished layout V1.0)
 
               <select id="board">
                 <option value="circle" selected>Circle</option>
@@ -554,20 +506,9 @@
             </div>
           </div>
 
-<<<<<<< HEAD
-          <div>
-            <label>
-              Selection sensitivity
-              <span class="q" data-tip="How close your click/tap must be to a nail before it selects it.">?</span>
-            </label>
-            <input id="snap" type="number" min="6" step="1" value="18" />
-          </div>
-        </div>
-=======
           <div class="row">
             <div>
               <label>Zoom</label>
->>>>>>> ae11d63 (Added Pro modal and polished layout V1.0)
 
               <div class="row">
                 <button type="button" id="zoomOut">−</button>
@@ -591,14 +532,6 @@
             </div>
           </div>
 
-<<<<<<< HEAD
-          <div>
-            <label>
-              Number every
-              <span class="q" data-tip="Show a number on every Nth nail (e.g. 10 = 10, 20, 30…).">?</span>
-            </label>
-            <input id="numEvery" type="number" min="1" step="1" value="10" />
-=======
           <!-- NUMBER CONTROLS RESTORED -->
 
           <div class="row3">
@@ -625,7 +558,6 @@
                 <option value="1" selected>1</option>
               </select>
             </div>
->>>>>>> ae11d63 (Added Pro modal and polished layout V1.0)
           </div>
 
           <div class="row">
@@ -642,19 +574,10 @@
             </div>
           </div>
 
-<<<<<<< HEAD
-          <div>
-            <label>
-              Label distance
-              <span class="q" data-tip="Moves the labels further out from the board edge.">?</span>
-            </label>
-            <input id="numOffset" type="number" min="6" step="1" value="22" />
-=======
           <div class="btns">
             <button id="fit">Fit preview</button>
 
             <button id="redraw">Redraw</button>
->>>>>>> ae11d63 (Added Pro modal and polished layout V1.0)
           </div>
 
           <h2 style="margin-top: 20px">Manual Drawing</h2>
@@ -662,11 +585,6 @@
           <div class="row">
             <input id="color" type="color" value="#000000" />
 
-<<<<<<< HEAD
-          <div>
-            <label>Opacity (0–1)</label>
-            <input id="opacity" type="number" min="0" max="1" step="0.05" value="0.35" />
-=======
             <input
               id="opacity"
               type="number"
@@ -675,7 +593,6 @@
               step="0.05"
               value="0.35"
             />
->>>>>>> ae11d63 (Added Pro modal and polished layout V1.0)
           </div>
 
           <div class="row">
@@ -709,28 +626,6 @@
           <div id="seqOut" class="mono">Nothing yet — start tapping nails.</div>
         </div>
 
-<<<<<<< HEAD
-        <div class="btns">
-          <button id="newLayer" type="button">New layer</button>
-          <button id="undo" type="button">Undo</button>
-          <button id="clearLayer" type="button">Clear layer</button>
-          <button id="clearAll" type="button">Clear all</button>
-        </div>
-
-        <div class="btns">
-          <button id="exportSeq" type="button">Copy sequence</button>
-          <button id="downloadPng" type="button">Download PNG</button>
-        </div>
-
-        <div class="hint">
-          <span class="pill">Tip</span>
-          If selecting nails feels fiddly, increase <b>Selection sensitivity</b>.
-          If labels feel crowded, set <b>Number every</b> to 20, or increase <b>Label distance</b>.
-        </div>
-
-        <h2 style="margin-top: 16px">Sequence output</h2>
-        <div id="seqOut" class="mono">Nothing yet — start tapping nails.</div>
-=======
         <canvas id="cv"></canvas>
       </div>
     </div>
@@ -760,7 +655,6 @@
           calculations.
         </p>
         <button class="modal-close" onclick="closeProModal()">Close</button>
->>>>>>> ae11d63 (Added Pro modal and polished layout V1.0)
       </div>
     </div>
 
