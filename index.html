@@ -1,231 +1,479 @@
 <!doctype html>
+
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+<<<<<<< HEAD
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0"
     />
     <title>Steph String Art Studio</title>
+=======
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Steph Rawlings Creations – String Art Designer</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
+>>>>>>> ae11d63 (Added Pro modal and polished layout V1.0)
 
     <style>
+      :root {
+        --brand-blue: #2f56d3;
+
+        --brand-gold: #d8b85a;
+
+        --bg-soft: #f4f1ed;
+
+        --panel-bg: #ffffff;
+
+        --text-dark: #1e1e1e;
+
+        --border-soft: #e7e5e2;
+      }
+
       body {
+<<<<<<< HEAD
         font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+=======
+        font-family:
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          Arial,
+          sans-serif;
+
+>>>>>>> ae11d63 (Added Pro modal and polished layout V1.0)
         margin: 0;
-        background: #fff;
-        color: #111;
+
+        background: var(--bg-soft);
+
+        color: var(--text-dark);
       }
 
-      header {
-        padding: 12px 14px;
-        border-bottom: 1px solid #e8e8e8;
+      /* ================= HEADER ================= */
+
+      .site-header {
+        background: white;
+
+        border-bottom: 1px solid var(--border-soft);
+      }
+
+      .header-inner {
+        max-width: 1200px;
+
+        margin: 0 auto;
+
+        padding: 30px 20px;
+
         display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
+
         align-items: center;
+
+        justify-content: space-between;
+
+        position: relative;
       }
 
-      header h1 {
+      .logo {
+        height: 72px;
+      }
+
+      .brand-title {
+        position: absolute;
+
+        left: 50%;
+
+        transform: translateX(-50%);
+
+        font-family: "Playfair Display", serif;
+
+        font-weight: 600;
+
+        font-size: 34px;
+
+        letter-spacing: 0.8px;
+
+        color: var(--brand-blue);
+
+        line-height: 1;
+
+        text-align: center;
+      }
+
+      .brand-title::after {
+        content: "";
+
+        display: block;
+
+        width: 70px;
+
+        height: 2px;
+
+        background: var(--brand-gold);
+
+        margin: 8px auto 0;
+
+        border-radius: 2px;
+      }
+
+      .nav-links a {
+        margin-left: 24px;
+
+        text-decoration: none;
+
+        color: var(--text-dark);
+
+        font-weight: 500;
+
         font-size: 15px;
-        margin: 0;
       }
 
-      .tagline {
-        margin: 4px 0 0;
-        font-size: 12px;
-        color: #666;
+      /* Coming Soon styling */
+
+      .nav-links a.coming {
+        color: #bbb;
+
+        pointer-events: none;
+
+        display: inline-block;
+
+        text-align: center;
+      }
+
+      .nav-links a.coming span {
+        display: block;
+
+        font-size: 10px;
+
+        font-weight: 500;
+
+        color: var(--brand-gold);
+
+        margin-top: 2px;
+      }
+
+      /* ================= HERO ================= */
+
+      .hero {
+        text-align: center;
+
+        padding: 70px 20px 40px;
+      }
+
+      .hero h1 {
+        font-size: 30px;
+
+        font-weight: 500;
+
+        margin-bottom: 18px; /* add space under title */
+      }
+
+      .version-badge {
+        display: inline-block;
+
+        margin-bottom: 20px; /* space before paragraph */
+
+        padding: 6px 14px;
+
+        font-size: 11px;
+
+        font-weight: 500;
+
+        border-radius: 999px;
+
+        background: rgba(216, 184, 90, 0.15);
+
+        color: var(--brand-gold);
+
+        letter-spacing: 0.5px;
+      }
+
+      .hero p {
+        max-width: 620px;
+
+        margin: 0 auto;
+
+        margin-top: 10px; /* extra breathing space */
+
+        color: #555;
+
+        font-size: 15px;
+      }
+
+      /* ================= LAYOUT ================= */
+
+      .container {
+        max-width: 1200px;
+
+        margin: 0 auto;
+
+        padding: 40px 20px 80px;
       }
 
       .wrap {
         display: grid;
-        grid-template-columns: 400px 1fr;
-        gap: 14px;
-        padding: 14px;
+
+        grid-template-columns: 380px 1fr;
+
+        gap: 24px;
+
         align-items: start;
       }
 
+      /* ================= PANEL ================= */
+
       .panel {
-        border: 1px solid #e5e5e5;
-        border-radius: 14px;
-        padding: 12px;
-        background: #fff;
+        background: var(--panel-bg);
+
+        border-radius: 18px;
+
+        padding: 20px;
+
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.06);
       }
 
       .panel h2 {
-        font-size: 14px;
-        margin: 6px 0 10px;
+        font-size: 15px;
+
+        margin: 6px 0 12px;
+
+        font-weight: 600;
       }
+
+      /* ================= FORM ================= */
 
       label {
         font-size: 12px;
-        color: #333;
+
+        color: #444;
+
         display: block;
-        margin: 8px 0 4px;
+
+        margin: 10px 0 4px;
       }
 
       input,
-      select,
-      textarea {
+      select {
         width: 100%;
+
         padding: 9px 10px;
-        border: 1px solid #cfcfcf;
+
+        border: 1px solid #d7d7d7;
+
         border-radius: 12px;
+
         font-size: 14px;
+
         box-sizing: border-box;
       }
 
       input[type="color"] {
         padding: 0;
+
         height: 40px;
+
         border-radius: 10px;
       }
 
+      /* ================= BUTTONS ================= */
+
       button {
-        padding: 10px 12px;
-        border: 1px solid #cfcfcf;
+        padding: 10px 14px;
+
         border-radius: 12px;
-        background: #fff;
+
+        border: none;
+
+        background: var(--brand-blue);
+
+        color: white;
+
         cursor: pointer;
+
         font-size: 14px;
       }
 
       button:hover {
-        background: #f6f6f6;
+        opacity: 0.9;
+      }
+
+      .pro-btn {
+        background: var(--brand-gold);
+
+        color: #1e1e1e;
+
+        font-weight: 600;
       }
 
       .btns {
         display: flex;
+
         gap: 10px;
+
         flex-wrap: wrap;
-        margin-top: 10px;
+
+        margin-top: 12px;
       }
+      /* ================= PRO BUTTON PREMIUM ================= */
+
+      .pro-btn {
+        background: linear-gradient(135deg, #e3c774, #d8b85a);
+        color: #1e1e1e;
+        font-weight: 600;
+        box-shadow: 0 4px 14px rgba(216, 184, 90, 0.25);
+        transition: all 0.25s ease;
+      }
+
+      .pro-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(216, 184, 90, 0.35);
+      }
+
+      /* ================= MODAL ================= */
+
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 999;
+      }
+
+      .modal {
+        background: white;
+        width: 90%;
+        max-width: 520px;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        animation: fadeIn 0.25s ease;
+      }
+
+      .modal h3 {
+        margin-top: 0;
+        font-size: 20px;
+      }
+
+      .modal ul {
+        padding-left: 18px;
+        margin: 12px 0 18px;
+      }
+
+      .modal li {
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+
+      .modal-close {
+        background: var(--brand-blue);
+        color: white;
+        border-radius: 12px;
+        padding: 8px 14px;
+        border: none;
+        cursor: pointer;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      /* ================= GRID HELPERS ================= */
 
       .row {
         display: grid;
+
         grid-template-columns: 1fr 1fr;
-        gap: 10px;
+
+        gap: 12px;
       }
 
       .row3 {
         display: grid;
+
         grid-template-columns: 1fr 1fr 1fr;
-        gap: 10px;
+
+        gap: 12px;
       }
 
-      /* ✅ responsive square canvas */
+      /* ================= CANVAS ================= */
+
       canvas {
         width: 100%;
-        max-width: 650px;
-        aspect-ratio: 1 / 1;
-        border: 1px solid #e5e5e5;
-        border-radius: 14px;
-        background: #fff;
-        display: block;
-        margin: 0 auto;
-        touch-action: none;
-      }
 
-      .hint {
-        font-size: 12px;
-        color: #666;
-        line-height: 1.35;
-        margin-top: 10px;
+        max-width: 700px;
+
+        aspect-ratio: 1 / 1;
+
+        border-radius: 18px;
+
+        background: white;
+
+        display: block;
+
+        margin: 0 auto;
+
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
       }
 
       .mono {
+<<<<<<< HEAD
         font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Courier New",
           monospace;
+=======
+        font-family: ui-monospace, monospace;
+
+>>>>>>> ae11d63 (Added Pro modal and polished layout V1.0)
         font-size: 12px;
+
         white-space: pre-wrap;
+
         background: #fafafa;
-        border: 1px solid #eee;
-        border-radius: 10px;
-        padding: 10px;
-      }
 
-      .pill {
-        display: inline-block;
-        padding: 2px 8px;
-        border: 1px solid #e5e5e5;
-        border-radius: 999px;
-        font-size: 11px;
-        color: #555;
-        margin-right: 6px;
-      }
-
-      .howto {
-        padding: 0 14px;
-      }
-
-      .howto details {
-        border-bottom: 1px solid #eee;
-        padding: 10px 0;
-      }
-
-      .howto summary {
-        cursor: pointer;
-        font-size: 13px;
-      }
-
-      .howto ul {
-        margin: 10px 0 0 18px;
-        font-size: 12px;
-        color: #555;
-        line-height: 1.5;
-      }
-
-      /* help "?" */
-      .q {
-        display: inline-block;
-        margin-left: 6px;
-        width: 18px;
-        height: 18px;
-        border-radius: 999px;
-        border: 1px solid rgba(0, 0, 0, 0.25);
-        line-height: 18px;
-        text-align: center;
-        font-size: 12px;
-        cursor: pointer;
-        user-select: none;
-      }
-
-      .zoomRow {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-      }
-
-      .zoomBtn {
-        width: 36px;
-        height: 40px;
         border-radius: 12px;
-        border: 1px solid #cfcfcf;
-        background: #fff;
-        cursor: pointer;
-        font-size: 18px;
-        padding: 0;
+
+        padding: 12px;
+
+        margin-top: 10px;
       }
 
-      .zoomBtn:hover {
-        background: #f6f6f6;
-      }
+      /* ================= RESPONSIVE ================= */
 
-      /* ✅ mobile layout */
       @media (max-width: 980px) {
         .wrap {
           grid-template-columns: 1fr;
         }
-        .panel {
-          order: 2;
+
+        .brand-title {
+          position: static;
+
+          transform: none;
+
+          margin: 10px 0;
         }
-        canvas {
-          order: 1;
+
+        .header-inner {
+          flex-direction: column;
         }
       }
     </style>
   </head>
 
   <body>
+<<<<<<< HEAD
     <header>
       <div>
         <h1>Interactive String Art Board Designer</h1>
@@ -245,40 +493,68 @@
         </ul>
       </details>
     </div>
+=======
+    <header class="site-header">
+      <div class="header-inner">
+        <img src="logo.png" alt="Steph Rawlings Creations" class="logo" />
 
-    <div class="wrap">
-      <div class="panel">
-        <h2>Board</h2>
+        <div class="brand-title">Steph Rawlings Creations</div>
 
-        <div class="row">
-          <div>
-            <label>Shape</label>
-            <select id="board">
-              <option value="circle" selected>Circle</option>
-              <option value="square">Square (perimeter nails)</option>
-            </select>
-          </div>
+        <div class="nav-links">
+          <a href="#">Designer</a>
 
-          <div>
-            <label>Nails</label>
-            <input id="nails" type="number" min="10" step="1" value="150" />
-          </div>
+          <a href="#" class="coming">Templates <span>Coming Soon</span></a>
+
+          <a href="#" class="coming">About <span>Coming Soon</span></a>
         </div>
+      </div>
+    </header>
 
+    <section class="hero">
+      <h1>Interactive String Art Board Designer</h1>
+>>>>>>> ae11d63 (Added Pro modal and polished layout V1.0)
+
+      <div class="version-badge">V1.0</div>
+
+      <p>
+        Create precise, print-ready numbered layouts in seconds. Free to use.
+        Download precision templates when you're ready to build.
+      </p>
+    </section>
+
+    <div class="container">
+      <div class="wrap">
+        <div class="panel">
+          <h2>Board Settings</h2>
+
+<<<<<<< HEAD
         <div class="row">
           <div>
             <label>
               Zoom
               <span class="q" data-tip="Changes the on-screen preview size (does not change nail count).">?</span>
             </label>
+=======
+          <div class="row">
+            <div>
+              <label>Shape</label>
+>>>>>>> ae11d63 (Added Pro modal and polished layout V1.0)
 
-            <div class="zoomRow">
-              <button type="button" id="zoomOut" class="zoomBtn">−</button>
-              <input id="radius" type="number" min="80" step="10" value="320" />
-              <button type="button" id="zoomIn" class="zoomBtn">+</button>
+              <select id="board">
+                <option value="circle" selected>Circle</option>
+
+                <option value="square">Square</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Nails</label>
+
+              <input id="nails" type="number" min="10" step="1" value="150" />
             </div>
           </div>
 
+<<<<<<< HEAD
           <div>
             <label>
               Selection sensitivity
@@ -287,78 +563,153 @@
             <input id="snap" type="number" min="6" step="1" value="18" />
           </div>
         </div>
+=======
+          <div class="row">
+            <div>
+              <label>Zoom</label>
+>>>>>>> ae11d63 (Added Pro modal and polished layout V1.0)
 
-        <div class="row3">
-          <div>
-            <label>
-              <input id="showNums" type="checkbox" checked />
-              Show numbers
-            </label>
+              <div class="row">
+                <button type="button" id="zoomOut">−</button>
+
+                <input
+                  id="radius"
+                  type="number"
+                  min="80"
+                  step="10"
+                  value="320"
+                />
+
+                <button type="button" id="zoomIn">+</button>
+              </div>
+            </div>
+
+            <div>
+              <label>Selection sensitivity</label>
+
+              <input id="snap" type="number" min="6" step="1" value="18" />
+            </div>
           </div>
 
+<<<<<<< HEAD
           <div>
             <label>
               Number every
               <span class="q" data-tip="Show a number on every Nth nail (e.g. 10 = 10, 20, 30…).">?</span>
             </label>
             <input id="numEvery" type="number" min="1" step="1" value="10" />
+=======
+          <!-- NUMBER CONTROLS RESTORED -->
+
+          <div class="row3">
+            <div>
+              <label>
+                <input id="showNums" type="checkbox" checked />
+
+                Show numbers
+              </label>
+            </div>
+
+            <div>
+              <label>Number every</label>
+
+              <input id="numEvery" type="number" min="1" step="1" value="10" />
+            </div>
+
+            <div>
+              <label>Start at</label>
+
+              <select id="numStart">
+                <option value="0">0</option>
+
+                <option value="1" selected>1</option>
+              </select>
+            </div>
+>>>>>>> ae11d63 (Added Pro modal and polished layout V1.0)
           </div>
 
-          <div>
-            <label>Start at</label>
-            <select id="numStart">
-              <option value="0">0 (0–149)</option>
-              <option value="1" selected>1 (1–150)</option>
-            </select>
-          </div>
-        </div>
+          <div class="row">
+            <div>
+              <label>Number size</label>
 
-        <div class="row">
-          <div>
-            <label>Number size</label>
-            <input id="numSize" type="number" min="8" step="1" value="12" />
+              <input id="numSize" type="number" min="8" step="1" value="12" />
+            </div>
+
+            <div>
+              <label>Label distance</label>
+
+              <input id="numOffset" type="number" min="6" step="1" value="22" />
+            </div>
           </div>
 
+<<<<<<< HEAD
           <div>
             <label>
               Label distance
               <span class="q" data-tip="Moves the labels further out from the board edge.">?</span>
             </label>
             <input id="numOffset" type="number" min="6" step="1" value="22" />
+=======
+          <div class="btns">
+            <button id="fit">Fit preview</button>
+
+            <button id="redraw">Redraw</button>
+>>>>>>> ae11d63 (Added Pro modal and polished layout V1.0)
           </div>
-        </div>
 
-        <div class="btns">
-          <button id="fit" type="button">Fit preview to screen</button>
-          <button id="redraw" type="button">Redraw board</button>
-        </div>
+          <h2 style="margin-top: 20px">Manual Drawing</h2>
 
-        <h2 style="margin-top: 16px">Manual draw</h2>
-
-        <div class="row">
-          <div>
-            <label>Current layer colour</label>
+          <div class="row">
             <input id="color" type="color" value="#000000" />
-          </div>
 
+<<<<<<< HEAD
           <div>
             <label>Opacity (0–1)</label>
             <input id="opacity" type="number" min="0" max="1" step="0.05" value="0.35" />
+=======
+            <input
+              id="opacity"
+              type="number"
+              min="0"
+              max="1"
+              step="0.05"
+              value="0.35"
+            />
+>>>>>>> ae11d63 (Added Pro modal and polished layout V1.0)
           </div>
-        </div>
 
-        <div class="row">
-          <div>
-            <label>Thickness</label>
+          <div class="row">
             <input id="lw" type="number" min="0.1" step="0.1" value="0.7" />
-          </div>
 
-          <div>
-            <label>Active layer</label>
             <select id="layerSel"></select>
           </div>
+
+          <div class="btns">
+            <button id="newLayer">New layer</button>
+
+            <button id="undo">Undo</button>
+
+            <button id="clearLayer">Clear layer</button>
+
+            <button id="clearAll">Clear all</button>
+          </div>
+
+          <div class="btns">
+            <button id="exportSeq">Copy sequence</button>
+
+            <button id="downloadPng">Download Preview PNG</button>
+
+            <button class="pro-btn" onclick="openProModal()">
+              Download Printable Template (Pro)
+            </button>
+          </div>
+
+          <h2 style="margin-top: 20px">Sequence</h2>
+
+          <div id="seqOut" class="mono">Nothing yet — start tapping nails.</div>
         </div>
 
+<<<<<<< HEAD
         <div class="btns">
           <button id="newLayer" type="button">New layer</button>
           <button id="undo" type="button">Undo</button>
@@ -379,11 +730,49 @@
 
         <h2 style="margin-top: 16px">Sequence output</h2>
         <div id="seqOut" class="mono">Nothing yet — start tapping nails.</div>
+=======
+        <canvas id="cv"></canvas>
       </div>
-
-      <canvas id="cv"></canvas>
+    </div>
+    <script>
+      function showProInfo() {
+        alert(
+          "Printable precision templates are launching soon.\n\n" +
+            "These will include true-to-scale drill-ready PDF layouts.\n\n" +
+            "Early access coming soon.",
+        );
+      }
+    </script>
+    <!-- PRO MODAL -->
+    <div class="modal-overlay" id="proModal">
+      <div class="modal">
+        <h3>Printable Precision Templates (Pro)</h3>
+        <p>Our upcoming Pro version will include:</p>
+        <ul>
+          <li>True-to-scale drill-ready PDF layouts</li>
+          <li>Accurate nail spacing measurements</li>
+          <li>Printable multi-page large board templates</li>
+          <li>Export with numbering guides</li>
+          <li>Professional build-ready layout formatting</li>
+        </ul>
+        <p style="font-size: 13px; color: #666">
+          Designed for serious makers who want precision without manual
+          calculations.
+        </p>
+        <button class="modal-close" onclick="closeProModal()">Close</button>
+>>>>>>> ae11d63 (Added Pro modal and polished layout V1.0)
+      </div>
     </div>
 
+    <script>
+      function openProModal() {
+        document.getElementById("proModal").style.display = "flex";
+      }
+
+      function closeProModal() {
+        document.getElementById("proModal").style.display = "none";
+      }
+    </script>
     <script src="app.js"></script>
   </body>
 </html>
