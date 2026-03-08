@@ -527,6 +527,74 @@
         width: 200px;
         z-index: 10;
       }
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .panel-toggle {
+        background: var(--brand-blue);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 6px 10px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      /* default desktop behaviour */
+      #controlsPanel {
+        display: block;
+      }
+
+      /* mobile collapse */
+      @media (max-width: 900px) {
+        #controlsPanel {
+          display: none;
+        }
+
+        #controlsPanel.open {
+          display: block;
+        }
+      }
+      /* Floating undo button */
+
+      .floating-undo {
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+
+        width: 54px;
+        height: 54px;
+
+        border-radius: 50%;
+
+        background: var(--brand-blue);
+        color: white;
+
+        font-size: 22px;
+        font-weight: bold;
+
+        border: none;
+        cursor: pointer;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+
+        z-index: 999;
+      }
+
+      /* only show floating undo on mobile */
+
+      @media (min-width: 901px) {
+        .floating-undo {
+          display: none;
+        }
+      }
     </style>
   </head>
 
@@ -564,184 +632,201 @@
     <div class="container">
       <div class="wrap">
         <div class="panel">
-          <h2>Board Settings</h2>
-
-          <div class="row">
-            <div>
-              <label>Shape</label>
-
-              <select id="board">
-                <option value="circle" selected>Circle</option>
-
-                <option value="square">Square</option>
-              </select>
-            </div>
-
-            <div>
-              <label>
-                Nails
-                <span class="help-tip"
-                  >?
-                  <span class="tip-text">
-                    Number of nails around the board edge. Most designs use
-                    between 60 and 150.
-                  </span>
-                </span>
-              </label>
-
-              <input id="nails" type="number" min="10" step="1" value="150" />
-            </div>
+          <div class="panel-header">
+            <h2>Board Settings</h2>
+            <button class="panel-toggle" onclick="toggleControls()">▼</button>
           </div>
+          <div id="controlsPanel">
+            <div class="row">
+              <div>
+                <label>Shape</label>
 
-          <div class="row">
-            <div>
-              <label>
-                Zoom
-                <span class="help-tip"
-                  >?
-                  <span class="tip-text">
-                    Controls the size of the board preview.
+                <select id="board">
+                  <option value="circle" selected>Circle</option>
+
+                  <option value="square">Square</option>
+                </select>
+              </div>
+
+              <div>
+                <label>
+                  Nails
+                  <span class="help-tip"
+                    >?
+                    <span class="tip-text">
+                      Number of nails around the board edge. Most designs use
+                      between 60 and 150.
+                    </span>
                   </span>
-                </span>
-              </label>
+                </label>
 
-              <div class="row">
-                <button type="button" id="zoomOut">−</button>
-
-                <input
-                  id="radius"
-                  type="number"
-                  min="80"
-                  step="10"
-                  value="320"
-                />
-
-                <button type="button" id="zoomIn">+</button>
+                <input id="nails" type="number" min="10" step="1" value="150" />
               </div>
             </div>
 
-            <div>
-              <label>
-                Selection sensitivity
-                <span class="help-tip"
-                  >?
-                  <span class="tip-text">
-                    How close your click must be to a nail to select it.
-                    Increase this if tapping on mobile.
+            <div class="row">
+              <div>
+                <label>
+                  Zoom
+                  <span class="help-tip"
+                    >?
+                    <span class="tip-text">
+                      Controls the size of the board preview.
+                    </span>
                   </span>
-                </span>
-              </label>
+                </label>
 
-              <input id="snap" type="number" min="6" step="1" value="18" />
-            </div>
-          </div>
+                <div class="row">
+                  <button type="button" id="zoomOut">−</button>
 
-          <!-- NUMBER CONTROLS RESTORED -->
+                  <input
+                    id="radius"
+                    type="number"
+                    min="80"
+                    step="10"
+                    value="320"
+                  />
 
-          <div class="row3">
-            <div>
-              <label>
-                <input id="showNums" type="checkbox" checked />
+                  <button type="button" id="zoomIn">+</button>
+                </div>
+              </div>
 
-                Show numbers
-              </label>
-            </div>
-
-            <div>
-              <label>
-                Number every
-                <span class="help-tip"
-                  >?
-                  <span class="tip-text">
-                    Show labels every X nails around the board. Example: 10
-                    shows 10, 20, 30 etc.
+              <div>
+                <label>
+                  Selection sensitivity
+                  <span class="help-tip"
+                    >?
+                    <span class="tip-text">
+                      How close your click must be to a nail to select it.
+                      Increase this if tapping on mobile.
+                    </span>
                   </span>
-                </span>
-              </label>
+                </label>
 
-              <input id="numEvery" type="number" min="1" step="1" value="10" />
+                <input id="snap" type="number" min="6" step="1" value="22" />
+              </div>
             </div>
 
-            <div>
-              <label>Start at</label>
+            <!-- NUMBER CONTROLS RESTORED -->
 
-              <select id="numStart">
-                <option value="0">0</option>
+            <div class="row3">
+              <div>
+                <label>
+                  <input id="showNums" type="checkbox" checked />
 
-                <option value="1" selected>1</option>
-              </select>
+                  Show numbers
+                </label>
+              </div>
+
+              <div>
+                <label>
+                  Number every
+                  <span class="help-tip"
+                    >?
+                    <span class="tip-text">
+                      Show labels every X nails around the board. Example: 10
+                      shows 10, 20, 30 etc.
+                    </span>
+                  </span>
+                </label>
+
+                <input
+                  id="numEvery"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value="10"
+                />
+              </div>
+
+              <div>
+                <label>Start at</label>
+
+                <select id="numStart">
+                  <option value="0">0</option>
+
+                  <option value="1" selected>1</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row">
+              <div>
+                <label>Number size</label>
+
+                <input id="numSize" type="number" min="8" step="1" value="12" />
+              </div>
+
+              <div>
+                <label>Label distance</label>
+
+                <input
+                  id="numOffset"
+                  type="number"
+                  min="6"
+                  step="1"
+                  value="22"
+                />
+              </div>
+            </div>
+
+            <div class="btns">
+              <button id="fit">Fit preview</button>
+
+              <button id="redraw">Redraw</button>
+            </div>
+
+            <h2 style="margin-top: 20px">Manual Drawing</h2>
+
+            <div class="row">
+              <input id="color" type="color" value="#000000" />
+
+              <input
+                id="opacity"
+                type="number"
+                min="0"
+                max="1"
+                step="0.05"
+                value="0.35"
+              />
+            </div>
+
+            <div class="row">
+              <input id="lw" type="number" min="0.1" step="0.1" value="0.7" />
+
+              <select id="layerSel"></select>
+            </div>
+
+            <div class="btns">
+              <button id="newLayer">New layer</button>
+              <button id="clearLayer">Clear layer</button>
+              <button id="clearAll">Clear all</button>
             </div>
           </div>
-
-          <div class="row">
-            <div>
-              <label>Number size</label>
-
-              <input id="numSize" type="number" min="8" step="1" value="12" />
-            </div>
-
-            <div>
-              <label>Label distance</label>
-
-              <input id="numOffset" type="number" min="6" step="1" value="22" />
-            </div>
-          </div>
-
-          <div class="btns">
-            <button id="fit">Fit preview</button>
-
-            <button id="redraw">Redraw</button>
-          </div>
-
-          <h2 style="margin-top: 20px">Manual Drawing</h2>
-
-          <div class="row">
-            <input id="color" type="color" value="#000000" />
-
-            <input
-              id="opacity"
-              type="number"
-              min="0"
-              max="1"
-              step="0.05"
-              value="0.35"
-            />
-          </div>
-
-          <div class="row">
-            <input id="lw" type="number" min="0.1" step="0.1" value="0.7" />
-
-            <select id="layerSel"></select>
-          </div>
-
-          <div class="btns">
-            <button id="newLayer">New layer</button>
-
-            <button id="undo">Undo</button>
-
-            <button id="clearLayer">Clear layer</button>
-
-            <button id="clearAll">Clear all</button>
-          </div>
-
           <div class="btns">
             <button id="exportSeq">Copy sequence</button>
-
             <button id="downloadPng">Download Preview PNG</button>
-
             <button class="pro-btn" onclick="openProModal()">
               Download Printable Template (Pro)
             </button>
           </div>
+        </div>
+        <!-- end controlsPanel -->
+        <!-- CLOSE controlsPanel -->
 
-          <h2 style="margin-top: 20px">Sequence</h2>
-
-          <div id="seqOut" class="mono">Nothing yet — start tapping nails.</div>
+        <!-- Always visible action -->
+        <div class="btns">
+          <button id="undo">↶ Undo</button>
         </div>
 
-        <canvas id="cv"></canvas>
+        <h2 style="margin-top: 20px">Sequence</h2>
+
+        <div id="seqOut" class="mono">Nothing yet — start tapping nails.</div>
       </div>
+
+      <canvas id="cv"></canvas>
     </div>
+
     <script>
       function showProInfo() {
         alert(
@@ -816,7 +901,35 @@
       function closeHelp() {
         document.getElementById("helpPanel").style.display = "none";
       }
+
+      /* mobile tooltip support */
+
+      document.addEventListener("click", function (e) {
+        const tip = e.target.closest(".help-tip");
+
+        if (!tip) return;
+
+        const text = tip.querySelector(".tip-text");
+
+        if (!text) return;
+
+        const visible = text.style.display === "block";
+
+        document.querySelectorAll(".tip-text").forEach(function (t) {
+          t.style.display = "none";
+        });
+
+        text.style.display = visible ? "none" : "block";
+      });
     </script>
+    <script>
+      function toggleControls() {
+        const panel = document.getElementById("controlsPanel");
+
+        panel.classList.toggle("open");
+      }
+    </script>
+    <button id="undoFloating" class="floating-undo">↶</button>
     <script src="app.js"></script>
   </body>
 </html>

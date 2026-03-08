@@ -73,6 +73,22 @@ function rgba(hex, a) {
   const { r, g, b } = hexToRgb(hex);
   return `rgba(${r},${g},${b},${a})`;
 }
+/* -----------------------------
+Mobile control panel toggle
+----------------------------- */
+
+function toggleControls() {
+  const panel = document.getElementById("controlsPanel");
+  const btn = document.querySelector(".panel-toggle");
+
+  panel.classList.toggle("open");
+
+  if (panel.classList.contains("open")) {
+    btn.textContent = "▲ Hide";
+  } else {
+    btn.textContent = "▼ Show";
+  }
+}
 
 /* -----------------------------
 Canvas sizing
@@ -428,10 +444,12 @@ Canvas interaction
 ----------------------------- */
 
 function nearestNail(x, y) {
-  const tol = clampFloat($("snap")?.value, 6, 200, 18);
+  // increase tolerance slightly on mobile
+  const baseTol = clampFloat($("snap")?.value, 6, 200, 18);
+  const tol = window.innerWidth < 900 ? baseTol * 1.4 : baseTol;
 
   let bestIdx = null;
-  let bestD2 = Infinity;
+  let bestD2 = tol * tol;
 
   for (let i = 0; i < pts.length; i++) {
     const dx = pts[i][0] - x;
@@ -444,10 +462,6 @@ function nearestNail(x, y) {
       bestIdx = i;
     }
   }
-
-  if (bestIdx === null) return null;
-
-  if (Math.sqrt(bestD2) > tol) return null;
 
   return bestIdx;
 }
@@ -498,7 +512,7 @@ function init() {
   $("zoomOut")?.addEventListener("click", () => nudgeZoom(-1));
 
   getZoomInput()?.addEventListener("change", applyZoomFromUI);
-
+  $("undoFloating")?.addEventListener("click", undo);
   ["board", "nails", "radius"].forEach((id) => {
     $(id)?.addEventListener("change", () => {
       lastNail = null;
