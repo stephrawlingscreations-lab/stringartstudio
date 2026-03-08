@@ -452,13 +452,88 @@
           flex-direction: column;
         }
       }
+      /* ================= HELP PANEL ================= */
+
+      .help-btn {
+        margin-top: 20px;
+        background: var(--brand-blue);
+        color: white;
+        padding: 10px 16px;
+        border-radius: 12px;
+        border: none;
+        cursor: pointer;
+      }
+
+      .help-panel {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 28px;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+        max-width: 480px;
+        width: 90%;
+        display: none;
+        z-index: 999;
+      }
+
+      .help-panel h3 {
+        margin-top: 0;
+      }
+
+      .help-close {
+        margin-top: 16px;
+        background: var(--brand-blue);
+        color: white;
+        border: none;
+        padding: 8px 14px;
+        border-radius: 10px;
+        cursor: pointer;
+      }
+      /* ================= TOOLTIP HELP ================= */
+
+      .help-tip {
+        display: inline-block;
+        margin-left: 6px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--brand-blue);
+        color: white;
+        font-size: 11px;
+        line-height: 16px;
+        text-align: center;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .help-tip:hover .tip-text {
+        display: block;
+      }
+
+      .tip-text {
+        display: none;
+        position: absolute;
+        top: 22px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: white;
+        padding: 8px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        width: 200px;
+        z-index: 10;
+      }
     </style>
   </head>
 
   <body>
     <header class="site-header">
       <div class="header-inner">
-        <img src="Logo.png" alt="Steph Rawlings Creations" class="logo" />
+        <img src="logo.png" alt="Steph Rawlings Creations" class="logo" />
 
         <div class="brand-title">Steph Rawlings Creations</div>
 
@@ -481,6 +556,9 @@
         Create precise, print-ready numbered layouts in seconds. Free to use.
         Download precision templates when you're ready to build.
       </p>
+      <button class="help-btn" onclick="openHelp()">
+        How to use this tool
+      </button>
     </section>
 
     <div class="container">
@@ -500,7 +578,16 @@
             </div>
 
             <div>
-              <label>Nails</label>
+              <label>
+                Nails
+                <span class="help-tip"
+                  >?
+                  <span class="tip-text">
+                    Number of nails around the board edge. Most designs use
+                    between 60 and 150.
+                  </span>
+                </span>
+              </label>
 
               <input id="nails" type="number" min="10" step="1" value="150" />
             </div>
@@ -508,7 +595,15 @@
 
           <div class="row">
             <div>
-              <label>Zoom</label>
+              <label>
+                Zoom
+                <span class="help-tip"
+                  >?
+                  <span class="tip-text">
+                    Controls the size of the board preview.
+                  </span>
+                </span>
+              </label>
 
               <div class="row">
                 <button type="button" id="zoomOut">−</button>
@@ -526,7 +621,16 @@
             </div>
 
             <div>
-              <label>Selection sensitivity</label>
+              <label>
+                Selection sensitivity
+                <span class="help-tip"
+                  >?
+                  <span class="tip-text">
+                    How close your click must be to a nail to select it.
+                    Increase this if tapping on mobile.
+                  </span>
+                </span>
+              </label>
 
               <input id="snap" type="number" min="6" step="1" value="18" />
             </div>
@@ -544,7 +648,16 @@
             </div>
 
             <div>
-              <label>Number every</label>
+              <label>
+                Number every
+                <span class="help-tip"
+                  >?
+                  <span class="tip-text">
+                    Show labels every X nails around the board. Example: 10
+                    shows 10, 20, 30 etc.
+                  </span>
+                </span>
+              </label>
 
               <input id="numEvery" type="number" min="1" step="1" value="10" />
             </div>
@@ -665,6 +778,43 @@
 
       function closeProModal() {
         document.getElementById("proModal").style.display = "none";
+      }
+    </script>
+    <div id="helpPanel" class="help-panel">
+      <h3>How to Use the String Art Designer</h3>
+
+      <p>
+        <strong>1. Choose your board</strong><br />
+        Select a circle or square and choose how many nails your board will
+        have.
+      </p>
+
+      <p>
+        <strong>2. Create your pattern</strong><br />
+        Click one nail, then another to draw a thread line between them.
+      </p>
+
+      <p>
+        <strong>3. Continue connecting nails</strong><br />
+        Build up your design by connecting nails in sequence.
+      </p>
+
+      <p>
+        <strong>4. Follow the thread sequence</strong><br />
+        Use the sequence panel to follow the order when wrapping your thread.
+      </p>
+
+      <p><strong>Tip:</strong> Use Undo if you make a mistake.</p>
+
+      <button onclick="closeHelp()" class="help-close">Close</button>
+    </div>
+    <script>
+      function openHelp() {
+        document.getElementById("helpPanel").style.display = "block";
+      }
+
+      function closeHelp() {
+        document.getElementById("helpPanel").style.display = "none";
       }
     </script>
     <script src="app.js"></script>
