@@ -356,6 +356,30 @@ Redraw
         ctx.stroke();
       }
     }
+    /* preview thread */
+
+    if (lastNail !== null && hoverNail !== null && hoverNail !== lastNail) {
+      const [x1, y1] = pts[lastNail];
+      const [x2, y2] = pts[hoverNail];
+
+      const L = layers[activeLayer];
+
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+
+      ctx.lineWidth = L.lw;
+      ctx.strokeStyle = rgba(L.color, 0.45);
+
+      ctx.shadowColor = rgba(L.color, 0.35);
+      ctx.shadowBlur = 6;
+
+      ctx.setLineDash([6, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.shadowBlur = 0;
+    }
     /* hover nail highlight */
 
     if (hoverNail !== null && hoverNail < pts.length) {
