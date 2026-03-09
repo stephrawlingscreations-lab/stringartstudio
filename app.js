@@ -12,7 +12,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let hoverNail = null;
   let rafHover = 0;
-
+  let hoverX = 0;
+  let hoverY = 0;
   let isPointerDown = false;
 
   /* -----------------------------
@@ -80,14 +81,14 @@ Mobile control panel toggle
 
   function toggleControls() {
     const panel = document.getElementById("controlsPanel");
-    const btn = document.querySelector(".panel-toggle");
+    const btn = document.getElementById("toggleControlsBtn");
 
-    panel.classList.toggle("open");
+    panel.classList.toggle("hidden");
 
-    if (panel.classList.contains("open")) {
-      btn.textContent = "▲ Hide";
-    } else {
+    if (panel.classList.contains("hidden")) {
       btn.textContent = "▼ Show";
+    } else {
+      btn.textContent = "▲ Hide";
     }
   }
 
@@ -250,7 +251,8 @@ Sequence output
     layers.forEach((L, i) => {
       if (!L.seq || L.seq.length === 0) return;
 
-      lines.push(`Layer ${i + 1}: ${L.seq.join(" → ")}`);
+      const start = $("numStart")?.value === "1" ? 1 : 0;
+      lines.push(`Layer ${i + 1}: ` + L.seq.map((n) => n + start).join(" → "));
     });
 
     el.textContent = lines.length
@@ -354,7 +356,40 @@ Redraw
         ctx.stroke();
       }
     }
+    /* hover nail highlight */
 
+    if (hoverNail !== null && hoverNail < pts.length) {
+      const [x, y] = pts[hoverNail];
+
+      ctx.beginPath();
+      ctx.arc(x, y, 7, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(0,0,0,0.8)";
+      ctx.lineWidth = 2;
+      ctx.shadowColor = "rgba(0,0,0,0.4)";
+      ctx.shadowBlur = 6;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(0,0,0,0.8)";
+      ctx.fill();
+    }
+    /* hover nail number label */
+
+    if (hoverNail !== null) {
+      const [x, y] = pts[hoverNail];
+
+      const start = $("numStart")?.value === "1" ? 1 : 0;
+      const label = `${hoverNail + start}`;
+
+      ctx.font = "12px system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+
+      ctx.fillStyle = "rgba(0,0,0,0.85)";
+      ctx.fillText(label, x, y - 10);
+    }
     updateStatusBar();
   }
 
@@ -445,9 +480,7 @@ Canvas interaction
 ----------------------------- */
 
   function nearestNail(x, y) {
-    // increase tolerance slightly on mobile
-    const baseTol = clampFloat($("snap")?.value, 6, 200, 18);
-    const tol = window.innerWidth < 900 ? baseTol * 1.4 : baseTol;
+    const tol = 35; // simple and reliable hover distance
 
     let bestIdx = null;
     let bestD2 = tol * tol;
@@ -477,9 +510,30 @@ Canvas interaction
   }
 
   function initCanvasPointerControls() {
-    cv.addEventListener("pointerdown", (ev) => {
+    function handleHover(ev) {
+      if (ev.pointerType === "touch") return;
+
       const { x, y } = canvasXYFromPointerEvent(ev);
 
+      hoverX = x;
+      hoverY = y;
+
+      hoverNail = nearestNail(x, y);
+
+      redrawAll();
+    }
+
+    // hover detection
+    cv.addEventListener("pointermove", handleHover);
+
+    cv.addEventListener("mouseleave", () => {
+      hoverNail = null;
+      redrawAll();
+    });
+
+    // clicking nails
+    cv.addEventListener("pointerdown", (ev) => {
+      const { x, y } = canvasXYFromPointerEvent(ev);
       const idx = nearestNail(x, y);
 
       if (idx === null) return;
@@ -490,7 +544,6 @@ Canvas interaction
       updateSeqOutput();
     });
   }
-
   /* -----------------------------
 Init
 ----------------------------- */
@@ -504,10 +557,10 @@ Init
       redrawAll();
     });
 
-    $("resetBoard")?.addEventListener("click", resetBoard);
-
     $("undo")?.addEventListener("click", undo);
     $("clearAll")?.addEventListener("click", clearAll);
+    $("continuePattern")?.addEventListener("click", continuePattern);
+    $("toggleControlsBtn")?.addEventListener("click", toggleControls);
     $("exportSeq")?.addEventListener("click", copySequence);
     $("downloadPng")?.addEventListener("click", downloadPreview);
     $("zoomIn")?.addEventListener("click", () => nudgeZoom(1));
@@ -540,6 +593,94 @@ Init
     link.download = "string-art-preview.png";
     link.href = cv.toDataURL("image/png");
     link.click();
+  }
+  function continuePattern() {
+    ensureLayerExists();
+
+    const L = layers[activeLayer];
+    if (!L || !L.seq || L.seq.length < 6) {
+      alert("Draw at least 6 nails first.");
+      return;
+    }
+
+    const nails = pts.length;
+    const seq = L.seq;
+
+    // split into left / right sequences
+    const left = [];
+    const right = [];
+
+    for (let i = 0; i < seq.length; i += 2) left.push(seq[i]);
+    for (let i = 1; i < seq.length; i += 2) right.push(seq[i]);
+
+    // helper: convert step to shortest direction
+    function normaliseStep(step) {
+      if (step > nails / 2) step -= nails;
+      if (step < -nails / 2) step += nails;
+      return step;
+    }
+
+    // build step list
+    function getSteps(arr) {
+      const steps = [];
+
+      for (let i = 1; i < arr.length; i++) {
+        steps.push(normaliseStep(arr[i] - arr[i - 1]));
+      }
+
+      return steps;
+    }
+
+    // detect repeating step cycle
+    function detectCycle(steps) {
+      for (let size = 1; size <= steps.length; size++) {
+        let ok = true;
+
+        for (let i = 0; i < steps.length; i++) {
+          if (steps[i] !== steps[i % size]) {
+            ok = false;
+            break;
+          }
+        }
+
+        if (ok) return steps.slice(0, size);
+      }
+
+      return steps;
+    }
+
+    const leftSteps = detectCycle(getSteps(left));
+    const rightSteps = detectCycle(getSteps(right));
+
+    let a = left[left.length - 1];
+    let b = right[right.length - 1];
+
+    const startA = left[0];
+    const startB = right[0];
+
+    let li = 0;
+    let ri = 0;
+    let safety = 0;
+
+    while (safety < nails) {
+      a = (a + leftSteps[li] + nails) % nails;
+      b = (b + rightSteps[ri] + nails) % nails;
+
+      if (a === startA && b === startB) break;
+
+      L.edges.push({ a, b });
+      L.seq.push(a, b);
+
+      li = (li + 1) % leftSteps.length;
+      ri = (ri + 1) % rightSteps.length;
+
+      safety++;
+    }
+
+    lastNail = b;
+
+    redrawAll();
+    updateSeqOutput();
   }
   init();
 

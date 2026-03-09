@@ -551,11 +551,11 @@
       /* mobile collapse */
       @media (max-width: 900px) {
         #controlsPanel {
-          display: none;
+          display: block;
         }
 
-        #controlsPanel.open {
-          display: block;
+        #controlsPanel.hidden {
+          display: none;
         }
       }
       /* Floating undo button */
@@ -634,7 +634,7 @@
         <div class="panel">
           <div class="panel-header">
             <h2>Board Settings</h2>
-            <button class="panel-toggle" onclick="toggleControls()">▼</button>
+            <button id="toggleControlsBtn" class="panel-toggle">▲ Hide</button>
           </div>
           <div id="controlsPanel">
             <div class="row">
@@ -793,6 +793,7 @@
             <div class="btns">
               <button id="exportSeq">Copy sequence</button>
               <button id="downloadPng">Download Preview PNG</button>
+              <button id="continuePattern">Continue Pattern</button>
               <button class="pro-btn" onclick="openProModal()">
                 Download Printable Template (Pro)
               </button>
@@ -912,12 +913,6 @@
 
         text.style.display = visible ? "none" : "block";
       });
-    </script>
-    <script>
-      function toggleControls() {
-        const panel = document.getElementById("controlsPanel");
-        panel.classList.toggle("open");
-      }
     </script>
 
     <button id="undoFloating" class="floating-undo">↶</button>
