@@ -480,6 +480,10 @@ Actions
     lastNail = null;
 
     ensureLayerExists();
+
+    /* reset stored pattern step */
+    delete layers[activeLayer].step;
+
     syncLayerSelect();
 
     redrawAll();
@@ -622,83 +626,38 @@ Init
     ensureLayerExists();
 
     const L = layers[activeLayer];
-    if (!L || !L.seq || L.seq.length < 6) {
-      alert("Draw at least 6 nails first.");
+    const seq = L.seq;
+
+    if (!seq || seq.length < 4) {
+      alert("Draw at least two lines first.");
       return;
     }
 
     const nails = pts.length;
-    const seq = L.seq;
+    const maxSteps = parseInt($("continueSteps")?.value || 20);
 
-    // split into left / right sequences
-    const left = [];
-    const right = [];
+    /* detect step once */
 
-    for (let i = 0; i < seq.length; i += 2) left.push(seq[i]);
-    for (let i = 1; i < seq.length; i += 2) right.push(seq[i]);
+    if (!L.step) {
+      const a1 = seq[0];
+      const a2 = seq[2];
 
-    // helper: convert step to shortest direction
-    function normaliseStep(step) {
-      if (step > nails / 2) step -= nails;
-      if (step < -nails / 2) step += nails;
-      return step;
+      L.step = (a2 - a1 + nails) % nails;
     }
 
-    // build step list
-    function getSteps(arr) {
-      const steps = [];
+    const step = L.step;
 
-      for (let i = 1; i < arr.length; i++) {
-        steps.push(normaliseStep(arr[i] - arr[i - 1]));
-      }
+    /* continue from last pair */
 
-      return steps;
-    }
+    let a = seq[seq.length - 2];
+    let b = seq[seq.length - 1];
 
-    // detect repeating step cycle
-    function detectCycle(steps) {
-      for (let size = 1; size <= steps.length; size++) {
-        let ok = true;
-
-        for (let i = 0; i < steps.length; i++) {
-          if (steps[i] !== steps[i % size]) {
-            ok = false;
-            break;
-          }
-        }
-
-        if (ok) return steps.slice(0, size);
-      }
-
-      return steps;
-    }
-
-    const leftSteps = detectCycle(getSteps(left));
-    const rightSteps = detectCycle(getSteps(right));
-
-    let a = left[left.length - 1];
-    let b = right[right.length - 1];
-
-    const startA = left[0];
-    const startB = right[0];
-
-    let li = 0;
-    let ri = 0;
-    let safety = 0;
-
-    while (safety < nails) {
-      a = (a + leftSteps[li] + nails) % nails;
-      b = (b + rightSteps[ri] + nails) % nails;
-
-      if (a === startA && b === startB) break;
+    for (let i = 0; i < maxSteps; i++) {
+      a = (a + step + nails) % nails;
+      b = (b + step + nails) % nails;
 
       L.edges.push({ a, b });
       L.seq.push(a, b);
-
-      li = (li + 1) % leftSteps.length;
-      ri = (ri + 1) % rightSteps.length;
-
-      safety++;
     }
 
     lastNail = b;
