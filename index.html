@@ -503,31 +503,16 @@
 
       /* ================= RESPONSIVE ================= */
 
-      @media (max-width: 980px) {
-        .wrap {
-          grid-template-columns: 1fr;
-        }
+      /* controls panel works on all screen sizes */
+      #controlsPanel {
+        display: block;
+      }
 
-        .brand-title {
-          position: static;
-          transform: none;
-          margin: 10px 0;
-        }
-
-        .header-inner {
-          flex-direction: column;
-        }
+      #controlsPanel.hidden {
+        display: none !important;
       }
 
       @media (max-width: 900px) {
-        #controlsPanel {
-          display: block;
-        }
-
-        #controlsPanel.hidden {
-          display: none;
-        }
-
         .mobile-draw-launch {
           display: flex;
         }
