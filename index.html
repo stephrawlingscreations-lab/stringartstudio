@@ -651,15 +651,10 @@
 
                 <div class="row">
                   <button type="button" id="zoomOut">−</button>
-                  <input
-                    id="radius"
-                    type="number"
-                    min="80"
-                    step="10"
-                    value="320"
-                  />
                   <button type="button" id="zoomIn">+</button>
                 </div>
+
+                <input id="radius" type="hidden" value="320" />
               </div>
 
               <div>
@@ -837,31 +832,36 @@
       <h3>How to Use the String Art Designer</h3>
 
       <p>
-        <strong>1. Choose your board</strong><br />
-        Select a circle or square and choose how many nails your board will
-        have.
+        <strong>1. Choose your board settings</strong><br />
+        Pick your shape, number of nails, and any other settings you want.
       </p>
 
       <p>
-        <strong>2. Create your pattern</strong><br />
-        Click one nail, then another to draw a thread line between them.
+        <strong>2. On phones and tablets</strong><br />
+        Scroll down and tap <strong>Open Draw Mode</strong> to open the
+        full-screen drawing board. This is the easiest way to use the tool on a
+        mobile.
       </p>
 
       <p>
-        <strong>3. Continue connecting nails</strong><br />
-        Build up your design by connecting nails in sequence.
+        <strong>3. Start your pattern</strong><br />
+        Tap one nail, then tap another to draw a line between them.
       </p>
 
       <p>
-        <strong>4. Follow the thread sequence</strong><br />
-        Use the sequence panel to follow the order when wrapping your thread.
+        <strong>4. Keep building your design</strong><br />
+        Continue tapping nails in order to create your pattern.
+      </p>
+
+      <p>
+        <strong>5. Check your sequence</strong><br />
+        The sequence shows the order of the nails you selected.
       </p>
 
       <p><strong>Tip:</strong> Use Undo if you make a mistake.</p>
 
       <button onclick="closeHelp()" class="help-close">Close</button>
     </div>
-
     <script>
       function openHelp() {
         document.getElementById("helpPanel").style.display = "block";
