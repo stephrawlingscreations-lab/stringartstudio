@@ -237,7 +237,63 @@ Layers
 
     return L;
   }
+  function addLayer() {
+    layers.push({
+      color: $("color")?.value || "#000000",
+      opacity: clampFloat($("opacity")?.value, 0, 1, 0.35),
+      lw: clampFloat($("lw")?.value, 0.1, 10, 0.7),
+      edges: [],
+      seq: [],
+      step: null,
+    });
 
+    activeLayer = layers.length - 1;
+    lastNail = null;
+
+    syncLayerSelect();
+
+    const L = layers[activeLayer];
+    if ($("color")) $("color").value = L.color;
+    if ($("opacity")) $("opacity").value = L.opacity;
+    if ($("lw")) $("lw").value = L.lw;
+
+    redrawAll();
+    updateSeqOutput();
+  }
+
+  function switchLayer(index) {
+    if (index < 0 || index >= layers.length) return;
+
+    activeLayer = index;
+    lastNail = null;
+
+    const L = layers[activeLayer];
+
+    if ($("color")) $("color").value = L.color || "#000000";
+    if ($("opacity")) $("opacity").value = L.opacity ?? 0.35;
+    if ($("lw")) $("lw").value = L.lw ?? 0.7;
+
+    redrawAll();
+    updateSeqOutput();
+  }
+
+  function clearLayer() {
+    ensureLayerExists();
+
+    layers[activeLayer] = {
+      color: $("color")?.value || "#000000",
+      opacity: clampFloat($("opacity")?.value, 0, 1, 0.35),
+      lw: clampFloat($("lw")?.value, 0.1, 10, 0.7),
+      edges: [],
+      seq: [],
+      step: null,
+    };
+
+    lastNail = null;
+
+    redrawAll();
+    updateSeqOutput();
+  }
   /* -----------------------------
 Sequence output
 ----------------------------- */
@@ -508,7 +564,7 @@ Canvas interaction
 ----------------------------- */
 
   function nearestNail(x, y) {
-    const tol = 35; // simple and reliable hover distance
+    const tol = clampInt($("snap")?.value, 6, 100, 22);
 
     let bestIdx = null;
     let bestD2 = tol * tol;
@@ -596,16 +652,37 @@ Init
 
     getZoomInput()?.addEventListener("change", applyZoomFromUI);
     $("undoFloating")?.addEventListener("click", undo);
-    ["board", "nails", "radius"].forEach((id) => {
+    [
+      "board",
+      "nails",
+      "radius",
+      "snap",
+      "showNums",
+      "numEvery",
+      "numStart",
+      "numSize",
+      "numOffset",
+    ].forEach((id) => {
       $(id)?.addEventListener("change", () => {
         lastNail = null;
         redrawAll();
         updateSeqOutput();
       });
     });
+    $("newLayer")?.addEventListener("click", addLayer);
 
+    $("clearLayer")?.addEventListener("click", clearLayer);
+
+    $("color")?.addEventListener("input", () => {
+      ensureLayerExists();
+      layers[activeLayer].color = $("color").value;
+      redrawAll();
+    });
     window.addEventListener("resize", redrawAll);
 
+    $("layerSel")?.addEventListener("change", (e) => {
+      switchLayer(parseInt(e.target.value, 10));
+    });
     redrawAll();
     updateSeqOutput();
   }
@@ -628,36 +705,45 @@ Init
     const L = layers[activeLayer];
     const seq = L.seq;
 
-    if (!seq || seq.length < 4) {
-      alert("Draw at least two lines first.");
+    if (seq.length < 4) {
+      alert("Draw at least two lines to detect a pattern.");
       return;
     }
 
     const nails = pts.length;
-    const maxSteps = parseInt($("continueSteps")?.value || 20);
+    const maxSteps = clampInt($("continueSteps")?.value, 1, 500, 20);
 
-    /* detect step once */
+    // Detect the two progressions from the first 4 points
+    // Example:
+    // 1 → 77 → 2 → 78
+    // side A moves 1 -> 2  so stepA = +1
+    // side B moves 77 -> 78 so stepB = +1
+    const stepA = (seq[2] - seq[0] + nails) % nails;
+    const stepB = (seq[3] - seq[1] + nails) % nails;
 
-    if (!L.step) {
-      const a1 = seq[0];
-      const a2 = seq[2];
-
-      L.step = (a2 - a1 + nails) % nails;
+    if (stepA === 0 || stepB === 0) {
+      alert("Could not detect a repeat pattern.");
+      return;
     }
 
-    const step = L.step;
-
-    /* continue from last pair */
-
+    // Last detected pair in the running zig-zag
     let a = seq[seq.length - 2];
     let b = seq[seq.length - 1];
 
     for (let i = 0; i < maxSteps; i++) {
-      a = (a + step + nails) % nails;
-      b = (b + step + nails) % nails;
+      const nextA = (a + stepA) % nails;
+      const nextB = (b + stepB) % nails;
 
-      L.edges.push({ a, b });
-      L.seq.push(a, b);
+      // Continue the actual path:
+      // ... -> b -> nextA -> nextB
+      L.edges.push({ a: b, b: nextA });
+      L.seq.push(nextA);
+
+      L.edges.push({ a: nextA, b: nextB });
+      L.seq.push(nextB);
+
+      a = nextA;
+      b = nextB;
     }
 
     lastNail = b;
