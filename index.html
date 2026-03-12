@@ -1,5 +1,4 @@
 <!doctype html>
-
 <html lang="en">
   <head>
     <meta charset="utf-8" />
@@ -7,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>Steph Rawlings Creations – String Art Designer</title>
+
+    <link rel="icon" href="logo.png" />
 
     <link
       href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&display=swap"
@@ -16,15 +17,10 @@
     <style>
       :root {
         --brand-blue: #2f56d3;
-
         --brand-gold: #d8b85a;
-
         --bg-soft: #f4f1ed;
-
         --panel-bg: #ffffff;
-
         --text-dark: #1e1e1e;
-
         --border-soft: #e7e5e2;
       }
 
@@ -36,35 +32,29 @@
           Roboto,
           Arial,
           sans-serif;
-
         margin: 0;
-
         background: var(--bg-soft);
-
         color: var(--text-dark);
+      }
+
+      body.draw-mode-open {
+        overflow: hidden;
       }
 
       /* ================= HEADER ================= */
 
       .site-header {
         background: white;
-
         border-bottom: 1px solid var(--border-soft);
       }
 
       .header-inner {
         max-width: 1200px;
-
         margin: 0 auto;
-
         padding: 30px 20px;
-
         display: flex;
-
         align-items: center;
-
         justify-content: space-between;
-
         position: relative;
       }
 
@@ -74,75 +64,47 @@
 
       .brand-title {
         position: absolute;
-
         left: 50%;
-
         transform: translateX(-50%);
-
         font-family: "Playfair Display", serif;
-
         font-weight: 600;
-
         font-size: 34px;
-
         letter-spacing: 0.8px;
-
         color: var(--brand-blue);
-
         line-height: 1;
-
         text-align: center;
       }
 
       .brand-title::after {
         content: "";
-
         display: block;
-
         width: 70px;
-
         height: 2px;
-
         background: var(--brand-gold);
-
         margin: 8px auto 0;
-
         border-radius: 2px;
       }
 
       .nav-links a {
         margin-left: 24px;
-
         text-decoration: none;
-
         color: var(--text-dark);
-
         font-weight: 500;
-
         font-size: 15px;
       }
 
-      /* Coming Soon styling */
-
       .nav-links a.coming {
         color: #bbb;
-
         pointer-events: none;
-
         display: inline-block;
-
         text-align: center;
       }
 
       .nav-links a.coming span {
         display: block;
-
         font-size: 10px;
-
         font-weight: 500;
-
         color: var(--brand-gold);
-
         margin-top: 2px;
       }
 
@@ -150,47 +112,32 @@
 
       .hero {
         text-align: center;
-
         padding: 70px 20px 40px;
       }
 
       .hero h1 {
         font-size: 30px;
-
         font-weight: 500;
-
-        margin-bottom: 18px; /* add space under title */
+        margin-bottom: 18px;
       }
 
       .version-badge {
         display: inline-block;
-
-        margin-bottom: 20px; /* space before paragraph */
-
+        margin-bottom: 20px;
         padding: 6px 14px;
-
         font-size: 11px;
-
         font-weight: 500;
-
         border-radius: 999px;
-
         background: rgba(216, 184, 90, 0.15);
-
         color: var(--brand-gold);
-
         letter-spacing: 0.5px;
       }
 
       .hero p {
         max-width: 620px;
-
         margin: 0 auto;
-
-        margin-top: 10px; /* extra breathing space */
-
+        margin-top: 10px;
         color: #555;
-
         font-size: 15px;
       }
 
@@ -198,19 +145,14 @@
 
       .container {
         max-width: 1200px;
-
         margin: 0 auto;
-
         padding: 40px 20px 80px;
       }
 
       .wrap {
         display: grid;
-
         grid-template-columns: 380px 1fr;
-
         gap: 24px;
-
         align-items: start;
       }
 
@@ -218,19 +160,14 @@
 
       .panel {
         background: var(--panel-bg);
-
         border-radius: 18px;
-
         padding: 20px;
-
         box-shadow: 0 10px 35px rgba(0, 0, 0, 0.06);
       }
 
       .panel h2 {
         font-size: 15px;
-
         margin: 6px 0 12px;
-
         font-weight: 600;
       }
 
@@ -238,34 +175,24 @@
 
       label {
         font-size: 12px;
-
         color: #444;
-
         display: block;
-
         margin: 10px 0 4px;
       }
 
       input,
       select {
         width: 100%;
-
         padding: 9px 10px;
-
         border: 1px solid #d7d7d7;
-
         border-radius: 12px;
-
         font-size: 14px;
-
         box-sizing: border-box;
       }
 
       input[type="color"] {
         padding: 0;
-
         height: 40px;
-
         border-radius: 10px;
       }
 
@@ -273,42 +200,17 @@
 
       button {
         padding: 10px 14px;
-
         border-radius: 12px;
-
         border: none;
-
         background: var(--brand-blue);
-
         color: white;
-
         cursor: pointer;
-
         font-size: 14px;
       }
 
       button:hover {
         opacity: 0.9;
       }
-
-      .pro-btn {
-        background: var(--brand-gold);
-
-        color: #1e1e1e;
-
-        font-weight: 600;
-      }
-
-      .btns {
-        display: flex;
-
-        gap: 10px;
-
-        flex-wrap: wrap;
-
-        margin-top: 12px;
-      }
-      /* ================= PRO BUTTON PREMIUM ================= */
 
       .pro-btn {
         background: linear-gradient(135deg, #e3c774, #d8b85a);
@@ -321,6 +223,13 @@
       .pro-btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 22px rgba(216, 184, 90, 0.35);
+      }
+
+      .btns {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 12px;
       }
 
       /* ================= MODAL ================= */
@@ -379,21 +288,18 @@
           transform: translateY(0);
         }
       }
+
       /* ================= GRID HELPERS ================= */
 
       .row {
         display: grid;
-
         grid-template-columns: 1fr 1fr;
-
         gap: 12px;
       }
 
       .row3 {
         display: grid;
-
         grid-template-columns: 1fr 1fr 1fr;
-
         gap: 12px;
       }
 
@@ -401,57 +307,25 @@
 
       canvas {
         width: 100%;
-
         max-width: 700px;
-
         aspect-ratio: 1 / 1;
-
         border-radius: 18px;
-
         background: white;
-
         display: block;
-
         margin: 0 auto;
-
         box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
       }
 
       .mono {
         font-family: ui-monospace, monospace;
-
         font-size: 12px;
-
         white-space: pre-wrap;
-
         background: #fafafa;
-
         border-radius: 12px;
-
         padding: 12px;
-
         margin-top: 10px;
       }
 
-      /* ================= RESPONSIVE ================= */
-
-      @media (max-width: 980px) {
-        .wrap {
-          grid-template-columns: 1fr;
-        }
-
-        .brand-title {
-          position: static;
-
-          transform: none;
-
-          margin: 10px 0;
-        }
-
-        .header-inner {
-          flex-direction: column;
-        }
-      }
       /* ================= HELP PANEL ================= */
 
       .help-btn {
@@ -492,6 +366,7 @@
         border-radius: 10px;
         cursor: pointer;
       }
+
       /* ================= TOOLTIP HELP ================= */
 
       .help-tip {
@@ -527,6 +402,7 @@
         width: 200px;
         z-index: 10;
       }
+
       .panel-header {
         display: flex;
         justify-content: space-between;
@@ -543,12 +419,106 @@
         font-size: 14px;
       }
 
-      /* default desktop behaviour */
       #controlsPanel {
         display: block;
       }
 
-      /* mobile collapse */
+      /* ================= DRAW MODE ================= */
+
+      .mobile-draw-launch {
+        justify-content: center;
+      }
+
+      .draw-mode-overlay {
+        position: fixed;
+        inset: 0;
+        background: var(--bg-soft);
+        display: none;
+        flex-direction: column;
+        z-index: 5000;
+      }
+
+      .draw-mode-overlay.active {
+        display: flex;
+      }
+
+      .draw-mode-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        background: white;
+        border-bottom: 1px solid var(--border-soft);
+        flex: 0 0 auto;
+      }
+
+      .draw-mode-title {
+        font-weight: 600;
+        font-size: 15px;
+      }
+
+      .draw-mode-exit {
+        background: var(--brand-blue);
+        color: white;
+        border-radius: 10px;
+        padding: 8px 12px;
+      }
+
+      .draw-mode-canvas-wrap {
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      #drawModeCanvas {
+        width: 100%;
+        max-width: 100%;
+        aspect-ratio: 1 / 1;
+        background: white;
+        border-radius: 18px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+        touch-action: none;
+      }
+
+      .draw-mode-toolbar {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+        padding: 12px;
+        background: white;
+        border-top: 1px solid var(--border-soft);
+        flex: 0 0 auto;
+      }
+
+      .draw-mode-toolbar button {
+        min-height: 44px;
+        border-radius: 12px;
+        font-size: 14px;
+      }
+
+      /* ================= RESPONSIVE ================= */
+
+      @media (max-width: 980px) {
+        .wrap {
+          grid-template-columns: 1fr;
+        }
+
+        .brand-title {
+          position: static;
+          transform: none;
+          margin: 10px 0;
+        }
+
+        .header-inner {
+          flex-direction: column;
+        }
+      }
+
       @media (max-width: 900px) {
         #controlsPanel {
           display: block;
@@ -557,43 +527,64 @@
         #controlsPanel.hidden {
           display: none;
         }
+
+        .mobile-draw-launch {
+          display: flex;
+        }
       }
-      /* Floating undo button */
-
-      .floating-undo {
-        position: fixed;
-        bottom: 25px;
-        right: 25px;
-
-        width: 54px;
-        height: 54px;
-
-        border-radius: 50%;
-
-        background: var(--brand-blue);
-        color: white;
-
-        font-size: 22px;
-        font-weight: bold;
-
-        border: none;
-        cursor: pointer;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
-
-        z-index: 999;
-      }
-
-      /* only show floating undo on mobile */
 
       @media (min-width: 901px) {
         .floating-undo {
           display: none;
         }
+
+        .mobile-draw-launch {
+          display: none;
+        }
+      }
+
+      /* ================= FLOATING UNDO ================= */
+
+      .floating-undo {
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        background: var(--brand-blue);
+        color: white;
+        font-size: 22px;
+        font-weight: bold;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        z-index: 999;
+      }
+      /* ================= DRAW MODE MINI SEQUENCE ================= */
+
+      .draw-mode-seq-mini {
+        background: white;
+        border-bottom: 1px solid var(--border-soft);
+        padding: 8px 12px;
+        font-size: 12px;
+        line-height: 1.4;
+        color: #333;
+        white-space: nowrap;
+        overflow-x: auto;
+      }
+      button {
+        touch-action: manipulation;
+      }
+
+      .draw-mode-toolbar button {
+        touch-action: manipulation;
+      }
+      button {
+        -webkit-tap-highlight-color: transparent;
       }
     </style>
   </head>
@@ -607,9 +598,7 @@
 
         <div class="nav-links">
           <a href="#">Designer</a>
-
           <a href="#" class="coming">Templates <span>Coming Soon</span></a>
-
           <a href="#" class="coming">About <span>Coming Soon</span></a>
         </div>
       </div>
@@ -624,6 +613,7 @@
         Create precise, print-ready numbered layouts in seconds. Free to use.
         Download precision templates when you're ready to build.
       </p>
+
       <button class="help-btn" onclick="openHelp()">
         How to use this tool
       </button>
@@ -636,14 +626,13 @@
             <h2>Board Settings</h2>
             <button id="toggleControlsBtn" class="panel-toggle">▲ Hide</button>
           </div>
+
           <div id="controlsPanel">
             <div class="row">
               <div>
                 <label>Shape</label>
-
                 <select id="board">
                   <option value="circle" selected>Circle</option>
-
                   <option value="square">Square</option>
                 </select>
               </div>
@@ -659,7 +648,6 @@
                     </span>
                   </span>
                 </label>
-
                 <input id="nails" type="number" min="10" step="1" value="150" />
               </div>
             </div>
@@ -678,7 +666,6 @@
 
                 <div class="row">
                   <button type="button" id="zoomOut">−</button>
-
                   <input
                     id="radius"
                     type="number"
@@ -686,7 +673,6 @@
                     step="10"
                     value="320"
                   />
-
                   <button type="button" id="zoomIn">+</button>
                 </div>
               </div>
@@ -702,18 +688,14 @@
                     </span>
                   </span>
                 </label>
-
                 <input id="snap" type="number" min="6" step="1" value="22" />
               </div>
             </div>
-
-            <!-- NUMBER CONTROLS RESTORED -->
 
             <div class="row3">
               <div>
                 <label>
                   <input id="showNums" type="checkbox" checked />
-
                   Show numbers
                 </label>
               </div>
@@ -729,7 +711,6 @@
                     </span>
                   </span>
                 </label>
-
                 <input
                   id="numEvery"
                   type="number"
@@ -741,10 +722,8 @@
 
               <div>
                 <label>Start at</label>
-
                 <select id="numStart">
                   <option value="0">0</option>
-
                   <option value="1" selected>1</option>
                 </select>
               </div>
@@ -753,13 +732,11 @@
             <div class="row">
               <div>
                 <label>Number size</label>
-
                 <input id="numSize" type="number" min="8" step="1" value="12" />
               </div>
 
               <div>
                 <label>Label distance</label>
-
                 <input
                   id="numOffset"
                   type="number"
@@ -781,7 +758,6 @@
             <label style="margin-top: 12px">Layer</label>
             <select id="layerSel"></select>
 
-            <!-- Hidden advanced settings -->
             <input id="opacity" type="hidden" value="0.35" />
             <input id="lw" type="hidden" value="0.7" />
 
@@ -790,6 +766,7 @@
               <button id="clearLayer">Clear layer</button>
               <button id="clearAll">Clear all</button>
             </div>
+
             <div class="btns">
               <button id="exportSeq">Copy sequence</button>
               <button id="downloadPng">Download Preview PNG</button>
@@ -804,30 +781,28 @@
                 style="width: 70px"
               />
               <button id="continuePattern">Continue Pattern</button>
+
               <button class="pro-btn" onclick="openProModal()">
                 Download Printable Template (Pro)
               </button>
             </div>
           </div>
-          <!-- end controlsPanel -->
-          <!-- CLOSE controlsPanel -->
 
-          <!-- Always visible action -->
           <div class="btns">
             <button id="undo">↶ Undo</button>
           </div>
 
           <h2 style="margin-top: 20px">Sequence</h2>
-
           <div id="seqOut" class="mono">Nothing yet — start tapping nails.</div>
         </div>
-        <!-- closes panel -->
 
         <canvas id="cv"></canvas>
       </div>
-      <!-- closes wrap -->
+
+      <div class="btns mobile-draw-launch">
+        <button id="openDrawMode">Open Draw Mode</button>
+      </div>
     </div>
-    <!-- closes container -->
 
     <script>
       function showProInfo() {
@@ -838,7 +813,7 @@
         );
       }
     </script>
-    <!-- PRO MODAL -->
+
     <div class="modal-overlay" id="proModal">
       <div class="modal">
         <h3>Printable Precision Templates (Pro)</h3>
@@ -867,6 +842,7 @@
         document.getElementById("proModal").style.display = "none";
       }
     </script>
+
     <div id="helpPanel" class="help-panel">
       <h3>How to Use the String Art Designer</h3>
 
@@ -895,6 +871,7 @@
 
       <button onclick="closeHelp()" class="help-close">Close</button>
     </div>
+
     <script>
       function openHelp() {
         document.getElementById("helpPanel").style.display = "block";
@@ -904,15 +881,11 @@
         document.getElementById("helpPanel").style.display = "none";
       }
 
-      /* mobile tooltip support */
-
       document.addEventListener("click", function (e) {
         const tip = e.target.closest(".help-tip");
-
         if (!tip) return;
 
         const text = tip.querySelector(".tip-text");
-
         if (!text) return;
 
         const visible = text.style.display === "block";
@@ -926,6 +899,27 @@
     </script>
 
     <button id="undoFloating" class="floating-undo">↶</button>
+
+    <div id="drawModeOverlay" class="draw-mode-overlay" aria-hidden="true">
+      <div class="draw-mode-topbar">
+        <div class="draw-mode-title">Draw Mode</div>
+        <button id="closeDrawMode" class="draw-mode-exit">Exit</button>
+      </div>
+      <div id="drawModeSeqMini" class="draw-mode-seq-mini">
+        Nothing yet — start tapping nails.
+      </div>
+      <div class="draw-mode-canvas-wrap">
+        <canvas id="drawModeCanvas"></canvas>
+      </div>
+
+      <div class="draw-mode-toolbar">
+        <button id="drawUndo">↶ Undo</button>
+        <button id="drawNewLayer">Layer</button>
+        <button id="drawContinue">Continue</button>
+        <button id="drawZoomOut">−</button>
+        <button id="drawZoomIn">+</button>
+      </div>
+    </div>
 
     <script src="app.js"></script>
   </body>

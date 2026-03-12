@@ -1,24 +1,31 @@
 document.addEventListener("DOMContentLoaded", function () {
   console.log("JS LOADED");
 
-  const cv = document.getElementById("cv");
-  const ctx = cv.getContext("2d");
+  let cv = document.getElementById("cv");
+  let ctx = cv.getContext("2d");
   const $ = (id) => document.getElementById(id);
 
   let pts = [];
   let layers = [];
   let activeLayer = 0;
   let lastNail = null;
-
   let hoverNail = null;
-  let rafHover = 0;
-  let hoverX = 0;
-  let hoverY = 0;
-  let isPointerDown = false;
 
   /* -----------------------------
-START HINT CONTROL
------------------------------ */
+     CANVAS SWITCHING
+  ----------------------------- */
+
+  function setActiveCanvas(id) {
+    const nextCanvas = document.getElementById(id);
+    if (!nextCanvas) return;
+
+    cv = nextCanvas;
+    ctx = cv.getContext("2d");
+  }
+
+  /* -----------------------------
+     START HINT CONTROL
+  ----------------------------- */
 
   function hideStartHint() {
     const hint = document.getElementById("startHint");
@@ -26,8 +33,8 @@ START HINT CONTROL
   }
 
   /* -----------------------------
-STATUS BAR
------------------------------ */
+     STATUS BAR
+  ----------------------------- */
 
   function updateStatusBar() {
     const el = $("statusBar");
@@ -37,7 +44,6 @@ STATUS BAR
     const nails = $("nails")?.value || 0;
 
     let lines = 0;
-
     layers.forEach((l) => {
       lines += l.edges.length;
     });
@@ -46,8 +52,8 @@ STATUS BAR
   }
 
   /* -----------------------------
-Helpers
------------------------------ */
+     HELPERS
+  ----------------------------- */
 
   function clampInt(v, min, max, fallback) {
     const n = parseInt(v, 10);
@@ -75,30 +81,65 @@ Helpers
     const { r, g, b } = hexToRgb(hex);
     return `rgba(${r},${g},${b},${a})`;
   }
+
   /* -----------------------------
-Mobile control panel toggle
------------------------------ */
+     MOBILE CONTROL PANEL TOGGLE
+  ----------------------------- */
 
   function toggleControls() {
     const panel = document.getElementById("controlsPanel");
     const btn = document.getElementById("toggleControlsBtn");
+    if (!panel || !btn) return;
 
     panel.classList.toggle("hidden");
-
-    if (panel.classList.contains("hidden")) {
-      btn.textContent = "▼ Show";
-    } else {
-      btn.textContent = "▲ Hide";
-    }
+    btn.textContent = panel.classList.contains("hidden") ? "▼ Show" : "▲ Hide";
   }
 
   /* -----------------------------
-Canvas sizing
------------------------------ */
+     DRAW MODE
+  ----------------------------- */
+
+  function openDrawMode() {
+    const overlay = $("drawModeOverlay");
+    if (!overlay) return;
+
+    overlay.classList.add("active");
+    overlay.setAttribute("aria-hidden", "false");
+    document.body.classList.add("draw-mode-open");
+
+    setActiveCanvas("drawModeCanvas");
+    initActiveCanvasPointerControls();
+    hoverNail = null;
+
+    fitToScreen();
+    redrawAll();
+    updateSeqOutput();
+    updateDrawModeSeqMini();
+  }
+
+  function closeDrawMode() {
+    const overlay = $("drawModeOverlay");
+    if (!overlay) return;
+
+    overlay.classList.remove("active");
+    overlay.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("draw-mode-open");
+
+    setActiveCanvas("cv");
+    initActiveCanvasPointerControls();
+    hoverNail = null;
+
+    redrawAll();
+    updateSeqOutput();
+    updateDrawModeSeqMini();
+  }
+
+  /* -----------------------------
+     CANVAS SIZING
+  ----------------------------- */
 
   function resizeCanvas() {
     const dpr = window.devicePixelRatio || 1;
-
     const cssW = cv.clientWidth || 800;
     const size = cssW;
 
@@ -111,8 +152,8 @@ Canvas sizing
   }
 
   /* -----------------------------
-Zoom
------------------------------ */
+     ZOOM
+  ----------------------------- */
 
   function getZoomInput() {
     return $("radius");
@@ -126,6 +167,7 @@ Zoom
 
     redrawAll();
     updateSeqOutput();
+    updateDrawModeSeqMini();
   }
 
   function nudgeZoom(dir) {
@@ -140,13 +182,12 @@ Zoom
     const next = Math.max(min, Math.min(max, cur + dir * step));
 
     el.value = String(next);
-
     applyZoomFromUI();
   }
 
   /* -----------------------------
-Board points
------------------------------ */
+     BOARD POINTS
+  ----------------------------- */
 
   function pointsCircle(n, cx, cy, r) {
     const out = new Array(n);
@@ -154,7 +195,6 @@ Board points
     for (let i = 0; i < n; i++) {
       const t = (Math.PI * 2 * i) / n;
       const a = t - Math.PI / 2;
-
       out[i] = [cx + r * Math.cos(a), cy + r * Math.sin(a)];
     }
 
@@ -191,8 +231,8 @@ Board points
   }
 
   /* -----------------------------
-Layers
------------------------------ */
+     LAYERS
+  ----------------------------- */
 
   function ensureLayerExists() {
     if (layers.length === 0) {
@@ -202,6 +242,7 @@ Layers
         lw: clampFloat($("lw")?.value, 0.1, 10, 0.7),
         edges: [],
         seq: [],
+        step: null,
       });
 
       activeLayer = 0;
@@ -216,10 +257,8 @@ Layers
 
     layers.forEach((_, i) => {
       const opt = document.createElement("option");
-
       opt.value = String(i);
       opt.textContent = `Layer ${i + 1}`;
-
       sel.appendChild(opt);
     });
 
@@ -237,6 +276,7 @@ Layers
 
     return L;
   }
+
   function addLayer() {
     layers.push({
       color: $("color")?.value || "#000000",
@@ -259,6 +299,7 @@ Layers
 
     redrawAll();
     updateSeqOutput();
+    updateDrawModeSeqMini();
   }
 
   function switchLayer(index) {
@@ -275,6 +316,7 @@ Layers
 
     redrawAll();
     updateSeqOutput();
+    updateDrawModeSeqMini();
   }
 
   function clearLayer() {
@@ -293,10 +335,12 @@ Layers
 
     redrawAll();
     updateSeqOutput();
+    updateDrawModeSeqMini();
   }
+
   /* -----------------------------
-Sequence output
------------------------------ */
+     SEQUENCE OUTPUT
+  ----------------------------- */
 
   function updateSeqOutput() {
     const el = $("seqOut");
@@ -315,10 +359,29 @@ Sequence output
       ? lines.join("\n\n")
       : "Nothing yet — click two nails to begin.";
   }
+  function updateDrawModeSeqMini() {
+    const el = $("drawModeSeqMini");
+    if (!el) return;
 
+    ensureLayerExists();
+
+    const L = layers[activeLayer];
+    const start = $("numStart")?.value === "1" ? 1 : 0;
+
+    if (!L.seq || L.seq.length === 0) {
+      el.textContent = "Nothing yet — start tapping nails.";
+      return;
+    }
+
+    const tail = L.seq
+      .slice(-8)
+      .map((n) => n + start)
+      .join(" → ");
+    el.textContent = `Layer ${activeLayer + 1}: … ${tail}`;
+  }
   /* -----------------------------
-Redraw
------------------------------ */
+     REDRAW
+  ----------------------------- */
 
   function redrawAll() {
     const { cssW, cssH } = resizeCanvas();
@@ -337,8 +400,6 @@ Redraw
         ? pointsCircle(nails, cx, cy, radius)
         : pointsSquarePerimeter(nails, cx, cy, radius);
 
-    /* outline */
-
     ctx.lineWidth = 1;
     ctx.strokeStyle = "rgba(0,0,0,0.12)";
     ctx.beginPath();
@@ -348,23 +409,19 @@ Redraw
 
     ctx.stroke();
 
-    /* nail dots */
-
     for (let i = 0; i < nails; i++) {
       const [x, y] = pts[i];
-
       ctx.beginPath();
       ctx.arc(x, y, 1.8, 0, Math.PI * 2);
       ctx.fillStyle = "rgba(0,0,0,0.6)";
       ctx.fill();
     }
-    /* numbers around board */
 
     if ($("showNums")?.checked) {
-      const every = parseInt($("numEvery")?.value || 10);
+      const every = parseInt($("numEvery")?.value || 10, 10);
       const start = $("numStart")?.value === "1" ? 1 : 0;
-      const size = parseInt($("numSize")?.value || 12);
-      const offset = parseInt($("numOffset")?.value || 22);
+      const size = parseInt($("numSize")?.value || 12, 10);
+      const offset = parseInt($("numOffset")?.value || 22, 10);
 
       ctx.font = size + "px system-ui";
       ctx.fillStyle = "rgba(0,0,0,0.8)";
@@ -374,27 +431,20 @@ Redraw
       for (let i = 0; i < nails; i++) {
         const label = i + start;
         if (label === nails) continue;
-
         if (every > 1 && label % every !== 0 && label !== start) continue;
 
         const [x, y] = pts[i];
-
         const dx = x - cx;
         const dy = y - cy;
-
         const len = Math.sqrt(dx * dx + dy * dy) || 1;
-
         const nx = dx / len;
         const ny = dy / len;
-
         const lx = x + nx * offset;
         const ly = y + ny * offset;
 
         ctx.fillText(label.toString(), lx, ly);
       }
     }
-
-    /* layers */
 
     for (let li = 0; li < layers.length; li++) {
       const layer = layers[li];
@@ -403,6 +453,8 @@ Redraw
       ctx.strokeStyle = rgba(layer.color, layer.opacity);
 
       for (const e of layer.edges) {
+        if (!pts[e.a] || !pts[e.b]) continue;
+
         const [x1, y1] = pts[e.a];
         const [x2, y2] = pts[e.b];
 
@@ -412,12 +464,10 @@ Redraw
         ctx.stroke();
       }
     }
-    /* preview thread */
 
     if (lastNail !== null && hoverNail !== null && hoverNail !== lastNail) {
       const [x1, y1] = pts[lastNail];
       const [x2, y2] = pts[hoverNail];
-
       const L = layers[activeLayer];
 
       ctx.beginPath();
@@ -426,17 +476,13 @@ Redraw
 
       ctx.lineWidth = L.lw;
       ctx.strokeStyle = rgba(L.color, 0.45);
-
       ctx.shadowColor = rgba(L.color, 0.35);
       ctx.shadowBlur = 6;
-
       ctx.setLineDash([6, 4]);
       ctx.stroke();
       ctx.setLineDash([]);
-
       ctx.shadowBlur = 0;
     }
-    /* hover nail highlight */
 
     if (hoverNail !== null && hoverNail < pts.length) {
       const [x, y] = pts[hoverNail];
@@ -455,35 +501,30 @@ Redraw
       ctx.fillStyle = "rgba(0,0,0,0.8)";
       ctx.fill();
     }
-    /* hover nail number label */
 
     if (hoverNail !== null) {
       const [x, y] = pts[hoverNail];
-
       const start = $("numStart")?.value === "1" ? 1 : 0;
       const label = `${hoverNail + start}`;
 
       ctx.font = "12px system-ui";
       ctx.textAlign = "center";
       ctx.textBaseline = "bottom";
-
       ctx.fillStyle = "rgba(0,0,0,0.85)";
       ctx.fillText(label, x, y - 10);
     }
+
     updateStatusBar();
   }
 
   /* -----------------------------
-Actions
------------------------------ */
+     ACTIONS
+  ----------------------------- */
 
   function fitToScreen() {
     const { cssW, cssH } = resizeCanvas();
-
     const margin = 28;
-
     const r = Math.floor(Math.min(cssW, cssH) / 2 - margin);
-
     const el = getZoomInput();
 
     if (el) el.value = String(Math.max(80, r));
@@ -491,23 +532,21 @@ Actions
 
   function addNailToSequence(idx) {
     hideStartHint();
-
     ensureLayerExists();
 
     const L = currentLayer();
 
     if (lastNail === null) {
       lastNail = idx;
-
       if (L.seq.length === 0) L.seq.push(idx);
     } else {
       if (L.seq.length === 0) L.seq.push(lastNail);
 
       L.edges.push({ a: lastNail, b: idx });
       L.seq.push(idx);
-
       lastNail = idx;
     }
+    updateDrawModeSeqMini();
   }
 
   function undo() {
@@ -517,17 +556,17 @@ Actions
 
     if (L.edges.length > 0) {
       L.edges.pop();
-
       if (L.seq.length > 1) L.seq.pop();
-
       lastNail = L.seq.length ? L.seq[L.seq.length - 1] : null;
     } else {
       lastNail = null;
       L.seq = [];
+      L.step = null;
     }
 
     redrawAll();
     updateSeqOutput();
+    updateDrawModeSeqMini();
   }
 
   function clearAll() {
@@ -536,32 +575,42 @@ Actions
     lastNail = null;
 
     ensureLayerExists();
-
-    /* reset stored pattern step */
     delete layers[activeLayer].step;
-
     syncLayerSelect();
 
     redrawAll();
     updateSeqOutput();
+    updateDrawModeSeqMini();
   }
-
-  /* -----------------------------
-Reset board button
------------------------------ */
 
   function resetBoard() {
     $("nails").value = 150;
     $("radius").value = 320;
 
     clearAll();
-
     redrawAll();
     updateSeqOutput();
+    updateDrawModeSeqMini();
+  }
+  function panDrawModeToLastNail() {
+    const wrap = document.querySelector(".draw-mode-canvas-wrap");
+
+    if (!wrap || lastNail === null || !pts[lastNail]) return;
+
+    const [x, y] = pts[lastNail];
+
+    const targetLeft = Math.max(0, x - wrap.clientWidth / 2);
+    const targetTop = Math.max(0, y - wrap.clientHeight / 2);
+
+    wrap.scrollTo({
+      left: targetLeft,
+      top: targetTop,
+      behavior: "smooth",
+    });
   }
   /* -----------------------------
-Canvas interaction
------------------------------ */
+     CANVAS INTERACTION
+  ----------------------------- */
 
   function nearestNail(x, y) {
     const tol = clampInt($("snap")?.value, 6, 100, 22);
@@ -572,7 +621,6 @@ Canvas interaction
     for (let i = 0; i < pts.length; i++) {
       const dx = pts[i][0] - x;
       const dy = pts[i][1] - y;
-
       const d2 = dx * dx + dy * dy;
 
       if (d2 < bestD2) {
@@ -593,56 +641,131 @@ Canvas interaction
     };
   }
 
-  function initCanvasPointerControls() {
+  function initActiveCanvasPointerControls() {
+    if (!cv) return;
+
+    cv.onpointermove = null;
+    cv.onpointerleave = null;
+    cv.onpointerdown = null;
+
     function handleHover(ev) {
       if (ev.pointerType === "touch") return;
 
       const { x, y } = canvasXYFromPointerEvent(ev);
-
-      hoverX = x;
-      hoverY = y;
-
       hoverNail = nearestNail(x, y);
-
       redrawAll();
     }
 
-    // hover detection
-    cv.addEventListener("pointermove", handleHover);
+    cv.onpointermove = handleHover;
 
-    cv.addEventListener("mouseleave", () => {
+    cv.onpointerleave = () => {
       hoverNail = null;
       redrawAll();
-    });
+    };
 
-    // clicking nails
-    cv.addEventListener("pointerdown", (ev) => {
+    cv.onpointerdown = (ev) => {
       const { x, y } = canvasXYFromPointerEvent(ev);
       const idx = nearestNail(x, y);
 
       if (idx === null) return;
 
       addNailToSequence(idx);
-
       redrawAll();
       updateSeqOutput();
+      updateDrawModeSeqMini();
+      panDrawModeToLastNail();
+    };
+  }
+
+  /* -----------------------------
+     COPY / DOWNLOAD
+  ----------------------------- */
+
+  function copySequence() {
+    const text = $("seqOut")?.textContent || "";
+
+    navigator.clipboard.writeText(text).then(() => {
+      alert("Sequence copied to clipboard");
     });
   }
+
+  function downloadPreview() {
+    const link = document.createElement("a");
+    link.download = "string-art-preview.png";
+    link.href = cv.toDataURL("image/png");
+    link.click();
+  }
+
   /* -----------------------------
-Init
------------------------------ */
+     CONTINUE PATTERN
+  ----------------------------- */
+
+  function continuePattern() {
+    ensureLayerExists();
+
+    const L = layers[activeLayer];
+    const seq = L.seq;
+
+    if (seq.length < 4) {
+      alert("Draw at least two lines to detect a pattern.");
+      return;
+    }
+
+    const nails = pts.length;
+    const maxSteps = clampInt($("continueSteps")?.value, 1, 500, 20);
+
+    const stepA = (seq[2] - seq[0] + nails) % nails;
+    const stepB = (seq[3] - seq[1] + nails) % nails;
+
+    if (stepA === 0 || stepB === 0) {
+      alert("Could not detect a repeat pattern.");
+      return;
+    }
+
+    let a = seq[seq.length - 2];
+    let b = seq[seq.length - 1];
+
+    for (let i = 0; i < maxSteps; i++) {
+      const nextA = (a + stepA) % nails;
+      const nextB = (b + stepB) % nails;
+
+      L.edges.push({ a: b, b: nextA });
+      L.seq.push(nextA);
+
+      L.edges.push({ a: nextA, b: nextB });
+      L.seq.push(nextB);
+
+      a = nextA;
+      b = nextB;
+    }
+
+    lastNail = b;
+
+    redrawAll();
+    updateSeqOutput();
+    updateDrawModeSeqMini();
+    panDrawModeToLastNail();
+  }
+
+  /* -----------------------------
+     INIT
+  ----------------------------- */
 
   function init() {
     ensureLayerExists();
     syncLayerSelect();
-    initCanvasPointerControls();
+    initActiveCanvasPointerControls();
+
     $("fit")?.addEventListener("click", () => {
       fitToScreen();
       redrawAll();
     });
 
     $("undo")?.addEventListener("click", undo);
+    $("undoFloating")?.addEventListener("click", undo);
     $("clearAll")?.addEventListener("click", clearAll);
+    $("clearLayer")?.addEventListener("click", clearLayer);
+    $("newLayer")?.addEventListener("click", addLayer);
     $("continuePattern")?.addEventListener("click", continuePattern);
     $("toggleControlsBtn")?.addEventListener("click", toggleControls);
     $("exportSeq")?.addEventListener("click", copySequence);
@@ -650,8 +773,16 @@ Init
     $("zoomIn")?.addEventListener("click", () => nudgeZoom(1));
     $("zoomOut")?.addEventListener("click", () => nudgeZoom(-1));
 
+    $("openDrawMode")?.addEventListener("click", openDrawMode);
+    $("closeDrawMode")?.addEventListener("click", closeDrawMode);
+    $("drawUndo")?.addEventListener("click", undo);
+    $("drawNewLayer")?.addEventListener("click", addLayer);
+    $("drawContinue")?.addEventListener("click", continuePattern);
+    $("drawZoomIn")?.addEventListener("click", () => nudgeZoom(1));
+    $("drawZoomOut")?.addEventListener("click", () => nudgeZoom(-1));
+
     getZoomInput()?.addEventListener("change", applyZoomFromUI);
-    $("undoFloating")?.addEventListener("click", undo);
+
     [
       "board",
       "nails",
@@ -668,92 +799,32 @@ Init
         redrawAll();
         updateSeqOutput();
       });
+      updateDrawModeSeqMini();
     });
-    $("newLayer")?.addEventListener("click", addLayer);
 
-    $("clearLayer")?.addEventListener("click", clearLayer);
+    $("layerSel")?.addEventListener("change", (e) => {
+      switchLayer(parseInt(e.target.value, 10));
+    });
 
     $("color")?.addEventListener("input", () => {
       ensureLayerExists();
       layers[activeLayer].color = $("color").value;
       redrawAll();
     });
-    window.addEventListener("resize", redrawAll);
 
-    $("layerSel")?.addEventListener("change", (e) => {
-      switchLayer(parseInt(e.target.value, 10));
+    window.addEventListener("resize", () => {
+      redrawAll();
     });
-    redrawAll();
-    updateSeqOutput();
-  }
-  function copySequence() {
-    const text = $("seqOut")?.textContent || "";
-
-    navigator.clipboard.writeText(text).then(() => {
-      alert("Sequence copied to clipboard");
-    });
-  }
-  function downloadPreview() {
-    const link = document.createElement("a");
-    link.download = "string-art-preview.png";
-    link.href = cv.toDataURL("image/png");
-    link.click();
-  }
-  function continuePattern() {
-    ensureLayerExists();
-
-    const L = layers[activeLayer];
-    const seq = L.seq;
-
-    if (seq.length < 4) {
-      alert("Draw at least two lines to detect a pattern.");
-      return;
-    }
-
-    const nails = pts.length;
-    const maxSteps = clampInt($("continueSteps")?.value, 1, 500, 20);
-
-    // Detect the two progressions from the first 4 points
-    // Example:
-    // 1 → 77 → 2 → 78
-    // side A moves 1 -> 2  so stepA = +1
-    // side B moves 77 -> 78 so stepB = +1
-    const stepA = (seq[2] - seq[0] + nails) % nails;
-    const stepB = (seq[3] - seq[1] + nails) % nails;
-
-    if (stepA === 0 || stepB === 0) {
-      alert("Could not detect a repeat pattern.");
-      return;
-    }
-
-    // Last detected pair in the running zig-zag
-    let a = seq[seq.length - 2];
-    let b = seq[seq.length - 1];
-
-    for (let i = 0; i < maxSteps; i++) {
-      const nextA = (a + stepA) % nails;
-      const nextB = (b + stepB) % nails;
-
-      // Continue the actual path:
-      // ... -> b -> nextA -> nextB
-      L.edges.push({ a: b, b: nextA });
-      L.seq.push(nextA);
-
-      L.edges.push({ a: nextA, b: nextB });
-      L.seq.push(nextB);
-
-      a = nextA;
-      b = nextB;
-    }
-
-    lastNail = b;
 
     redrawAll();
     updateSeqOutput();
+    updateDrawModeSeqMini();
   }
+
   init();
 
   window.addEventListener("load", () => {
+    setActiveCanvas("cv");
     fitToScreen();
     redrawAll();
   });
