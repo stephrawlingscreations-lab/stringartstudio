@@ -103,6 +103,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const overlay = $("drawModeOverlay");
     if (!overlay) return;
 
+    ensureLayerExists();
+
     overlay.classList.add("active");
     overlay.setAttribute("aria-hidden", "false");
     document.body.classList.add("draw-mode-open");
@@ -111,6 +113,12 @@ document.addEventListener("DOMContentLoaded", function () {
     initActiveCanvasPointerControls();
     hoverNail = null;
 
+    if ($("drawColor")) {
+      const L = layers[activeLayer];
+      $("drawColor").value = L.color || "#000000";
+    }
+
+    syncLayerSelect();
     fitToScreen();
     redrawAll();
     updateSeqOutput();
@@ -250,19 +258,22 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function syncLayerSelect() {
-    const sel = $("layerSel");
-    if (!sel) return;
+    const selects = [$("layerSel"), $("drawLayerSel")];
 
-    sel.innerHTML = "";
+    selects.forEach((sel) => {
+      if (!sel) return;
 
-    layers.forEach((_, i) => {
-      const opt = document.createElement("option");
-      opt.value = String(i);
-      opt.textContent = `Layer ${i + 1}`;
-      sel.appendChild(opt);
+      sel.innerHTML = "";
+
+      layers.forEach((_, i) => {
+        const opt = document.createElement("option");
+        opt.value = String(i);
+        opt.textContent = `Layer ${i + 1}`;
+        sel.appendChild(opt);
+      });
+
+      sel.value = String(activeLayer);
     });
-
-    sel.value = String(activeLayer);
   }
 
   function currentLayer() {
@@ -293,7 +304,9 @@ document.addEventListener("DOMContentLoaded", function () {
     syncLayerSelect();
 
     const L = layers[activeLayer];
+
     if ($("color")) $("color").value = L.color;
+    if ($("drawColor")) $("drawColor").value = L.color;
     if ($("opacity")) $("opacity").value = L.opacity;
     if ($("lw")) $("lw").value = L.lw;
 
@@ -311,9 +324,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const L = layers[activeLayer];
 
     if ($("color")) $("color").value = L.color || "#000000";
+    if ($("drawColor")) $("drawColor").value = L.color || "#000000";
     if ($("opacity")) $("opacity").value = L.opacity ?? 0.35;
     if ($("lw")) $("lw").value = L.lw ?? 0.7;
 
+    syncLayerSelect();
     redrawAll();
     updateSeqOutput();
     updateDrawModeSeqMini();
@@ -798,20 +813,41 @@ document.addEventListener("DOMContentLoaded", function () {
         lastNail = null;
         redrawAll();
         updateSeqOutput();
+        updateDrawModeSeqMini();
       });
-      updateDrawModeSeqMini();
     });
 
     $("layerSel")?.addEventListener("change", (e) => {
       switchLayer(parseInt(e.target.value, 10));
     });
 
+    $("drawLayerSel")?.addEventListener("change", (e) => {
+      switchLayer(parseInt(e.target.value, 10));
+    });
+
     $("color")?.addEventListener("input", () => {
       ensureLayerExists();
       layers[activeLayer].color = $("color").value;
+
+      if ($("drawColor")) {
+        $("drawColor").value = $("color").value;
+      }
+
       redrawAll();
+      updateDrawModeSeqMini();
     });
 
+    $("drawColor")?.addEventListener("input", (e) => {
+      ensureLayerExists();
+      layers[activeLayer].color = e.target.value;
+
+      if ($("color")) {
+        $("color").value = e.target.value;
+      }
+
+      redrawAll();
+      updateDrawModeSeqMini();
+    });
     window.addEventListener("resize", () => {
       redrawAll();
     });

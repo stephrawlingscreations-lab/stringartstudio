@@ -484,10 +484,18 @@
         box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
         touch-action: none;
       }
-
+      .draw-mode-toolbar select,
+      .draw-mode-toolbar input[type="color"] {
+        min-height: 44px;
+        border-radius: 12px;
+        border: 1px solid #d7d7d7;
+        font-size: 14px;
+        width: 100%;
+        box-sizing: border-box;
+      }
       .draw-mode-toolbar {
         display: grid;
-        grid-template-columns: repeat(5, 1fr);
+        grid-template-columns: repeat(7, 1fr);
         gap: 8px;
         padding: 12px;
         background: white;
@@ -570,6 +578,14 @@
       }
       button {
         -webkit-tap-highlight-color: transparent;
+      }
+      .zoom-controls {
+        display: flex;
+        gap: 10px;
+      }
+
+      .zoom-controls button {
+        flex: 1;
       }
     </style>
   </head>
@@ -903,8 +919,10 @@
       </div>
 
       <div class="draw-mode-toolbar">
-        <button id="drawUndo">↶ Undo</button>
-        <button id="drawNewLayer">Layer</button>
+        <button id="drawUndo">↶</button>
+        <select id="drawLayerSel"></select>
+        <button id="drawNewLayer">+ Layer</button>
+        <input type="color" id="drawColor" />
         <button id="drawContinue">Continue</button>
         <button id="drawZoomOut">−</button>
         <button id="drawZoomIn">+</button>
