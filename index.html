@@ -470,9 +470,22 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 10px;
+
+        padding: 14px;
         overflow: auto;
         -webkit-overflow-scrolling: touch;
+
+        border-radius: 12px;
+
+        background: radial-gradient(
+          circle at center,
+          #ffffff 60%,
+          #f6f6f6 100%
+        );
+
+        box-shadow:
+          0 6px 18px rgba(0, 0, 0, 0.06),
+          inset 0 1px 0 rgba(255, 255, 255, 0.6);
       }
 
       #drawModeCanvas {
@@ -498,8 +511,14 @@
         grid-template-columns: repeat(7, 1fr);
         gap: 8px;
         padding: 12px;
-        background: white;
+
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+
+        background: rgba(255, 255, 255, 0.85);
+
         border-top: 1px solid var(--border-soft);
+        box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.05);
         flex: 0 0 auto;
       }
 
@@ -587,6 +606,198 @@
       .zoom-controls button {
         flex: 1;
       }
+      .quick-patterns-section {
+        width: min(1200px, calc(100% - 32px));
+        margin: 24px auto 28px;
+      }
+
+      .quick-patterns-wrap {
+        background: #ffffff;
+        border: 1px solid #e7e5e2;
+        border-radius: 24px;
+        padding: 20px;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.04);
+      }
+
+      .quick-patterns-heading h2 {
+        margin: 0 0 8px;
+        font-size: clamp(1.25rem, 2vw, 1.7rem);
+        line-height: 1.2;
+        color: #1e1e1e;
+      }
+
+      .quick-patterns-heading p {
+        margin: 0 0 16px;
+        color: #666;
+        font-size: 0.98rem;
+        line-height: 1.5;
+      }
+
+      /* MOBILE */
+      .mobile-presets {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+
+      .mobile-presets::-webkit-scrollbar {
+        display: none;
+      }
+
+      .preset-chip {
+        flex: 0 0 auto;
+        border: 1px solid #e7e5e2;
+        background: #fff;
+        color: #1e1e1e;
+        border-radius: 999px;
+        padding: 12px 18px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        min-height: 46px;
+        transition: all 0.2s ease;
+      }
+
+      .preset-chip:hover,
+      .preset-chip:focus-visible {
+        border-color: #2f56d3;
+        color: #2f56d3;
+        outline: none;
+      }
+      .drawmode-presets {
+        display: none;
+        padding: 10px 14px 0;
+      }
+
+      .drawmode-presets-label {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #1e1e1e;
+        margin-bottom: 8px;
+      }
+
+      .drawmode-preset-row {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+
+      .drawmode-preset-row::-webkit-scrollbar {
+        display: none;
+      }
+
+      @media (max-width: 899px) {
+        .quick-patterns-section {
+          display: none;
+        }
+
+        .drawmode-presets {
+          display: block;
+        }
+      }
+      /* DESKTOP */
+      .desktop-presets {
+        display: none;
+      }
+
+      .preset-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .preset-btn {
+        border: 1px solid #e7e5e2;
+        background: #fff;
+        color: #1e1e1e;
+        border-radius: 999px;
+        padding: 11px 18px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        min-height: 44px;
+        transition: all 0.2s ease;
+      }
+
+      .preset-btn:hover,
+      .preset-btn:focus-visible {
+        border-color: #2f56d3;
+        color: #2f56d3;
+        outline: none;
+      }
+
+      .preset-controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 14px;
+        flex-wrap: wrap;
+      }
+
+      .preset-controls label {
+        font-weight: 600;
+        color: #1e1e1e;
+      }
+
+      #presetOffset {
+        width: 180px;
+      }
+
+      #presetOffsetValue {
+        min-width: 30px;
+        font-weight: 700;
+        color: #2f56d3;
+      }
+
+      .generate-preset-btn {
+        border: none;
+        background: #2f56d3;
+        color: #fff;
+        border-radius: 999px;
+        padding: 11px 20px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+        min-height: 44px;
+        transition:
+          opacity 0.2s ease,
+          transform 0.2s ease;
+      }
+
+      .generate-preset-btn:hover,
+      .generate-preset-btn:focus-visible {
+        opacity: 0.92;
+        outline: none;
+      }
+
+      /* ACTIVE STATE */
+      .preset-chip.active,
+      .preset-btn.active {
+        background: #2f56d3;
+        color: #fff;
+        border-color: #2f56d3;
+      }
+
+      /* BREAKPOINT */
+      @media (min-width: 900px) {
+        .mobile-presets {
+          display: none;
+        }
+
+        .desktop-presets {
+          display: block;
+        }
+
+        .quick-patterns-wrap {
+          padding: 24px 26px;
+        }
+      }
     </style>
   </head>
 
@@ -619,7 +830,43 @@
         How to use this tool
       </button>
     </section>
+    <section class="quick-patterns-section">
+      <div class="quick-patterns-wrap">
+        <div class="quick-patterns-heading">
+          <h2>Start with a Pattern</h2>
+          <p>Pick a preset to generate a beautiful base design in one tap.</p>
+        </div>
 
+        <!-- Mobile preset row -->
+        <div
+          class="preset-bar mobile-presets"
+          aria-label="Quick pattern presets"
+        >
+          <button class="preset-chip" data-preset="spiral">Spiral</button>
+          <button class="preset-chip" data-preset="star">Star</button>
+          <button class="preset-chip" data-preset="flower">Flower</button>
+        </div>
+
+        <!-- Desktop preset panel -->
+        <div class="preset-panel desktop-presets">
+          <div class="preset-buttons">
+            <button class="preset-btn" data-preset="spiral">Spiral</button>
+            <button class="preset-btn" data-preset="star">Star</button>
+            <button class="preset-btn" data-preset="flower">Flower</button>
+          </div>
+
+          <div class="preset-controls">
+            <label for="presetOffset">Pattern Spacing</label>
+            <input type="range" id="presetOffset" min="2" max="60" value="18" />
+            <span id="presetOffsetValue">12</span>
+
+            <button id="generatePresetBtn" class="generate-preset-btn">
+              Generate
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
     <div class="container">
       <div class="wrap">
         <div class="panel">
@@ -649,7 +896,7 @@
                     </span>
                   </span>
                 </label>
-                <input id="nails" type="number" min="10" step="1" value="150" />
+                <input id="nails" type="number" min="10" step="1" value="120" />
               </div>
             </div>
 
@@ -789,7 +1036,10 @@
           </div>
 
           <h2 style="margin-top: 20px">Sequence</h2>
-          <div id="seqOut" class="mono">Nothing yet — start tapping nails.</div>
+          <div id="seqOut" class="mono">
+            Tap a nail to start your thread. Then tap another nail to draw a
+            line.
+          </div>
         </div>
 
         <canvas id="cv"></canvas>
@@ -911,9 +1161,20 @@
         <div class="draw-mode-title">Draw Mode</div>
         <button id="closeDrawMode" class="draw-mode-exit">Exit</button>
       </div>
+
       <div id="drawModeSeqMini" class="draw-mode-seq-mini">
         Nothing yet — start tapping nails.
       </div>
+
+      <div class="drawmode-presets" aria-label="Draw mode quick patterns">
+        <div class="drawmode-presets-label">Start with a Pattern</div>
+        <div class="drawmode-preset-row">
+          <button class="preset-chip" data-preset="spiral">Spiral</button>
+          <button class="preset-chip" data-preset="star">Star</button>
+          <button class="preset-chip" data-preset="flower">Flower</button>
+        </div>
+      </div>
+
       <div class="draw-mode-canvas-wrap">
         <canvas id="drawModeCanvas"></canvas>
       </div>

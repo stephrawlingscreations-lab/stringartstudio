@@ -550,7 +550,7 @@ document.addEventListener("DOMContentLoaded", function () {
     ensureLayerExists();
 
     const L = currentLayer();
-
+    L.generatedPreset = false;
     if (lastNail === null) {
       lastNail = idx;
       if (L.seq.length === 0) L.seq.push(idx);
@@ -599,7 +599,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function resetBoard() {
-    $("nails").value = 150;
+    $("nails").value = 120;
     $("radius").value = 320;
 
     clearAll();
@@ -720,7 +720,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const L = layers[activeLayer];
     const seq = L.seq;
-
+    if (L.generatedPreset === true) {
+      $("drawModeSeqMini").textContent =
+        "Continue only works on manually drawn patterns.";
+      return;
+    }
     if (seq.length < 4) {
       alert("Draw at least two lines to detect a pattern.");
       return;
@@ -761,6 +765,182 @@ document.addEventListener("DOMContentLoaded", function () {
     updateDrawModeSeqMini();
     panDrawModeToLastNail();
   }
+  /* -----------------------------
+     QUICK PATTERNS
+  ----------------------------- */
+
+  let selectedPreset = "spiral";
+
+  function initQuickPatterns() {
+    const allPresetButtons = document.querySelectorAll("[data-preset]");
+    const offsetSlider = document.getElementById("presetOffset");
+    const offsetValue = document.getElementById("presetOffsetValue");
+    const generateBtn = document.getElementById("generatePresetBtn");
+
+    if (offsetSlider && offsetValue) {
+      offsetValue.textContent = offsetSlider.value;
+
+      offsetSlider.addEventListener("input", () => {
+        offsetValue.textContent = offsetSlider.value;
+      });
+    }
+
+    allPresetButtons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        selectedPreset = btn.dataset.preset || "spiral";
+        setActivePresetButton(selectedPreset);
+
+        // Mobile = instant generate
+        if (window.innerWidth < 900) {
+          const offset = getPresetOffset();
+          generatePreset(selectedPreset, offset);
+        }
+      });
+    });
+
+    if (generateBtn) {
+      generateBtn.addEventListener("click", () => {
+        const offset = getPresetOffset();
+        generatePreset(selectedPreset, offset);
+      });
+    }
+
+    setActivePresetButton(selectedPreset);
+  }
+
+  function setActivePresetButton(presetName) {
+    document.querySelectorAll("[data-preset]").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.preset === presetName);
+    });
+    const slider = document.getElementById("presetOffset");
+    const value = document.getElementById("presetOffsetValue");
+
+    if (presetName === "spiral") slider.value = 12;
+    if (presetName === "star") slider.value = 18;
+    if (presetName === "flower") slider.value = 10;
+
+    if (value) value.textContent = slider.value;
+  }
+
+  function getPresetOffset() {
+    const slider = document.getElementById("presetOffset");
+    if (!slider) return 18;
+    return parseInt(slider.value, 10) || 18;
+  }
+
+  function clearActiveLayerForPreset() {
+    ensureLayerExists();
+
+    layers[activeLayer].edges = [];
+    layers[activeLayer].seq = [];
+    layers[activeLayer].step = null;
+
+    lastNail = null;
+  }
+
+  function addPresetEdge(a, b) {
+    ensureLayerExists();
+
+    if (a === b) return;
+    if (a < 0 || b < 0) return;
+    if (a >= pts.length || b >= pts.length) return;
+
+    layers[activeLayer].edges.push({ a, b });
+  }
+
+  function wrapIndex(index, total) {
+    return ((index % total) + total) % total;
+  }
+
+  function buildSeqFromEdges(edges) {
+    if (!edges.length) return [];
+
+    const seq = [edges[0].a, edges[0].b];
+
+    for (let i = 1; i < edges.length; i++) {
+      seq.push(edges[i].b);
+    }
+
+    return seq;
+  }
+
+  function generatePreset(presetName, offset) {
+    if (!pts || pts.length < 3) return;
+
+    clearActiveLayerForPreset();
+
+    const total = pts.length;
+    let generatedEdges = [];
+
+    switch (presetName) {
+      case "spiral":
+        generatedEdges = generateSpiralPattern(total, offset);
+        break;
+
+      case "star":
+        generatedEdges = generateStarPattern(total, offset);
+        break;
+
+      case "flower":
+        generatedEdges = generateFlowerPattern(total, offset);
+        break;
+
+      default:
+        generatedEdges = generateSpiralPattern(total, offset);
+        break;
+    }
+
+    layers[activeLayer].edges = generatedEdges;
+    layers[activeLayer].seq = buildSeqFromEdges(generatedEdges);
+    layers[activeLayer].generatedPreset = true;
+    if (layers[activeLayer].seq.length) {
+      lastNail = layers[activeLayer].seq[layers[activeLayer].seq.length - 1];
+    }
+
+    redrawAll();
+    updateSeqOutput();
+    updateDrawModeSeqMini();
+  }
+
+  function generateSpiralPattern(total, offset) {
+    const edges = [];
+
+    for (let i = 0; i < total; i++) {
+      const a = i;
+      const b = wrapIndex(i + offset, total);
+      edges.push({ a, b });
+    }
+
+    return edges;
+  }
+
+  function generateStarPattern(total, offset) {
+    const edges = [];
+    const starOffset = Math.max(
+      2,
+      Math.floor(total / 2) - Math.floor(offset / 3),
+    );
+
+    for (let i = 0; i < total; i++) {
+      const a = i;
+      const b = wrapIndex(i + starOffset, total);
+      edges.push({ a, b });
+    }
+
+    return edges;
+  }
+
+  function generateFlowerPattern(total, offset) {
+    const edges = [];
+
+    for (let i = 0; i < total; i++) {
+      const a = i;
+      const b = wrapIndex(i * 2 + offset, total);
+      edges.push({ a, b });
+    }
+
+    return edges;
+  }
 
   /* -----------------------------
      INIT
@@ -770,7 +950,7 @@ document.addEventListener("DOMContentLoaded", function () {
     ensureLayerExists();
     syncLayerSelect();
     initActiveCanvasPointerControls();
-
+    initQuickPatterns();
     $("fit")?.addEventListener("click", () => {
       fitToScreen();
       redrawAll();
