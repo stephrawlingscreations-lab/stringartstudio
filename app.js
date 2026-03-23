@@ -1260,8 +1260,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // Board outline
     const outline =
       board === "circle"
-        ? `<circle cx="${CX}" cy="${CY}" r="${BRAD}" fill="none" stroke="#bbb" stroke-width="1.5"/>`
-        : `<rect x="${CX - BRAD}" y="${CY - BRAD}" width="${BRAD * 2}" height="${BRAD * 2}" fill="none" stroke="#bbb" stroke-width="1.5"/>`;
+        ? `<circle cx="${CX}" cy="${CY}" r="${BRAD}" fill="none" stroke="#ccc" stroke-width="1.5"/>`
+        : `<rect x="${CX - BRAD}" y="${CY - BRAD}" width="${BRAD * 2}" height="${BRAD * 2}" fill="none" stroke="#ccc" stroke-width="1.5"/>`;
 
     // String lines
     let svgLines = "";
@@ -1286,15 +1286,13 @@ document.addEventListener("DOMContentLoaded", function () {
     for (let i = 0; i < nailCount; i++) {
       const [x, y] = svgPts[i];
       svgNails += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.2" fill="#2a2a2a"/>`;
-
       if (i % showEvery === 0) {
         const dx = x - CX;
         const dy = y - CY;
         const len = Math.sqrt(dx * dx + dy * dy) || 1;
         const lx = (x + (dx / len) * 14).toFixed(1);
         const ly = (y + (dy / len) * 14).toFixed(1);
-        const lbl = i + numStart;
-        svgNails += `<text x="${lx}" y="${ly}" font-size="${labelSize}" text-anchor="middle" dominant-baseline="middle" fill="#555">${lbl}</text>`;
+        svgNails += `<text x="${lx}" y="${ly}" font-size="${labelSize}" text-anchor="middle" dominant-baseline="middle" fill="#555">${i + numStart}</text>`;
       }
     }
 
@@ -1302,81 +1300,159 @@ document.addEventListener("DOMContentLoaded", function () {
     const totalLines = layers.reduce((s, L) => s + (L.edges?.length || 0), 0);
     const activeLayers = layers.filter((L) => L.edges?.length > 0).length;
 
-    // Sequence HTML
+    // Thread length estimation
+    // Assumes a 30 cm board (150 mm radius). Scale linearly for other sizes.
+    const PHYSICAL_RADIUS_MM = 150;
+    const mmPerSvgUnit = PHYSICAL_RADIUS_MM / BRAD;
+    let totalThreadMm = 0;
+    const layerThreadMm = layers.map((L) => {
+      if (!L.edges?.length) return 0;
+      let mm = 0;
+      for (const e of L.edges) {
+        if (!svgPts[e.a] || !svgPts[e.b]) continue;
+        const [x1, y1] = svgPts[e.a];
+        const [x2, y2] = svgPts[e.b];
+        const dx = x2 - x1, dy = y2 - y1;
+        mm += Math.sqrt(dx * dx + dy * dy) * mmPerSvgUnit;
+      }
+      totalThreadMm += mm;
+      return mm;
+    });
+
+    const toMetres = (mm) => (mm / 1000).toFixed(1);
+
+    // Thread requirements section
+    let threadRows = "";
+    layers.forEach((L, li) => {
+      if (!L.edges?.length) return;
+      const c = hexToRgb(L.color || "#000000");
+      threadRows += `<tr>
+        <td><span class="dot" style="background:rgb(${c.r},${c.g},${c.b})"></span>Layer ${li + 1}</td>
+        <td class="tv">~${toMetres(layerThreadMm[li])} m</td>
+      </tr>`;
+    });
+    const threadHTML = `
+      <div class="section">
+        <h2 class="sh">Thread Requirements</h2>
+        <p class="sn">Based on a 30 cm board — scale proportionally for other sizes. Add ~10% for tying off.</p>
+        <table class="tt">
+          ${threadRows}
+          <tr class="tt-total"><td>Total</td><td class="tv">~${toMetres(totalThreadMm)} m</td></tr>
+        </table>
+      </div>`;
+
+    // Start nail
+    const firstActiveLayer = layers.find((L) => L.seq?.length > 0);
+    const startNailLabel = firstActiveLayer ? firstActiveLayer.seq[0] + numStart : "—";
+
+    // Sequence + layer sections
     let seqHTML = "";
+    let isFirst = true;
     layers.forEach((L, li) => {
       if (!L.seq?.length) return;
       const c = hexToRgb(L.color || "#000000");
-      const dotStyle = `background:rgb(${c.r},${c.g},${c.b})`;
+      const colorRgb = `rgb(${c.r},${c.g},${c.b})`;
       const arrowSeq = L.seq.map((n) => n + numStart).join(" → ");
-
-      seqHTML += `<section class="layer-section">`;
-      seqHTML += `<h2>Layer ${li + 1} <span class="dot" style="${dotStyle}"></span> <small>${L.seq.length - 1} moves · ${L.color || "#000000"}</small></h2>`;
-      seqHTML += `<p class="arrow-seq">${arrowSeq}</p>`;
-      seqHTML += `<div class="step-grid">`;
+      const moves = L.seq.length - 1;
+      seqHTML += `<section class="ls${isFirst ? " ls-first" : ""}">
+        <div class="lh">
+          <span class="ldot" style="background:${colorRgb}"></span>
+          <div>
+            <h2 class="lt">Layer ${li + 1} <span style="color:${colorRgb}">(${L.color || "#000000"})</span> — ${moves} moves</h2>
+            <p class="lsub">Follow the full sequence below</p>
+          </div>
+        </div>
+        <p class="arrow-seq">${arrowSeq}</p>
+        <div class="step-grid">`;
       L.seq.forEach((nail, i) => {
-        const stepTxt = i === 0 ? "Start" : `#${i}`;
-        seqHTML += `<div class="step"><span class="step-lbl">${stepTxt}</span><span class="step-nail">${nail + numStart}</span></div>`;
+        seqHTML += `<div class="step"><span class="sl">${i === 0 ? "Start" : "#" + i}</span><span class="sn2">${nail + numStart}</span></div>`;
       });
       seqHTML += `</div></section>`;
+      isFirst = false;
     });
 
     const date = new Date().toLocaleDateString("en-IE", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
+      day: "numeric", month: "long", year: "numeric",
     });
 
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>String Art Template – stephrawlingscreations.ie</title>
+<title>String Art Build Guide – stephrawlingscreations.ie</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:system-ui,sans-serif;background:#eee;color:#1e1e1e}
-.toolbar{background:#fff;border-bottom:1px solid #ddd;padding:12px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
-.toolbar h2{font-size:15px;font-weight:600;flex:1;margin:0}
-.btn-print{background:#2f56d3;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:500;cursor:pointer}
-.page{width:210mm;min-height:297mm;padding:14mm;margin:20px auto;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,.12);position:relative}
-.ph{text-align:center;margin-bottom:6mm;padding-bottom:4mm;border-bottom:.3pt solid #e0e0e0}
-.ph h1{font-size:20pt;font-weight:600;letter-spacing:-.02em}
-.ph p{font-size:9pt;color:#999;margin-top:1mm}
-.board-wrap{display:flex;justify-content:center;margin:3mm 0}
-.board-wrap svg{width:170mm;height:170mm}
-.stats{display:flex;justify-content:center;gap:12mm;margin:5mm 0}
-.stat{text-align:center}
-.stat b{display:block;font-size:18pt;font-weight:700;line-height:1.1}
-.stat span{font-size:8pt;color:#999;text-transform:uppercase;letter-spacing:.05em}
+body{font-family:system-ui,sans-serif;background:#e5e5e5;color:#1e1e1e;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.toolbar{background:#fff;border-bottom:1px solid #ddd;padding:12px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+.toolbar h2{font-size:14px;font-weight:600;flex:1;margin:0;color:#444}
+.btn-print{background:#1e1e1e;color:#fff;border:none;border-radius:6px;padding:9px 20px;font-size:13px;font-weight:500;cursor:pointer}
+.page{width:210mm;min-height:297mm;padding:15mm 18mm 20mm;margin:24px auto;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.14);position:relative}
+/* Page header */
+.ph{margin-bottom:7mm;padding-bottom:5mm;border-bottom:0.75pt solid #e0e0e0}
+.ph-label{font-size:7pt;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#bbb;margin-bottom:2mm}
+.ph h1{font-size:22pt;font-weight:700;letter-spacing:-.03em;line-height:1;color:#1e1e1e}
+.ph p{font-size:8.5pt;color:#bbb;margin-top:2mm}
+/* Board */
+.board-wrap{display:flex;justify-content:center;margin:3mm 0 4mm}
+.board-wrap svg{width:155mm;height:155mm}
+/* Stats */
+.stats{display:flex;margin:4mm 0;border:0.5pt solid #ececec;border-radius:8pt;overflow:hidden}
+.stat{flex:1;text-align:center;padding:4mm 2mm;border-right:0.5pt solid #ececec}
+.stat:last-child{border-right:none}
+.stat b{display:block;font-size:16pt;font-weight:700;line-height:1.15}
+.stat span{font-size:7pt;color:#bbb;text-transform:uppercase;letter-spacing:.07em}
+/* Scale */
 .scale-ref{text-align:center;margin-top:4mm}
-.scale-bar{display:inline-block;width:37.8pt;height:5pt;border:1pt solid #555}
-.scale-ref p{font-size:8pt;color:#888;margin-top:2pt}
-.pf{position:absolute;bottom:8mm;left:14mm;right:14mm;display:flex;justify-content:space-between;font-size:8pt;color:#ccc}
-.layer-section{margin-bottom:10mm;break-inside:avoid}
-.layer-section h2{font-size:12pt;font-weight:600;margin-bottom:2mm;display:flex;align-items:center;gap:6px}
-.dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.layer-section h2 small{font-size:9pt;color:#888;font-weight:400}
-.arrow-seq{font-size:7.5pt;color:#555;margin-bottom:2mm;line-height:1.6;word-break:break-all;background:#f9f9f9;padding:3mm;border-radius:4pt;max-height:20mm;overflow:hidden}
-.step-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(30pt,1fr));gap:1pt}
-.step{border:.3pt solid #e8e8e8;border-radius:3pt;padding:1.5pt 2pt}
-.step-lbl{display:block;font-size:5.5pt;color:#bbb}
-.step-nail{display:block;font-size:9pt;font-weight:600}
+.scale-bar{display:inline-block;width:37.8pt;height:4pt;background:#333;border-radius:1pt}
+.scale-ref p{font-size:7.5pt;color:#bbb;margin-top:2pt}
+/* Section dividers */
+.section{margin-top:6mm;padding-top:5mm;border-top:0.5pt solid #ececec}
+.sh{font-size:9.5pt;font-weight:700;letter-spacing:.03em;margin-bottom:2.5mm;text-transform:uppercase;color:#555}
+.sn{font-size:7.5pt;color:#bbb;margin-bottom:3mm}
+/* Thread table */
+.tt{width:100%;border-collapse:collapse;font-size:9pt}
+.tt td{padding:2mm 2.5mm;border-bottom:0.3pt solid #f2f2f2;vertical-align:middle}
+.tt tr:last-child td{border-bottom:none}
+.tt-total td{font-weight:700;padding-top:3mm;border-top:0.75pt solid #ccc;border-bottom:none}
+.tv{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;font-size:10pt}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+/* Start box */
+.start-box{background:#f8f8f8;border-radius:6pt;padding:4mm 5mm;margin-bottom:6mm;border-left:2pt solid #1e1e1e}
+.start-box h3{font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#555;margin-bottom:2mm}
+.start-box ol{padding-left:14pt;font-size:8.5pt;color:#444;line-height:2}
+/* Layer sections */
+.ls{padding-top:6mm;margin-top:6mm;border-top:0.5pt solid #ececec;break-inside:avoid}
+.ls-first{border-top:none;padding-top:0;margin-top:0}
+.lh{display:flex;align-items:flex-start;gap:8pt;margin-bottom:3mm}
+.ldot{display:inline-block;width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:2pt}
+.lt{font-size:11pt;font-weight:700;line-height:1.2;color:#1e1e1e}
+.lsub{font-size:8pt;color:#aaa;margin-top:1mm}
+.arrow-seq{font-size:7pt;color:#666;margin-bottom:3mm;line-height:1.8;word-break:break-all;background:#f8f8f8;padding:3mm 4mm;border-radius:4pt;border-left:2pt solid #ddd;max-height:20mm;overflow:hidden}
+.step-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(28pt,1fr));gap:1.5pt}
+.step{border:0.3pt solid #ebebeb;border-radius:3pt;padding:2pt 3pt}
+.sl{display:block;font-size:5pt;color:#ccc;letter-spacing:.03em}
+.sn2{display:block;font-size:9pt;font-weight:700;color:#1e1e1e}
+/* Build tips */
+.tips-list{list-style:none;padding:0}
+.tips-list li{font-size:8.5pt;color:#555;padding:2mm 0 2mm 12pt;border-bottom:0.3pt solid #f5f5f5;position:relative;line-height:1.4}
+.tips-list li::before{content:"·";position:absolute;left:0;color:#bbb;font-size:16pt;line-height:.9}
+.tips-list li:last-child{border-bottom:none}
+/* Footer */
+.pf{position:absolute;bottom:8mm;left:18mm;right:18mm;display:flex;justify-content:space-between;font-size:7.5pt;color:#ccc;border-top:0.3pt solid #f0f0f0;padding-top:3mm}
 @page{size:A4;margin:0}
-@media print{
-  .toolbar{display:none}
-  body{background:#fff}
-  .page{margin:0;box-shadow:none;break-after:page}
-}
+@media print{.toolbar{display:none}body{background:#fff}.page{margin:0;box-shadow:none;break-after:page}}
 </style>
 </head>
 <body>
 <div class="toolbar">
-  <h2>String Art Template – stephrawlingscreations.ie</h2>
-  <button class="btn-print" onclick="window.print()">🖨 Print / Save as PDF</button>
+  <h2>String Art Build Guide — stephrawlingscreations.ie</h2>
+  <button class="btn-print" onclick="setTimeout(() => window.print(), 150)">🖨 Print / Save as PDF</button>
 </div>
 
+<!-- PAGE 1: BOARD TEMPLATE -->
 <div class="page">
   <div class="ph">
+    <div class="ph-label">String Art Studio</div>
     <h1>Board Template</h1>
     <p>Generated ${date} · stephrawlingscreations.ie</p>
   </div>
@@ -1391,33 +1467,57 @@ body{font-family:system-ui,sans-serif;background:#eee;color:#1e1e1e}
     <div class="stat"><b>${nailCount}</b><span>Nails</span></div>
     <div class="stat"><b>${board.charAt(0).toUpperCase() + board.slice(1)}</b><span>Shape</span></div>
     <div class="stat"><b>${totalLines}</b><span>Lines</span></div>
-    <div class="stat"><b>${activeLayers}</b><span>Layers</span></div>
+    <div class="stat"><b>${activeLayers}</b><span>Layer${activeLayers !== 1 ? "s" : ""}</span></div>
   </div>
   <div class="scale-ref">
     <div class="scale-bar"></div>
-    <p>This bar = 1 cm at 100% print scale</p>
+    <p>1 cm reference at 100% print scale</p>
   </div>
-  <div class="pf"><span>stephrawlingscreations.ie</span><span>Page 1 of 2 – Board Layout</span></div>
+  ${threadHTML}
+  <div class="pf"><span>stephrawlingscreations.ie</span><span>Page 1 of 2 — Board Layout</span></div>
 </div>
 
+<!-- PAGE 2: BUILD GUIDE -->
 <div class="page">
   <div class="ph">
-    <h1>Thread Sequence</h1>
+    <div class="ph-label">String Art Studio</div>
+    <h1>Build Guide</h1>
     <p>Generated ${date} · Follow each step in order to wrap your thread</p>
   </div>
-  ${seqHTML || '<p style="color:#aaa;margin-top:20mm;text-align:center">No sequence recorded yet — draw some lines first.</p>'}
-  <div class="pf"><span>stephrawlingscreations.ie</span><span>Page 2 of 2 – Thread Sequence</span></div>
+  <div class="start-box">
+    <h3>Before you begin</h3>
+    <ol>
+      <li>Start at nail <strong>${startNailLabel}</strong></li>
+      <li>Follow the sequence in order, one nail at a time</li>
+      <li>Complete one full layer before starting the next</li>
+    </ol>
+  </div>
+  ${seqHTML || '<p style="color:#bbb;text-align:center;margin-top:20mm">No sequence recorded — draw some lines first.</p>'}
+  <div class="section">
+    <h2 class="sh">Build Tips</h2>
+    <ul class="tips-list">
+      <li>Keep even tension on the thread throughout</li>
+      <li>Do not pull too tight — this can warp the board</li>
+      <li>Complete one full layer before starting the next</li>
+      <li>Use contrasting colours for clarity between layers</li>
+    </ul>
+  </div>
+  <div class="pf"><span>stephrawlingscreations.ie</span><span>Page 2 of 2 — Build Guide</span></div>
 </div>
 </body>
 </html>`;
 
-    const blob = new Blob([html], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    const win = window.open(url, "_blank");
+    const win = window.open("", "_blank");
     if (!win) {
-      URL.revokeObjectURL(url);
       showToast("Popup blocked — allow popups for this site.", true);
+      return;
     }
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+    win.onload = function () {
+      try { win.focus(); } catch (_) {}
+    };
   }
 
   init();
