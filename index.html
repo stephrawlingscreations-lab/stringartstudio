@@ -1505,19 +1505,7 @@
       </div>
       <div class="sr-nav-links">
         <a href="#designer">Designer</a>
-        <a href="#" class="coming">Templates <span>Coming Soon</span></a>
-        <a href="#" class="coming">About <span>Coming Soon</span></a>
       </div>
-      <button
-        class="sr-nav-cta"
-        onclick="
-          document
-            .getElementById('designer')
-            .scrollIntoView({ behavior: 'smooth' })
-        "
-      >
-        Try it free
-      </button>
     </nav>
 
     <!-- Landing page sections -->
@@ -2076,7 +2064,10 @@
         <!-- LOCKED: shown when not yet purchased -->
         <div id="proModalLocked">
           <h3>✦ Unlock Printable Build Guide</h3>
-          <p>Turn your design into a complete step-by-step guide you can follow on your board — no guessing, no mistakes.</p>
+          <p>
+            Turn your design into a complete step-by-step guide you can follow
+            on your board — no guessing, no mistakes.
+          </p>
           <ul>
             <li>Board layout with every nail numbered</li>
             <li>Step-by-step thread sequence guide</li>
@@ -2168,8 +2159,12 @@
     <script>
       function openProModal() {
         var unlocked = localStorage.getItem("sas_pro_unlocked") === "1";
-        document.getElementById("proModalLocked").style.display = unlocked ? "none" : "block";
-        document.getElementById("proModalUnlocked").style.display = unlocked ? "block" : "none";
+        document.getElementById("proModalLocked").style.display = unlocked
+          ? "none"
+          : "block";
+        document.getElementById("proModalUnlocked").style.display = unlocked
+          ? "block"
+          : "none";
         document.getElementById("proModal").style.display = "flex";
       }
 
@@ -2281,12 +2276,12 @@
     <div class="sr-cta-band">
       <div>
         <h2>Ready to start your next project?</h2>
-        <p></div>p>
         <p>
-          Free to use — no sign-up required. Upgrade to unlock printable
-          template export.
+          Create your design for free — then upgrade to get a printable build
+          guide you can follow step-by-step.
         </p>
       </div>
+
       <button
         class="sr-btn-primary"
         style="white-space: nowrap; padding: 13px 28px; font-size: 15px"
