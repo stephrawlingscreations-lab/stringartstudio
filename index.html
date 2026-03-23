@@ -237,9 +237,8 @@
       }
 
       .sr-how {
-        padding: 56px 32px;
+        padding: 28px 32px;
         border-top: 0.5px solid var(--color-border-tertiary);
-        background: var(--color-background-secondary);
       }
       .sr-section-label {
         font-size: 11px;
@@ -247,64 +246,49 @@
         text-transform: uppercase;
         color: #b85c38;
         font-weight: 500;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
       }
       .sr-section-title {
         font-family: "Playfair Display", serif;
-        font-size: 28px;
+        font-size: 20px;
         font-weight: 400;
-        margin: 0 0 36px;
+        margin: 0 0 20px;
       }
       .sr-steps {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
+        gap: 0;
+        border-top: 0.5px solid var(--color-border-tertiary);
       }
       .sr-step {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 5px;
+        padding: 14px 20px 0 0;
+        border-right: 0.5px solid var(--color-border-tertiary);
+      }
+      .sr-step:last-child {
+        border-right: none;
+        padding-right: 0;
       }
       .sr-step-num {
-        font-family: "Playfair Display", serif;
-        font-size: 36px;
+        font-family: "DM Sans", sans-serif;
+        font-size: 11px;
+        letter-spacing: 0.08em;
         color: #b85c38;
-        opacity: 0.3;
+        font-weight: 500;
         line-height: 1;
       }
       .sr-step h4 {
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 500;
         margin: 0;
       }
       .sr-step p {
-        font-size: 13px;
+        font-size: 12px;
         color: var(--color-text-secondary);
         margin: 0;
         line-height: 1.6;
-      }
-
-      .sr-cta-band {
-        padding: 56px 32px;
-        border-top: 0.5px solid var(--color-border-tertiary);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 32px;
-        background: var(--color-background-primary);
-        max-width: 900px;
-        margin: 0 auto;
-      }
-      .sr-cta-band h2 {
-        font-family: "Playfair Display", serif;
-        font-size: 26px;
-        font-weight: 400;
-        margin: 0;
-      }
-      .sr-cta-band p {
-        font-size: 14px;
-        color: var(--color-text-secondary);
-        margin: 6px 0 0;
       }
 
       .sr-footer {
@@ -346,13 +330,20 @@
         .sr-steps {
           grid-template-columns: 1fr 1fr;
         }
+        .sr-step:nth-child(even) {
+          border-right: none;
+          padding-right: 0;
+        }
+        .sr-step:nth-child(3),
+        .sr-step:nth-child(4) {
+          padding-top: 14px;
+          border-top: 0.5px solid var(--color-border-tertiary);
+          margin-top: 14px;
+        }
         .sr-how {
-          padding: 40px 20px;
+          padding: 24px 20px;
         }
-        .sr-cta-band {
-          flex-direction: column;
-          padding: 40px 20px;
-        }
+
         .sr-nav {
           padding: 14px 16px;
         }
@@ -2273,28 +2264,6 @@
     <script src="app.js"></script>
 
     <!-- CTA Band -->
-    <div class="sr-cta-band">
-      <div>
-        <h2>Ready to start your next project?</h2>
-        <p>
-          Create your design for free — then upgrade to get a printable build
-          guide you can follow step-by-step.
-        </p>
-      </div>
-
-      <button
-        class="sr-btn-primary"
-        style="white-space: nowrap; padding: 13px 28px; font-size: 15px"
-        onclick="
-          document
-            .getElementById('designer')
-            .scrollIntoView({ behavior: 'smooth' })
-        "
-      >
-        Open the designer
-      </button>
-    </div>
-
     <!-- Footer -->
     <div class="sr-footer">
       <span>© 2025 Steph Rawlings Creations</span>
