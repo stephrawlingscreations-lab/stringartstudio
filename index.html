@@ -146,7 +146,8 @@
         .sr-cta-band { flex-direction: column; padding: 40px 20px; }
         .sr-nav { padding: 14px 16px; }
         .sr-nav-links { display: none; }
-        .sr-logo-name { display: none; }
+        .sr-logo img { display: none; }
+        .sr-logo-name { display: block; }
       }
 
       body {
@@ -1303,41 +1304,126 @@
         </div>
         <div class="sr-hero-right">
           <svg width="240" height="240" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="120" cy="120" r="108" fill="#F5EDE3" stroke="#C8A882" stroke-width="1.5"/>
-            <g opacity="0.55" stroke="#B85C38" stroke-width="0.8" fill="none">
-              <line x1="120" y1="12" x2="202" y2="179"/>
-              <line x1="202" y1="179" x2="38" y2="179"/>
-              <line x1="38" y1="179" x2="120" y2="12"/>
-              <line x1="120" y1="12" x2="220" y2="95"/>
-              <line x1="220" y1="95" x2="55" y2="210"/>
-              <line x1="55" y1="210" x2="185" y2="210"/>
-              <line x1="185" y1="210" x2="20" y2="95"/>
-              <line x1="20" y1="95" x2="120" y2="12"/>
-              <line x1="120" y1="12" x2="230" y2="140"/>
-              <line x1="230" y1="140" x2="120" y2="228"/>
-              <line x1="120" y1="228" x2="10" y2="140"/>
-              <line x1="10" y1="140" x2="65" y2="25"/>
-              <line x1="65" y1="25" x2="175" y2="25"/>
-              <line x1="175" y1="25" x2="230" y2="140"/>
+            <defs>
+              <radialGradient id="sas_boardGrad" cx="42%" cy="38%" r="62%">
+                <stop offset="0%" stop-color="#FBF3E8"/>
+                <stop offset="100%" stop-color="#DBBF98"/>
+              </radialGradient>
+            </defs>
+            <!-- Board depth -->
+            <circle cx="122" cy="122" r="108" fill="#9B7040" opacity="0.28"/>
+            <!-- Board surface -->
+            <circle cx="120" cy="120" r="108" fill="url(#sas_boardGrad)" stroke="#9B7040" stroke-width="2.5"/>
+            <!-- Inner decorative ring -->
+            <circle cx="120" cy="120" r="104.5" fill="none" stroke="#B09070" stroke-width="0.6" opacity="0.5"/>
+            <!-- Step-9 strings (warm amber) — 24 nails evenly spaced, connect i to (i+9)%24 -->
+            <g stroke="#C87828" stroke-width="0.9" fill="none" opacity="0.32">
+              <line x1="120" y1="12" x2="196.4" y2="196.4"/>
+              <line x1="148" y1="15.7" x2="174" y2="213.5"/>
+              <line x1="174" y1="26.5" x2="148" y2="224.3"/>
+              <line x1="196.4" y1="43.6" x2="120" y2="228"/>
+              <line x1="213.5" y1="66" x2="92" y2="224.3"/>
+              <line x1="224.3" y1="92" x2="66" y2="213.5"/>
+              <line x1="228" y1="120" x2="43.6" y2="196.4"/>
+              <line x1="224.3" y1="148" x2="26.5" y2="174"/>
+              <line x1="213.5" y1="174" x2="15.7" y2="148"/>
+              <line x1="196.4" y1="196.4" x2="12" y2="120"/>
+              <line x1="174" y1="213.5" x2="15.7" y2="92"/>
+              <line x1="148" y1="224.3" x2="26.5" y2="66"/>
+              <line x1="120" y1="228" x2="43.6" y2="43.6"/>
+              <line x1="92" y1="224.3" x2="66" y2="26.5"/>
+              <line x1="66" y1="213.5" x2="92" y2="15.7"/>
+              <line x1="43.6" y1="196.4" x2="120" y2="12"/>
+              <line x1="26.5" y1="174" x2="148" y2="15.7"/>
+              <line x1="15.7" y1="148" x2="174" y2="26.5"/>
+              <line x1="12" y1="120" x2="196.4" y2="43.6"/>
+              <line x1="15.7" y1="92" x2="213.5" y2="66"/>
+              <line x1="26.5" y1="66" x2="224.3" y2="92"/>
+              <line x1="43.6" y1="43.6" x2="228" y2="120"/>
+              <line x1="66" y1="26.5" x2="224.3" y2="148"/>
+              <line x1="92" y1="15.7" x2="213.5" y2="174"/>
             </g>
-            <g opacity="0.4" stroke="#5A7FAA" stroke-width="0.8" fill="none">
-              <line x1="120" y1="12" x2="215" y2="168"/>
-              <line x1="215" y1="168" x2="25" y2="168"/>
-              <line x1="25" y1="168" x2="120" y2="228"/>
-              <line x1="120" y1="228" x2="215" y2="72"/>
-              <line x1="215" y1="72" x2="25" y2="72"/>
-              <line x1="25" y1="72" x2="120" y2="12"/>
+            <!-- Step-7 strings (terracotta) — connect i to (i+7)%24 -->
+            <g stroke="#B84030" stroke-width="0.9" fill="none" opacity="0.52">
+              <line x1="120" y1="12" x2="224.3" y2="148"/>
+              <line x1="148" y1="15.7" x2="213.5" y2="174"/>
+              <line x1="174" y1="26.5" x2="196.4" y2="196.4"/>
+              <line x1="196.4" y1="43.6" x2="174" y2="213.5"/>
+              <line x1="213.5" y1="66" x2="148" y2="224.3"/>
+              <line x1="224.3" y1="92" x2="120" y2="228"/>
+              <line x1="228" y1="120" x2="92" y2="224.3"/>
+              <line x1="224.3" y1="148" x2="66" y2="213.5"/>
+              <line x1="213.5" y1="174" x2="43.6" y2="196.4"/>
+              <line x1="196.4" y1="196.4" x2="26.5" y2="174"/>
+              <line x1="174" y1="213.5" x2="15.7" y2="148"/>
+              <line x1="148" y1="224.3" x2="12" y2="120"/>
+              <line x1="120" y1="228" x2="15.7" y2="92"/>
+              <line x1="92" y1="224.3" x2="26.5" y2="66"/>
+              <line x1="66" y1="213.5" x2="43.6" y2="43.6"/>
+              <line x1="43.6" y1="196.4" x2="66" y2="26.5"/>
+              <line x1="26.5" y1="174" x2="92" y2="15.7"/>
+              <line x1="15.7" y1="148" x2="120" y2="12"/>
+              <line x1="12" y1="120" x2="148" y2="15.7"/>
+              <line x1="15.7" y1="92" x2="174" y2="26.5"/>
+              <line x1="26.5" y1="66" x2="196.4" y2="43.6"/>
+              <line x1="43.6" y1="43.6" x2="213.5" y2="66"/>
+              <line x1="66" y1="26.5" x2="224.3" y2="92"/>
+              <line x1="92" y1="15.7" x2="228" y2="120"/>
             </g>
-            <g fill="#8B6348">
-              <circle cx="120" cy="12" r="3"/><circle cx="156" cy="16" r="3"/><circle cx="189" cy="31" r="3"/>
-              <circle cx="215" cy="55" r="3"/><circle cx="228" cy="86" r="3"/><circle cx="228" cy="120" r="3"/>
-              <circle cx="215" cy="154" r="3"/><circle cx="189" cy="178" r="3"/><circle cx="156" cy="193" r="3"/>
-              <circle cx="120" cy="228" r="3"/><circle cx="84" cy="224" r="3"/><circle cx="51" cy="209" r="3"/>
-              <circle cx="25" cy="185" r="3"/><circle cx="12" cy="154" r="3"/><circle cx="12" cy="120" r="3"/>
-              <circle cx="25" cy="86" r="3"/><circle cx="51" cy="62" r="3"/><circle cx="84" cy="47" r="3"/>
+            <!-- 24 nails evenly spaced (r=108, every 15°, starting at top) -->
+            <g fill="#3D2410">
+              <circle cx="120" cy="12" r="2.8"/>
+              <circle cx="148" cy="15.7" r="2.8"/>
+              <circle cx="174" cy="26.5" r="2.8"/>
+              <circle cx="196.4" cy="43.6" r="2.8"/>
+              <circle cx="213.5" cy="66" r="2.8"/>
+              <circle cx="224.3" cy="92" r="2.8"/>
+              <circle cx="228" cy="120" r="2.8"/>
+              <circle cx="224.3" cy="148" r="2.8"/>
+              <circle cx="213.5" cy="174" r="2.8"/>
+              <circle cx="196.4" cy="196.4" r="2.8"/>
+              <circle cx="174" cy="213.5" r="2.8"/>
+              <circle cx="148" cy="224.3" r="2.8"/>
+              <circle cx="120" cy="228" r="2.8"/>
+              <circle cx="92" cy="224.3" r="2.8"/>
+              <circle cx="66" cy="213.5" r="2.8"/>
+              <circle cx="43.6" cy="196.4" r="2.8"/>
+              <circle cx="26.5" cy="174" r="2.8"/>
+              <circle cx="15.7" cy="148" r="2.8"/>
+              <circle cx="12" cy="120" r="2.8"/>
+              <circle cx="15.7" cy="92" r="2.8"/>
+              <circle cx="26.5" cy="66" r="2.8"/>
+              <circle cx="43.6" cy="43.6" r="2.8"/>
+              <circle cx="66" cy="26.5" r="2.8"/>
+              <circle cx="92" cy="15.7" r="2.8"/>
             </g>
-            <circle cx="120" cy="120" r="4" fill="#B85C38" opacity="0.4"/>
-            <text x="120" y="120" text-anchor="middle" dominant-baseline="middle" font-size="9" fill="#8B6348" font-family="DM Sans, sans-serif" opacity="0.7">120 nails</text>
+            <!-- Nail glints (top-left highlight) -->
+            <g fill="rgba(210,170,110,0.7)">
+              <circle cx="119.2" cy="11.2" r="1.1"/>
+              <circle cx="147.2" cy="14.9" r="1.1"/>
+              <circle cx="173.2" cy="25.7" r="1.1"/>
+              <circle cx="195.6" cy="42.8" r="1.1"/>
+              <circle cx="212.7" cy="65.2" r="1.1"/>
+              <circle cx="223.5" cy="91.2" r="1.1"/>
+              <circle cx="227.2" cy="119.2" r="1.1"/>
+              <circle cx="223.5" cy="147.2" r="1.1"/>
+              <circle cx="212.7" cy="173.2" r="1.1"/>
+              <circle cx="195.6" cy="195.6" r="1.1"/>
+              <circle cx="173.2" cy="212.7" r="1.1"/>
+              <circle cx="147.2" cy="223.5" r="1.1"/>
+              <circle cx="119.2" cy="227.2" r="1.1"/>
+              <circle cx="91.2" cy="223.5" r="1.1"/>
+              <circle cx="65.2" cy="212.7" r="1.1"/>
+              <circle cx="42.8" cy="195.6" r="1.1"/>
+              <circle cx="25.7" cy="173.2" r="1.1"/>
+              <circle cx="14.9" cy="147.2" r="1.1"/>
+              <circle cx="11.2" cy="119.2" r="1.1"/>
+              <circle cx="14.9" cy="91.2" r="1.1"/>
+              <circle cx="25.7" cy="65.2" r="1.1"/>
+              <circle cx="42.8" cy="42.8" r="1.1"/>
+              <circle cx="65.2" cy="25.7" r="1.1"/>
+              <circle cx="91.2" cy="14.9" r="1.1"/>
+            </g>
           </svg>
         </div>
       </div>
