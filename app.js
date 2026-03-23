@@ -721,6 +721,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const SAVE_KEY = "sas_design_v1";
 
   function saveDesign() {
+    const hasContent = layers.some(L => L.edges && L.edges.length > 0);
+    if (!hasContent) return;
     try {
       const state = {
         layers,
