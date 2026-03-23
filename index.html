@@ -10,7 +10,7 @@
     <link rel="icon" href="logo.png" />
 
     <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap"
       rel="stylesheet"
     />
 
@@ -22,6 +22,131 @@
         --panel-bg: #ffffff;
         --text-dark: #1e1e1e;
         --border-soft: #e7e5e2;
+
+        /* Mockup design tokens */
+        --color-text-primary: #1e1e1e;
+        --color-text-secondary: #666;
+        --color-border-tertiary: #e7e5e2;
+        --color-border-secondary: #d5d3d0;
+        --color-background-primary: #ffffff;
+        --color-background-secondary: #f8f5f1;
+      }
+
+      /* ================= LANDING PAGE ================= */
+
+      .sr-nav {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 18px 32px;
+        border-bottom: 0.5px solid var(--color-border-tertiary);
+        background: var(--color-background-primary);
+        font-family: 'DM Sans', sans-serif;
+      }
+      .sr-logo { display: flex; align-items: center; gap: 10px; }
+      .sr-logo img { height: 44px; width: auto; display: block; }
+      .sr-logo-name { font-family: 'Playfair Display', serif; font-size: 17px; letter-spacing: 0.01em; color: var(--color-text-primary); }
+      .sr-logo-name span { font-style: italic; color: #B85C38; }
+      .sr-nav-links { display: flex; gap: 24px; font-size: 13px; color: var(--color-text-secondary); }
+      .sr-nav-links a { text-decoration: none; color: inherit; }
+      .sr-nav-links a.coming { color: #bbb; pointer-events: none; display: inline-block; text-align: center; }
+      .sr-nav-links a.coming span { display: block; font-size: 10px; font-weight: 500; color: var(--brand-gold); margin-top: 2px; }
+      .sr-nav-cta {
+        font-size: 13px; padding: 7px 18px;
+        background: #B85C38; color: #fff; border: none;
+        border-radius: 20px; cursor: pointer; font-family: 'DM Sans', sans-serif;
+      }
+      .sr-nav-cta:hover { opacity: 0.9; }
+
+      .sr-landing { font-family: 'DM Sans', sans-serif; color: var(--color-text-primary); max-width: 900px; margin: 0 auto; }
+
+      .sr-hero {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+        min-height: 420px;
+        background: var(--color-background-primary);
+      }
+      .sr-hero-left {
+        padding: 56px 40px 56px 32px;
+        display: flex; flex-direction: column; justify-content: center; gap: 20px;
+        border-right: 0.5px solid var(--color-border-tertiary);
+      }
+      .sr-eyebrow { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #B85C38; font-weight: 500; }
+      .sr-headline { font-family: 'Playfair Display', serif; font-size: 38px; line-height: 1.2; font-weight: 400; margin: 0; }
+      .sr-headline em { font-style: italic; color: #B85C38; }
+      .sr-sub { font-size: 15px; line-height: 1.7; color: var(--color-text-secondary); max-width: 340px; }
+      .sr-btns { display: flex; gap: 12px; margin-top: 8px; }
+      .sr-btn-primary { background: #B85C38; color: #fff; border: none; padding: 11px 24px; border-radius: 24px; font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; }
+      .sr-btn-primary:hover { opacity: 0.9; }
+      .sr-btn-secondary { background: transparent; color: var(--color-text-primary); border: 0.5px solid var(--color-border-secondary); padding: 11px 24px; border-radius: 24px; font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; }
+      .sr-btn-secondary:hover { background: var(--color-background-secondary); }
+      .sr-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-text-secondary); }
+      .sr-badge-dot { width: 7px; height: 7px; border-radius: 50%; background: #5A9E6F; flex-shrink: 0; }
+
+      .sr-hero-right {
+        background: #FBF6F0;
+        display: flex; align-items: center; justify-content: center;
+        position: relative; overflow: hidden; padding: 24px;
+      }
+
+      .sr-features {
+        display: grid; grid-template-columns: repeat(3, 1fr);
+        border-top: 0.5px solid var(--color-border-tertiary);
+      }
+      .sr-feature {
+        padding: 32px 28px;
+        border-right: 0.5px solid var(--color-border-tertiary);
+      }
+      .sr-feature:last-child { border-right: none; }
+      .sr-feature-icon { width: 36px; height: 36px; border-radius: 8px; background: #FBF6F0; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+      .sr-feature h3 { font-size: 14px; font-weight: 500; margin: 0 0 6px; }
+      .sr-feature p { font-size: 13px; color: var(--color-text-secondary); margin: 0; line-height: 1.6; }
+
+      .sr-how {
+        padding: 56px 32px;
+        border-top: 0.5px solid var(--color-border-tertiary);
+        background: var(--color-background-secondary);
+      }
+      .sr-section-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #B85C38; font-weight: 500; margin-bottom: 6px; }
+      .sr-section-title { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 400; margin: 0 0 36px; }
+      .sr-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+      .sr-step { display: flex; flex-direction: column; gap: 10px; }
+      .sr-step-num { font-family: 'Playfair Display', serif; font-size: 36px; color: #B85C38; opacity: 0.3; line-height: 1; }
+      .sr-step h4 { font-size: 14px; font-weight: 500; margin: 0; }
+      .sr-step p { font-size: 13px; color: var(--color-text-secondary); margin: 0; line-height: 1.6; }
+
+      .sr-cta-band {
+        padding: 56px 32px;
+        border-top: 0.5px solid var(--color-border-tertiary);
+        display: flex; align-items: center; justify-content: space-between; gap: 32px;
+        background: var(--color-background-primary);
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      .sr-cta-band h2 { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 400; margin: 0; }
+      .sr-cta-band p { font-size: 14px; color: var(--color-text-secondary); margin: 6px 0 0; }
+
+      .sr-footer {
+        padding: 20px 32px;
+        border-top: 0.5px solid var(--color-border-tertiary);
+        display: flex; align-items: center; justify-content: space-between;
+        font-size: 12px; color: var(--color-text-secondary);
+        font-family: 'DM Sans', sans-serif;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      @media (max-width: 700px) {
+        .sr-hero { grid-template-columns: 1fr; }
+        .sr-hero-right { display: none; }
+        .sr-hero-left { padding: 40px 20px; }
+        .sr-headline { font-size: 28px; }
+        .sr-features { grid-template-columns: 1fr; }
+        .sr-feature { border-right: none; border-bottom: 0.5px solid var(--color-border-tertiary); }
+        .sr-feature:last-child { border-bottom: none; }
+        .sr-steps { grid-template-columns: 1fr 1fr; }
+        .sr-how { padding: 40px 20px; }
+        .sr-cta-band { flex-direction: column; padding: 40px 20px; }
+        .sr-nav { padding: 14px 16px; }
+        .sr-nav-links { display: none; }
+        .sr-logo-name { display: none; }
       }
 
       body {
@@ -426,7 +551,29 @@
       /* ================= DRAW MODE ================= */
 
       .mobile-draw-launch {
+        padding: 0 0 8px;
+      }
+
+      .open-draw-btn {
+        width: 100%;
+        background: #B85C38;
+        color: white;
+        border: none;
+        border-radius: 24px;
+        padding: 15px 24px;
+        font-size: 16px;
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
         justify-content: center;
+        gap: 8px;
+        box-shadow: 0 4px 16px rgba(184, 92, 56, 0.28);
+      }
+
+      .open-draw-btn:hover {
+        opacity: 0.92;
       }
 
       .draw-mode-overlay {
@@ -453,16 +600,26 @@
         flex: 0 0 auto;
       }
 
-      .draw-mode-title {
-        font-weight: 600;
+      .draw-mode-brand {
+        font-family: 'Playfair Display', serif;
         font-size: 15px;
+        color: var(--text-dark);
+        white-space: nowrap;
+      }
+
+      .draw-mode-brand em {
+        font-style: italic;
+        color: #B85C38;
       }
 
       .draw-mode-exit {
-        background: var(--brand-blue);
+        background: #B85C38;
         color: white;
-        border-radius: 10px;
-        padding: 8px 12px;
+        border-radius: 20px;
+        padding: 9px 20px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 14px;
+        white-space: nowrap;
       }
 
       .draw-mode-canvas-wrap {
@@ -470,22 +627,10 @@
         display: flex;
         align-items: center;
         justify-content: center;
-
         padding: 14px;
         overflow: auto;
         -webkit-overflow-scrolling: touch;
-
-        border-radius: 12px;
-
-        background: radial-gradient(
-          circle at center,
-          #ffffff 60%,
-          #f6f6f6 100%
-        );
-
-        box-shadow:
-          0 6px 18px rgba(0, 0, 0, 0.06),
-          inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        background: radial-gradient(circle at center, #ffffff 60%, #f6f6f6 100%);
       }
 
       #drawModeCanvas {
@@ -494,38 +639,85 @@
         aspect-ratio: 1 / 1;
         background: white;
         border-radius: 18px;
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
         touch-action: none;
       }
-      .draw-mode-toolbar select,
-      .draw-mode-toolbar input[type="color"] {
-        min-height: 44px;
-        border-radius: 12px;
-        border: 1px solid #d7d7d7;
-        font-size: 14px;
-        width: 100%;
-        box-sizing: border-box;
-      }
+
       .draw-mode-toolbar {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
+        display: flex;
+        flex-direction: column;
         gap: 8px;
-        padding: 12px;
-
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-
-        background: rgba(255, 255, 255, 0.85);
-
-        border-top: 1px solid var(--border-soft);
-        box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.05);
+        padding: 12px 14px 20px;
+        background: white;
+        border-top: 0.5px solid var(--border-soft);
+        box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.05);
         flex: 0 0 auto;
       }
 
-      .draw-mode-toolbar button {
-        min-height: 44px;
+      .dm-thread-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .dm-thread-row input[type="color"] {
+        width: 52px;
+        height: 48px;
+        flex-shrink: 0;
+        border-radius: 12px;
+        border: 1px solid #d7d7d7;
+        padding: 3px;
+        cursor: pointer;
+        box-sizing: border-box;
+      }
+
+      .dm-thread-row select {
+        flex: 1;
+        min-height: 48px;
+        border-radius: 12px;
+        border: 1px solid #d7d7d7;
+        font-size: 14px;
+        padding: 0 10px;
+        box-sizing: border-box;
+        background: white;
+      }
+
+      .dm-thread-row .dm-new-layer {
+        min-height: 48px;
+        background: transparent;
+        color: var(--text-dark);
+        border: 1px solid #d7d7d7;
         border-radius: 12px;
         font-size: 14px;
+        white-space: nowrap;
+        padding: 0 14px;
+        font-family: 'DM Sans', sans-serif;
+      }
+
+      .dm-action-row {
+        display: flex;
+        gap: 8px;
+      }
+
+      .dm-action-row button {
+        flex: 1;
+        min-height: 48px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-family: 'DM Sans', sans-serif;
+        background: transparent;
+        color: var(--text-dark);
+        border: 1px solid #d7d7d7;
+        white-space: nowrap;
+      }
+
+      .dm-action-row button:hover {
+        background: #f8f5f1;
+        opacity: 1;
+      }
+
+      #drawZoomOut, #drawZoomIn {
+        flex: 0 0 52px;
       }
 
       /* ================= RESPONSIVE ================= */
@@ -543,51 +735,96 @@
         .mobile-draw-launch {
           display: flex;
         }
+
+        .wrap {
+          grid-template-columns: 1fr;
+        }
+
+        #cv {
+          display: none;
+        }
+
+        .panel {
+          position: static;
+        }
+
+        .container {
+          padding: 24px 16px 40px;
+        }
+
+        .designer-intro {
+          padding: 32px 20px 0;
+        }
+
+        .designer-intro h2 {
+          font-size: 22px;
+        }
+
+
       }
 
       @media (min-width: 901px) {
-        .floating-undo {
-          display: none;
-        }
-
         .mobile-draw-launch {
           display: none;
         }
+
+        .panel-settings-toggle {
+          display: none;
+        }
+
+      .panel-settings-toggle {
+        width: 100%;
+        margin-top: 12px;
+        font-size: 13px;
+        background: transparent;
+        color: var(--text-dark);
+        border: 1px solid #d7d7d7;
+      }
       }
 
       /* ================= FLOATING UNDO ================= */
 
-      .floating-undo {
-        position: fixed;
-        bottom: 25px;
-        right: 25px;
-        width: 54px;
-        height: 54px;
-        border-radius: 50%;
-        background: var(--brand-blue);
-        color: white;
-        font-size: 22px;
-        font-weight: bold;
-        border: none;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
-        z-index: 999;
-      }
       /* ================= DRAW MODE MINI SEQUENCE ================= */
 
       .draw-mode-seq-mini {
-        background: white;
-        border-bottom: 1px solid var(--border-soft);
-        padding: 8px 12px;
+        background: #faf8f5;
+        border-bottom: 0.5px solid var(--border-soft);
+        padding: 8px 16px;
         font-size: 12px;
         line-height: 1.4;
-        color: #333;
+        color: #888;
         white-space: nowrap;
         overflow-x: auto;
+        font-family: ui-monospace, monospace;
+        flex-shrink: 0;
       }
+
+      .drawmode-presets {
+        background: white;
+        border-bottom: 0.5px solid var(--border-soft);
+        padding: 10px 14px;
+        flex-shrink: 0;
+      }
+
+      .drawmode-presets-label {
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #B85C38;
+        font-weight: 600;
+        font-family: 'DM Sans', sans-serif;
+        margin-bottom: 8px;
+      }
+
+      .drawmode-preset-row {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+
+      .drawmode-preset-row::-webkit-scrollbar { display: none; }
       button {
         touch-action: manipulation;
       }
@@ -598,6 +835,268 @@
       button {
         -webkit-tap-highlight-color: transparent;
       }
+      /* ================= DESIGNER INTRO ================= */
+
+      .designer-intro {
+        text-align: center;
+        padding: 56px 20px 0;
+        background: var(--bg-soft);
+      }
+
+      .designer-intro-label {
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #B85C38;
+        font-weight: 500;
+        font-family: 'DM Sans', sans-serif;
+        display: block;
+        margin-bottom: 10px;
+      }
+
+      .designer-intro h2 {
+        font-family: 'Playfair Display', serif;
+        font-size: 30px;
+        font-weight: 400;
+        margin: 0 0 10px;
+        color: var(--text-dark);
+      }
+
+      .designer-intro p {
+        font-size: 14px;
+        color: #666;
+        margin: 0;
+        font-family: 'DM Sans', sans-serif;
+      }
+
+      /* ================= PANEL SECTIONS ================= */
+
+      .panel {
+        position: sticky;
+        top: 20px;
+      }
+
+      .panel-section {
+        padding: 16px 0 4px;
+        border-top: 1px solid #f0eeeb;
+      }
+
+      .panel-section:first-child {
+        border-top: none;
+        padding-top: 0;
+      }
+
+      .panel-section-label {
+        font-size: 10px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #B85C38;
+        font-weight: 600;
+        font-family: 'DM Sans', sans-serif;
+        margin-bottom: 10px;
+        display: block;
+      }
+
+      /* ================= PANEL BUTTONS ================= */
+
+      .panel button {
+        background: #B85C38;
+        font-family: 'DM Sans', system-ui, sans-serif;
+      }
+
+      .panel .btn-ghost {
+        background: transparent;
+        color: var(--text-dark);
+        border: 1px solid #d7d7d7;
+      }
+
+      .panel .btn-ghost:hover {
+        background: #f8f5f1;
+        opacity: 1;
+      }
+
+      .panel .btn-danger {
+        background: #fdf2f1;
+        color: #c0392b;
+        border: 1px solid #f5d5d2;
+      }
+
+      .panel .btn-danger:hover {
+        background: #fce8e6;
+        opacity: 1;
+      }
+
+      /* ================= COLOR + LAYER ROW ================= */
+
+      .color-layer-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .color-layer-row input[type="color"] {
+        width: 48px;
+        height: 48px;
+        flex-shrink: 0;
+        border-radius: 12px;
+        border: 1px solid #d7d7d7;
+        padding: 3px;
+        cursor: pointer;
+      }
+
+      .color-layer-row select {
+        flex: 1;
+        margin: 0;
+      }
+
+      /* ================= ACTION ROW ================= */
+
+      .action-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+      }
+
+      .action-row button {
+        flex: 1;
+        min-width: 80px;
+        font-size: 13px;
+        padding: 9px 10px;
+      }
+
+      .undo-row {
+        padding: 12px 0 0;
+        border-top: 1px solid #f0eeeb;
+        margin-top: 4px;
+      }
+
+      .undo-row button {
+        width: 100%;
+        background: transparent;
+        color: var(--text-dark);
+        border: 1px solid #d7d7d7;
+        font-size: 14px;
+      }
+
+      .undo-row button:hover {
+        background: #f8f5f1;
+        opacity: 1;
+      }
+
+      /* ================= EXPORT ================= */
+
+      .export-row {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .export-row button {
+        flex: 1;
+        font-size: 13px;
+        padding: 9px 10px;
+      }
+
+      .continue-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .continue-row input {
+        width: 64px;
+        flex-shrink: 0;
+        margin: 0;
+      }
+
+      .continue-row label {
+        margin: 0;
+        font-size: 12px;
+        color: #888;
+        flex-shrink: 0;
+      }
+
+      .continue-row button {
+        flex: 1;
+        font-size: 13px;
+        padding: 9px 10px;
+      }
+
+      .btn-pro-full {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 12px 16px !important;
+        font-size: 14px !important;
+        margin-top: 4px;
+      }
+
+      .pro-label {
+        font-size: 10px;
+        background: rgba(0,0,0,0.15);
+        padding: 2px 7px;
+        border-radius: 999px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        font-weight: 700;
+      }
+
+      /* ================= SEQUENCE OUT ================= */
+
+      .seq-out-wrap {
+        background: #faf8f5;
+        border: 1px solid #edeae6;
+        border-radius: 12px;
+        padding: 12px;
+        margin-top: 4px;
+        max-height: 140px;
+        overflow-y: auto;
+      }
+
+      .seq-out-wrap .mono {
+        background: none;
+        border-radius: 0;
+        padding: 0;
+        margin: 0;
+        font-size: 11px;
+        color: #555;
+      }
+
+      /* ================= TOAST ================= */
+
+      .toast {
+        position: fixed;
+        bottom: 32px;
+        left: 50%;
+        transform: translateX(-50%) translateY(12px);
+        background: #1e1e1e;
+        color: #fff;
+        font-family: 'DM Sans', system-ui, sans-serif;
+        font-size: 14px;
+        padding: 10px 20px;
+        border-radius: 999px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.22);
+        opacity: 0;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        pointer-events: none;
+        z-index: 99999;
+        white-space: nowrap;
+      }
+
+      .toast.toast-error {
+        background: #c0392b;
+      }
+
+      .toast.visible {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
       .zoom-controls {
         display: flex;
         gap: 10px;
@@ -667,38 +1166,9 @@
         color: #2f56d3;
         outline: none;
       }
-      .drawmode-presets {
-        display: none;
-        padding: 10px 14px 0;
-      }
-
-      .drawmode-presets-label {
-        font-size: 0.9rem;
-        font-weight: 700;
-        color: #1e1e1e;
-        margin-bottom: 8px;
-      }
-
-      .drawmode-preset-row {
-        display: flex;
-        gap: 10px;
-        overflow-x: auto;
-        padding-bottom: 4px;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-      }
-
-      .drawmode-preset-row::-webkit-scrollbar {
-        display: none;
-      }
-
       @media (max-width: 899px) {
         .quick-patterns-section {
           display: none;
-        }
-
-        .drawmode-presets {
-          display: block;
         }
       }
       /* DESKTOP */
@@ -802,34 +1272,146 @@
   </head>
 
   <body>
-    <header class="site-header">
-      <div class="header-inner">
-        <img src="logo.png" alt="Steph Rawlings Creations" class="logo" />
+    <!-- Nav -->
+    <nav class="sr-nav">
+      <div class="sr-logo">
+        <img src="logo.png" alt="Steph Rawlings Creations" />
+        <span class="sr-logo-name">Steph Rawlings <span>Creations</span></span>
+      </div>
+      <div class="sr-nav-links">
+        <a href="#designer">Designer</a>
+        <a href="#" class="coming">Templates <span>Coming Soon</span></a>
+        <a href="#" class="coming">About <span>Coming Soon</span></a>
+      </div>
+      <button class="sr-nav-cta" onclick="document.getElementById('designer').scrollIntoView({behavior:'smooth'})">Try it free</button>
+    </nav>
 
-        <div class="brand-title">Steph Rawlings Creations</div>
+    <!-- Landing page sections -->
+    <div class="sr-landing">
 
-        <div class="nav-links">
-          <a href="#">Designer</a>
-          <a href="#" class="coming">Templates <span>Coming Soon</span></a>
-          <a href="#" class="coming">About <span>Coming Soon</span></a>
+      <!-- Hero -->
+      <div class="sr-hero">
+        <div class="sr-hero-left">
+          <div class="sr-eyebrow">Free online tool for makers</div>
+          <h1 class="sr-headline">Design your<br><em>string art</em><br>before you build it</h1>
+          <p class="sr-sub">Plan your nail layout, choose your thread paths, and download a print-ready template — all in your browser, for free.</p>
+          <div class="sr-btns">
+            <button class="sr-btn-primary" onclick="document.getElementById('designer').scrollIntoView({behavior:'smooth'})">Open the designer</button>
+            <button class="sr-btn-secondary" onclick="openHelp()">How it works</button>
+          </div>
+          <div class="sr-badge"><span class="sr-badge-dot"></span>Free to use · No account needed</div>
+        </div>
+        <div class="sr-hero-right">
+          <svg width="240" height="240" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="120" cy="120" r="108" fill="#F5EDE3" stroke="#C8A882" stroke-width="1.5"/>
+            <g opacity="0.55" stroke="#B85C38" stroke-width="0.8" fill="none">
+              <line x1="120" y1="12" x2="202" y2="179"/>
+              <line x1="202" y1="179" x2="38" y2="179"/>
+              <line x1="38" y1="179" x2="120" y2="12"/>
+              <line x1="120" y1="12" x2="220" y2="95"/>
+              <line x1="220" y1="95" x2="55" y2="210"/>
+              <line x1="55" y1="210" x2="185" y2="210"/>
+              <line x1="185" y1="210" x2="20" y2="95"/>
+              <line x1="20" y1="95" x2="120" y2="12"/>
+              <line x1="120" y1="12" x2="230" y2="140"/>
+              <line x1="230" y1="140" x2="120" y2="228"/>
+              <line x1="120" y1="228" x2="10" y2="140"/>
+              <line x1="10" y1="140" x2="65" y2="25"/>
+              <line x1="65" y1="25" x2="175" y2="25"/>
+              <line x1="175" y1="25" x2="230" y2="140"/>
+            </g>
+            <g opacity="0.4" stroke="#5A7FAA" stroke-width="0.8" fill="none">
+              <line x1="120" y1="12" x2="215" y2="168"/>
+              <line x1="215" y1="168" x2="25" y2="168"/>
+              <line x1="25" y1="168" x2="120" y2="228"/>
+              <line x1="120" y1="228" x2="215" y2="72"/>
+              <line x1="215" y1="72" x2="25" y2="72"/>
+              <line x1="25" y1="72" x2="120" y2="12"/>
+            </g>
+            <g fill="#8B6348">
+              <circle cx="120" cy="12" r="3"/><circle cx="156" cy="16" r="3"/><circle cx="189" cy="31" r="3"/>
+              <circle cx="215" cy="55" r="3"/><circle cx="228" cy="86" r="3"/><circle cx="228" cy="120" r="3"/>
+              <circle cx="215" cy="154" r="3"/><circle cx="189" cy="178" r="3"/><circle cx="156" cy="193" r="3"/>
+              <circle cx="120" cy="228" r="3"/><circle cx="84" cy="224" r="3"/><circle cx="51" cy="209" r="3"/>
+              <circle cx="25" cy="185" r="3"/><circle cx="12" cy="154" r="3"/><circle cx="12" cy="120" r="3"/>
+              <circle cx="25" cy="86" r="3"/><circle cx="51" cy="62" r="3"/><circle cx="84" cy="47" r="3"/>
+            </g>
+            <circle cx="120" cy="120" r="4" fill="#B85C38" opacity="0.4"/>
+            <text x="120" y="120" text-anchor="middle" dominant-baseline="middle" font-size="9" fill="#8B6348" font-family="DM Sans, sans-serif" opacity="0.7">120 nails</text>
+          </svg>
         </div>
       </div>
-    </header>
 
-    <section class="hero">
-      <h1>Interactive String Art Board Designer</h1>
+      <!-- Feature strip -->
+      <div class="sr-features">
+        <div class="sr-feature">
+          <div class="sr-feature-icon">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <circle cx="9" cy="9" r="7.5" stroke="#B85C38" stroke-width="1.2"/>
+              <circle cx="9" cy="9" r="3" fill="#B85C38" opacity="0.3"/>
+            </svg>
+          </div>
+          <h3>Nail board designer</h3>
+          <p>Set your board shape, nail count, and spacing. Works for circle and square boards.</p>
+        </div>
+        <div class="sr-feature">
+          <div class="sr-feature-icon">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M2 9 L9 2 L16 9 L9 16 Z" stroke="#B85C38" stroke-width="1.2" fill="none"/>
+              <line x1="2" y1="9" x2="16" y2="9" stroke="#B85C38" stroke-width="0.8" opacity="0.5"/>
+              <line x1="9" y1="2" x2="9" y2="16" stroke="#B85C38" stroke-width="0.8" opacity="0.5"/>
+            </svg>
+          </div>
+          <h3>Preset patterns</h3>
+          <p>Start with a spiral, star, or flower — then customise the spacing and layers.</p>
+        </div>
+        <div class="sr-feature">
+          <div class="sr-feature-icon">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <rect x="2" y="2" width="14" height="14" rx="2" stroke="#B85C38" stroke-width="1.2" fill="none"/>
+              <line x1="2" y1="7" x2="16" y2="7" stroke="#B85C38" stroke-width="0.8" opacity="0.5"/>
+              <line x1="6" y1="7" x2="6" y2="16" stroke="#B85C38" stroke-width="0.8" opacity="0.5"/>
+            </svg>
+          </div>
+          <h3>Download your template</h3>
+          <p>Export a numbered PNG preview, or upgrade to Pro for a full print-ready template.</p>
+        </div>
+      </div>
 
-      <div class="version-badge">V1.0</div>
+      <!-- How it works -->
+      <div class="sr-how">
+        <div class="sr-section-label">How it works</div>
+        <h2 class="sr-section-title">From idea to nail board in minutes</h2>
+        <div class="sr-steps">
+          <div class="sr-step">
+            <div class="sr-step-num">01</div>
+            <h4>Set your board</h4>
+            <p>Choose circle or square, set your nail count and board size.</p>
+          </div>
+          <div class="sr-step">
+            <div class="sr-step-num">02</div>
+            <h4>Pick a pattern</h4>
+            <p>Start with a preset or tap nails manually to draw your own design.</p>
+          </div>
+          <div class="sr-step">
+            <div class="sr-step-num">03</div>
+            <h4>Add colours</h4>
+            <p>Layer multiple thread colours to build up the design.</p>
+          </div>
+          <div class="sr-step">
+            <div class="sr-step-num">04</div>
+            <h4>Download &amp; build</h4>
+            <p>Export your template and use it as your guide while you work.</p>
+          </div>
+        </div>
+      </div>
 
-      <p>
-        Create precise, print-ready numbered layouts in seconds. Free to use.
-        Download precision templates when you're ready to build.
-      </p>
-
-      <button class="help-btn" onclick="openHelp()">
-        How to use this tool
-      </button>
-    </section>
+    </div><!-- end .sr-landing -->
+    <div class="designer-intro">
+      <span class="designer-intro-label">Try it now</span>
+      <h2>Your string art designer</h2>
+      <p>Pick a pattern preset or tap nails on the board to draw your own design.</p>
+    </div>
     <section class="quick-patterns-section">
       <div class="quick-patterns-wrap">
         <div class="quick-patterns-heading">
@@ -842,22 +1424,22 @@
           class="preset-bar mobile-presets"
           aria-label="Quick pattern presets"
         >
-          <button class="preset-chip" data-preset="spiral">Spiral</button>
-          <button class="preset-chip" data-preset="star">Star</button>
           <button class="preset-chip" data-preset="flower">Flower</button>
+          <button class="preset-chip" data-preset="cardioid">Cardioid</button>
+          <button class="preset-chip" data-preset="web">Web</button>
         </div>
 
         <!-- Desktop preset panel -->
         <div class="preset-panel desktop-presets">
           <div class="preset-buttons">
-            <button class="preset-btn" data-preset="spiral">Spiral</button>
-            <button class="preset-btn" data-preset="star">Star</button>
             <button class="preset-btn" data-preset="flower">Flower</button>
+            <button class="preset-btn" data-preset="cardioid">Cardioid</button>
+            <button class="preset-btn" data-preset="web">Web</button>
           </div>
 
           <div class="preset-controls">
             <label for="presetOffset">Pattern Spacing</label>
-            <input type="range" id="presetOffset" min="2" max="60" value="18" />
+            <input type="range" id="presetOffset" min="0" max="60" value="18" />
             <span id="presetOffsetValue">12</span>
 
             <button id="generatePresetBtn" class="generate-preset-btn">
@@ -867,15 +1449,13 @@
         </div>
       </div>
     </section>
-    <div class="container">
+    <div class="container" id="designer">
       <div class="wrap">
         <div class="panel">
-          <div class="panel-header">
-            <h2>Board Settings</h2>
-            <button id="toggleControlsBtn" class="panel-toggle">▲ Hide</button>
-          </div>
 
-          <div id="controlsPanel">
+          <!-- BOARD -->
+          <div class="panel-section">
+            <span class="panel-section-label">Board</span>
             <div class="row">
               <div>
                 <label>Shape</label>
@@ -884,169 +1464,115 @@
                   <option value="square">Square</option>
                 </select>
               </div>
-
               <div>
-                <label>
-                  Nails
-                  <span class="help-tip"
-                    >?
-                    <span class="tip-text">
-                      Number of nails around the board edge. Most designs use
-                      between 60 and 150.
-                    </span>
-                  </span>
-                </label>
+                <label>Nails <span class="help-tip">?<span class="tip-text">Number of nails around the board edge. Most designs use between 60 and 150.</span></span></label>
                 <input id="nails" type="number" min="10" step="1" value="120" />
               </div>
             </div>
+            <label>Zoom <span class="help-tip">?<span class="tip-text">Controls the size of the board preview.</span></span></label>
+            <div class="zoom-controls" style="margin-bottom:8px">
+              <button type="button" id="zoomOut" class="btn-ghost">−</button>
+              <button type="button" id="zoomIn" class="btn-ghost">+</button>
+              <button id="fit" class="btn-ghost" style="flex:2">Fit to screen</button>
+            </div>
+            <input id="radius" type="hidden" value="320" />
+          </div>
 
-            <div class="row">
-              <div>
-                <label>
-                  Zoom
-                  <span class="help-tip"
-                    >?
-                    <span class="tip-text">
-                      Controls the size of the board preview.
-                    </span>
-                  </span>
-                </label>
+          <button id="toggleControlsBtn" class="panel-settings-toggle btn-ghost">▼ Show settings</button>
 
-                <div class="row">
-                  <button type="button" id="zoomOut">−</button>
-                  <button type="button" id="zoomIn">+</button>
+          <div id="controlsPanel">
+
+            <!-- NUMBERS -->
+            <div class="panel-section">
+              <span class="panel-section-label">Nail Numbers</span>
+              <label style="margin-top:0">
+                <input id="showNums" type="checkbox" checked />
+                Show nail numbers
+              </label>
+              <div class="row3" style="margin-top:10px">
+                <div>
+                  <label>Every <span class="help-tip">?<span class="tip-text">Show a label every X nails. Example: 10 shows 10, 20, 30...</span></span></label>
+                  <input id="numEvery" type="number" min="1" step="1" value="10" />
                 </div>
-
-                <input id="radius" type="hidden" value="320" />
+                <div>
+                  <label>Start at</label>
+                  <select id="numStart">
+                    <option value="0">0</option>
+                    <option value="1" selected>1</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Size</label>
+                  <input id="numSize" type="number" min="8" step="1" value="12" />
+                </div>
               </div>
+              <label>Label distance</label>
+              <input id="numOffset" type="number" min="6" step="1" value="22" />
+            </div>
 
-              <div>
-                <label>
-                  Selection sensitivity
-                  <span class="help-tip"
-                    >?
-                    <span class="tip-text">
-                      How close your click must be to a nail to select it.
-                      Increase this if tapping on mobile.
-                    </span>
-                  </span>
-                </label>
-                <input id="snap" type="number" min="6" step="1" value="22" />
+            <!-- THREAD -->
+            <div class="panel-section">
+              <span class="panel-section-label">Thread &amp; Layers</span>
+              <div class="color-layer-row">
+                <input id="color" type="color" value="#000000" />
+                <select id="layerSel"></select>
+                <button id="newLayer" class="btn-ghost" style="padding:9px 12px;font-size:13px;white-space:nowrap">+ Layer</button>
+              </div>
+              <input id="opacity" type="hidden" value="0.35" />
+              <input id="lw" type="hidden" value="0.7" />
+              <div class="action-row">
+                <button id="clearLayer" class="btn-ghost">Clear layer</button>
+                <button id="clearAll" class="btn-danger">Clear all</button>
               </div>
             </div>
 
-            <div class="row3">
-              <div>
-                <label>
-                  <input id="showNums" type="checkbox" checked />
-                  Show numbers
-                </label>
-              </div>
-
-              <div>
-                <label>
-                  Number every
-                  <span class="help-tip"
-                    >?
-                    <span class="tip-text">
-                      Show labels every X nails around the board. Example: 10
-                      shows 10, 20, 30 etc.
-                    </span>
-                  </span>
-                </label>
-                <input
-                  id="numEvery"
-                  type="number"
-                  min="1"
-                  step="1"
-                  value="10"
-                />
-              </div>
-
-              <div>
-                <label>Start at</label>
-                <select id="numStart">
-                  <option value="0">0</option>
-                  <option value="1" selected>1</option>
-                </select>
-              </div>
+            <!-- TAP SENSITIVITY -->
+            <div class="panel-section">
+              <span class="panel-section-label">Advanced</span>
+              <label>Tap sensitivity <span class="help-tip">?<span class="tip-text">How close your tap must be to a nail to select it. Increase if you miss nails on mobile.</span></span></label>
+              <input id="snap" type="number" min="6" step="1" value="22" />
             </div>
 
-            <div class="row">
-              <div>
-                <label>Number size</label>
-                <input id="numSize" type="number" min="8" step="1" value="12" />
+            <!-- EXPORT -->
+            <div class="panel-section">
+              <span class="panel-section-label">Export</span>
+              <div class="export-row">
+                <button id="exportSeq" class="btn-ghost">Copy sequence</button>
+                <button id="downloadPng">Download PNG</button>
               </div>
-
-              <div>
-                <label>Label distance</label>
-                <input
-                  id="numOffset"
-                  type="number"
-                  min="6"
-                  step="1"
-                  value="22"
-                />
+              <div class="continue-row">
+                <input id="continueSteps" type="number" min="1" max="500" value="20" />
+                <label>steps</label>
+                <button id="continuePattern" class="btn-ghost">Continue pattern</button>
               </div>
-            </div>
-
-            <div class="btns">
-              <button id="fit">Fit preview</button>
-            </div>
-
-            <h2 style="margin-top: 20px">Thread Colour</h2>
-
-            <input id="color" type="color" value="#000000" />
-
-            <label style="margin-top: 12px">Layer</label>
-            <select id="layerSel"></select>
-
-            <input id="opacity" type="hidden" value="0.35" />
-            <input id="lw" type="hidden" value="0.7" />
-
-            <div class="btns">
-              <button id="newLayer">New layer</button>
-              <button id="clearLayer">Clear layer</button>
-              <button id="clearAll">Clear all</button>
-            </div>
-
-            <div class="btns">
-              <button id="exportSeq">Copy sequence</button>
-              <button id="downloadPng">Download Preview PNG</button>
-
-              <label style="margin-right: 6px">Steps</label>
-              <input
-                id="continueSteps"
-                type="number"
-                min="1"
-                max="500"
-                value="20"
-                style="width: 70px"
-              />
-              <button id="continuePattern">Continue Pattern</button>
-
-              <button class="pro-btn" onclick="openProModal()">
-                Download Printable Template (Pro)
+              <button class="pro-btn btn-pro-full" onclick="openProModal()">
+                ✦ Download Printable Template
+                <span class="pro-label">Pro</span>
               </button>
             </div>
+
+          </div><!-- end #controlsPanel -->
+
+          <!-- UNDO -->
+          <div class="undo-row">
+            <button id="undo">↶ Undo last line</button>
           </div>
 
-          <div class="btns">
-            <button id="undo">↶ Undo</button>
+          <!-- SEQUENCE -->
+          <div class="panel-section">
+            <span class="panel-section-label">Sequence</span>
+            <div class="seq-out-wrap">
+              <div id="seqOut" class="mono">Tap a nail to start your thread. Then tap another nail to draw a line.</div>
+            </div>
           </div>
 
-          <h2 style="margin-top: 20px">Sequence</h2>
-          <div id="seqOut" class="mono">
-            Tap a nail to start your thread. Then tap another nail to draw a
-            line.
-          </div>
         </div>
 
         <canvas id="cv"></canvas>
       </div>
 
-      <div class="btns mobile-draw-launch">
-        <button id="openDrawMode">Open Draw Mode</button>
+      <div class="mobile-draw-launch">
+        <button id="openDrawMode" class="open-draw-btn">✏ Open Draw Mode</button>
       </div>
     </div>
 
@@ -1154,25 +1680,24 @@
       });
     </script>
 
-    <button id="undoFloating" class="floating-undo">↶</button>
-
     <div id="drawModeOverlay" class="draw-mode-overlay" aria-hidden="true">
-      <div class="draw-mode-topbar">
-        <div class="draw-mode-title">Draw Mode</div>
-        <button id="closeDrawMode" class="draw-mode-exit">Exit</button>
-      </div>
 
-      <div id="drawModeSeqMini" class="draw-mode-seq-mini">
-        Nothing yet — start tapping nails.
+      <div class="draw-mode-topbar">
+        <div class="draw-mode-brand">Steph Rawlings <em>Creations</em></div>
+        <button id="closeDrawMode" class="draw-mode-exit">✓ Done</button>
       </div>
 
       <div class="drawmode-presets" aria-label="Draw mode quick patterns">
-        <div class="drawmode-presets-label">Start with a Pattern</div>
+        <div class="drawmode-presets-label">Quick start</div>
         <div class="drawmode-preset-row">
-          <button class="preset-chip" data-preset="spiral">Spiral</button>
-          <button class="preset-chip" data-preset="star">Star</button>
           <button class="preset-chip" data-preset="flower">Flower</button>
+          <button class="preset-chip" data-preset="cardioid">Cardioid</button>
+          <button class="preset-chip" data-preset="web">Web</button>
         </div>
+      </div>
+
+      <div id="drawModeSeqMini" class="draw-mode-seq-mini">
+        Tap a nail to begin — or pick a pattern above.
       </div>
 
       <div class="draw-mode-canvas-wrap">
@@ -1180,16 +1705,36 @@
       </div>
 
       <div class="draw-mode-toolbar">
-        <button id="drawUndo">↶</button>
-        <select id="drawLayerSel"></select>
-        <button id="drawNewLayer">+ Layer</button>
-        <input type="color" id="drawColor" />
-        <button id="drawContinue">Continue</button>
-        <button id="drawZoomOut">−</button>
-        <button id="drawZoomIn">+</button>
+        <div class="dm-thread-row">
+          <input type="color" id="drawColor" />
+          <select id="drawLayerSel"></select>
+          <button id="drawNewLayer" class="dm-new-layer">+ Layer</button>
+        </div>
+        <div class="dm-action-row">
+          <button id="drawUndo">↶ Undo</button>
+          <button id="drawZoomOut">−</button>
+          <button id="drawZoomIn">+</button>
+          <button id="drawContinue">Continue</button>
+        </div>
       </div>
+
     </div>
 
     <script src="app.js"></script>
+
+    <!-- CTA Band -->
+    <div class="sr-cta-band">
+      <div>
+        <h2>Ready to start your next project?</h2>
+        <p>Free to use — no sign-up required. Pro templates coming soon.</p>
+      </div>
+      <button class="sr-btn-primary" style="white-space: nowrap; padding: 13px 28px; font-size: 15px;" onclick="document.getElementById('designer').scrollIntoView({behavior:'smooth'})">Open the designer</button>
+    </div>
+
+    <!-- Footer -->
+    <div class="sr-footer">
+      <span>© 2025 Steph Rawlings Creations</span>
+      <span>stephrawlingscreations.ie</span>
+    </div>
   </body>
 </html>

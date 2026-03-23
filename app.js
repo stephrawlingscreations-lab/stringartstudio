@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-  console.log("JS LOADED");
 
   let cv = document.getElementById("cv");
   let ctx = cv.getContext("2d");
@@ -24,31 +23,26 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   /* -----------------------------
-     START HINT CONTROL
+     TOAST
   ----------------------------- */
 
-  function hideStartHint() {
-    const hint = document.getElementById("startHint");
-    if (hint) hint.style.display = "none";
-  }
+  let toastTimer = null;
 
-  /* -----------------------------
-     STATUS BAR
-  ----------------------------- */
+  function showToast(msg, isError = false) {
+    let el = document.getElementById("toastEl");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "toastEl";
+      el.className = "toast";
+      document.body.appendChild(el);
+    }
 
-  function updateStatusBar() {
-    const el = $("statusBar");
-    if (!el) return;
+    el.textContent = msg;
+    el.classList.toggle("toast-error", isError);
 
-    const board = $("board")?.value || "circle";
-    const nails = $("nails")?.value || 0;
-
-    let lines = 0;
-    layers.forEach((l) => {
-      lines += l.edges.length;
-    });
-
-    el.textContent = `Board: ${board} | Nails: ${nails} | Lines: ${lines}`;
+    clearTimeout(toastTimer);
+    el.classList.add("visible");
+    toastTimer = setTimeout(() => el.classList.remove("visible"), 2800);
   }
 
   /* -----------------------------
@@ -92,7 +86,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!panel || !btn) return;
 
     panel.classList.toggle("hidden");
-    btn.textContent = panel.classList.contains("hidden") ? "▼ Show" : "▲ Hide";
+    btn.textContent = panel.classList.contains("hidden") ? "▼ Show settings" : "▲ Hide settings";
   }
 
   /* -----------------------------
@@ -529,7 +523,6 @@ document.addEventListener("DOMContentLoaded", function () {
       ctx.fillText(label, x, y - 10);
     }
 
-    updateStatusBar();
   }
 
   /* -----------------------------
@@ -546,7 +539,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function addNailToSequence(idx) {
-    hideStartHint();
     ensureLayerExists();
 
     const L = currentLayer();
@@ -598,15 +590,6 @@ document.addEventListener("DOMContentLoaded", function () {
     updateDrawModeSeqMini();
   }
 
-  function resetBoard() {
-    $("nails").value = 120;
-    $("radius").value = 320;
-
-    clearAll();
-    redrawAll();
-    updateSeqOutput();
-    updateDrawModeSeqMini();
-  }
   function panDrawModeToLastNail() {
     const wrap = document.querySelector(".draw-mode-canvas-wrap");
 
@@ -700,7 +683,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const text = $("seqOut")?.textContent || "";
 
     navigator.clipboard.writeText(text).then(() => {
-      alert("Sequence copied to clipboard");
+      showToast("Sequence copied to clipboard");
     });
   }
 
@@ -721,12 +704,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const L = layers[activeLayer];
     const seq = L.seq;
     if (L.generatedPreset === true) {
-      $("drawModeSeqMini").textContent =
-        "Continue only works on manually drawn patterns.";
+      showToast("Continue only works on manually drawn patterns.", true);
       return;
     }
     if (seq.length < 4) {
-      alert("Draw at least two lines to detect a pattern.");
+      showToast("Draw at least two lines to detect a pattern.", true);
       return;
     }
 
@@ -737,7 +719,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const stepB = (seq[3] - seq[1] + nails) % nails;
 
     if (stepA === 0 || stepB === 0) {
-      alert("Could not detect a repeat pattern.");
+      showToast("Could not detect a repeat pattern.", true);
       return;
     }
 
@@ -769,7 +751,7 @@ document.addEventListener("DOMContentLoaded", function () {
      QUICK PATTERNS
   ----------------------------- */
 
-  let selectedPreset = "spiral";
+  let selectedPreset = "flower";
 
   function initQuickPatterns() {
     const allPresetButtons = document.querySelectorAll("[data-preset]");
@@ -782,6 +764,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       offsetSlider.addEventListener("input", () => {
         offsetValue.textContent = offsetSlider.value;
+        generatePreset(selectedPreset, getPresetOffset());
       });
     }
 
@@ -812,14 +795,19 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll("[data-preset]").forEach((btn) => {
       btn.classList.toggle("active", btn.dataset.preset === presetName);
     });
+
     const slider = document.getElementById("presetOffset");
     const value = document.getElementById("presetOffsetValue");
 
-    if (presetName === "spiral") slider.value = 12;
-    if (presetName === "star") slider.value = 18;
-    if (presetName === "flower") slider.value = 10;
+    if (slider) {
+      if (presetName === "flower") slider.value = 10;
+      if (presetName === "cardioid") slider.value = 3;
+      if (presetName === "web") slider.value = 0;
+      if (presetName === "spiral") slider.value = 15;
+      if (presetName === "star") slider.value = 12;
+    }
 
-    if (value) value.textContent = slider.value;
+    if (slider && value) value.textContent = slider.value;
   }
 
   function getPresetOffset() {
@@ -863,6 +851,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
     return seq;
   }
+  function buildEdgesFromSeq(seq) {
+    const edges = [];
+
+    if (!seq || seq.length < 2) return edges;
+
+    for (let i = 0; i < seq.length - 1; i++) {
+      edges.push({ a: seq[i], b: seq[i + 1] });
+    }
+
+    return edges;
+  }
 
   function generatePreset(presetName, offset) {
     if (!pts || pts.length < 3) return;
@@ -871,63 +870,51 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const total = pts.length;
     let generatedEdges = [];
+    let generatedSeq = [];
 
     switch (presetName) {
-      case "spiral":
-        generatedEdges = generateSpiralPattern(total, offset);
+      case "cardioid":
+        generatedEdges = generateCardioidPattern(total, offset);
+        generatedSeq = buildSeqFromEdges(generatedEdges);
         break;
 
-      case "star":
-        generatedEdges = generateStarPattern(total, offset);
+      case "web":
+        generatedEdges = generateWebPattern(total, offset);
+        generatedSeq = buildSeqFromEdges(generatedEdges);
         break;
 
       case "flower":
         generatedEdges = generateFlowerPattern(total, offset);
+        generatedSeq = buildSeqFromEdges(generatedEdges);
+        break;
+
+      case "spiral":
+        generatedSeq = generateSpiralSequence(total, offset);
+        generatedEdges = buildEdgesFromSeq(generatedSeq);
+        break;
+
+      case "star":
+        generatedEdges = generateStarPattern(total, offset);
+        generatedSeq = buildSeqFromEdges(generatedEdges);
         break;
 
       default:
-        generatedEdges = generateSpiralPattern(total, offset);
+        generatedEdges = generateFlowerPattern(total, offset);
+        generatedSeq = buildSeqFromEdges(generatedEdges);
         break;
     }
 
     layers[activeLayer].edges = generatedEdges;
-    layers[activeLayer].seq = buildSeqFromEdges(generatedEdges);
+    layers[activeLayer].seq = generatedSeq;
     layers[activeLayer].generatedPreset = true;
-    if (layers[activeLayer].seq.length) {
-      lastNail = layers[activeLayer].seq[layers[activeLayer].seq.length - 1];
+
+    if (generatedSeq.length) {
+      lastNail = generatedSeq[generatedSeq.length - 1];
     }
 
     redrawAll();
     updateSeqOutput();
     updateDrawModeSeqMini();
-  }
-
-  function generateSpiralPattern(total, offset) {
-    const edges = [];
-
-    for (let i = 0; i < total; i++) {
-      const a = i;
-      const b = wrapIndex(i + offset, total);
-      edges.push({ a, b });
-    }
-
-    return edges;
-  }
-
-  function generateStarPattern(total, offset) {
-    const edges = [];
-    const starOffset = Math.max(
-      2,
-      Math.floor(total / 2) - Math.floor(offset / 3),
-    );
-
-    for (let i = 0; i < total; i++) {
-      const a = i;
-      const b = wrapIndex(i + starOffset, total);
-      edges.push({ a, b });
-    }
-
-    return edges;
   }
 
   function generateFlowerPattern(total, offset) {
@@ -942,6 +929,55 @@ document.addEventListener("DOMContentLoaded", function () {
     return edges;
   }
 
+  function generateCardioidPattern(total, offset) {
+    const edges = [];
+    const multiplier = Math.max(2, Math.min(20, offset));
+
+    for (let i = 0; i < total; i++) {
+      const b = (i * multiplier) % total;
+      if (i !== b) edges.push({ a: i, b });
+    }
+
+    return edges;
+  }
+
+  function generateWebPattern(total, offset) {
+    const edges = [];
+    const skip = Math.max(2, Math.floor(total / 3) + offset);
+
+    for (let i = 0; i < total; i++) {
+      edges.push({ a: i, b: wrapIndex(i + skip, total) });
+      edges.push({ a: i, b: wrapIndex(i + total - skip, total) });
+    }
+
+    return edges;
+  }
+
+  function generateSpiralSequence(total, offset) {
+    const seq = [];
+    const baseStep = Math.max(2, offset);
+    let current = 0;
+    seq.push(current);
+
+    for (let i = 0; i < total * 3; i++) {
+      const step = baseStep + Math.floor(i / total);
+      current = wrapIndex(current + step, total);
+      seq.push(current);
+    }
+
+    return seq;
+  }
+
+  function generateStarPattern(total, offset) {
+    const edges = [];
+    const skip = Math.max(2, Math.floor(total / 2) - offset);
+
+    for (let i = 0; i < total; i++) {
+      edges.push({ a: i, b: wrapIndex(i + skip, total) });
+    }
+
+    return edges;
+  }
   /* -----------------------------
      INIT
   ----------------------------- */
@@ -957,7 +993,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     $("undo")?.addEventListener("click", undo);
-    $("undoFloating")?.addEventListener("click", undo);
     $("clearAll")?.addEventListener("click", clearAll);
     $("clearLayer")?.addEventListener("click", clearLayer);
     $("newLayer")?.addEventListener("click", addLayer);
@@ -1028,8 +1063,14 @@ document.addEventListener("DOMContentLoaded", function () {
       redrawAll();
       updateDrawModeSeqMini();
     });
+    if (window.innerWidth <= 900) {
+      $("controlsPanel")?.classList.add("hidden");
+    }
+
+    let resizeTimer = null;
     window.addEventListener("resize", () => {
-      redrawAll();
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(redrawAll, 100);
     });
 
     redrawAll();
@@ -1038,10 +1079,4 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   init();
-
-  window.addEventListener("load", () => {
-    setActiveCanvas("cv");
-    fitToScreen();
-    redrawAll();
-  });
 });
