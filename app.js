@@ -696,22 +696,47 @@ document.addEventListener("DOMContentLoaded", function () {
     const offCtx = offscreen.getContext("2d");
     offCtx.drawImage(cv, 0, 0);
 
-    // Free-tier watermark
-    const wmText = "StringArtStudio.com";
+    // Watermark
+    const wmText = "stephrawlingscreations.ie";
     const fontSize = Math.max(12, Math.round(offscreen.width * 0.022));
-    offCtx.save();
-    offCtx.globalAlpha = 0.38;
-    offCtx.fillStyle = "#444444";
-    offCtx.font = `bold ${fontSize}px sans-serif`;
-    offCtx.textAlign = "right";
-    offCtx.textBaseline = "bottom";
-    offCtx.fillText(wmText, offscreen.width - 10, offscreen.height - 10);
-    offCtx.restore();
+    const logoHeight = fontSize * 2;
+    const padding = 10;
 
-    const link = document.createElement("a");
-    link.download = "string-art-preview.png";
-    link.href = offscreen.toDataURL("image/png");
-    link.click();
+    const triggerDownload = () => {
+      const link = document.createElement("a");
+      link.download = "string-art-preview.png";
+      link.href = offscreen.toDataURL("image/png");
+      link.click();
+    };
+
+    const drawWatermark = (logo) => {
+      offCtx.save();
+      offCtx.globalAlpha = 0.45;
+
+      let textX = offscreen.width - padding;
+
+      if (logo) {
+        const logoW = Math.round(logo.width * (logoHeight / logo.height));
+        const logoX = offscreen.width - padding - logoW;
+        const logoY = offscreen.height - padding - logoHeight;
+        offCtx.drawImage(logo, logoX, logoY, logoW, logoHeight);
+        textX = logoX - 8;
+      }
+
+      offCtx.fillStyle = "#444444";
+      offCtx.font = `bold ${fontSize}px sans-serif`;
+      offCtx.textAlign = "right";
+      offCtx.textBaseline = "bottom";
+      offCtx.fillText(wmText, textX, offscreen.height - padding);
+      offCtx.restore();
+
+      triggerDownload();
+    };
+
+    const logoImg = new Image();
+    logoImg.onload = () => drawWatermark(logoImg);
+    logoImg.onerror = () => drawWatermark(null);
+    logoImg.src = "logo.png";
   }
 
   /* -----------------------------
