@@ -523,6 +523,7 @@ document.addEventListener("DOMContentLoaded", function () {
       ctx.fillText(label, x, y - 10);
     }
 
+    saveDesign();
   }
 
   /* -----------------------------
@@ -580,6 +581,7 @@ document.addEventListener("DOMContentLoaded", function () {
     layers = [];
     activeLayer = 0;
     lastNail = null;
+    try { localStorage.removeItem(SAVE_KEY); } catch (_) {}
 
     ensureLayerExists();
     delete layers[activeLayer].step;
@@ -688,10 +690,87 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function downloadPreview() {
+    const offscreen = document.createElement("canvas");
+    offscreen.width = cv.width;
+    offscreen.height = cv.height;
+    const offCtx = offscreen.getContext("2d");
+    offCtx.drawImage(cv, 0, 0);
+
+    // Free-tier watermark
+    const wmText = "StringArtStudio.com";
+    const fontSize = Math.max(12, Math.round(offscreen.width * 0.022));
+    offCtx.save();
+    offCtx.globalAlpha = 0.38;
+    offCtx.fillStyle = "#444444";
+    offCtx.font = `bold ${fontSize}px sans-serif`;
+    offCtx.textAlign = "right";
+    offCtx.textBaseline = "bottom";
+    offCtx.fillText(wmText, offscreen.width - 10, offscreen.height - 10);
+    offCtx.restore();
+
     const link = document.createElement("a");
     link.download = "string-art-preview.png";
-    link.href = cv.toDataURL("image/png");
+    link.href = offscreen.toDataURL("image/png");
     link.click();
+  }
+
+  /* -----------------------------
+     SAVE / LOAD  (LOCAL STORAGE)
+  ----------------------------- */
+
+  const SAVE_KEY = "sas_design_v1";
+
+  function saveDesign() {
+    try {
+      const state = {
+        layers,
+        activeLayer,
+        settings: {
+          board: $("board")?.value,
+          nails: $("nails")?.value,
+          radius: $("radius")?.value,
+          showNums: $("showNums")?.checked,
+          numEvery: $("numEvery")?.value,
+          numStart: $("numStart")?.value,
+          numSize: $("numSize")?.value,
+          numOffset: $("numOffset")?.value,
+        },
+      };
+      localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+    } catch (_) {}
+  }
+
+  function hasSavedDesign() {
+    try { return !!localStorage.getItem(SAVE_KEY); } catch (_) { return false; }
+  }
+
+  function loadSavedDesign(silent) {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) { if (!silent) showToast("No saved design found.", true); return false; }
+      const state = JSON.parse(raw);
+      if (!Array.isArray(state.layers) || state.layers.length === 0) return false;
+
+      layers = state.layers;
+      activeLayer = Math.min(state.activeLayer || 0, layers.length - 1);
+
+      const s = state.settings || {};
+      if (s.board != null && $("board")) $("board").value = s.board;
+      if (s.nails != null && $("nails")) $("nails").value = s.nails;
+      if (s.radius != null && $("radius")) $("radius").value = s.radius;
+      if (s.showNums != null && $("showNums")) $("showNums").checked = s.showNums;
+      if (s.numEvery != null && $("numEvery")) $("numEvery").value = s.numEvery;
+      if (s.numStart != null && $("numStart")) $("numStart").value = s.numStart;
+      if (s.numSize != null && $("numSize")) $("numSize").value = s.numSize;
+      if (s.numOffset != null && $("numOffset")) $("numOffset").value = s.numOffset;
+
+      syncLayerSelect();
+      switchLayer(activeLayer);
+      if (!silent) showToast("Design loaded.");
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   /* -----------------------------
@@ -1000,6 +1079,8 @@ document.addEventListener("DOMContentLoaded", function () {
     $("toggleControlsBtn")?.addEventListener("click", toggleControls);
     $("exportSeq")?.addEventListener("click", copySequence);
     $("downloadPng")?.addEventListener("click", downloadPreview);
+    $("saveDesignBtn")?.addEventListener("click", () => { saveDesign(); showToast("Design saved."); });
+    $("loadDesignBtn")?.addEventListener("click", () => loadSavedDesign(false));
     $("zoomIn")?.addEventListener("click", () => nudgeZoom(1));
     $("zoomOut")?.addEventListener("click", () => nudgeZoom(-1));
 
@@ -1073,9 +1154,14 @@ document.addEventListener("DOMContentLoaded", function () {
       resizeTimer = setTimeout(redrawAll, 100);
     });
 
-    redrawAll();
-    updateSeqOutput();
-    updateDrawModeSeqMini();
+    if (hasSavedDesign()) {
+      loadSavedDesign(true);
+      showToast("Last design restored.");
+    } else {
+      redrawAll();
+      updateSeqOutput();
+      updateDrawModeSeqMini();
+    }
   }
 
   init();
