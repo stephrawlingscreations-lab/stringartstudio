@@ -1,5 +1,34 @@
 document.addEventListener("DOMContentLoaded", function () {
 
+  /* -----------------------------
+     PRO UNLOCK (Gumroad redirect)
+  ----------------------------- */
+
+  // After a Gumroad purchase, the buyer is redirected to:
+  //   https://stephrawlingscreations.ie/?sas_pro=unlock
+  // Set that as your "Redirect URL" in the Gumroad product settings.
+  // The parameter is detected here, saved to localStorage, then removed from the URL.
+
+  (function checkProRedirect() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("sas_pro") === "unlock") {
+        localStorage.setItem("sas_pro_unlocked", "1");
+        const clean = window.location.pathname + window.location.hash;
+        history.replaceState({}, "", clean);
+        setTimeout(() => openProModal(), 300);
+      }
+    } catch (_) {}
+  })();
+
+  function isPro() {
+    try {
+      return localStorage.getItem("sas_pro_unlocked") === "1";
+    } catch (_) {
+      return false;
+    }
+  }
+
   let cv = document.getElementById("cv");
   let ctx = cv.getContext("2d");
   const $ = (id) => document.getElementById(id);
@@ -1106,6 +1135,10 @@ document.addEventListener("DOMContentLoaded", function () {
     $("toggleControlsBtn")?.addEventListener("click", toggleControls);
     $("exportSeq")?.addEventListener("click", copySequence);
     $("downloadPng")?.addEventListener("click", downloadPreview);
+    $("downloadTemplateBtn")?.addEventListener("click", () => {
+      document.getElementById("proModal").style.display = "none";
+      downloadPrintableTemplate();
+    });
     $("saveDesignBtn")?.addEventListener("click", () => { saveDesign(); showToast("Design saved."); });
     $("loadDesignBtn")?.addEventListener("click", () => loadSavedDesign(false));
     $("zoomIn")?.addEventListener("click", () => nudgeZoom(1));
@@ -1188,6 +1221,202 @@ document.addEventListener("DOMContentLoaded", function () {
       redrawAll();
       updateSeqOutput();
       updateDrawModeSeqMini();
+    }
+  }
+
+  /* -----------------------------
+     PRINTABLE TEMPLATE
+  ----------------------------- */
+
+  function downloadPrintableTemplate() {
+    if (!isPro()) {
+      openProModal();
+      return;
+    }
+
+    ensureLayerExists();
+
+    const hasContent = layers.some((L) => L.edges && L.edges.length > 0);
+    if (!hasContent) {
+      showToast("Draw some lines first before downloading a template.", true);
+      return;
+    }
+
+    const board = $("board")?.value || "circle";
+    const nailCount = clampInt($("nails")?.value, 10, 8000, 150);
+    const numStart = $("numStart")?.value === "1" ? 1 : 0;
+
+    // Fixed SVG coordinate space for the board diagram
+    const SZ = 560;
+    const CX = SZ / 2;
+    const CY = SZ / 2;
+    const BRAD = SZ / 2 - 44;
+
+    const svgPts =
+      board === "circle"
+        ? pointsCircle(nailCount, CX, CY, BRAD)
+        : pointsSquarePerimeter(nailCount, CX, CY, BRAD);
+
+    // Board outline
+    const outline =
+      board === "circle"
+        ? `<circle cx="${CX}" cy="${CY}" r="${BRAD}" fill="none" stroke="#bbb" stroke-width="1.5"/>`
+        : `<rect x="${CX - BRAD}" y="${CY - BRAD}" width="${BRAD * 2}" height="${BRAD * 2}" fill="none" stroke="#bbb" stroke-width="1.5"/>`;
+
+    // String lines
+    let svgLines = "";
+    for (const L of layers) {
+      if (!L.edges?.length) continue;
+      const c = hexToRgb(L.color || "#000000");
+      const op = Math.max(0.15, (L.opacity || 0.35) * 0.7).toFixed(2);
+      for (const e of L.edges) {
+        if (!svgPts[e.a] || !svgPts[e.b]) continue;
+        const [x1, y1] = svgPts[e.a];
+        const [x2, y2] = svgPts[e.b];
+        svgLines += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="rgb(${c.r},${c.g},${c.b})" stroke-opacity="${op}" stroke-width="${Math.min(L.lw || 0.7, 1)}"/>`;
+      }
+    }
+
+    // Nail dots and labels
+    const showEvery =
+      nailCount > 400 ? 50 : nailCount > 200 ? 25 : nailCount > 100 ? 10 : nailCount > 60 ? 5 : 1;
+    const labelSize = nailCount > 200 ? 6 : 8;
+
+    let svgNails = "";
+    for (let i = 0; i < nailCount; i++) {
+      const [x, y] = svgPts[i];
+      svgNails += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.2" fill="#2a2a2a"/>`;
+
+      if (i % showEvery === 0) {
+        const dx = x - CX;
+        const dy = y - CY;
+        const len = Math.sqrt(dx * dx + dy * dy) || 1;
+        const lx = (x + (dx / len) * 14).toFixed(1);
+        const ly = (y + (dy / len) * 14).toFixed(1);
+        const lbl = i + numStart;
+        svgNails += `<text x="${lx}" y="${ly}" font-size="${labelSize}" text-anchor="middle" dominant-baseline="middle" fill="#555">${lbl}</text>`;
+      }
+    }
+
+    // Stats
+    const totalLines = layers.reduce((s, L) => s + (L.edges?.length || 0), 0);
+    const activeLayers = layers.filter((L) => L.edges?.length > 0).length;
+
+    // Sequence HTML
+    let seqHTML = "";
+    layers.forEach((L, li) => {
+      if (!L.seq?.length) return;
+      const c = hexToRgb(L.color || "#000000");
+      const dotStyle = `background:rgb(${c.r},${c.g},${c.b})`;
+      const arrowSeq = L.seq.map((n) => n + numStart).join(" → ");
+
+      seqHTML += `<section class="layer-section">`;
+      seqHTML += `<h2>Layer ${li + 1} <span class="dot" style="${dotStyle}"></span> <small>${L.seq.length - 1} moves · ${L.color || "#000000"}</small></h2>`;
+      seqHTML += `<p class="arrow-seq">${arrowSeq}</p>`;
+      seqHTML += `<div class="step-grid">`;
+      L.seq.forEach((nail, i) => {
+        const stepTxt = i === 0 ? "Start" : `#${i}`;
+        seqHTML += `<div class="step"><span class="step-lbl">${stepTxt}</span><span class="step-nail">${nail + numStart}</span></div>`;
+      });
+      seqHTML += `</div></section>`;
+    });
+
+    const date = new Date().toLocaleDateString("en-IE", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>String Art Template – stephrawlingscreations.ie</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,sans-serif;background:#eee;color:#1e1e1e}
+.toolbar{background:#fff;border-bottom:1px solid #ddd;padding:12px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+.toolbar h2{font-size:15px;font-weight:600;flex:1;margin:0}
+.btn-print{background:#2f56d3;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:500;cursor:pointer}
+.page{width:210mm;min-height:297mm;padding:14mm;margin:20px auto;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,.12);position:relative}
+.ph{text-align:center;margin-bottom:6mm;padding-bottom:4mm;border-bottom:.3pt solid #e0e0e0}
+.ph h1{font-size:20pt;font-weight:600;letter-spacing:-.02em}
+.ph p{font-size:9pt;color:#999;margin-top:1mm}
+.board-wrap{display:flex;justify-content:center;margin:3mm 0}
+.board-wrap svg{width:170mm;height:170mm}
+.stats{display:flex;justify-content:center;gap:12mm;margin:5mm 0}
+.stat{text-align:center}
+.stat b{display:block;font-size:18pt;font-weight:700;line-height:1.1}
+.stat span{font-size:8pt;color:#999;text-transform:uppercase;letter-spacing:.05em}
+.scale-ref{text-align:center;margin-top:4mm}
+.scale-bar{display:inline-block;width:37.8pt;height:5pt;border:1pt solid #555}
+.scale-ref p{font-size:8pt;color:#888;margin-top:2pt}
+.pf{position:absolute;bottom:8mm;left:14mm;right:14mm;display:flex;justify-content:space-between;font-size:8pt;color:#ccc}
+.layer-section{margin-bottom:10mm;break-inside:avoid}
+.layer-section h2{font-size:12pt;font-weight:600;margin-bottom:2mm;display:flex;align-items:center;gap:6px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.layer-section h2 small{font-size:9pt;color:#888;font-weight:400}
+.arrow-seq{font-size:7.5pt;color:#555;margin-bottom:2mm;line-height:1.6;word-break:break-all;background:#f9f9f9;padding:3mm;border-radius:4pt;max-height:20mm;overflow:hidden}
+.step-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(30pt,1fr));gap:1pt}
+.step{border:.3pt solid #e8e8e8;border-radius:3pt;padding:1.5pt 2pt}
+.step-lbl{display:block;font-size:5.5pt;color:#bbb}
+.step-nail{display:block;font-size:9pt;font-weight:600}
+@page{size:A4;margin:0}
+@media print{
+  .toolbar{display:none}
+  body{background:#fff}
+  .page{margin:0;box-shadow:none;break-after:page}
+}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <h2>String Art Template – stephrawlingscreations.ie</h2>
+  <button class="btn-print" onclick="window.print()">🖨 Print / Save as PDF</button>
+</div>
+
+<div class="page">
+  <div class="ph">
+    <h1>Board Template</h1>
+    <p>Generated ${date} · stephrawlingscreations.ie</p>
+  </div>
+  <div class="board-wrap">
+    <svg viewBox="0 0 ${SZ} ${SZ}" xmlns="http://www.w3.org/2000/svg">
+      ${outline}
+      <g>${svgLines}</g>
+      <g>${svgNails}</g>
+    </svg>
+  </div>
+  <div class="stats">
+    <div class="stat"><b>${nailCount}</b><span>Nails</span></div>
+    <div class="stat"><b>${board.charAt(0).toUpperCase() + board.slice(1)}</b><span>Shape</span></div>
+    <div class="stat"><b>${totalLines}</b><span>Lines</span></div>
+    <div class="stat"><b>${activeLayers}</b><span>Layers</span></div>
+  </div>
+  <div class="scale-ref">
+    <div class="scale-bar"></div>
+    <p>This bar = 1 cm at 100% print scale</p>
+  </div>
+  <div class="pf"><span>stephrawlingscreations.ie</span><span>Page 1 of 2 – Board Layout</span></div>
+</div>
+
+<div class="page">
+  <div class="ph">
+    <h1>Thread Sequence</h1>
+    <p>Generated ${date} · Follow each step in order to wrap your thread</p>
+  </div>
+  ${seqHTML || '<p style="color:#aaa;margin-top:20mm;text-align:center">No sequence recorded yet — draw some lines first.</p>'}
+  <div class="pf"><span>stephrawlingscreations.ie</span><span>Page 2 of 2 – Thread Sequence</span></div>
+</div>
+</body>
+</html>`;
+
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, "_blank");
+    if (!win) {
+      URL.revokeObjectURL(url);
+      showToast("Popup blocked — allow popups for this site.", true);
     }
   }
 

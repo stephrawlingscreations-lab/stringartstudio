@@ -35,119 +35,336 @@
       /* ================= LANDING PAGE ================= */
 
       .sr-nav {
-        display: flex; align-items: center; justify-content: space-between;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         padding: 18px 32px;
         border-bottom: 0.5px solid var(--color-border-tertiary);
         background: var(--color-background-primary);
-        font-family: 'DM Sans', sans-serif;
+        font-family: "DM Sans", sans-serif;
       }
-      .sr-logo { display: flex; align-items: center; gap: 10px; }
-      .sr-logo img { height: 44px; width: auto; display: block; }
-      .sr-logo-name { font-family: 'Playfair Display', serif; font-size: 17px; letter-spacing: 0.01em; color: var(--color-text-primary); }
-      .sr-logo-name span { font-style: italic; color: #B85C38; }
-      .sr-nav-links { display: flex; gap: 24px; font-size: 13px; color: var(--color-text-secondary); }
-      .sr-nav-links a { text-decoration: none; color: inherit; }
-      .sr-nav-links a.coming { color: #bbb; pointer-events: none; display: inline-block; text-align: center; }
-      .sr-nav-links a.coming span { display: block; font-size: 10px; font-weight: 500; color: var(--brand-gold); margin-top: 2px; }
+      .sr-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .sr-logo img {
+        height: 44px;
+        width: auto;
+        display: block;
+      }
+      .sr-logo-name {
+        font-family: "Playfair Display", serif;
+        font-size: 17px;
+        letter-spacing: 0.01em;
+        color: var(--color-text-primary);
+      }
+      .sr-logo-name span {
+        font-style: italic;
+        color: #b85c38;
+      }
+      .sr-nav-links {
+        display: flex;
+        gap: 24px;
+        font-size: 13px;
+        color: var(--color-text-secondary);
+      }
+      .sr-nav-links a {
+        text-decoration: none;
+        color: inherit;
+      }
+      .sr-nav-links a.coming {
+        color: #bbb;
+        pointer-events: none;
+        display: inline-block;
+        text-align: center;
+      }
+      .sr-nav-links a.coming span {
+        display: block;
+        font-size: 10px;
+        font-weight: 500;
+        color: var(--brand-gold);
+        margin-top: 2px;
+      }
       .sr-nav-cta {
-        font-size: 13px; padding: 7px 18px;
-        background: #B85C38; color: #fff; border: none;
-        border-radius: 20px; cursor: pointer; font-family: 'DM Sans', sans-serif;
+        font-size: 13px;
+        padding: 7px 18px;
+        background: #b85c38;
+        color: #fff;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        font-family: "DM Sans", sans-serif;
       }
-      .sr-nav-cta:hover { opacity: 0.9; }
+      .sr-nav-cta:hover {
+        opacity: 0.9;
+      }
 
-      .sr-landing { font-family: 'DM Sans', sans-serif; color: var(--color-text-primary); max-width: 900px; margin: 0 auto; }
+      .sr-landing {
+        font-family: "DM Sans", sans-serif;
+        color: var(--color-text-primary);
+        max-width: 900px;
+        margin: 0 auto;
+      }
 
       .sr-hero {
-        display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
         min-height: 420px;
         background: var(--color-background-primary);
       }
       .sr-hero-left {
         padding: 56px 40px 56px 32px;
-        display: flex; flex-direction: column; justify-content: center; gap: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 20px;
         border-right: 0.5px solid var(--color-border-tertiary);
       }
-      .sr-eyebrow { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #B85C38; font-weight: 500; }
-      .sr-headline { font-family: 'Playfair Display', serif; font-size: 38px; line-height: 1.2; font-weight: 400; margin: 0; }
-      .sr-headline em { font-style: italic; color: #B85C38; }
-      .sr-sub { font-size: 15px; line-height: 1.7; color: var(--color-text-secondary); max-width: 340px; }
-      .sr-btns { display: flex; gap: 12px; margin-top: 8px; }
-      .sr-btn-primary { background: #B85C38; color: #fff; border: none; padding: 11px 24px; border-radius: 24px; font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; }
-      .sr-btn-primary:hover { opacity: 0.9; }
-      .sr-btn-secondary { background: transparent; color: var(--color-text-primary); border: 0.5px solid var(--color-border-secondary); padding: 11px 24px; border-radius: 24px; font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; }
-      .sr-btn-secondary:hover { background: var(--color-background-secondary); }
-      .sr-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-text-secondary); }
-      .sr-badge-dot { width: 7px; height: 7px; border-radius: 50%; background: #5A9E6F; flex-shrink: 0; }
+      .sr-eyebrow {
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #b85c38;
+        font-weight: 500;
+      }
+      .sr-headline {
+        font-family: "Playfair Display", serif;
+        font-size: 38px;
+        line-height: 1.2;
+        font-weight: 400;
+        margin: 0;
+      }
+      .sr-headline em {
+        font-style: italic;
+        color: #b85c38;
+      }
+      .sr-sub {
+        font-size: 15px;
+        line-height: 1.7;
+        color: var(--color-text-secondary);
+        max-width: 340px;
+      }
+      .sr-btns {
+        display: flex;
+        gap: 12px;
+        margin-top: 8px;
+      }
+      .sr-btn-primary {
+        background: #b85c38;
+        color: #fff;
+        border: none;
+        padding: 11px 24px;
+        border-radius: 24px;
+        font-family: "DM Sans", sans-serif;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .sr-btn-primary:hover {
+        opacity: 0.9;
+      }
+      .sr-btn-secondary {
+        background: transparent;
+        color: var(--color-text-primary);
+        border: 0.5px solid var(--color-border-secondary);
+        padding: 11px 24px;
+        border-radius: 24px;
+        font-family: "DM Sans", sans-serif;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      .sr-btn-secondary:hover {
+        background: var(--color-background-secondary);
+      }
+      .sr-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: var(--color-text-secondary);
+      }
+      .sr-badge-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #5a9e6f;
+        flex-shrink: 0;
+      }
 
       .sr-hero-right {
-        background: #FBF6F0;
-        display: flex; align-items: center; justify-content: center;
-        position: relative; overflow: hidden; padding: 24px;
+        background: #fbf6f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        padding: 24px;
       }
 
       .sr-features {
-        display: grid; grid-template-columns: repeat(3, 1fr);
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
         border-top: 0.5px solid var(--color-border-tertiary);
       }
       .sr-feature {
         padding: 32px 28px;
         border-right: 0.5px solid var(--color-border-tertiary);
       }
-      .sr-feature:last-child { border-right: none; }
-      .sr-feature-icon { width: 36px; height: 36px; border-radius: 8px; background: #FBF6F0; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
-      .sr-feature h3 { font-size: 14px; font-weight: 500; margin: 0 0 6px; }
-      .sr-feature p { font-size: 13px; color: var(--color-text-secondary); margin: 0; line-height: 1.6; }
+      .sr-feature:last-child {
+        border-right: none;
+      }
+      .sr-feature-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: #fbf6f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 14px;
+      }
+      .sr-feature h3 {
+        font-size: 14px;
+        font-weight: 500;
+        margin: 0 0 6px;
+      }
+      .sr-feature p {
+        font-size: 13px;
+        color: var(--color-text-secondary);
+        margin: 0;
+        line-height: 1.6;
+      }
 
       .sr-how {
         padding: 56px 32px;
         border-top: 0.5px solid var(--color-border-tertiary);
         background: var(--color-background-secondary);
       }
-      .sr-section-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #B85C38; font-weight: 500; margin-bottom: 6px; }
-      .sr-section-title { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 400; margin: 0 0 36px; }
-      .sr-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-      .sr-step { display: flex; flex-direction: column; gap: 10px; }
-      .sr-step-num { font-family: 'Playfair Display', serif; font-size: 36px; color: #B85C38; opacity: 0.3; line-height: 1; }
-      .sr-step h4 { font-size: 14px; font-weight: 500; margin: 0; }
-      .sr-step p { font-size: 13px; color: var(--color-text-secondary); margin: 0; line-height: 1.6; }
+      .sr-section-label {
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #b85c38;
+        font-weight: 500;
+        margin-bottom: 6px;
+      }
+      .sr-section-title {
+        font-family: "Playfair Display", serif;
+        font-size: 28px;
+        font-weight: 400;
+        margin: 0 0 36px;
+      }
+      .sr-steps {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+      .sr-step {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .sr-step-num {
+        font-family: "Playfair Display", serif;
+        font-size: 36px;
+        color: #b85c38;
+        opacity: 0.3;
+        line-height: 1;
+      }
+      .sr-step h4 {
+        font-size: 14px;
+        font-weight: 500;
+        margin: 0;
+      }
+      .sr-step p {
+        font-size: 13px;
+        color: var(--color-text-secondary);
+        margin: 0;
+        line-height: 1.6;
+      }
 
       .sr-cta-band {
         padding: 56px 32px;
         border-top: 0.5px solid var(--color-border-tertiary);
-        display: flex; align-items: center; justify-content: space-between; gap: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 32px;
         background: var(--color-background-primary);
         max-width: 900px;
         margin: 0 auto;
       }
-      .sr-cta-band h2 { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 400; margin: 0; }
-      .sr-cta-band p { font-size: 14px; color: var(--color-text-secondary); margin: 6px 0 0; }
+      .sr-cta-band h2 {
+        font-family: "Playfair Display", serif;
+        font-size: 26px;
+        font-weight: 400;
+        margin: 0;
+      }
+      .sr-cta-band p {
+        font-size: 14px;
+        color: var(--color-text-secondary);
+        margin: 6px 0 0;
+      }
 
       .sr-footer {
         padding: 20px 32px;
         border-top: 0.5px solid var(--color-border-tertiary);
-        display: flex; align-items: center; justify-content: space-between;
-        font-size: 12px; color: var(--color-text-secondary);
-        font-family: 'DM Sans', sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--color-text-secondary);
+        font-family: "DM Sans", sans-serif;
         max-width: 900px;
         margin: 0 auto;
       }
 
       @media (max-width: 700px) {
-        .sr-hero { grid-template-columns: 1fr; }
-        .sr-hero-right { display: none; }
-        .sr-hero-left { padding: 40px 20px; }
-        .sr-headline { font-size: 28px; }
-        .sr-features { grid-template-columns: 1fr; }
-        .sr-feature { border-right: none; border-bottom: 0.5px solid var(--color-border-tertiary); }
-        .sr-feature:last-child { border-bottom: none; }
-        .sr-steps { grid-template-columns: 1fr 1fr; }
-        .sr-how { padding: 40px 20px; }
-        .sr-cta-band { flex-direction: column; padding: 40px 20px; }
-        .sr-nav { padding: 14px 16px; }
-        .sr-nav-links { display: none; }
-        .sr-logo img { display: none; }
-        .sr-logo-name { display: block; }
+        .sr-hero {
+          grid-template-columns: 1fr;
+        }
+        .sr-hero-right {
+          display: none;
+        }
+        .sr-hero-left {
+          padding: 40px 20px;
+        }
+        .sr-headline {
+          font-size: 28px;
+        }
+        .sr-features {
+          grid-template-columns: 1fr;
+        }
+        .sr-feature {
+          border-right: none;
+          border-bottom: 0.5px solid var(--color-border-tertiary);
+        }
+        .sr-feature:last-child {
+          border-bottom: none;
+        }
+        .sr-steps {
+          grid-template-columns: 1fr 1fr;
+        }
+        .sr-how {
+          padding: 40px 20px;
+        }
+        .sr-cta-band {
+          flex-direction: column;
+          padding: 40px 20px;
+        }
+        .sr-nav {
+          padding: 14px 16px;
+        }
+        .sr-nav-links {
+          display: none;
+        }
+        .sr-logo img {
+          display: none;
+        }
+        .sr-logo-name {
+          display: block;
+        }
       }
 
       body {
@@ -557,13 +774,13 @@
 
       .open-draw-btn {
         width: 100%;
-        background: #B85C38;
+        background: #b85c38;
         color: white;
         border: none;
         border-radius: 24px;
         padding: 15px 24px;
         font-size: 16px;
-        font-family: 'DM Sans', sans-serif;
+        font-family: "DM Sans", sans-serif;
         font-weight: 500;
         cursor: pointer;
         display: flex;
@@ -602,7 +819,7 @@
       }
 
       .draw-mode-brand {
-        font-family: 'Playfair Display', serif;
+        font-family: "Playfair Display", serif;
         font-size: 15px;
         color: var(--text-dark);
         white-space: nowrap;
@@ -610,15 +827,15 @@
 
       .draw-mode-brand em {
         font-style: italic;
-        color: #B85C38;
+        color: #b85c38;
       }
 
       .draw-mode-exit {
-        background: #B85C38;
+        background: #b85c38;
         color: white;
         border-radius: 20px;
         padding: 9px 20px;
-        font-family: 'DM Sans', sans-serif;
+        font-family: "DM Sans", sans-serif;
         font-size: 14px;
         white-space: nowrap;
       }
@@ -631,7 +848,11 @@
         padding: 14px;
         overflow: auto;
         -webkit-overflow-scrolling: touch;
-        background: radial-gradient(circle at center, #ffffff 60%, #f6f6f6 100%);
+        background: radial-gradient(
+          circle at center,
+          #ffffff 60%,
+          #f6f6f6 100%
+        );
       }
 
       #drawModeCanvas {
@@ -692,7 +913,7 @@
         font-size: 14px;
         white-space: nowrap;
         padding: 0 14px;
-        font-family: 'DM Sans', sans-serif;
+        font-family: "DM Sans", sans-serif;
       }
 
       .dm-action-row {
@@ -705,7 +926,7 @@
         min-height: 48px;
         border-radius: 12px;
         font-size: 14px;
-        font-family: 'DM Sans', sans-serif;
+        font-family: "DM Sans", sans-serif;
         background: transparent;
         color: var(--text-dark);
         border: 1px solid #d7d7d7;
@@ -717,7 +938,8 @@
         opacity: 1;
       }
 
-      #drawZoomOut, #drawZoomIn {
+      #drawZoomOut,
+      #drawZoomIn {
         flex: 0 0 52px;
       }
 
@@ -760,8 +982,6 @@
         .designer-intro h2 {
           font-size: 22px;
         }
-
-
       }
 
       @media (min-width: 901px) {
@@ -773,14 +993,14 @@
           display: none;
         }
 
-      .panel-settings-toggle {
-        width: 100%;
-        margin-top: 12px;
-        font-size: 13px;
-        background: transparent;
-        color: var(--text-dark);
-        border: 1px solid #d7d7d7;
-      }
+        .panel-settings-toggle {
+          width: 100%;
+          margin-top: 12px;
+          font-size: 13px;
+          background: transparent;
+          color: var(--text-dark);
+          border: 1px solid #d7d7d7;
+        }
       }
 
       /* ================= FLOATING UNDO ================= */
@@ -811,9 +1031,9 @@
         font-size: 10px;
         letter-spacing: 0.1em;
         text-transform: uppercase;
-        color: #B85C38;
+        color: #b85c38;
         font-weight: 600;
-        font-family: 'DM Sans', sans-serif;
+        font-family: "DM Sans", sans-serif;
         margin-bottom: 8px;
       }
 
@@ -825,7 +1045,9 @@
         scrollbar-width: none;
       }
 
-      .drawmode-preset-row::-webkit-scrollbar { display: none; }
+      .drawmode-preset-row::-webkit-scrollbar {
+        display: none;
+      }
       button {
         touch-action: manipulation;
       }
@@ -848,15 +1070,15 @@
         font-size: 11px;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: #B85C38;
+        color: #b85c38;
         font-weight: 500;
-        font-family: 'DM Sans', sans-serif;
+        font-family: "DM Sans", sans-serif;
         display: block;
         margin-bottom: 10px;
       }
 
       .designer-intro h2 {
-        font-family: 'Playfair Display', serif;
+        font-family: "Playfair Display", serif;
         font-size: 30px;
         font-weight: 400;
         margin: 0 0 10px;
@@ -867,7 +1089,7 @@
         font-size: 14px;
         color: #666;
         margin: 0;
-        font-family: 'DM Sans', sans-serif;
+        font-family: "DM Sans", sans-serif;
       }
 
       /* ================= PANEL SECTIONS ================= */
@@ -891,9 +1113,9 @@
         font-size: 10px;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: #B85C38;
+        color: #b85c38;
         font-weight: 600;
-        font-family: 'DM Sans', sans-serif;
+        font-family: "DM Sans", sans-serif;
         margin-bottom: 10px;
         display: block;
       }
@@ -901,8 +1123,8 @@
       /* ================= PANEL BUTTONS ================= */
 
       .panel button {
-        background: #B85C38;
-        font-family: 'DM Sans', system-ui, sans-serif;
+        background: #b85c38;
+        font-family: "DM Sans", system-ui, sans-serif;
       }
 
       .panel .btn-ghost {
@@ -1039,7 +1261,7 @@
 
       .pro-label {
         font-size: 10px;
-        background: rgba(0,0,0,0.15);
+        background: rgba(0, 0, 0, 0.15);
         padding: 2px 7px;
         border-radius: 999px;
         letter-spacing: 0.05em;
@@ -1077,13 +1299,15 @@
         transform: translateX(-50%) translateY(12px);
         background: #1e1e1e;
         color: #fff;
-        font-family: 'DM Sans', system-ui, sans-serif;
+        font-family: "DM Sans", system-ui, sans-serif;
         font-size: 14px;
         padding: 10px 20px;
         border-radius: 999px;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.22);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
         opacity: 0;
-        transition: opacity 0.2s ease, transform 0.2s ease;
+        transition:
+          opacity 0.2s ease,
+          transform 0.2s ease;
         pointer-events: none;
         z-index: 99999;
         white-space: nowrap;
@@ -1284,145 +1508,191 @@
         <a href="#" class="coming">Templates <span>Coming Soon</span></a>
         <a href="#" class="coming">About <span>Coming Soon</span></a>
       </div>
-      <button class="sr-nav-cta" onclick="document.getElementById('designer').scrollIntoView({behavior:'smooth'})">Try it free</button>
+      <button
+        class="sr-nav-cta"
+        onclick="
+          document
+            .getElementById('designer')
+            .scrollIntoView({ behavior: 'smooth' })
+        "
+      >
+        Try it free
+      </button>
     </nav>
 
     <!-- Landing page sections -->
     <div class="sr-landing">
-
       <!-- Hero -->
       <div class="sr-hero">
         <div class="sr-hero-left">
           <div class="sr-eyebrow">Free online tool for makers</div>
-          <h1 class="sr-headline">Design your<br><em>string art</em><br>before you build it</h1>
-          <p class="sr-sub">Plan your nail layout, choose your thread paths, and download a print-ready template — all in your browser, for free.</p>
+          <h1 class="sr-headline">
+            Design your<br /><em>string art</em><br />before you build it
+          </h1>
+          <p class="sr-sub">
+            Plan your nail layout, choose your thread paths, and design for free
+            in your browser
+          </p>
           <div class="sr-btns">
-            <button class="sr-btn-primary" onclick="document.getElementById('designer').scrollIntoView({behavior:'smooth'})">Open the designer</button>
-            <button class="sr-btn-secondary" onclick="openHelp()">How it works</button>
+            <button
+              class="sr-btn-primary"
+              onclick="
+                document
+                  .getElementById('designer')
+                  .scrollIntoView({ behavior: 'smooth' })
+              "
+            >
+              Open the designer
+            </button>
+            <button class="sr-btn-secondary" onclick="openHelp()">
+              How it works
+            </button>
           </div>
-          <div class="sr-badge"><span class="sr-badge-dot"></span>Free to use · No account needed</div>
+          <div class="sr-badge">
+            <span class="sr-badge-dot"></span>Free to use · No account needed
+          </div>
         </div>
         <div class="sr-hero-right">
-          <svg width="240" height="240" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+          <svg
+            width="240"
+            height="240"
+            viewBox="0 0 240 240"
+            xmlns="http://www.w3.org/2000/svg"
+          >
             <defs>
               <radialGradient id="sas_boardGrad" cx="42%" cy="38%" r="62%">
-                <stop offset="0%" stop-color="#FBF3E8"/>
-                <stop offset="100%" stop-color="#DBBF98"/>
+                <stop offset="0%" stop-color="#FBF3E8" />
+                <stop offset="100%" stop-color="#DBBF98" />
               </radialGradient>
             </defs>
             <!-- Board depth -->
-            <circle cx="122" cy="122" r="108" fill="#9B7040" opacity="0.28"/>
+            <circle cx="122" cy="122" r="108" fill="#9B7040" opacity="0.28" />
             <!-- Board surface -->
-            <circle cx="120" cy="120" r="108" fill="url(#sas_boardGrad)" stroke="#9B7040" stroke-width="2.5"/>
+            <circle
+              cx="120"
+              cy="120"
+              r="108"
+              fill="url(#sas_boardGrad)"
+              stroke="#9B7040"
+              stroke-width="2.5"
+            />
             <!-- Inner decorative ring -->
-            <circle cx="120" cy="120" r="104.5" fill="none" stroke="#B09070" stroke-width="0.6" opacity="0.5"/>
+            <circle
+              cx="120"
+              cy="120"
+              r="104.5"
+              fill="none"
+              stroke="#B09070"
+              stroke-width="0.6"
+              opacity="0.5"
+            />
             <!-- Step-9 strings (warm amber) — 24 nails evenly spaced, connect i to (i+9)%24 -->
             <g stroke="#C87828" stroke-width="0.9" fill="none" opacity="0.32">
-              <line x1="120" y1="12" x2="196.4" y2="196.4"/>
-              <line x1="148" y1="15.7" x2="174" y2="213.5"/>
-              <line x1="174" y1="26.5" x2="148" y2="224.3"/>
-              <line x1="196.4" y1="43.6" x2="120" y2="228"/>
-              <line x1="213.5" y1="66" x2="92" y2="224.3"/>
-              <line x1="224.3" y1="92" x2="66" y2="213.5"/>
-              <line x1="228" y1="120" x2="43.6" y2="196.4"/>
-              <line x1="224.3" y1="148" x2="26.5" y2="174"/>
-              <line x1="213.5" y1="174" x2="15.7" y2="148"/>
-              <line x1="196.4" y1="196.4" x2="12" y2="120"/>
-              <line x1="174" y1="213.5" x2="15.7" y2="92"/>
-              <line x1="148" y1="224.3" x2="26.5" y2="66"/>
-              <line x1="120" y1="228" x2="43.6" y2="43.6"/>
-              <line x1="92" y1="224.3" x2="66" y2="26.5"/>
-              <line x1="66" y1="213.5" x2="92" y2="15.7"/>
-              <line x1="43.6" y1="196.4" x2="120" y2="12"/>
-              <line x1="26.5" y1="174" x2="148" y2="15.7"/>
-              <line x1="15.7" y1="148" x2="174" y2="26.5"/>
-              <line x1="12" y1="120" x2="196.4" y2="43.6"/>
-              <line x1="15.7" y1="92" x2="213.5" y2="66"/>
-              <line x1="26.5" y1="66" x2="224.3" y2="92"/>
-              <line x1="43.6" y1="43.6" x2="228" y2="120"/>
-              <line x1="66" y1="26.5" x2="224.3" y2="148"/>
-              <line x1="92" y1="15.7" x2="213.5" y2="174"/>
+              <line x1="120" y1="12" x2="196.4" y2="196.4" />
+              <line x1="148" y1="15.7" x2="174" y2="213.5" />
+              <line x1="174" y1="26.5" x2="148" y2="224.3" />
+              <line x1="196.4" y1="43.6" x2="120" y2="228" />
+              <line x1="213.5" y1="66" x2="92" y2="224.3" />
+              <line x1="224.3" y1="92" x2="66" y2="213.5" />
+              <line x1="228" y1="120" x2="43.6" y2="196.4" />
+              <line x1="224.3" y1="148" x2="26.5" y2="174" />
+              <line x1="213.5" y1="174" x2="15.7" y2="148" />
+              <line x1="196.4" y1="196.4" x2="12" y2="120" />
+              <line x1="174" y1="213.5" x2="15.7" y2="92" />
+              <line x1="148" y1="224.3" x2="26.5" y2="66" />
+              <line x1="120" y1="228" x2="43.6" y2="43.6" />
+              <line x1="92" y1="224.3" x2="66" y2="26.5" />
+              <line x1="66" y1="213.5" x2="92" y2="15.7" />
+              <line x1="43.6" y1="196.4" x2="120" y2="12" />
+              <line x1="26.5" y1="174" x2="148" y2="15.7" />
+              <line x1="15.7" y1="148" x2="174" y2="26.5" />
+              <line x1="12" y1="120" x2="196.4" y2="43.6" />
+              <line x1="15.7" y1="92" x2="213.5" y2="66" />
+              <line x1="26.5" y1="66" x2="224.3" y2="92" />
+              <line x1="43.6" y1="43.6" x2="228" y2="120" />
+              <line x1="66" y1="26.5" x2="224.3" y2="148" />
+              <line x1="92" y1="15.7" x2="213.5" y2="174" />
             </g>
             <!-- Step-7 strings (terracotta) — connect i to (i+7)%24 -->
             <g stroke="#B84030" stroke-width="0.9" fill="none" opacity="0.52">
-              <line x1="120" y1="12" x2="224.3" y2="148"/>
-              <line x1="148" y1="15.7" x2="213.5" y2="174"/>
-              <line x1="174" y1="26.5" x2="196.4" y2="196.4"/>
-              <line x1="196.4" y1="43.6" x2="174" y2="213.5"/>
-              <line x1="213.5" y1="66" x2="148" y2="224.3"/>
-              <line x1="224.3" y1="92" x2="120" y2="228"/>
-              <line x1="228" y1="120" x2="92" y2="224.3"/>
-              <line x1="224.3" y1="148" x2="66" y2="213.5"/>
-              <line x1="213.5" y1="174" x2="43.6" y2="196.4"/>
-              <line x1="196.4" y1="196.4" x2="26.5" y2="174"/>
-              <line x1="174" y1="213.5" x2="15.7" y2="148"/>
-              <line x1="148" y1="224.3" x2="12" y2="120"/>
-              <line x1="120" y1="228" x2="15.7" y2="92"/>
-              <line x1="92" y1="224.3" x2="26.5" y2="66"/>
-              <line x1="66" y1="213.5" x2="43.6" y2="43.6"/>
-              <line x1="43.6" y1="196.4" x2="66" y2="26.5"/>
-              <line x1="26.5" y1="174" x2="92" y2="15.7"/>
-              <line x1="15.7" y1="148" x2="120" y2="12"/>
-              <line x1="12" y1="120" x2="148" y2="15.7"/>
-              <line x1="15.7" y1="92" x2="174" y2="26.5"/>
-              <line x1="26.5" y1="66" x2="196.4" y2="43.6"/>
-              <line x1="43.6" y1="43.6" x2="213.5" y2="66"/>
-              <line x1="66" y1="26.5" x2="224.3" y2="92"/>
-              <line x1="92" y1="15.7" x2="228" y2="120"/>
+              <line x1="120" y1="12" x2="224.3" y2="148" />
+              <line x1="148" y1="15.7" x2="213.5" y2="174" />
+              <line x1="174" y1="26.5" x2="196.4" y2="196.4" />
+              <line x1="196.4" y1="43.6" x2="174" y2="213.5" />
+              <line x1="213.5" y1="66" x2="148" y2="224.3" />
+              <line x1="224.3" y1="92" x2="120" y2="228" />
+              <line x1="228" y1="120" x2="92" y2="224.3" />
+              <line x1="224.3" y1="148" x2="66" y2="213.5" />
+              <line x1="213.5" y1="174" x2="43.6" y2="196.4" />
+              <line x1="196.4" y1="196.4" x2="26.5" y2="174" />
+              <line x1="174" y1="213.5" x2="15.7" y2="148" />
+              <line x1="148" y1="224.3" x2="12" y2="120" />
+              <line x1="120" y1="228" x2="15.7" y2="92" />
+              <line x1="92" y1="224.3" x2="26.5" y2="66" />
+              <line x1="66" y1="213.5" x2="43.6" y2="43.6" />
+              <line x1="43.6" y1="196.4" x2="66" y2="26.5" />
+              <line x1="26.5" y1="174" x2="92" y2="15.7" />
+              <line x1="15.7" y1="148" x2="120" y2="12" />
+              <line x1="12" y1="120" x2="148" y2="15.7" />
+              <line x1="15.7" y1="92" x2="174" y2="26.5" />
+              <line x1="26.5" y1="66" x2="196.4" y2="43.6" />
+              <line x1="43.6" y1="43.6" x2="213.5" y2="66" />
+              <line x1="66" y1="26.5" x2="224.3" y2="92" />
+              <line x1="92" y1="15.7" x2="228" y2="120" />
             </g>
             <!-- 24 nails evenly spaced (r=108, every 15°, starting at top) -->
             <g fill="#3D2410">
-              <circle cx="120" cy="12" r="2.8"/>
-              <circle cx="148" cy="15.7" r="2.8"/>
-              <circle cx="174" cy="26.5" r="2.8"/>
-              <circle cx="196.4" cy="43.6" r="2.8"/>
-              <circle cx="213.5" cy="66" r="2.8"/>
-              <circle cx="224.3" cy="92" r="2.8"/>
-              <circle cx="228" cy="120" r="2.8"/>
-              <circle cx="224.3" cy="148" r="2.8"/>
-              <circle cx="213.5" cy="174" r="2.8"/>
-              <circle cx="196.4" cy="196.4" r="2.8"/>
-              <circle cx="174" cy="213.5" r="2.8"/>
-              <circle cx="148" cy="224.3" r="2.8"/>
-              <circle cx="120" cy="228" r="2.8"/>
-              <circle cx="92" cy="224.3" r="2.8"/>
-              <circle cx="66" cy="213.5" r="2.8"/>
-              <circle cx="43.6" cy="196.4" r="2.8"/>
-              <circle cx="26.5" cy="174" r="2.8"/>
-              <circle cx="15.7" cy="148" r="2.8"/>
-              <circle cx="12" cy="120" r="2.8"/>
-              <circle cx="15.7" cy="92" r="2.8"/>
-              <circle cx="26.5" cy="66" r="2.8"/>
-              <circle cx="43.6" cy="43.6" r="2.8"/>
-              <circle cx="66" cy="26.5" r="2.8"/>
-              <circle cx="92" cy="15.7" r="2.8"/>
+              <circle cx="120" cy="12" r="2.8" />
+              <circle cx="148" cy="15.7" r="2.8" />
+              <circle cx="174" cy="26.5" r="2.8" />
+              <circle cx="196.4" cy="43.6" r="2.8" />
+              <circle cx="213.5" cy="66" r="2.8" />
+              <circle cx="224.3" cy="92" r="2.8" />
+              <circle cx="228" cy="120" r="2.8" />
+              <circle cx="224.3" cy="148" r="2.8" />
+              <circle cx="213.5" cy="174" r="2.8" />
+              <circle cx="196.4" cy="196.4" r="2.8" />
+              <circle cx="174" cy="213.5" r="2.8" />
+              <circle cx="148" cy="224.3" r="2.8" />
+              <circle cx="120" cy="228" r="2.8" />
+              <circle cx="92" cy="224.3" r="2.8" />
+              <circle cx="66" cy="213.5" r="2.8" />
+              <circle cx="43.6" cy="196.4" r="2.8" />
+              <circle cx="26.5" cy="174" r="2.8" />
+              <circle cx="15.7" cy="148" r="2.8" />
+              <circle cx="12" cy="120" r="2.8" />
+              <circle cx="15.7" cy="92" r="2.8" />
+              <circle cx="26.5" cy="66" r="2.8" />
+              <circle cx="43.6" cy="43.6" r="2.8" />
+              <circle cx="66" cy="26.5" r="2.8" />
+              <circle cx="92" cy="15.7" r="2.8" />
             </g>
             <!-- Nail glints (top-left highlight) -->
             <g fill="rgba(210,170,110,0.7)">
-              <circle cx="119.2" cy="11.2" r="1.1"/>
-              <circle cx="147.2" cy="14.9" r="1.1"/>
-              <circle cx="173.2" cy="25.7" r="1.1"/>
-              <circle cx="195.6" cy="42.8" r="1.1"/>
-              <circle cx="212.7" cy="65.2" r="1.1"/>
-              <circle cx="223.5" cy="91.2" r="1.1"/>
-              <circle cx="227.2" cy="119.2" r="1.1"/>
-              <circle cx="223.5" cy="147.2" r="1.1"/>
-              <circle cx="212.7" cy="173.2" r="1.1"/>
-              <circle cx="195.6" cy="195.6" r="1.1"/>
-              <circle cx="173.2" cy="212.7" r="1.1"/>
-              <circle cx="147.2" cy="223.5" r="1.1"/>
-              <circle cx="119.2" cy="227.2" r="1.1"/>
-              <circle cx="91.2" cy="223.5" r="1.1"/>
-              <circle cx="65.2" cy="212.7" r="1.1"/>
-              <circle cx="42.8" cy="195.6" r="1.1"/>
-              <circle cx="25.7" cy="173.2" r="1.1"/>
-              <circle cx="14.9" cy="147.2" r="1.1"/>
-              <circle cx="11.2" cy="119.2" r="1.1"/>
-              <circle cx="14.9" cy="91.2" r="1.1"/>
-              <circle cx="25.7" cy="65.2" r="1.1"/>
-              <circle cx="42.8" cy="42.8" r="1.1"/>
-              <circle cx="65.2" cy="25.7" r="1.1"/>
-              <circle cx="91.2" cy="14.9" r="1.1"/>
+              <circle cx="119.2" cy="11.2" r="1.1" />
+              <circle cx="147.2" cy="14.9" r="1.1" />
+              <circle cx="173.2" cy="25.7" r="1.1" />
+              <circle cx="195.6" cy="42.8" r="1.1" />
+              <circle cx="212.7" cy="65.2" r="1.1" />
+              <circle cx="223.5" cy="91.2" r="1.1" />
+              <circle cx="227.2" cy="119.2" r="1.1" />
+              <circle cx="223.5" cy="147.2" r="1.1" />
+              <circle cx="212.7" cy="173.2" r="1.1" />
+              <circle cx="195.6" cy="195.6" r="1.1" />
+              <circle cx="173.2" cy="212.7" r="1.1" />
+              <circle cx="147.2" cy="223.5" r="1.1" />
+              <circle cx="119.2" cy="227.2" r="1.1" />
+              <circle cx="91.2" cy="223.5" r="1.1" />
+              <circle cx="65.2" cy="212.7" r="1.1" />
+              <circle cx="42.8" cy="195.6" r="1.1" />
+              <circle cx="25.7" cy="173.2" r="1.1" />
+              <circle cx="14.9" cy="147.2" r="1.1" />
+              <circle cx="11.2" cy="119.2" r="1.1" />
+              <circle cx="14.9" cy="91.2" r="1.1" />
+              <circle cx="25.7" cy="65.2" r="1.1" />
+              <circle cx="42.8" cy="42.8" r="1.1" />
+              <circle cx="65.2" cy="25.7" r="1.1" />
+              <circle cx="91.2" cy="14.9" r="1.1" />
             </g>
           </svg>
         </div>
@@ -1433,34 +1703,95 @@
         <div class="sr-feature">
           <div class="sr-feature-icon">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <circle cx="9" cy="9" r="7.5" stroke="#B85C38" stroke-width="1.2"/>
-              <circle cx="9" cy="9" r="3" fill="#B85C38" opacity="0.3"/>
+              <circle
+                cx="9"
+                cy="9"
+                r="7.5"
+                stroke="#B85C38"
+                stroke-width="1.2"
+              />
+              <circle cx="9" cy="9" r="3" fill="#B85C38" opacity="0.3" />
             </svg>
           </div>
           <h3>Nail board designer</h3>
-          <p>Set your board shape, nail count, and spacing. Works for circle and square boards.</p>
+          <p>
+            Set your board shape, nail count, and spacing. Works for circle and
+            square boards.
+          </p>
         </div>
         <div class="sr-feature">
           <div class="sr-feature-icon">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <path d="M2 9 L9 2 L16 9 L9 16 Z" stroke="#B85C38" stroke-width="1.2" fill="none"/>
-              <line x1="2" y1="9" x2="16" y2="9" stroke="#B85C38" stroke-width="0.8" opacity="0.5"/>
-              <line x1="9" y1="2" x2="9" y2="16" stroke="#B85C38" stroke-width="0.8" opacity="0.5"/>
+              <path
+                d="M2 9 L9 2 L16 9 L9 16 Z"
+                stroke="#B85C38"
+                stroke-width="1.2"
+                fill="none"
+              />
+              <line
+                x1="2"
+                y1="9"
+                x2="16"
+                y2="9"
+                stroke="#B85C38"
+                stroke-width="0.8"
+                opacity="0.5"
+              />
+              <line
+                x1="9"
+                y1="2"
+                x2="9"
+                y2="16"
+                stroke="#B85C38"
+                stroke-width="0.8"
+                opacity="0.5"
+              />
             </svg>
           </div>
           <h3>Preset patterns</h3>
-          <p>Start with a spiral, star, or flower — then customise the spacing and layers.</p>
+          <p>
+            Start with a spiral, star, or flower — then customise the spacing
+            and layers.
+          </p>
         </div>
         <div class="sr-feature">
           <div class="sr-feature-icon">
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-              <rect x="2" y="2" width="14" height="14" rx="2" stroke="#B85C38" stroke-width="1.2" fill="none"/>
-              <line x1="2" y1="7" x2="16" y2="7" stroke="#B85C38" stroke-width="0.8" opacity="0.5"/>
-              <line x1="6" y1="7" x2="6" y2="16" stroke="#B85C38" stroke-width="0.8" opacity="0.5"/>
+              <rect
+                x="2"
+                y="2"
+                width="14"
+                height="14"
+                rx="2"
+                stroke="#B85C38"
+                stroke-width="1.2"
+                fill="none"
+              />
+              <line
+                x1="2"
+                y1="7"
+                x2="16"
+                y2="7"
+                stroke="#B85C38"
+                stroke-width="0.8"
+                opacity="0.5"
+              />
+              <line
+                x1="6"
+                y1="7"
+                x2="6"
+                y2="16"
+                stroke="#B85C38"
+                stroke-width="0.8"
+                opacity="0.5"
+              />
             </svg>
           </div>
           <h3>Download your template</h3>
-          <p>Export a numbered PNG preview, or upgrade to Pro for a full print-ready template.</p>
+          <p>
+            Export a numbered PNG preview, or upgrade to Pro for a full
+            print-ready template.
+          </p>
         </div>
       </div>
 
@@ -1477,7 +1808,9 @@
           <div class="sr-step">
             <div class="sr-step-num">02</div>
             <h4>Pick a pattern</h4>
-            <p>Start with a preset or tap nails manually to draw your own design.</p>
+            <p>
+              Start with a preset or tap nails manually to draw your own design.
+            </p>
           </div>
           <div class="sr-step">
             <div class="sr-step-num">03</div>
@@ -1491,12 +1824,14 @@
           </div>
         </div>
       </div>
-
-    </div><!-- end .sr-landing -->
+    </div>
+    <!-- end .sr-landing -->
     <div class="designer-intro">
       <span class="designer-intro-label">Try it now</span>
       <h2>Your string art designer</h2>
-      <p>Pick a pattern preset or tap nails on the board to draw your own design.</p>
+      <p>
+        Pick a pattern preset or tap nails on the board to draw your own design.
+      </p>
     </div>
     <section class="quick-patterns-section">
       <div class="quick-patterns-wrap">
@@ -1538,7 +1873,6 @@
     <div class="container" id="designer">
       <div class="wrap">
         <div class="panel">
-
           <!-- BOARD -->
           <div class="panel-section">
             <span class="panel-section-label">Board</span>
@@ -1551,34 +1885,69 @@
                 </select>
               </div>
               <div>
-                <label>Nails <span class="help-tip">?<span class="tip-text">Number of nails around the board edge. Most designs use between 60 and 150.</span></span></label>
+                <label
+                  >Nails
+                  <span class="help-tip"
+                    >?<span class="tip-text"
+                      >Number of nails around the board edge. Most designs use
+                      between 60 and 150.</span
+                    ></span
+                  ></label
+                >
                 <input id="nails" type="number" min="10" step="1" value="120" />
               </div>
             </div>
-            <label>Zoom <span class="help-tip">?<span class="tip-text">Controls the size of the board preview.</span></span></label>
-            <div class="zoom-controls" style="margin-bottom:8px">
+            <label
+              >Zoom
+              <span class="help-tip"
+                >?<span class="tip-text"
+                  >Controls the size of the board preview.</span
+                ></span
+              ></label
+            >
+            <div class="zoom-controls" style="margin-bottom: 8px">
               <button type="button" id="zoomOut" class="btn-ghost">−</button>
               <button type="button" id="zoomIn" class="btn-ghost">+</button>
-              <button id="fit" class="btn-ghost" style="flex:2">Fit to screen</button>
+              <button id="fit" class="btn-ghost" style="flex: 2">
+                Fit to screen
+              </button>
             </div>
             <input id="radius" type="hidden" value="320" />
           </div>
 
-          <button id="toggleControlsBtn" class="panel-settings-toggle btn-ghost">▼ Show settings</button>
+          <button
+            id="toggleControlsBtn"
+            class="panel-settings-toggle btn-ghost"
+          >
+            ▼ Show settings
+          </button>
 
           <div id="controlsPanel">
-
             <!-- NUMBERS -->
             <div class="panel-section">
               <span class="panel-section-label">Nail Numbers</span>
-              <label style="margin-top:0">
+              <label style="margin-top: 0">
                 <input id="showNums" type="checkbox" checked />
                 Show nail numbers
               </label>
-              <div class="row3" style="margin-top:10px">
+              <div class="row3" style="margin-top: 10px">
                 <div>
-                  <label>Every <span class="help-tip">?<span class="tip-text">Show a label every X nails. Example: 10 shows 10, 20, 30...</span></span></label>
-                  <input id="numEvery" type="number" min="1" step="1" value="10" />
+                  <label
+                    >Every
+                    <span class="help-tip"
+                      >?<span class="tip-text"
+                        >Show a label every X nails. Example: 10 shows 10, 20,
+                        30...</span
+                      ></span
+                    ></label
+                  >
+                  <input
+                    id="numEvery"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value="10"
+                  />
                 </div>
                 <div>
                   <label>Start at</label>
@@ -1589,7 +1958,13 @@
                 </div>
                 <div>
                   <label>Size</label>
-                  <input id="numSize" type="number" min="8" step="1" value="12" />
+                  <input
+                    id="numSize"
+                    type="number"
+                    min="8"
+                    step="1"
+                    value="12"
+                  />
                 </div>
               </div>
               <label>Label distance</label>
@@ -1602,7 +1977,17 @@
               <div class="color-layer-row">
                 <input id="color" type="color" value="#000000" />
                 <select id="layerSel"></select>
-                <button id="newLayer" class="btn-ghost" style="padding:9px 12px;font-size:13px;white-space:nowrap">+ Layer</button>
+                <button
+                  id="newLayer"
+                  class="btn-ghost"
+                  style="
+                    padding: 9px 12px;
+                    font-size: 13px;
+                    white-space: nowrap;
+                  "
+                >
+                  + Layer
+                </button>
               </div>
               <input id="opacity" type="hidden" value="0.35" />
               <input id="lw" type="hidden" value="0.7" />
@@ -1615,7 +2000,15 @@
             <!-- TAP SENSITIVITY -->
             <div class="panel-section">
               <span class="panel-section-label">Advanced</span>
-              <label>Tap sensitivity <span class="help-tip">?<span class="tip-text">How close your tap must be to a nail to select it. Increase if you miss nails on mobile.</span></span></label>
+              <label
+                >Tap sensitivity
+                <span class="help-tip"
+                  >?<span class="tip-text"
+                    >How close your tap must be to a nail to select it. Increase
+                    if you miss nails on mobile.</span
+                  ></span
+                ></label
+              >
               <input id="snap" type="number" min="6" step="1" value="22" />
             </div>
 
@@ -1626,22 +2019,30 @@
                 <button id="saveDesignBtn" class="btn-ghost">Save</button>
                 <button id="loadDesignBtn" class="btn-ghost">Load saved</button>
               </div>
-              <div class="export-row" style="margin-top:6px">
+              <div class="export-row" style="margin-top: 6px">
                 <button id="exportSeq" class="btn-ghost">Copy sequence</button>
                 <button id="downloadPng">Download PNG</button>
               </div>
               <div class="continue-row">
-                <input id="continueSteps" type="number" min="1" max="500" value="20" />
+                <input
+                  id="continueSteps"
+                  type="number"
+                  min="1"
+                  max="500"
+                  value="20"
+                />
                 <label>steps</label>
-                <button id="continuePattern" class="btn-ghost">Continue pattern</button>
+                <button id="continuePattern" class="btn-ghost">
+                  Continue pattern
+                </button>
               </div>
               <button class="pro-btn btn-pro-full" onclick="openProModal()">
                 ✦ Download Printable Template
                 <span class="pro-label">Pro</span>
               </button>
             </div>
-
-          </div><!-- end #controlsPanel -->
+          </div>
+          <!-- end #controlsPanel -->
 
           <!-- UNDO -->
           <div class="undo-row">
@@ -1652,57 +2053,121 @@
           <div class="panel-section">
             <span class="panel-section-label">Sequence</span>
             <div class="seq-out-wrap">
-              <div id="seqOut" class="mono">Tap a nail to start your thread. Then tap another nail to draw a line.</div>
+              <div id="seqOut" class="mono">
+                Tap a nail to start your thread. Then tap another nail to draw a
+                line.
+              </div>
             </div>
           </div>
-
         </div>
 
         <canvas id="cv"></canvas>
       </div>
 
       <div class="mobile-draw-launch">
-        <button id="openDrawMode" class="open-draw-btn">✏ Open Draw Mode</button>
+        <button id="openDrawMode" class="open-draw-btn">
+          ✏ Open Draw Mode
+        </button>
       </div>
     </div>
 
-    <script>
-      function showProInfo() {
-        alert(
-          "Printable precision templates are launching soon.\n\n" +
-            "These will include true-to-scale drill-ready PDF layouts.\n\n" +
-            "Early access coming soon.",
-        );
-      }
-    </script>
     <div class="modal-overlay" id="proModal">
       <div class="modal">
-        <h3>Printable String Art Templates (Pro) Coming Soon</h3>
+        <!-- LOCKED: shown when not yet purchased -->
+        <div id="proModalLocked">
+          <h3>✦ Printable Template</h3>
+          <p>Download a ready-to-print template for your design.</p>
+          <ul>
+            <li>Board layout with every nail numbered</li>
+            <li>1 cm scale reference bar for sizing</li>
+            <li>Step-by-step thread sequence guide</li>
+            <li>One page per layer with colour labels</li>
+          </ul>
+          <p style="font-size: 13px; color: #888; margin-top: 10px">
+            One-time purchase &middot; yours forever
+          </p>
+          <div
+            style="
+              display: flex;
+              gap: 10px;
+              margin-top: 18px;
+              flex-wrap: wrap;
+              align-items: center;
+            "
+          >
+            <a
+              id="gumroadBuyBtn"
+              href="https://creativestep5.gumroad.com/l/nhcecw"
+              target="_blank"
+              rel="noopener"
+              class="pro-btn"
+              style="
+                flex: 1;
+                text-align: center;
+                text-decoration: none;
+                padding: 10px 16px;
+                font-size: 14px;
+                display: block;
+                border-radius: 12px;
+              "
+            >
+              Unlock Printable — €5
+            </a>
+            <button
+              class="modal-close"
+              onclick="closeProModal()"
+              style="flex: 0 0 auto"
+            >
+              Cancel
+            </button>
+          </div>
+          <p
+            style="
+              font-size: 12px;
+              color: #bbb;
+              margin-top: 12px;
+              text-align: center;
+            "
+          >
+            After purchase you'll be redirected here automatically to unlock the
+            download.
+          </p>
+        </div>
 
-        <p>
-          Soon you'll be able to download ready-to-print templates for your
-          design.
-        </p>
-
-        <ul>
-          <li>Print a full-size template for your board</li>
-          <li>See exactly where every nail should go</li>
-          <li>Follow the numbered guide while wrapping your string</li>
-          <li>Print large designs across multiple pages</li>
-          <li>Perfect for turning your design into a real string art piece</li>
-        </ul>
-
-        <p style="font-size: 13px; color: #666">
-          Ideal if you want to take your digital design and build it in real
-          life.
-        </p>
-
-        <button class="modal-close" onclick="closeProModal()">Close</button>
+        <!-- UNLOCKED: shown after purchase -->
+        <div id="proModalUnlocked" style="display: none">
+          <h3>✦ Download Template</h3>
+          <p>
+            Your design is ready to print. Opens in a new tab — use
+            <strong>Print → Save as PDF</strong>.
+          </p>
+          <div
+            style="display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap"
+          >
+            <button
+              id="downloadTemplateBtn"
+              class="pro-btn"
+              style="flex: 1; padding: 10px 16px; font-size: 14px"
+            >
+              📄 Download Template
+            </button>
+            <button
+              class="modal-close"
+              onclick="closeProModal()"
+              style="flex: 0 0 auto"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
     <script>
       function openProModal() {
+        var unlocked = localStorage.getItem("sas_pro_unlocked") === "1";
+        document.getElementById("proModalLocked").style.display = unlocked ? "none" : "block";
+        document.getElementById("proModalUnlocked").style.display = unlocked ? "block" : "none";
         document.getElementById("proModal").style.display = "flex";
       }
 
@@ -1771,7 +2236,6 @@
     </script>
 
     <div id="drawModeOverlay" class="draw-mode-overlay" aria-hidden="true">
-
       <div class="draw-mode-topbar">
         <div class="draw-mode-brand">Steph Rawlings <em>Creations</em></div>
         <button id="closeDrawMode" class="draw-mode-exit">✓ Done</button>
@@ -1807,7 +2271,6 @@
           <button id="drawContinue">Continue</button>
         </div>
       </div>
-
     </div>
 
     <script src="app.js"></script>
@@ -1816,9 +2279,23 @@
     <div class="sr-cta-band">
       <div>
         <h2>Ready to start your next project?</h2>
-        <p>Free to use — no sign-up required. Pro templates coming soon.</p>
+        <p></div>p>
+        <p>
+          Free to use — no sign-up required. Upgrade to unlock printable
+          template export.
+        </p>
       </div>
-      <button class="sr-btn-primary" style="white-space: nowrap; padding: 13px 28px; font-size: 15px;" onclick="document.getElementById('designer').scrollIntoView({behavior:'smooth'})">Open the designer</button>
+      <button
+        class="sr-btn-primary"
+        style="white-space: nowrap; padding: 13px 28px; font-size: 15px"
+        onclick="
+          document
+            .getElementById('designer')
+            .scrollIntoView({ behavior: 'smooth' })
+        "
+      >
+        Open the designer
+      </button>
     </div>
 
     <!-- Footer -->
