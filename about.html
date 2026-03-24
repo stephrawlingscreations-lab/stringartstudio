@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About — Steph Rawlings Creations</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="site.css" />
+  </head>
+  <body>
+    <div class="site-shell">
+      <div class="blur-orb orb-a"></div>
+      <div class="blur-orb orb-b"></div>
+
+      <div class="topbar">
+        <div class="container nav">
+          <a class="brand" href="index.html">
+            <strong>Steph Rawlings Creations</strong>
+            <span>String Art Designer</span>
+          </a>
+          <div class="nav-links">
+            <a href="tools.html">Tools</a>
+            <a href="about.html" class="active">About</a>
+            <a href="feature.html">Get Featured</a>
+            <a href="newsletter.html">Join the list</a>
+            <a class="btn btn-primary" href="designer.html">Open the Designer</a>
+          </div>
+        </div>
+      </div>
+
+      <main>
+        <div class="container page-header">
+          <div class="eyebrow">The maker behind the tools</div>
+          <h1>A bit about me</h1>
+          <p>I made the tools I couldn't find anywhere else.</p>
+        </div>
+
+        <section>
+          <div class="container">
+            <div class="about-grid">
+              <div class="about-visual">
+                <canvas
+                  id="aboutCanvas"
+                  width="300"
+                  height="300"
+                  style="width: 100%; max-width: 260px; margin: 0 auto; display: block;"
+                ></canvas>
+              </div>
+              <div class="about-card">
+                <div class="about-tag">The maker behind the tools</div>
+                <h2>I made the tools I couldn't find anywhere else.</h2>
+                <p>
+                  I'm Steph — I came to string art as a complete beginner,
+                  excited to get started but quickly frustrated when I couldn't
+                  find any decent tools to help me plan my designs.
+                </p>
+                <p>
+                  Every app I found was either too complicated, not built for
+                  string art, or just didn't do what I actually needed. So I
+                  decided to build my own.
+                </p>
+                <p>
+                  These tools are made by someone who's been exactly where you
+                  are — starting from scratch, figuring it out as I went, and
+                  wishing something like this already existed. I hope they make
+                  your projects a little easier and a lot more satisfying.
+                </p>
+                <div style="margin-top: 22px; display: flex; gap: 12px; flex-wrap: wrap;">
+                  <a class="btn btn-primary" href="designer.html">Try the designer</a>
+                  <a class="btn btn-secondary" href="mailto:stephrawlingscreations@gmail.com">Get in touch</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="cta-band">
+          <div class="container">
+            <div class="feature-callout">
+              <div>
+                <div class="eyebrow" style="margin-bottom: 16px">Free to use · no signup needed</div>
+                <h2 style="margin: 0 0 12px; font-family: 'Playfair Display', serif; font-size: clamp(2rem, 3.6vw, 3rem); letter-spacing: -0.05em;">
+                  Ready to plan your next piece?
+                </h2>
+                <p style="margin: 0; color: var(--muted); line-height: 1.8; max-width: 60ch;">
+                  Open the designer, start laying out your pattern, and see your
+                  idea come together before you commit a single nail to the board.
+                </p>
+              </div>
+              <div class="callout-panel">
+                <h3 style="margin: 0;">Start right now</h3>
+                <p>The designer is free, works in your browser, and needs no account or download.</p>
+                <a class="btn btn-primary" href="designer.html">Open the designer</a>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <div class="container footer-box">
+          <span>© 2025 Steph Rawlings Creations</span>
+          <div class="footer-links">
+            <span style="opacity: 0.45;">Shop — coming soon</span>
+            <a href="designer.html">Designer</a>
+            <a href="nail-placement-guide.html">Nail Guide</a>
+            <a href="mailto:stephrawlingscreations@gmail.com">Contact</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      (function () {
+        const canvas = document.getElementById("aboutCanvas");
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        const total = 24;
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        const r = 105;
+        let points = [];
+        let step = 0;
+
+        function setup() {
+          points = [];
+          for (let i = 0; i < total; i++) {
+            const angle = (i / total) * Math.PI * 2 - Math.PI / 2;
+            points.push({ x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r });
+          }
+        }
+
+        function draw() {
+          if (step === 0) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath();
+            ctx.arc(cx, cy, r + 8, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(46,123,121,0.08)";
+            ctx.fill();
+          }
+          if (step >= total) {
+            setTimeout(() => { step = 0; setup(); draw(); }, 1400);
+            return;
+          }
+          const a = points[step];
+          const b = points[(step * 7) % total];
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.strokeStyle = "rgba(46,123,121,0.75)";
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = "#2e7b79";
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(a.x, a.y, 2.2, 0, Math.PI * 2);
+          ctx.fillStyle = "#1e1712";
+          ctx.shadowBlur = 0;
+          ctx.fill();
+          step++;
+          setTimeout(draw, 65);
+        }
+
+        setup();
+        draw();
+      })();
+    </script>
+  </body>
+</html>

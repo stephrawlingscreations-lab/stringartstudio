@@ -288,10 +288,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
       sel.innerHTML = "";
 
-      layers.forEach((_, i) => {
+      layers.forEach((layer, i) => {
         const opt = document.createElement("option");
         opt.value = String(i);
-        opt.textContent = `Layer ${i + 1}`;
+        opt.textContent = layer.hidden ? `Layer ${i + 1} (hidden)` : `Layer ${i + 1}`;
         sel.appendChild(opt);
       });
 
@@ -325,13 +325,20 @@ document.addEventListener("DOMContentLoaded", function () {
     lastNail = null;
 
     syncLayerSelect();
+    syncHideButton();
 
     const L = layers[activeLayer];
 
     if ($("color")) $("color").value = L.color;
     if ($("drawColor")) $("drawColor").value = L.color;
-    if ($("opacity")) $("opacity").value = L.opacity;
-    if ($("lw")) $("lw").value = L.lw;
+    if ($("opacity")) {
+      $("opacity").value = L.opacity;
+      if ($("opacityVal")) $("opacityVal").textContent = Math.round(L.opacity * 100) + "%";
+    }
+    if ($("lw")) {
+      $("lw").value = L.lw;
+      if ($("lwVal")) $("lwVal").textContent = L.lw.toFixed(1);
+    }
 
     redrawAll();
     updateSeqOutput();
@@ -348,10 +355,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if ($("color")) $("color").value = L.color || "#000000";
     if ($("drawColor")) $("drawColor").value = L.color || "#000000";
-    if ($("opacity")) $("opacity").value = L.opacity ?? 0.35;
-    if ($("lw")) $("lw").value = L.lw ?? 0.7;
+    if ($("opacity")) {
+      $("opacity").value = L.opacity ?? 0.35;
+      if ($("opacityVal")) $("opacityVal").textContent = Math.round((L.opacity ?? 0.35) * 100) + "%";
+    }
+    if ($("lw")) {
+      $("lw").value = L.lw ?? 0.7;
+      if ($("lwVal")) $("lwVal").textContent = (L.lw ?? 0.7).toFixed(1);
+    }
 
     syncLayerSelect();
+    syncHideButton();
     redrawAll();
     updateSeqOutput();
     updateDrawModeSeqMini();
@@ -374,6 +388,37 @@ document.addEventListener("DOMContentLoaded", function () {
     redrawAll();
     updateSeqOutput();
     updateDrawModeSeqMini();
+  }
+
+  function deleteLayer() {
+    if (layers.length <= 1) {
+      showToast("Can't delete the only layer — use Clear layer instead.", true);
+      return;
+    }
+    layers.splice(activeLayer, 1);
+    activeLayer = Math.min(activeLayer, layers.length - 1);
+    lastNail = null;
+    syncLayerSelect();
+    syncHideButton();
+    redrawAll();
+    updateSeqOutput();
+    updateDrawModeSeqMini();
+  }
+
+  function toggleLayerVisibility() {
+    ensureLayerExists();
+    layers[activeLayer].hidden = !layers[activeLayer].hidden;
+    syncHideButton();
+    syncLayerSelect();
+    redrawAll();
+  }
+
+  function syncHideButton() {
+    const btn = $("toggleLayerVis");
+    if (!btn) return;
+    const isHidden = layers[activeLayer]?.hidden;
+    btn.textContent = isHidden ? "👁 Show layer" : "👁 Hide layer";
+    btn.style.opacity = isHidden ? "0.6" : "1";
   }
 
   /* -----------------------------
@@ -486,6 +531,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     for (let li = 0; li < layers.length; li++) {
       const layer = layers[li];
+      if (layer.hidden) continue;
 
       ctx.lineWidth = layer.lw;
       ctx.strokeStyle = rgba(layer.color, layer.opacity);
@@ -604,9 +650,11 @@ document.addEventListener("DOMContentLoaded", function () {
     redrawAll();
     updateSeqOutput();
     updateDrawModeSeqMini();
+    if (L.edges.length > 0 || L.seq.length > 0) showToast("Line removed.");
   }
 
   function clearAll() {
+    if (!confirm("Clear everything and start over? This cannot be undone.")) return;
     layers = [];
     activeLayer = 0;
     lastNail = null;
@@ -1131,6 +1179,8 @@ document.addEventListener("DOMContentLoaded", function () {
     $("clearAll")?.addEventListener("click", clearAll);
     $("clearLayer")?.addEventListener("click", clearLayer);
     $("newLayer")?.addEventListener("click", addLayer);
+    $("deleteLayer")?.addEventListener("click", deleteLayer);
+    $("toggleLayerVis")?.addEventListener("click", toggleLayerVisibility);
     $("continuePattern")?.addEventListener("click", continuePattern);
     $("toggleControlsBtn")?.addEventListener("click", toggleControls);
     $("exportSeq")?.addEventListener("click", copySequence);
@@ -1181,6 +1231,23 @@ document.addEventListener("DOMContentLoaded", function () {
       switchLayer(parseInt(e.target.value, 10));
     });
 
+    $("opacity")?.addEventListener("input", () => {
+      ensureLayerExists();
+      const val = parseFloat($("opacity").value);
+      layers[activeLayer].opacity = val;
+      const pct = Math.round(val * 100) + "%";
+      if ($("opacityVal")) $("opacityVal").textContent = pct;
+      redrawAll();
+    });
+
+    $("lw")?.addEventListener("input", () => {
+      ensureLayerExists();
+      const val = parseFloat($("lw").value);
+      layers[activeLayer].lw = val;
+      if ($("lwVal")) $("lwVal").textContent = val.toFixed(1);
+      redrawAll();
+    });
+
     $("color")?.addEventListener("input", () => {
       ensureLayerExists();
       layers[activeLayer].color = $("color").value;
@@ -1213,6 +1280,8 @@ document.addEventListener("DOMContentLoaded", function () {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(redrawAll, 100);
     });
+
+    syncHideButton();
 
     if (hasSavedDesign()) {
       loadSavedDesign(true);

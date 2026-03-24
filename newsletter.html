@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Join the List — Steph Rawlings Creations</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="site.css" />
+  </head>
+  <body>
+    <div class="site-shell">
+      <div class="blur-orb orb-a"></div>
+      <div class="blur-orb orb-b"></div>
+
+      <div class="toast" id="toast">Thanks! I'll be in touch soon. ✉️</div>
+
+      <div class="topbar">
+        <div class="container nav">
+          <a class="brand" href="index.html">
+            <strong>Steph Rawlings Creations</strong>
+            <span>String Art Designer</span>
+          </a>
+          <div class="nav-links">
+            <a href="tools.html">Tools</a>
+            <a href="about.html">About</a>
+            <a href="feature.html">Get Featured</a>
+            <a href="newsletter.html" class="active">Join the list</a>
+            <a class="btn btn-primary" href="designer.html">Open the Designer</a>
+          </div>
+        </div>
+      </div>
+
+      <main>
+        <div class="container page-header">
+          <div class="eyebrow">Stay in the loop</div>
+          <h1>Join the list</h1>
+          <p>New tools, templates, and updates — straight to your inbox. No spam, just the good stuff.</p>
+        </div>
+
+        <section>
+          <div class="container email-wrap">
+            <div class="email-card">
+              <div class="icon-chip">✉</div>
+              <h3>Get notified when new tools and templates drop</h3>
+              <p>
+                New printable packs, pattern templates, and tool updates —
+                straight to your inbox. No spam, just the good stuff.
+              </p>
+              <form id="emailForm">
+                <input
+                  type="email"
+                  id="emailInput"
+                  placeholder="Enter your email address"
+                  aria-label="Email address"
+                  required
+                />
+                <button class="btn btn-primary" type="button" onclick="handleSignup()">Join</button>
+              </form>
+            </div>
+
+            <div class="email-card">
+              <div class="icon-chip">🛍</div>
+              <h3>Shop coming soon</h3>
+              <p>
+                Premium extras — including printable pattern packs and
+                precision templates — are on the way. Join the list above
+                and you'll be the first to know when the shop opens.
+              </p>
+              <div class="soft-list">
+                <div>
+                  <strong>Printable pattern packs</strong><br />Ready-to-use
+                  designs to build straight away.
+                </div>
+                <div>
+                  <strong>Precision nail templates</strong><br />Perfect
+                  spacing, every time.
+                </div>
+                <div>
+                  <strong>More added as it grows</strong><br />New designs and
+                  tools added regularly.
+                </div>
+              </div>
+              <div style="margin-top: 20px;">
+                <span class="btn btn-primary" style="opacity: 0.45; cursor: default; pointer-events: none;">Shop coming soon</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="cta-band">
+          <div class="container">
+            <div class="feature-callout">
+              <div>
+                <div class="eyebrow" style="margin-bottom: 16px;">Free to use · no signup needed</div>
+                <h2 style="margin: 0 0 12px; font-family: 'Playfair Display', serif; font-size: clamp(2rem, 3.6vw, 3rem); letter-spacing: -0.05em;">
+                  Ready to plan your next piece?
+                </h2>
+                <p style="margin: 0; color: var(--muted); line-height: 1.8; max-width: 60ch;">
+                  Open the designer, start laying out your pattern, and see your
+                  idea come together before you commit a single nail to the board.
+                </p>
+              </div>
+              <div class="callout-panel">
+                <h3 style="margin: 0;">Start right now</h3>
+                <p>The designer is free, works in your browser, and needs no account or download.</p>
+                <a class="btn btn-primary" href="designer.html">Open the designer</a>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <div class="container footer-box">
+          <span>© 2025 Steph Rawlings Creations</span>
+          <div class="footer-links">
+            <span style="opacity: 0.45;">Shop — coming soon</span>
+            <a href="designer.html">Designer</a>
+            <a href="nail-placement-guide.html">Nail Guide</a>
+            <a href="mailto:stephrawlingscreations@gmail.com">Contact</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      function handleSignup() {
+        const input = document.getElementById("emailInput");
+        const email = input ? input.value.trim() : "";
+        if (!email || !email.includes("@")) {
+          input.focus();
+          input.style.borderColor = "var(--rust)";
+          setTimeout(() => { input.style.borderColor = ""; }, 1800);
+          return;
+        }
+        window.location.href =
+          "mailto:stephrawlingscreations@gmail.com?subject=New%20signup%3A%20" +
+          encodeURIComponent(email) +
+          "&body=New%20email%20list%20signup%3A%20" +
+          encodeURIComponent(email);
+        input.value = "";
+        showToast();
+      }
+
+      function showToast() {
+        const t = document.getElementById("toast");
+        if (!t) return;
+        t.classList.add("show");
+        setTimeout(() => t.classList.remove("show"), 3500);
+      }
+    </script>
+  </body>
+</html>
