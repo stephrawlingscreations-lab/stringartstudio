@@ -1,0 +1,1143 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nail Placement Guide — Steph Rawlings Creations</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --cream: #faf7f2;
+        --warm-white: #fff9f2;
+        --ink: #1a1410;
+        --thread-red: #c0392b;
+        --thread-gold: #b8860b;
+        --thread-teal: #2a7c7c;
+        --muted: #8a7f74;
+        --border: #e0d8ce;
+        --panel: #f3ede4;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: var(--cream);
+        color: var(--ink);
+        min-height: 100vh;
+      }
+
+      /* ── SCREEN UI ── */
+      @media screen {
+        .screen-wrapper {
+          max-width: 960px;
+          margin: 0 auto;
+          padding: 0 24px 80px;
+        }
+
+        header {
+          padding: 48px 0 32px;
+          border-bottom: 1px solid var(--border);
+          margin-bottom: 40px;
+          display: flex;
+          align-items: flex-end;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 16px;
+        }
+
+        .logo-area h1 {
+          font-family: "Playfair Display", serif;
+          font-size: clamp(22px, 4vw, 32px);
+          font-weight: 700;
+          letter-spacing: -0.5px;
+          color: var(--ink);
+        }
+
+        .logo-area p {
+          font-size: 13px;
+          color: var(--muted);
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          margin-top: 4px;
+        }
+
+        .badge {
+          background: var(--thread-teal);
+          color: #fff;
+          font-size: 11px;
+          font-weight: 500;
+          padding: 5px 12px;
+          border-radius: 20px;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+        }
+
+        .card {
+          background: var(--warm-white);
+          border: 1px solid var(--border);
+          border-radius: 16px;
+          padding: 32px;
+          margin-bottom: 28px;
+        }
+
+        .card-title {
+          font-family: "Playfair Display", serif;
+          font-size: 18px;
+          font-weight: 700;
+          margin-bottom: 24px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .card-title .step-num {
+          width: 28px;
+          height: 28px;
+          background: var(--ink);
+          color: var(--cream);
+          border-radius: 50%;
+          font-family: "DM Sans", sans-serif;
+          font-size: 13px;
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .form-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+        }
+
+        @media (max-width: 600px) {
+          .form-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        .field label {
+          display: block;
+          font-size: 12px;
+          font-weight: 500;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--muted);
+          margin-bottom: 8px;
+        }
+
+        .field input,
+        .field select {
+          width: 100%;
+          background: var(--cream);
+          border: 1.5px solid var(--border);
+          border-radius: 10px;
+          padding: 12px 16px;
+          font-family: "DM Sans", sans-serif;
+          font-size: 15px;
+          color: var(--ink);
+          transition: border-color 0.2s;
+          outline: none;
+        }
+
+        .field input:focus,
+        .field select:focus {
+          border-color: var(--thread-teal);
+        }
+
+        .unit-toggle {
+          display: flex;
+          gap: 8px;
+          margin-top: 12px;
+        }
+
+        .unit-btn {
+          flex: 1;
+          padding: 10px;
+          border-radius: 8px;
+          border: 1.5px solid var(--border);
+          background: var(--cream);
+          font-family: "DM Sans", sans-serif;
+          font-size: 14px;
+          cursor: pointer;
+          transition: all 0.15s;
+          color: var(--muted);
+        }
+
+        .unit-btn.active {
+          border-color: var(--ink);
+          background: var(--ink);
+          color: var(--cream);
+        }
+
+        /* Shape options */
+        .shape-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 12px;
+        }
+
+        @media (max-width: 480px) {
+          .shape-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        .shape-btn {
+          padding: 16px 8px;
+          border: 1.5px solid var(--border);
+          border-radius: 12px;
+          background: var(--cream);
+          cursor: pointer;
+          text-align: center;
+          transition: all 0.15s;
+          font-family: "DM Sans", sans-serif;
+        }
+
+        .shape-btn:hover {
+          border-color: var(--muted);
+        }
+
+        .shape-btn.active {
+          border-color: var(--thread-teal);
+          background: #e8f4f4;
+        }
+
+        .shape-btn svg {
+          display: block;
+          margin: 0 auto 8px;
+        }
+
+        .shape-btn span {
+          font-size: 12px;
+          font-weight: 500;
+          color: var(--muted);
+          letter-spacing: 0.04em;
+        }
+
+        .shape-btn.active span {
+          color: var(--thread-teal);
+        }
+
+        /* Distribution note */
+        .note {
+          font-size: 13px;
+          color: var(--muted);
+          background: var(--panel);
+          border-radius: 8px;
+          padding: 10px 14px;
+          margin-top: 16px;
+          line-height: 1.5;
+        }
+
+        .generate-btn {
+          width: 100%;
+          padding: 18px;
+          background: var(--ink);
+          color: var(--cream);
+          border: none;
+          border-radius: 12px;
+          font-family: "Playfair Display", serif;
+          font-size: 18px;
+          font-style: italic;
+          cursor: pointer;
+          transition: all 0.2s;
+          margin-top: 8px;
+          letter-spacing: 0.02em;
+        }
+
+        .generate-btn:hover {
+          background: #2a2420;
+          transform: translateY(-1px);
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Preview area */
+        #preview-section {
+          display: none;
+        }
+
+        #preview-section.visible {
+          display: block;
+        }
+
+        .preview-toolbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 12px;
+          margin-bottom: 20px;
+        }
+
+        .preview-toolbar h2 {
+          font-family: "Playfair Display", serif;
+          font-size: 20px;
+        }
+
+        .print-btn {
+          padding: 12px 28px;
+          background: var(--thread-teal);
+          color: #fff;
+          border: none;
+          border-radius: 10px;
+          font-family: "DM Sans", sans-serif;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.15s;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .print-btn:hover {
+          background: #236666;
+          transform: translateY(-1px);
+        }
+
+        .preview-card {
+          background: #fff;
+          border: 1px solid var(--border);
+          border-radius: 16px;
+          overflow: hidden;
+        }
+
+        #canvas-container {
+          width: 100%;
+          overflow: auto;
+          padding: 24px;
+          background: #f8f8f6;
+        }
+
+        canvas {
+          display: block;
+        }
+
+        .stats-bar {
+          padding: 16px 24px;
+          border-top: 1px solid var(--border);
+          display: flex;
+          gap: 32px;
+          flex-wrap: wrap;
+          background: var(--warm-white);
+        }
+
+        .stat {
+          font-size: 13px;
+          color: var(--muted);
+        }
+        .stat strong {
+          color: var(--ink);
+          font-weight: 500;
+          display: block;
+          font-size: 16px;
+        }
+
+        footer {
+          text-align: center;
+          padding: 32px 0 0;
+          font-size: 12px;
+          color: var(--muted);
+          border-top: 1px solid var(--border);
+          margin-top: 40px;
+        }
+
+        footer a {
+          color: var(--thread-teal);
+          text-decoration: none;
+        }
+      }
+
+      /* ── PRINT STYLES ── */
+      @media print {
+        body {
+          background: white;
+        }
+        .screen-wrapper > *:not(#preview-section) {
+          display: none !important;
+        }
+        header {
+          display: none !important;
+        }
+        #preview-section {
+          display: block !important;
+        }
+        .preview-toolbar {
+          display: none !important;
+        }
+        .stats-bar {
+          display: none !important;
+        }
+        .preview-card {
+          border: none;
+          border-radius: 0;
+        }
+        #canvas-container {
+          padding: 0;
+          background: white;
+          overflow: visible;
+        }
+        canvas {
+          width: 100% !important;
+          height: auto !important;
+          max-width: 100%;
+        }
+        @page {
+          margin: 10mm;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="screen-wrapper">
+      <header>
+        <div class="logo-area">
+          <h1>Steph Rawlings Creations</h1>
+          <p>Nail Placement Guide Generator</p>
+        </div>
+        <span class="badge">Free Tool</span>
+      </header>
+
+      <!-- Step 1: Board Size -->
+      <div class="card">
+        <div class="card-title">
+          <span class="step-num">1</span>
+          Board Size
+        </div>
+
+        <div style="margin-bottom: 16px">
+          <div
+            style="
+              font-size: 12px;
+              font-weight: 500;
+              letter-spacing: 0.08em;
+              text-transform: uppercase;
+              color: var(--muted);
+              margin-bottom: 8px;
+            "
+          >
+            Units
+          </div>
+          <div class="unit-toggle">
+            <button class="unit-btn active" onclick="setUnit('cm')" id="btn-cm">
+              Centimetres
+            </button>
+            <button class="unit-btn" onclick="setUnit('in')" id="btn-in">
+              Inches
+            </button>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label>Width <span id="unit-label-w">(cm)</span></label>
+            <input
+              type="number"
+              id="board-w"
+              value="30"
+              min="5"
+              max="200"
+              step="0.5"
+            />
+          </div>
+          <div class="field">
+            <label>Height <span id="unit-label-h">(cm)</span></label>
+            <input
+              type="number"
+              id="board-h"
+              value="30"
+              min="5"
+              max="200"
+              step="0.5"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Shape -->
+      <div class="card">
+        <div class="card-title">
+          <span class="step-num">2</span>
+          Nail Arrangement Shape
+        </div>
+        <div class="shape-grid">
+          <button
+            class="shape-btn active"
+            onclick="setShape('square')"
+            id="shape-square"
+          >
+            <svg width="40" height="40" viewBox="0 0 40 40">
+              <rect
+                x="4"
+                y="4"
+                width="32"
+                height="32"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <circle cx="4" cy="4" r="2.5" fill="currentColor" />
+              <circle cx="36" cy="4" r="2.5" fill="currentColor" />
+              <circle cx="4" cy="36" r="2.5" fill="currentColor" />
+              <circle cx="36" cy="36" r="2.5" fill="currentColor" />
+              <circle cx="20" cy="4" r="2" fill="currentColor" />
+              <circle cx="20" cy="36" r="2" fill="currentColor" />
+              <circle cx="4" cy="20" r="2" fill="currentColor" />
+              <circle cx="36" cy="20" r="2" fill="currentColor" />
+            </svg>
+            <span>Perimeter</span>
+          </button>
+
+          <button
+            class="shape-btn"
+            onclick="setShape('circle')"
+            id="shape-circle"
+          >
+            <svg width="40" height="40" viewBox="0 0 40 40">
+              <circle
+                cx="20"
+                cy="20"
+                r="16"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <circle cx="20" cy="4" r="2.5" fill="currentColor" />
+              <circle cx="36" cy="20" r="2.5" fill="currentColor" />
+              <circle cx="20" cy="36" r="2.5" fill="currentColor" />
+              <circle cx="4" cy="20" r="2.5" fill="currentColor" />
+              <circle cx="31.3" cy="8.7" r="2" fill="currentColor" />
+              <circle cx="31.3" cy="31.3" r="2" fill="currentColor" />
+              <circle cx="8.7" cy="8.7" r="2" fill="currentColor" />
+              <circle cx="8.7" cy="31.3" r="2" fill="currentColor" />
+            </svg>
+            <span>Circle</span>
+          </button>
+
+          <button
+            class="shape-btn"
+            onclick="setShape('diamond')"
+            id="shape-diamond"
+          >
+            <svg width="40" height="40" viewBox="0 0 40 40">
+              <polygon
+                points="20,3 37,20 20,37 3,20"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <circle cx="20" cy="3" r="2.5" fill="currentColor" />
+              <circle cx="37" cy="20" r="2.5" fill="currentColor" />
+              <circle cx="20" cy="37" r="2.5" fill="currentColor" />
+              <circle cx="3" cy="20" r="2.5" fill="currentColor" />
+              <circle cx="28.5" cy="11.5" r="2" fill="currentColor" />
+              <circle cx="28.5" cy="28.5" r="2" fill="currentColor" />
+              <circle cx="11.5" cy="11.5" r="2" fill="currentColor" />
+              <circle cx="11.5" cy="28.5" r="2" fill="currentColor" />
+            </svg>
+            <span>Diamond</span>
+          </button>
+
+          <button
+            class="shape-btn"
+            onclick="setShape('hexagon')"
+            id="shape-hexagon"
+          >
+            <svg width="40" height="40" viewBox="0 0 40 40">
+              <polygon
+                points="20,3 35,11.5 35,28.5 20,37 5,28.5 5,11.5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <circle cx="20" cy="3" r="2" fill="currentColor" />
+              <circle cx="35" cy="11.5" r="2" fill="currentColor" />
+              <circle cx="35" cy="28.5" r="2" fill="currentColor" />
+              <circle cx="20" cy="37" r="2" fill="currentColor" />
+              <circle cx="5" cy="28.5" r="2" fill="currentColor" />
+              <circle cx="5" cy="11.5" r="2" fill="currentColor" />
+            </svg>
+            <span>Hexagon</span>
+          </button>
+
+          <button
+            class="shape-btn"
+            onclick="setShape('heart')"
+            id="shape-heart"
+          >
+            <svg width="40" height="40" viewBox="0 0 40 40">
+              <path
+                d="M20,35 C20,35 4,24 4,13 C4,8 8,4 13,4 C16,4 18.5,5.5 20,8 C21.5,5.5 24,4 27,4 C32,4 36,8 36,13 C36,24 20,35 20,35Z"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <circle cx="20" cy="35" r="2" fill="currentColor" />
+              <circle cx="4" cy="13" r="2" fill="currentColor" />
+              <circle cx="36" cy="13" r="2" fill="currentColor" />
+              <circle cx="20" cy="8" r="2" fill="currentColor" />
+              <circle cx="10" cy="7" r="2" fill="currentColor" />
+              <circle cx="30" cy="7" r="2" fill="currentColor" />
+            </svg>
+            <span>Heart</span>
+          </button>
+
+          <button class="shape-btn" onclick="setShape('star')" id="shape-star">
+            <svg width="40" height="40" viewBox="0 0 40 40">
+              <polygon
+                points="20,3 24.5,15 37,15 27,23 31,36 20,28 9,36 13,23 3,15 15.5,15"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              />
+              <circle cx="20" cy="3" r="2" fill="currentColor" />
+              <circle cx="37" cy="15" r="2" fill="currentColor" />
+              <circle cx="31" cy="36" r="2" fill="currentColor" />
+              <circle cx="9" cy="36" r="2" fill="currentColor" />
+              <circle cx="3" cy="15" r="2" fill="currentColor" />
+            </svg>
+            <span>Star</span>
+          </button>
+        </div>
+        <div class="note">
+          💡 Nails are evenly distributed around the chosen shape. The printable
+          will scale to your exact board dimensions.
+        </div>
+      </div>
+
+      <!-- Step 3: Nail Count -->
+      <div class="card">
+        <div class="card-title">
+          <span class="step-num">3</span>
+          Number of Nails
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Total nails</label>
+            <input
+              type="number"
+              id="nail-count"
+              value="60"
+              min="8"
+              max="400"
+              step="1"
+            />
+          </div>
+          <div class="field">
+            <label>Dot size</label>
+            <select id="dot-size">
+              <option value="3">Small (fine nail)</option>
+              <option value="4" selected>Medium (standard)</option>
+              <option value="5.5">Large (panel pin)</option>
+            </select>
+          </div>
+        </div>
+        <div class="field" style="margin-top: 16px">
+          <label
+            >Margin from edge <span id="unit-label-margin">(cm)</span></label
+          >
+          <input
+            type="number"
+            id="margin"
+            value="1.5"
+            min="0"
+            max="10"
+            step="0.5"
+          />
+        </div>
+      </div>
+
+      <button class="generate-btn" onclick="generateGuide()">
+        Generate Printable Guide →
+      </button>
+
+      <!-- Preview -->
+      <div id="preview-section">
+        <div class="preview-toolbar">
+          <h2>Your Printable Guide</h2>
+          <button class="print-btn" onclick="window.print()">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <polyline points="6 9 6 2 18 2 18 9" />
+              <path
+                d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"
+              />
+              <rect x="6" y="14" width="12" height="8" />
+            </svg>
+            Print / Save as PDF
+          </button>
+        </div>
+
+        <div class="preview-card">
+          <div id="canvas-container">
+            <canvas id="guide-canvas"></canvas>
+          </div>
+          <div class="stats-bar" id="stats-bar"></div>
+        </div>
+      </div>
+
+      <footer>
+        <p>
+          A free tool by
+          <a href="https://stephrawlingscreations.ie"
+            >stephrawlingscreations.ie</a
+          >
+          — made with love for the string art community 🧵
+        </p>
+        <p style="margin-top: 8px">
+          Print at 100% scale (no scaling) for accurate measurements.
+        </p>
+      </footer>
+    </div>
+
+    <script>
+      let currentUnit = "cm";
+      let currentShape = "square";
+
+      // DPI for canvas rendering (screen: 96dpi, we'll render at higher for print quality)
+      const RENDER_DPI = 150;
+      const MM_PER_INCH = 25.4;
+
+      function setUnit(u) {
+        const prev = currentUnit;
+        currentUnit = u;
+        document
+          .getElementById("btn-cm")
+          .classList.toggle("active", u === "cm");
+        document
+          .getElementById("btn-in")
+          .classList.toggle("active", u === "in");
+        ["unit-label-w", "unit-label-h", "unit-label-margin"].forEach((id) => {
+          document.getElementById(id).textContent =
+            u === "cm" ? "(cm)" : "(in)";
+        });
+
+        // convert existing values
+        const fields = ["board-w", "board-h", "margin"];
+        fields.forEach((id) => {
+          const el = document.getElementById(id);
+          const val = parseFloat(el.value);
+          if (!isNaN(val)) {
+            if (prev === "cm" && u === "in") el.value = (val / 2.54).toFixed(2);
+            else if (prev === "in" && u === "cm")
+              el.value = (val * 2.54).toFixed(2);
+          }
+        });
+      }
+
+      function setShape(s) {
+        document
+          .querySelectorAll(".shape-btn")
+          .forEach((b) => b.classList.remove("active"));
+        document.getElementById("shape-" + s).classList.add("active");
+        currentShape = s;
+      }
+
+      function toInches(val) {
+        return currentUnit === "cm" ? val / 2.54 : val;
+      }
+
+      // --- Generate nail positions for each shape ---
+      function getNailPositions(shape, nails, cx, cy, rx, ry) {
+        const pts = [];
+
+        if (shape === "square") {
+          // Perimeter of rectangle, evenly spaced by arc length
+          const perimeter = 2 * (2 * rx + 2 * ry);
+          const step = perimeter / nails;
+          const sides = [
+            { len: 2 * rx, fn: (t) => [cx - rx + t, cy - ry] },
+            { len: 2 * ry, fn: (t) => [cx + rx, cy - ry + t] },
+            { len: 2 * rx, fn: (t) => [cx + rx - t, cy + ry] },
+            { len: 2 * ry, fn: (t) => [cx - rx, cy + ry - t] },
+          ];
+          let d = 0;
+          for (let i = 0; i < nails; i++) {
+            let pos = d;
+            let acc = 0;
+            for (const side of sides) {
+              if (pos <= acc + side.len) {
+                const t = pos - acc;
+                const [x, y] = side.fn(t);
+                pts.push([x, y]);
+                break;
+              }
+              acc += side.len;
+            }
+            d += step;
+          }
+        } else if (shape === "circle") {
+          for (let i = 0; i < nails; i++) {
+            const a = (i / nails) * Math.PI * 2 - Math.PI / 2;
+            pts.push([cx + rx * Math.cos(a), cy + ry * Math.sin(a)]);
+          }
+        } else if (shape === "diamond") {
+          // 4 sides of a diamond
+          const corners = [
+            [cx, cy - ry],
+            [cx + rx, cy],
+            [cx, cy + ry],
+            [cx - rx, cy],
+          ];
+          const sideLen = Math.sqrt(rx * rx + ry * ry);
+          const perim = 4 * sideLen;
+          const step = perim / nails;
+          for (let i = 0; i < nails; i++) {
+            let d = i * step;
+            const sideIdx = Math.floor(d / sideLen) % 4;
+            const t = (d % sideLen) / sideLen;
+            const a = corners[sideIdx];
+            const b = corners[(sideIdx + 1) % 4];
+            pts.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]);
+          }
+        } else if (shape === "hexagon") {
+          const corners = [];
+          for (let i = 0; i < 6; i++) {
+            const a = (i / 6) * Math.PI * 2 - Math.PI / 2;
+            corners.push([cx + rx * Math.cos(a), cy + ry * Math.sin(a)]);
+          }
+          const sideLen = Math.sqrt(
+            (corners[1][0] - corners[0][0]) ** 2 +
+              (corners[1][1] - corners[0][1]) ** 2,
+          );
+          const perim = 6 * sideLen;
+          const step = perim / nails;
+          for (let i = 0; i < nails; i++) {
+            let d = i * step;
+            const sideIdx = Math.floor(d / sideLen) % 6;
+            const t = (d % sideLen) / sideLen;
+            const a = corners[sideIdx];
+            const b = corners[(sideIdx + 1) % 6];
+            pts.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]);
+          }
+        } else if (shape === "heart") {
+          // Parametric heart
+          const samples = 2000;
+          const heartPts = [];
+          for (let i = 0; i <= samples; i++) {
+            const t = (i / samples) * Math.PI * 2;
+            // Rotated so tip points down
+            const hx = 16 * Math.pow(Math.sin(t), 3);
+            const hy = -(
+              13 * Math.cos(t) -
+              5 * Math.cos(2 * t) -
+              2 * Math.cos(3 * t) -
+              Math.cos(4 * t)
+            );
+            heartPts.push([hx, hy]);
+          }
+          // Scale to fit rx,ry
+          const maxHx = Math.max(...heartPts.map((p) => Math.abs(p[0])));
+          const maxHy = Math.max(...heartPts.map((p) => Math.abs(p[1])));
+          // Arc-length parameterize
+          const arcLen = [];
+          let total = 0;
+          arcLen.push(0);
+          for (let i = 1; i < heartPts.length; i++) {
+            const dx = heartPts[i][0] - heartPts[i - 1][0];
+            const dy = heartPts[i][1] - heartPts[i - 1][1];
+            total += Math.sqrt(dx * dx + dy * dy);
+            arcLen.push(total);
+          }
+          for (let i = 0; i < nails; i++) {
+            const target = (i / nails) * total;
+            let lo = 0,
+              hi = heartPts.length - 1;
+            while (lo < hi - 1) {
+              const mid = (lo + hi) >> 1;
+              if (arcLen[mid] < target) lo = mid;
+              else hi = mid;
+            }
+            const t2 = (target - arcLen[lo]) / (arcLen[hi] - arcLen[lo] || 1);
+            const hx =
+              heartPts[lo][0] + (heartPts[hi][0] - heartPts[lo][0]) * t2;
+            const hy =
+              heartPts[lo][1] + (heartPts[hi][1] - heartPts[lo][1]) * t2;
+            pts.push([cx + hx * (rx / maxHx), cy + hy * (ry / maxHy)]);
+          }
+        } else if (shape === "star") {
+          const corners = [];
+          for (let i = 0; i < 10; i++) {
+            const a = (i / 10) * Math.PI * 2 - Math.PI / 2;
+            const r = i % 2 === 0 ? 1 : 0.4;
+            corners.push([
+              cx + rx * r * Math.cos(a),
+              cy + ry * r * Math.sin(a),
+            ]);
+          }
+          const sideLens = corners.map((c, i) => {
+            const n = corners[(i + 1) % 10];
+            return Math.sqrt((n[0] - c[0]) ** 2 + (n[1] - c[1]) ** 2);
+          });
+          const perim = sideLens.reduce((a, b) => a + b, 0);
+          const step = perim / nails;
+          const cumLen = [0];
+          sideLens.forEach((l, i) => cumLen.push(cumLen[i] + l));
+          for (let i = 0; i < nails; i++) {
+            const d = i * step;
+            let sideIdx = 0;
+            while (sideIdx < 9 && cumLen[sideIdx + 1] < d) sideIdx++;
+            const t = (d - cumLen[sideIdx]) / (sideLens[sideIdx] || 1);
+            const a = corners[sideIdx];
+            const b = corners[(sideIdx + 1) % 10];
+            pts.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]);
+          }
+        }
+
+        return pts;
+      }
+
+      function generateGuide() {
+        const W_raw = parseFloat(document.getElementById("board-w").value);
+        const H_raw = parseFloat(document.getElementById("board-h").value);
+        const margin_raw = parseFloat(document.getElementById("margin").value);
+        const nailCount = parseInt(document.getElementById("nail-count").value);
+        const dotRadius = parseFloat(document.getElementById("dot-size").value);
+
+        if (isNaN(W_raw) || isNaN(H_raw) || W_raw < 5 || H_raw < 5) {
+          alert("Please enter valid board dimensions.");
+          return;
+        }
+        if (nailCount < 4 || nailCount > 400) {
+          alert("Nail count must be between 4 and 400.");
+          return;
+        }
+
+        // Convert everything to inches for canvas sizing
+        const W_in = toInches(W_raw);
+        const H_in = toInches(H_raw);
+        const margin_in = toInches(margin_raw);
+
+        // Canvas pixel dimensions
+        const PX_W = Math.round(W_in * RENDER_DPI);
+        const PX_H = Math.round(H_in * RENDER_DPI);
+        const margin_px = margin_in * RENDER_DPI;
+        const dotR_px = dotRadius * (RENDER_DPI / 96) * 1.5;
+
+        const canvas = document.getElementById("guide-canvas");
+        canvas.width = PX_W;
+        canvas.height = PX_H;
+
+        // Scale canvas display size
+        const maxDisplayW = Math.min(
+          PX_W,
+          document.getElementById("canvas-container").clientWidth - 48,
+        );
+        const scale = maxDisplayW / PX_W;
+        canvas.style.width = PX_W * scale + "px";
+        canvas.style.height = PX_H * scale + "px";
+
+        const ctx = canvas.getContext("2d");
+
+        // Background
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, PX_W, PX_H);
+
+        // Board outline
+        ctx.strokeStyle = "#cccccc";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([6, 4]);
+        ctx.strokeRect(1, 1, PX_W - 2, PX_H - 2);
+        ctx.setLineDash([]);
+
+        // Ruler marks (every cm or 0.5in)
+        ctx.fillStyle = "#dddddd";
+        ctx.font = `${Math.round((8 * RENDER_DPI) / 96)}px sans-serif`;
+        ctx.fillStyle = "#bbbbbb";
+        const tickStep_in = currentUnit === "cm" ? 1 / 2.54 : 0.5;
+        const tickCount_h = Math.floor(W_in / tickStep_in);
+        const tickCount_v = Math.floor(H_in / tickStep_in);
+        for (let i = 1; i < tickCount_h; i++) {
+          const x = ((i * tickStep_in) / W_in) * PX_W;
+          ctx.fillRect(x - 0.5, 0, 1, 6);
+        }
+        for (let i = 1; i < tickCount_v; i++) {
+          const y = ((i * tickStep_in) / H_in) * PX_H;
+          ctx.fillRect(0, y - 0.5, 6, 1);
+        }
+
+        // Corner marks
+        const csize = 20;
+        ctx.strokeStyle = "#aaaaaa";
+        ctx.lineWidth = 1.5;
+        [
+          [0, 0],
+          [PX_W, 0],
+          [0, PX_H],
+          [PX_W, PX_H],
+        ].forEach(([x, y]) => {
+          const sx = x === 0 ? 1 : -1,
+            sy = y === 0 ? 1 : -1;
+          ctx.beginPath();
+          ctx.moveTo(x + sx * csize, y);
+          ctx.lineTo(x, y);
+          ctx.lineTo(x, y + sy * csize);
+          ctx.stroke();
+        });
+
+        // Centre guides (faint)
+        ctx.strokeStyle = "#eeeeee";
+        ctx.lineWidth = 0.5;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(PX_W / 2, 0);
+        ctx.lineTo(PX_W / 2, PX_H);
+        ctx.moveTo(0, PX_H / 2);
+        ctx.lineTo(PX_W, PX_H / 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Nail area bounds
+        const areaX0 = margin_px;
+        const areaY0 = margin_px;
+        const areaW = PX_W - 2 * margin_px;
+        const areaH = PX_H - 2 * margin_px;
+
+        if (areaW <= 0 || areaH <= 0) {
+          alert("Margin is too large for these board dimensions.");
+          return;
+        }
+
+        const cx = areaX0 + areaW / 2;
+        const cy = areaY0 + areaH / 2;
+        const rx = areaW / 2;
+        const ry = areaH / 2;
+
+        // Get nail positions
+        const nails = getNailPositions(currentShape, nailCount, cx, cy, rx, ry);
+
+        // Draw nail dots
+        nails.forEach((pt, i) => {
+          const [x, y] = pt;
+
+          // Outer ring (print-friendly crosshair dot)
+          ctx.beginPath();
+          ctx.arc(x, y, dotR_px + 1.5, 0, Math.PI * 2);
+          ctx.strokeStyle = "rgba(0,0,0,0.12)";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+
+          // Filled dot
+          ctx.beginPath();
+          ctx.arc(x, y, dotR_px, 0, Math.PI * 2);
+          ctx.fillStyle = "#1a1410";
+          ctx.fill();
+        });
+
+        // Numbering (every 5th nail)
+        ctx.font = `bold ${Math.round((7 * RENDER_DPI) / 96)}px sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        nails.forEach((pt, i) => {
+          if ((i + 1) % 5 === 0 || i === 0) {
+            const [x, y] = pt;
+            const label = String(i + 1);
+            // Push label slightly outward from center
+            const dx = x - cx,
+              dy = y - cy;
+            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+            const offset = dotR_px + 11;
+            const lx = x + (dx / dist) * offset;
+            const ly = y + (dy / dist) * offset;
+
+            ctx.fillStyle = "#888";
+            ctx.fillText(label, lx, ly);
+          }
+        });
+
+        // Title block at bottom
+        const titleH = Math.round((32 * RENDER_DPI) / 96);
+        const titleY = PX_H - titleH;
+        ctx.fillStyle = "#f5f5f5";
+        ctx.fillRect(0, titleY, PX_W, titleH);
+        ctx.strokeStyle = "#cccccc";
+        ctx.lineWidth = 0.5;
+        ctx.beginPath();
+        ctx.moveTo(0, titleY);
+        ctx.lineTo(PX_W, titleY);
+        ctx.stroke();
+
+        const labelFontSize = Math.round((8.5 * RENDER_DPI) / 96);
+        ctx.font = `${labelFontSize}px sans-serif`;
+        ctx.textBaseline = "middle";
+        ctx.textAlign = "left";
+        ctx.fillStyle = "#666";
+        const sizeStr =
+          currentUnit === "cm"
+            ? `${W_raw}cm × ${H_raw}cm`
+            : `${W_raw}" × ${H_raw}"`;
+        ctx.fillText(
+          `stephrawlingscreations.ie  ·  ${sizeStr}  ·  ${nailCount} nails  ·  ${currentShape}  ·  Print at 100% scale — do not resize`,
+          10,
+          titleY + titleH / 2,
+        );
+
+        // Show section
+        document.getElementById("preview-section").classList.add("visible");
+
+        // Stats
+        const avgSpacing_px = computeAvgSpacing(nails);
+        const avgSpacing_in = avgSpacing_px / RENDER_DPI;
+        const avgSpacing_disp =
+          currentUnit === "cm"
+            ? (avgSpacing_in * 2.54).toFixed(1) + " cm"
+            : avgSpacing_in.toFixed(2) + '"';
+
+        document.getElementById("stats-bar").innerHTML = `
+      <div class="stat"><strong>${nailCount}</strong> Total nails</div>
+      <div class="stat"><strong>${avgSpacing_disp}</strong> Avg. spacing</div>
+      <div class="stat"><strong>${sizeStr}</strong> Board size</div>
+      <div class="stat"><strong>${currentShape.charAt(0).toUpperCase() + currentShape.slice(1)}</strong> Shape</div>
+    `;
+
+        // Scroll to preview
+        setTimeout(() => {
+          document
+            .getElementById("preview-section")
+            .scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+      }
+
+      function computeAvgSpacing(nails) {
+        if (nails.length < 2) return 0;
+        let total = 0;
+        for (let i = 0; i < nails.length; i++) {
+          const a = nails[i],
+            b = nails[(i + 1) % nails.length];
+          total += Math.sqrt((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2);
+        }
+        return total / nails.length;
+      }
+
+      // Recalculate canvas display size on resize
+      window.addEventListener("resize", () => {
+        const canvas = document.getElementById("guide-canvas");
+        if (canvas.width > 0) {
+          const maxW = Math.min(
+            canvas.width,
+            document.getElementById("canvas-container").clientWidth - 48,
+          );
+          const scale = maxW / canvas.width;
+          canvas.style.width = canvas.width * scale + "px";
+          canvas.style.height = canvas.height * scale + "px";
+        }
+      });
+    </script>
+  </body>
+</html>
