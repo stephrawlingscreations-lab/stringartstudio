@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>String Art Designer</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        margin: 0;
+        font-family: "DM Sans", sans-serif;
+        background: #f4f1ed;
+      }
+
+      .topbar {
+        padding: 16px 20px;
+        background: white;
+        border-bottom: 1px solid #e7e5e2;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .brand {
+        font-family: "Playfair Display", serif;
+        font-size: 18px;
+      }
+
+      .btn {
+        background: #b85c38;
+        color: white;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 20px;
+        cursor: pointer;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .wrap {
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        gap: 20px;
+      }
+
+      .panel {
+        background: white;
+        padding: 16px;
+        border-radius: 14px;
+      }
+
+      canvas {
+        width: 100%;
+        background: white;
+        border-radius: 16px;
+      }
+
+      @media (max-width: 900px) {
+        .wrap {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Top Bar -->
+    <div class="topbar">
+      <div class="brand">String Art Designer</div>
+      <a href="index.html"><button class="btn">← Back to Home</button></a>
+    </div>
+
+    <div class="container">
+      <!-- Intro -->
+      <div style="text-align: center; margin-bottom: 20px">
+        <h2>Your String Art Designer</h2>
+        <p>Pick a pattern or tap nails to create your own design.</p>
+      </div>
+
+      <!-- Layout -->
+      <div class="wrap">
+        <!-- Controls -->
+        <div class="panel">
+          <h3>Board Settings</h3>
+
+          <label>Shape</label>
+          <select id="board">
+            <option value="circle">Circle</option>
+            <option value="square">Square</option>
+          </select>
+
+          <label>Nails</label>
+          <input id="nails" type="number" value="120" />
+
+          <label>Size</label>
+          <input id="radius" type="number" value="320" />
+
+          <div
+            style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap"
+          >
+            <button onclick="fitToScreen()">Fit</button>
+            <button onclick="clearAll()">Clear</button>
+          </div>
+
+          <h3 style="margin-top: 20px">Actions</h3>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap">
+            <button onclick="undo()">Undo</button>
+            <button onclick="downloadPreview()">Download</button>
+          </div>
+
+          <h3 style="margin-top: 20px">Sequence</h3>
+          <div
+            id="seqOut"
+            style="
+              font-size: 12px;
+              white-space: pre-wrap;
+              background: #fafafa;
+              padding: 10px;
+              border-radius: 10px;
+            "
+          >
+            Nothing yet
+          </div>
+        </div>
+
+        <!-- Canvas -->
+        <div>
+          <canvas id="cv"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
