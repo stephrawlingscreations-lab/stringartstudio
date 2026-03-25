@@ -1333,8 +1333,6 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
-    // ── EDITABLE EARLY RELEASE MESSAGE ──
-    const EARLY_RELEASE_MSG = "These templates are currently in early release. If anything isn't quite right, I'll fix it for you or provide a full refund.";
     const CONTACT = "stephrawlingscreations.ie";
 
     const board = $("board")?.value || "circle";
@@ -1466,10 +1464,6 @@ document.addEventListener("DOMContentLoaded", function () {
     </table>
     <p class="sn" style="margin-top:2mm">Based on a ${boardSizeCm} cm board. Add ~10% extra for tying off.</p>
   </div>
-  <div class="early-release-box">
-    <p class="er-msg">${EARLY_RELEASE_MSG}</p>
-    <p class="er-contact">${CONTACT}</p>
-  </div>
   <div class="pf"><span>${CONTACT}</span><span>Page 1 — Design Overview</span></div>
 </div>`;
 
@@ -1484,6 +1478,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const totalCols = Math.ceil(SZ / tileW_svg);
     const totalRows = Math.ceil(SZ / tileH_svg);
     const boardPageCount = totalCols * totalRows;
+    const totalPages = 1 + boardPageCount + activeLayers + 1;
 
     let boardPagesHTML = "";
     let pageIdx = 1; // cover is page 1
@@ -1520,7 +1515,7 @@ document.addEventListener("DOMContentLoaded", function () {
 <div class="page tile-page">
   <div class="tile-hdr">
     <span class="tile-hdr-left">Nail Placement Template · ${boardSizeCm} cm board · Tile ${tileLabel}${boardPageCount > 1 ? ` (col ${col + 1}/${totalCols}, row ${row + 1}/${totalRows})` : ""}</span>
-    <span class="tile-hdr-right">Page ${pageIdx} of ${1 + boardPageCount + activeLayers + 1} · ⚠ PRINT AT 100% — no scaling, no "fit to page"</span>
+    <span class="tile-hdr-right">Page ${pageIdx} of ${totalPages} · ⚠ PRINT AT 100% — no scaling, no "fit to page"</span>
   </div>
   <div class="board-wrap">
     <svg viewBox="${sx.toFixed(2)} ${sy.toFixed(2)} ${tileW_svg.toFixed(2)} ${tileH_svg.toFixed(2)}"
@@ -1563,20 +1558,18 @@ document.addEventListener("DOMContentLoaded", function () {
         layerSvgLines += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="rgb(${c.r},${c.g},${c.b})" stroke-opacity="${Math.max(0.25, (L.opacity || 0.45)).toFixed(2)}" stroke-width="${Math.min((L.lw || 0.7) * 1.3, 1.5)}"/>`;
       }
 
-      // Full sequence display (arrow format, wrapped if very long)
-      const arrowSeq = L.seq?.length ? L.seq.map(n => n + numStart).join(" → ") : "";
-      const seqTruncated = arrowSeq.length > 500;
-      const seqDisplay = seqTruncated ? arrowSeq.substring(0, 500) + " …" : arrowSeq;
-
-      // Step grid (show first 80 steps max to avoid overflow)
-      let stepGridHTML = "";
-      if (L.seq?.length) {
-        const stepsToShow = Math.min(L.seq.length, 80);
-        for (let i = 0; i < stepsToShow; i++) {
-          stepGridHTML += `<div class="step"><span class="sl">${i === 0 ? "Start" : "#" + i}</span><span class="sn2">${L.seq[i] + numStart}</span></div>`;
+      // Step-pair rows — each move shown as "N → M", never breaks mid-number
+      const hasSeq = L.seq?.length > 1;
+      let seqRowsHTML = "";
+      if (hasSeq) {
+        const MAX_STEPS = 100;
+        const totalMoves = L.seq.length - 1;
+        const showMoves = Math.min(totalMoves, MAX_STEPS);
+        for (let i = 0; i < showMoves; i++) {
+          seqRowsHTML += `<div class="seq-step"><span class="seq-num">${i + 1}</span><span class="seq-move">${L.seq[i] + numStart}&thinsp;&rarr;&thinsp;${L.seq[i + 1] + numStart}</span></div>`;
         }
-        if (L.seq.length > 80) {
-          stepGridHTML += `<div class="step step-more"><span class="sl">&nbsp;</span><span class="sn2">+${L.seq.length - 80}</span></div>`;
+        if (totalMoves > MAX_STEPS) {
+          seqRowsHTML += `<div class="seq-more">+${totalMoves - MAX_STEPS} more moves — refer to the designer for full sequence</div>`;
         }
       }
 
@@ -1605,72 +1598,39 @@ document.addEventListener("DOMContentLoaded", function () {
     </svg>
     <p class="preview-caption">Layer ${li + 1} isolated · other layers shown faded for context</p>
   </div>
-  ${arrowSeq ? `<div class="section">
+  ${hasSeq ? `<div class="section">
     <h2 class="sh">Sequence — Layer ${li + 1}</h2>
-    <p class="lsub" style="margin-bottom:2mm">Start at nail <strong>${layerStartNail}</strong> · ${moves} moves · follow in order</p>
-    <p class="arrow-seq">${seqDisplay}</p>
-    ${stepGridHTML ? `<div class="step-grid" style="margin-top:2mm">${stepGridHTML}</div>` : ""}
+    <p class="lsub" style="margin-bottom:3mm">Start at nail <b>${layerStartNail}</b> &nbsp;·&nbsp; ${moves} moves &nbsp;·&nbsp; follow each step in order</p>
+    <div class="seq-grid">${seqRowsHTML}</div>
   </div>` : ""}
-  <div class="pf"><span>${CONTACT}</span><span>Page ${pageIdx} — Layer ${li + 1} of ${activeLayers}</span></div>
+  <div class="pf"><span>${CONTACT}</span><span>Page ${pageIdx} of ${totalPages} — Layer ${li + 1} of ${activeLayers}</span></div>
 </div>`;
     });
 
     // ── BUILD GUIDE PAGE ──
-    let seqHTML = "";
-    let isFirst = true;
-    layers.forEach((L, li) => {
-      if (!L.seq?.length) return;
-      const c = hexToRgb(L.color || "#000000");
-      const colorRgb = `rgb(${c.r},${c.g},${c.b})`;
-      const arrowSeq = L.seq.map((n) => n + numStart).join(" → ");
-      const moves = L.seq.length - 1;
-      seqHTML += `<section class="ls${isFirst ? " ls-first" : ""}">
-        <div class="lh">
-          <span class="ldot" style="background:${colorRgb}"></span>
-          <div>
-            <h2 class="lt">Layer ${li + 1} <span style="color:${colorRgb}">(${L.color || "#000000"})</span> — ${moves} moves</h2>
-            <p class="lsub">Start at nail ${L.seq[0] + numStart} · follow the sequence below</p>
-          </div>
-        </div>
-        <p class="arrow-seq">${arrowSeq}</p>
-        <div class="step-grid">`;
-      L.seq.forEach((nail, i) => {
-        seqHTML += `<div class="step"><span class="sl">${i === 0 ? "Start" : "#" + i}</span><span class="sn2">${nail + numStart}</span></div>`;
-      });
-      seqHTML += `</div></section>`;
-      isFirst = false;
-    });
-
     pageIdx++;
     const buildGuidePageHTML = `
 <div class="page">
   <div class="ph">
     <div class="ph-label">String Art Studio</div>
-    <h1>Build Guide</h1>
-    <p>Generated ${date} · Follow each step in order to wrap your thread</p>
+    <h1>How To Build</h1>
   </div>
-  <div class="start-box">
-    <h3>Before you begin</h3>
-    <ol>
-      <li>Start at nail <strong>${startNailLabel}</strong></li>
-      <li>Follow the sequence in order, one nail at a time</li>
-      <li>Complete one full layer before starting the next</li>
-    </ol>
+  <div class="guide-steps">
+    <div class="guide-step"><span class="gs-num">1</span><div class="gs-text"><b>Start at the listed nail</b><p>Each layer page shows the start nail — tie a knot here before you begin.</p></div></div>
+    <div class="guide-step"><span class="gs-num">2</span><div class="gs-text"><b>Follow the sequence in order</b><p>Each step shows one nail move. Work through the list exactly as shown, nail by nail.</p></div></div>
+    <div class="guide-step"><span class="gs-num">3</span><div class="gs-text"><b>Keep even tension on the thread</b><p>Thread should be snug but not so tight it bows the board.</p></div></div>
+    <div class="guide-step"><span class="gs-num">4</span><div class="gs-text"><b>Complete one full layer before stopping</b><p>Finish the entire sequence for a layer before moving to the next colour.</p></div></div>
   </div>
-  ${seqHTML || '<p style="color:#bbb;text-align:center;margin-top:20mm">No sequence recorded — draw some lines first.</p>'}
   <div class="section">
-    <h2 class="sh">Build Tips</h2>
+    <h2 class="sh">Tips</h2>
     <ul class="tips-list">
-      <li>Keep even tension on the thread throughout</li>
-      <li>Do not pull too tight — this can warp the board</li>
-      <li>Complete one full layer before starting the next</li>
-      <li>Use contrasting colours for clarity between layers</li>
+      <li>Do not pull the thread too tight — this can warp the board</li>
+      <li>Use contrasting colours to make each layer visually distinct</li>
+      <li>Mark your start nail with a small piece of tape while you work</li>
     </ul>
   </div>
-  <div class="pf"><span>${CONTACT}</span><span>Page ${pageIdx} — Build Guide</span></div>
+  <div class="pf"><span>${CONTACT}</span><span>Page ${pageIdx} of ${totalPages} — Build Guide</span></div>
 </div>`;
-
-    const totalPages = pageIdx;
 
     const html = `<!DOCTYPE html>
 <html lang="en">
@@ -1699,11 +1659,6 @@ body{font-family:system-ui,sans-serif;background:#e5e5e5;color:#1e1e1e;-webkit-p
 .cover-meta{font-size:8.5pt;color:#bbb;margin-top:2mm}
 .preview-svg-wrap{display:flex;flex-direction:column;align-items:center;padding:4mm 0}
 .preview-caption{font-size:7.5pt;color:#aaa;text-align:center;margin-top:2mm;letter-spacing:.04em}
-
-/* Early release box */
-.early-release-box{margin-top:5mm;padding:3.5mm 5mm;background:#fffbf0;border:0.5pt solid #e8d060;border-radius:6pt}
-.er-msg{font-size:8.5pt;color:#6b5500;line-height:1.55}
-.er-contact{font-size:7.5pt;color:#aaa;margin-top:1.5mm}
 
 /* Layer pages */
 .layer-page-hdr{padding:4mm 5mm;border-radius:6pt;background:#fafafa;margin-bottom:4mm;border-left:4pt solid #1e1e1e}
@@ -1745,20 +1700,19 @@ body{font-family:system-ui,sans-serif;background:#e5e5e5;color:#1e1e1e;-webkit-p
 .tt-total td{font-weight:700;padding-top:3mm;border-top:0.75pt solid #ccc;border-bottom:none}
 .tv{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;font-size:10pt}
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
-.start-box{background:#f8f8f8;border-radius:6pt;padding:4mm 5mm;margin-bottom:6mm;border-left:2pt solid #1e1e1e}
-.start-box h3{font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#555;margin-bottom:2mm}
-.start-box ol{padding-left:14pt;font-size:8.5pt;color:#444;line-height:2}
-.ls{padding-top:6mm;margin-top:6mm;border-top:0.5pt solid #ececec;break-inside:avoid}
-.ls-first{border-top:none;padding-top:0;margin-top:0}
-.lh{display:flex;align-items:flex-start;gap:8pt;margin-bottom:3mm}
 .ldot{display:inline-block;width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:2pt}
-.lt{font-size:11pt;font-weight:700;line-height:1.2;color:#1e1e1e}
 .lsub{font-size:8pt;color:#aaa;margin-top:1mm}
-.arrow-seq{font-size:7pt;color:#666;margin-bottom:3mm;line-height:1.8;word-break:break-all;background:#f8f8f8;padding:3mm 4mm;border-radius:4pt;border-left:2pt solid #ddd;max-height:22mm;overflow:hidden}
-.step-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(28pt,1fr));gap:1.5pt}
-.step{border:0.3pt solid #ebebeb;border-radius:3pt;padding:2pt 3pt}
-.sl{display:block;font-size:5pt;color:#ccc;letter-spacing:.03em}
-.sn2{display:block;font-size:9pt;font-weight:700;color:#1e1e1e}
+.seq-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(38mm,1fr));gap:0 3pt;margin-top:2mm}
+.seq-step{display:flex;align-items:baseline;gap:4pt;padding:2pt 3pt;border-bottom:0.2pt solid #f5f5f5}
+.seq-num{font-size:5.5pt;color:#bbb;min-width:16pt;flex-shrink:0;text-align:right;font-variant-numeric:tabular-nums}
+.seq-move{font-size:8.5pt;font-weight:600;color:#1e1e1e;white-space:nowrap;font-variant-numeric:tabular-nums}
+.seq-more{font-size:7pt;color:#aaa;padding:2mm;border-top:0.3pt solid #ececec;margin-top:2mm;grid-column:1/-1;text-align:center}
+.guide-steps{margin:6mm 0}
+.guide-step{display:flex;gap:5mm;padding:4.5mm 0;border-bottom:0.5pt solid #f0f0f0;align-items:flex-start}
+.guide-step:last-child{border-bottom:none}
+.gs-num{width:9mm;height:9mm;border-radius:50%;background:#1e1e1e;color:#fff;font-size:11pt;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.gs-text b{font-size:10pt;font-weight:700;color:#1e1e1e;display:block;margin-bottom:1.5mm}
+.gs-text p{font-size:8pt;color:#888;margin:0;line-height:1.5}
 .tips-list{list-style:none;padding:0}
 .tips-list li{font-size:8.5pt;color:#555;padding:2mm 0 2mm 12pt;border-bottom:0.3pt solid #f5f5f5;position:relative;line-height:1.4}
 .tips-list li::before{content:"·";position:absolute;left:0;color:#bbb;font-size:16pt;line-height:.9}
