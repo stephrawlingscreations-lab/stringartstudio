@@ -1314,6 +1314,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const board = $("board")?.value || "circle";
     const nailCount = clampInt($("nails")?.value, 10, 8000, 150);
     const numStart = $("numStart")?.value === "1" ? 1 : 0;
+    const boardSizeCm = parseFloat($("templateBoardSize")?.value) || 30;
+    const D_mm = boardSizeCm * 10;
 
     // Fixed SVG coordinate space for the board diagram
     const SZ = 560;
@@ -1369,9 +1371,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const totalLines = layers.reduce((s, L) => s + (L.edges?.length || 0), 0);
     const activeLayers = layers.filter((L) => L.edges?.length > 0).length;
 
-    // Thread length estimation
-    // Assumes a 30 cm board (150 mm radius). Scale linearly for other sizes.
-    const PHYSICAL_RADIUS_MM = 150;
+    // Thread length estimation based on actual board size
+    const PHYSICAL_RADIUS_MM = D_mm / 2;
     const mmPerSvgUnit = PHYSICAL_RADIUS_MM / BRAD;
     let totalThreadMm = 0;
     const layerThreadMm = layers.map((L) => {
@@ -1403,7 +1404,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const threadHTML = `
       <div class="section">
         <h2 class="sh">Thread Requirements</h2>
-        <p class="sn">Based on a 30 cm board — scale proportionally for other sizes. Add ~10% for tying off.</p>
+        <p class="sn">Based on a ${boardSizeCm} cm board. Add ~10% for tying off.</p>
         <table class="tt">
           ${threadRows}
           <tr class="tt-total"><td>Total</td><td class="tv">~${toMetres(totalThreadMm)} m</td></tr>
@@ -1444,6 +1445,81 @@ document.addEventListener("DOMContentLoaded", function () {
       day: "numeric", month: "long", year: "numeric",
     });
 
+    // ── TILING LOGIC ──
+    // BRAD*2 = 472 SVG units spans the board diameter D_mm
+    const svgPerMm = (BRAD * 2) / D_mm;   // SVG units per physical mm
+    const PAGE_W_MM = 190;                  // A4 with 10mm margins
+    const FOOTER_MM = 13;                   // reserved at bottom of each tile for scale check
+    const SVG_H_MM = 277 - FOOTER_MM;      // SVG area height per tile page
+    const tileW_svg = PAGE_W_MM * svgPerMm;
+    const tileH_svg = SVG_H_MM * svgPerMm;
+    const totalCols = Math.ceil(SZ / tileW_svg);
+    const totalRows = Math.ceil(SZ / tileH_svg);
+    const boardPageCount = totalCols * totalRows;
+
+    let boardPagesHTML = "";
+    let pageIdx = 0;
+    for (let row = 0; row < totalRows; row++) {
+      for (let col = 0; col < totalCols; col++) {
+        pageIdx++;
+        const sx = col * tileW_svg;
+        const sy = row * tileH_svg;
+        const contentW_mm = Math.min(PAGE_W_MM, (SZ - sx) / svgPerMm);
+        const contentH_mm = Math.min(SVG_H_MM, (SZ - sy) / svgPerMm);
+        const tileLabel = `${String.fromCharCode(65 + row)}${col + 1}`;
+
+        // Alignment marks at tile cut edges
+        let alignMarks = "";
+        const mk = 10; // mark arm length in SVG units
+        if (col < totalCols - 1) {
+          const ex = sx + tileW_svg;
+          alignMarks += `<line x1="${ex.toFixed(1)}" y1="${sy.toFixed(1)}" x2="${ex.toFixed(1)}" y2="${Math.min(sy + tileH_svg, SZ).toFixed(1)}" stroke="#ccc" stroke-width="0.5" stroke-dasharray="4,3"/>`;
+          alignMarks += `<line x1="${(ex - mk).toFixed(1)}" y1="${sy.toFixed(1)}" x2="${ex.toFixed(1)}" y2="${sy.toFixed(1)}" stroke="#aaa" stroke-width="1"/>`;
+          alignMarks += `<line x1="${ex.toFixed(1)}" y1="${sy.toFixed(1)}" x2="${ex.toFixed(1)}" y2="${(sy + mk).toFixed(1)}" stroke="#aaa" stroke-width="1"/>`;
+        }
+        if (row < totalRows - 1) {
+          const ey = sy + tileH_svg;
+          alignMarks += `<line x1="${sx.toFixed(1)}" y1="${ey.toFixed(1)}" x2="${Math.min(sx + tileW_svg, SZ).toFixed(1)}" y2="${ey.toFixed(1)}" stroke="#ccc" stroke-width="0.5" stroke-dasharray="4,3"/>`;
+          alignMarks += `<line x1="${sx.toFixed(1)}" y1="${(ey - mk).toFixed(1)}" x2="${sx.toFixed(1)}" y2="${ey.toFixed(1)}" stroke="#aaa" stroke-width="1"/>`;
+          alignMarks += `<line x1="${sx.toFixed(1)}" y1="${ey.toFixed(1)}" x2="${(sx + mk).toFixed(1)}" y2="${ey.toFixed(1)}" stroke="#aaa" stroke-width="1"/>`;
+        }
+
+        boardPagesHTML += `
+<div class="page tile-page">
+  <div class="tile-hdr">
+    <span class="tile-hdr-left">Drill Template · ${boardSizeCm} cm board · Tile ${tileLabel}${boardPageCount > 1 ? ` (${col + 1}/${totalCols} across, ${row + 1}/${totalRows} down)` : ""}</span>
+    <span class="tile-hdr-right">Page ${pageIdx} · PRINT AT 100% — no scaling, no "fit to page"</span>
+  </div>
+  <div class="board-wrap">
+    <svg viewBox="${sx.toFixed(2)} ${sy.toFixed(2)} ${tileW_svg.toFixed(2)} ${tileH_svg.toFixed(2)}"
+         xmlns="http://www.w3.org/2000/svg"
+         style="width:${contentW_mm.toFixed(1)}mm;height:${contentH_mm.toFixed(1)}mm;display:block">
+      ${outline}
+      <g>${svgLines}</g>
+      <g>${svgNails}</g>
+      ${alignMarks}
+    </svg>
+  </div>
+  <div class="tile-footer">
+    <div class="scale-check">
+      <div style="width:1cm;height:4pt;background:#333;border-radius:1pt;display:inline-block;vertical-align:middle"></div>
+      <span class="scale-lbl">1 cm — verify at 100% print scale</span>
+    </div>
+    <span class="tile-ref">Tile ${tileLabel} · ${boardSizeCm} cm · stephrawlingscreations.ie</span>
+  </div>
+</div>`;
+      }
+    }
+
+    const summaryStats = `
+    <div class="stats">
+      <div class="stat"><b>${nailCount}</b><span>Nails</span></div>
+      <div class="stat"><b>${board.charAt(0).toUpperCase() + board.slice(1)}</b><span>Shape</span></div>
+      <div class="stat"><b>${totalLines}</b><span>Lines</span></div>
+      <div class="stat"><b>${activeLayers}</b><span>Layer${activeLayers !== 1 ? "s" : ""}</span></div>
+      <div class="stat"><b>${boardSizeCm} cm</b><span>Board</span></div>
+    </div>`;
+
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1454,28 +1530,35 @@ document.addEventListener("DOMContentLoaded", function () {
 body{font-family:system-ui,sans-serif;background:#e5e5e5;color:#1e1e1e;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .toolbar{background:#fff;border-bottom:1px solid #ddd;padding:12px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
 .toolbar h2{font-size:14px;font-weight:600;flex:1;margin:0;color:#444}
+.toolbar .print-warn{font-size:12px;color:#c0392b;font-weight:500}
 .btn-print{background:#1e1e1e;color:#fff;border:none;border-radius:6px;padding:9px 20px;font-size:13px;font-weight:500;cursor:pointer}
-.page{width:210mm;min-height:297mm;padding:15mm 18mm 20mm;margin:24px auto;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.14);position:relative}
-/* Page header */
-.ph{margin-bottom:7mm;padding-bottom:5mm;border-bottom:0.75pt solid #e0e0e0}
+/* All pages */
+.page{width:190mm;min-height:277mm;padding:12mm 12mm 18mm;margin:24px auto;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.14);position:relative}
+/* Tile pages */
+.tile-page{padding:0;display:flex;flex-direction:column}
+.tile-hdr{display:flex;justify-content:space-between;align-items:baseline;padding:3.5mm 5mm;border-bottom:0.5pt solid #ebebeb;flex-shrink:0}
+.tile-hdr-left{font-size:7pt;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#bbb}
+.tile-hdr-right{font-size:7pt;color:#c0392b;font-weight:600;text-align:right}
+.board-wrap{flex:1;display:flex;justify-content:center;align-items:flex-start;padding:3mm 5mm 2mm;overflow:hidden}
+.tile-footer{display:flex;justify-content:space-between;align-items:center;padding:3mm 5mm;border-top:0.5pt solid #ebebeb;flex-shrink:0}
+.scale-check{display:flex;align-items:center;gap:6pt}
+.scale-lbl{font-size:7pt;color:#aaa}
+.tile-ref{font-size:7pt;color:#ccc;text-align:right}
+/* Summary/guide page header */
+.ph{margin-bottom:6mm;padding-bottom:4mm;border-bottom:0.75pt solid #e0e0e0}
 .ph-label{font-size:7pt;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#bbb;margin-bottom:2mm}
 .ph h1{font-size:22pt;font-weight:700;letter-spacing:-.03em;line-height:1;color:#1e1e1e}
 .ph p{font-size:8.5pt;color:#bbb;margin-top:2mm}
-/* Board */
-.board-wrap{display:flex;justify-content:center;margin:3mm 0 4mm}
-.board-wrap svg{width:155mm;height:155mm}
+/* Board overview (summary page) */
+.board-overview{display:flex;justify-content:center;margin:3mm 0 2mm}
 /* Stats */
 .stats{display:flex;margin:4mm 0;border:0.5pt solid #ececec;border-radius:8pt;overflow:hidden}
-.stat{flex:1;text-align:center;padding:4mm 2mm;border-right:0.5pt solid #ececec}
+.stat{flex:1;text-align:center;padding:3mm 2mm;border-right:0.5pt solid #ececec}
 .stat:last-child{border-right:none}
-.stat b{display:block;font-size:16pt;font-weight:700;line-height:1.15}
+.stat b{display:block;font-size:14pt;font-weight:700;line-height:1.15}
 .stat span{font-size:7pt;color:#bbb;text-transform:uppercase;letter-spacing:.07em}
-/* Scale */
-.scale-ref{text-align:center;margin-top:4mm}
-.scale-bar{display:inline-block;width:37.8pt;height:4pt;background:#333;border-radius:1pt}
-.scale-ref p{font-size:7.5pt;color:#bbb;margin-top:2pt}
 /* Section dividers */
-.section{margin-top:6mm;padding-top:5mm;border-top:0.5pt solid #ececec}
+.section{margin-top:5mm;padding-top:4mm;border-top:0.5pt solid #ececec}
 .sh{font-size:9.5pt;font-weight:700;letter-spacing:.03em;margin-bottom:2.5mm;text-transform:uppercase;color:#555}
 .sn{font-size:7.5pt;color:#bbb;margin-bottom:3mm}
 /* Thread table */
@@ -1506,47 +1589,55 @@ body{font-family:system-ui,sans-serif;background:#e5e5e5;color:#1e1e1e;-webkit-p
 .tips-list li{font-size:8.5pt;color:#555;padding:2mm 0 2mm 12pt;border-bottom:0.3pt solid #f5f5f5;position:relative;line-height:1.4}
 .tips-list li::before{content:"·";position:absolute;left:0;color:#bbb;font-size:16pt;line-height:.9}
 .tips-list li:last-child{border-bottom:none}
-/* Footer */
-.pf{position:absolute;bottom:8mm;left:18mm;right:18mm;display:flex;justify-content:space-between;font-size:7.5pt;color:#ccc;border-top:0.3pt solid #f0f0f0;padding-top:3mm}
-@page{size:A4;margin:0}
-@media print{.toolbar{display:none}body{background:#fff}.page{margin:0;box-shadow:none;break-after:page}}
+/* Page footer */
+.pf{display:flex;justify-content:space-between;font-size:7.5pt;color:#ccc;border-top:0.3pt solid #f0f0f0;padding-top:3mm;margin-top:6mm}
+@page{size:A4;margin:10mm}
+@media print{
+  .toolbar{display:none}
+  body{background:#fff}
+  .page{margin:0;box-shadow:none;padding:0;break-after:page;width:190mm}
+  .tile-page{height:277mm;overflow:hidden}
+  .page:not(.tile-page){padding:0;min-height:unset}
+  .page:not(.tile-page) .ph{margin:5mm 5mm 4mm;padding-bottom:4mm}
+  .page:not(.tile-page) .stats{margin:4mm 5mm}
+  .page:not(.tile-page) .section{margin:4mm 5mm 0}
+  .page:not(.tile-page) .start-box{margin:4mm 5mm}
+  .page:not(.tile-page) .ls,.page:not(.tile-page) .ls-first{padding-left:5mm;padding-right:5mm}
+  .page:not(.tile-page) .tips-list{padding:0 5mm}
+  .page:not(.tile-page) .pf{margin:4mm 5mm 0;padding-bottom:4mm}
+}
 </style>
 </head>
 <body>
 <div class="toolbar">
   <h2>String Art Build Guide — stephrawlingscreations.ie</h2>
+  <span class="print-warn">⚠ Set printer scale to 100% — no "Fit to page"</span>
   <button class="btn-print" onclick="setTimeout(() => window.print(), 150)">🖨 Print / Save as PDF</button>
 </div>
 
-<!-- PAGE 1: BOARD TEMPLATE -->
+<!-- DRILL TEMPLATE TILE PAGES (true size) -->
+${boardPagesHTML}
+
+<!-- SUMMARY PAGE -->
 <div class="page">
   <div class="ph">
     <div class="ph-label">String Art Studio</div>
-    <h1>Board Template</h1>
-    <p>Generated ${date} · stephrawlingscreations.ie</p>
+    <h1>Build Summary</h1>
+    <p>Generated ${date} · ${boardSizeCm} cm board · stephrawlingscreations.ie</p>
   </div>
-  <div class="board-wrap">
-    <svg viewBox="0 0 ${SZ} ${SZ}" xmlns="http://www.w3.org/2000/svg">
+  <div class="board-overview">
+    <svg viewBox="0 0 ${SZ} ${SZ}" xmlns="http://www.w3.org/2000/svg" style="width:90mm;height:90mm">
       ${outline}
       <g>${svgLines}</g>
       <g>${svgNails}</g>
     </svg>
   </div>
-  <div class="stats">
-    <div class="stat"><b>${nailCount}</b><span>Nails</span></div>
-    <div class="stat"><b>${board.charAt(0).toUpperCase() + board.slice(1)}</b><span>Shape</span></div>
-    <div class="stat"><b>${totalLines}</b><span>Lines</span></div>
-    <div class="stat"><b>${activeLayers}</b><span>Layer${activeLayers !== 1 ? "s" : ""}</span></div>
-  </div>
-  <div class="scale-ref">
-    <div class="scale-bar"></div>
-    <p>1 cm reference at 100% print scale</p>
-  </div>
+  ${summaryStats}
   ${threadHTML}
-  <div class="pf"><span>stephrawlingscreations.ie</span><span>Page 1 of 2 — Board Layout</span></div>
+  <div class="pf"><span>stephrawlingscreations.ie</span><span>Page ${pageIdx + 1} — Build Summary</span></div>
 </div>
 
-<!-- PAGE 2: BUILD GUIDE -->
+<!-- BUILD GUIDE PAGE -->
 <div class="page">
   <div class="ph">
     <div class="ph-label">String Art Studio</div>
@@ -1571,7 +1662,7 @@ body{font-family:system-ui,sans-serif;background:#e5e5e5;color:#1e1e1e;-webkit-p
       <li>Use contrasting colours for clarity between layers</li>
     </ul>
   </div>
-  <div class="pf"><span>stephrawlingscreations.ie</span><span>Page 2 of 2 — Build Guide</span></div>
+  <div class="pf"><span>stephrawlingscreations.ie</span><span>Page ${pageIdx + 2} — Build Guide</span></div>
 </div>
 </body>
 </html>`;

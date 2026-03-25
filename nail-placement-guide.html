@@ -359,40 +359,35 @@
       }
 
       /* ── PRINT STYLES ── */
+      @media screen {
+        #print-pages { display: none; }
+      }
+
       @media print {
-        body {
+        body { background: white; }
+        .screen-wrapper { display: none !important; }
+        #print-pages { display: block !important; }
+
+        .print-page {
+          width: 190mm;
+          height: 277mm;
+          page-break-after: always;
+          break-after: page;
+          overflow: hidden;
           background: white;
         }
-        .screen-wrapper > *:not(#preview-section) {
-          display: none !important;
+        .print-page:last-child {
+          page-break-after: auto;
+          break-after: auto;
         }
-        header {
-          display: none !important;
-        }
-        #preview-section {
-          display: block !important;
-        }
-        .preview-toolbar {
-          display: none !important;
-        }
-        .stats-bar {
-          display: none !important;
-        }
-        .preview-card {
-          border: none;
-          border-radius: 0;
-        }
-        #canvas-container {
-          padding: 0;
-          background: white;
-          overflow: visible;
-        }
-        canvas {
-          width: 100% !important;
-          height: auto !important;
-          max-width: 100%;
+        .print-page canvas {
+          width: 190mm !important;
+          height: 277mm !important;
+          max-width: none !important;
+          display: block;
         }
         @page {
+          size: A4 portrait;
           margin: 10mm;
         }
       }
@@ -665,23 +660,26 @@
       <div id="preview-section">
         <div class="preview-toolbar">
           <h2>Your Printable Guide</h2>
-          <button class="print-btn" onclick="window.print()">
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <polyline points="6 9 6 2 18 2 18 9" />
-              <path
-                d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"
-              />
-              <rect x="6" y="14" width="12" height="8" />
-            </svg>
-            Print / Save as PDF
-          </button>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
+            <button class="print-btn" onclick="window.print()">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="6 9 6 2 18 2 18 9" />
+                <path
+                  d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"
+                />
+                <rect x="6" y="14" width="12" height="8" />
+              </svg>
+              Print / Save as PDF
+            </button>
+            <span style="font-size:11px;color:var(--muted);">Set print scale to 100% — no "Fit to page"</span>
+          </div>
         </div>
 
         <div class="preview-card">
@@ -705,6 +703,8 @@
         </p>
       </footer>
     </div>
+
+    <div id="print-pages"></div>
 
     <script>
       let currentUnit = "cm";
@@ -1088,6 +1088,9 @@
           titleY + titleH / 2,
         );
 
+        // Build print-ready tiled pages
+        buildPrintPages(canvas, PX_W, PX_H);
+
         // Show section
         document.getElementById("preview-section").classList.add("visible");
 
@@ -1123,6 +1126,88 @@
           total += Math.sqrt((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2);
         }
         return total / nails.length;
+      }
+
+      function buildPrintPages(srcCanvas, srcW, srcH) {
+        const container = document.getElementById("print-pages");
+        container.innerHTML = "";
+
+        const MM_TO_PX = RENDER_DPI / MM_PER_INCH; // canvas pixels per mm
+        const PAGE_W_PX = Math.round(190 * MM_TO_PX); // 190mm printable width
+        const PAGE_H_PX = Math.round(277 * MM_TO_PX); // 277mm printable height
+        const FOOTER_PX = Math.round(8 * MM_TO_PX);   // 8mm footer strip
+
+        const cols = Math.ceil(srcW / PAGE_W_PX);
+        const rows = Math.ceil(srcH / PAGE_H_PX);
+        const total = rows * cols;
+
+        let pageNum = 0;
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            pageNum++;
+            const sx = c * PAGE_W_PX;
+            const sy = r * PAGE_H_PX;
+            const sw = Math.min(PAGE_W_PX, srcW - sx);
+            const sh = Math.min(PAGE_H_PX, srcH - sy);
+
+            const tile = document.createElement("canvas");
+            tile.width = PAGE_W_PX;
+            tile.height = PAGE_H_PX;
+            const ctx = tile.getContext("2d");
+
+            // White background
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(0, 0, PAGE_W_PX, PAGE_H_PX);
+
+            // Draw the slice from the main canvas
+            ctx.drawImage(srcCanvas, sx, sy, sw, sh, 0, 0, sw, sh);
+
+            // Dashed boundary line where the tile is a partial slice
+            ctx.strokeStyle = "#ccc";
+            ctx.lineWidth = 1;
+            ctx.setLineDash([6, 4]);
+            if (sw < PAGE_W_PX) {
+              ctx.beginPath();
+              ctx.moveTo(sw, 0);
+              ctx.lineTo(sw, PAGE_H_PX);
+              ctx.stroke();
+            }
+            if (sh < PAGE_H_PX) {
+              ctx.beginPath();
+              ctx.moveTo(0, sh);
+              ctx.lineTo(PAGE_W_PX, sh);
+              ctx.stroke();
+            }
+            ctx.setLineDash([]);
+
+            // Footer strip with page info
+            ctx.fillStyle = "rgba(255,255,255,0.96)";
+            ctx.fillRect(0, PAGE_H_PX - FOOTER_PX, PAGE_W_PX, FOOTER_PX);
+            ctx.strokeStyle = "#ddd";
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(0, PAGE_H_PX - FOOTER_PX);
+            ctx.lineTo(PAGE_W_PX, PAGE_H_PX - FOOTER_PX);
+            ctx.stroke();
+
+            const fSize = Math.round(2.3 * MM_TO_PX);
+            ctx.font = `${fSize}px sans-serif`;
+            ctx.fillStyle = "#999";
+            ctx.textBaseline = "middle";
+            ctx.textAlign = "left";
+            const tileNote = total > 1 ? `  ·  Row ${r + 1}, Col ${c + 1}` : "";
+            ctx.fillText(
+              `stephrawlingscreations.ie  ·  Page ${pageNum} of ${total}${tileNote}  ·  PRINT AT 100% — no fit-to-page, no scaling`,
+              Math.round(3 * MM_TO_PX),
+              PAGE_H_PX - FOOTER_PX / 2
+            );
+
+            const pageDiv = document.createElement("div");
+            pageDiv.className = "print-page";
+            pageDiv.appendChild(tile);
+            container.appendChild(pageDiv);
+          }
+        }
       }
 
       // Recalculate canvas display size on resize
