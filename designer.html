@@ -1507,17 +1507,23 @@
               Cancel
             </button>
           </div>
-          <p
-            style="
-              font-size: 12px;
-              color: #bbb;
-              margin-top: 12px;
-              text-align: center;
-            "
-          >
-            After purchase you'll be redirected here automatically to unlock the
-            download.
-          </p>
+          <hr style="border:none;border-top:1px solid #eee;margin:18px 0;" />
+          <p style="font-size: 13px; font-weight: 500; color: #555; margin: 0 0 8px;">Already purchased?</p>
+          <p style="font-size: 12px; color: #999; margin: 0 0 10px;">Paste the license key from your Gumroad confirmation email.</p>
+          <div id="licenseEntryArea" style="margin-top:0;">
+            <input
+              id="licenseKeyInput"
+              type="text"
+              placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+              style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;color:#1e1e1e;box-sizing:border-box;"
+            />
+            <p id="licenseKeyError" style="display:none;font-size:12px;color:#e05;margin-top:5px;"></p>
+            <button
+              onclick="activateLicense()"
+              class="pro-btn"
+              style="width:100%;margin-top:8px;padding:9px 16px;font-size:14px;"
+            >Activate</button>
+          </div>
         </div>
 
         <!-- UNLOCKED: shown after purchase -->
@@ -1556,19 +1562,38 @@
     </div>
 
     <script>
+      function _isProKey(k) {
+        return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(k || "");
+      }
+
       function openProModal() {
-        var unlocked = localStorage.getItem("sas_pro_unlocked") === "1";
-        document.getElementById("proModalLocked").style.display = unlocked
-          ? "none"
-          : "block";
-        document.getElementById("proModalUnlocked").style.display = unlocked
-          ? "block"
-          : "none";
+        var unlocked = _isProKey(localStorage.getItem("_sask"));
+        document.getElementById("proModalLocked").style.display = unlocked ? "none" : "block";
+        document.getElementById("proModalUnlocked").style.display = unlocked ? "block" : "none";
         document.getElementById("proModal").style.display = "flex";
+        // Reset license entry each time modal opens
+        var err = document.getElementById("licenseKeyError");
+        if (err) { err.style.display = "none"; err.textContent = ""; }
+        var inp = document.getElementById("licenseKeyInput");
+        if (inp) inp.value = "";
       }
 
       function closeProModal() {
         document.getElementById("proModal").style.display = "none";
+      }
+
+
+      function activateLicense() {
+        var inp = document.getElementById("licenseKeyInput");
+        var err = document.getElementById("licenseKeyError");
+        var key = inp.value.trim();
+        if (!_isProKey(key)) {
+          err.textContent = "That doesn't look like a valid Gumroad license key. Check your purchase confirmation email.";
+          err.style.display = "block";
+          return;
+        }
+        localStorage.setItem("_sask", key);
+        openProModal(); // re-render to show unlocked view
       }
     </script>
     <div id="helpPanel" class="help-panel">

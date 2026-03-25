@@ -7,13 +7,28 @@ document.addEventListener("DOMContentLoaded", function () {
   // After a Gumroad purchase, the buyer is redirected to:
   //   https://stephrawlingscreations.ie/?sas_pro=unlock
   // Set that as your "Redirect URL" in the Gumroad product settings.
-  // The parameter is detected here, saved to localStorage, then removed from the URL.
+  // The modal opens so the buyer can paste their Gumroad license key to activate.
+  //
+  // Dev override (localhost / 127.0.0.1 only — never works on the live site):
+  //   http://localhost/?sas_dev=unlock
 
   (function checkProRedirect() {
     try {
       const params = new URLSearchParams(window.location.search);
+      const host = window.location.hostname;
+
+      // Dev override — localhost only
+      if ((host === "localhost" || host === "127.0.0.1") &&
+          params.get("sas_dev") === "unlock") {
+        localStorage.setItem("_sask", "00000000-0000-0000-0000-000000000000");
+        const clean = window.location.pathname + window.location.hash;
+        history.replaceState({}, "", clean);
+        setTimeout(() => openProModal(), 300);
+        return;
+      }
+
+      // Gumroad redirect — open the modal with key entry expanded
       if (params.get("sas_pro") === "unlock") {
-        localStorage.setItem("sas_pro_unlocked", "1");
         const clean = window.location.pathname + window.location.hash;
         history.replaceState({}, "", clean);
         setTimeout(() => openProModal(), 300);
@@ -23,7 +38,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function isPro() {
     try {
-      return localStorage.getItem("sas_pro_unlocked") === "1";
+      const k = localStorage.getItem("_sask") || "";
+      return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(k);
     } catch (_) {
       return false;
     }
