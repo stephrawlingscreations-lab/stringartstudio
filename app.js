@@ -1468,8 +1468,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // BRAD*2 = 472 SVG units spans the board diameter D_mm
     const svgPerMm = (BRAD * 2) / D_mm;    // SVG units per physical mm
     const PAGE_W_MM = 190;                   // A4 usable width (10mm margins each side)
-    const FOOTER_MM = 13;                    // reserved at bottom of each tile for scale check
-    const SVG_H_MM = 277 - FOOTER_MM;       // SVG area height per tile page
+    const FOOTER_MM = 20;                    // hdr (~9mm) + footer (~9mm) + borders
+    const SVG_H_MM = 297 - FOOTER_MM;       // SVG area height per tile page
     const tileW_svg = PAGE_W_MM * svgPerMm;
     const tileH_svg = SVG_H_MM * svgPerMm;
     const totalCols = Math.ceil(SZ / tileW_svg);
@@ -1729,7 +1729,7 @@ body{font-family:system-ui,sans-serif;background:#e5e5e5;color:#1e1e1e;-webkit-p
 
   /* ── TILE PAGES ── */
   /* Tile pages must be exactly 277mm (A4 minus 10mm margins each side). */
-  .tile-page{height:297mm;max-height:297mm;overflow:hidden;padding:0;box-sizing:border-box}
+  .tile-page{height:297mm;max-height:297mm;overflow:hidden;padding:0;box-sizing:border-box;display:flex;flex-direction:column}
   /* FIX (vertical crop): JS sets SVG_H_MM = 277 - FOOTER_MM (13mm), so it expects
      only 13mm of non-SVG chrome. Screen CSS uses padding:3.5mm on tile-hdr and
      padding:3mm on tile-footer — together ~19mm — so the flex:1 board-wrap gets
@@ -1744,7 +1744,7 @@ body{font-family:system-ui,sans-serif;background:#e5e5e5;color:#1e1e1e;-webkit-p
      overflow:hidden that clips 5mm off each side of every tile. Removing padding
      and switching to overflow:visible lets tile-page handle any edge clipping at
      the 277mm boundary instead. */
-  .tile-page .board-wrap{overflow:visible;padding:0}
+  .tile-page .board-wrap{flex:1;overflow:hidden;min-height:0;padding:0}
 
   /* ── PREVIEW PAGES (cover + layer pages) ── */
   /* Reduced from 10mm to 8mm top/bottom: gives 4mm more content budget, preventing
