@@ -1311,6 +1311,10 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
+    // ── EDITABLE EARLY RELEASE MESSAGE ──
+    const EARLY_RELEASE_MSG = "These templates are currently in early release. If anything isn't quite right, I'll fix it for you or provide a full refund.";
+    const CONTACT = "stephrawlingscreations.ie";
+
     const board = $("board")?.value || "circle";
     const nailCount = clampInt($("nails")?.value, 10, 8000, 150);
     const numStart = $("numStart")?.value === "1" ? 1 : 0;
@@ -1334,7 +1338,7 @@ document.addEventListener("DOMContentLoaded", function () {
         ? `<circle cx="${CX}" cy="${CY}" r="${BRAD}" fill="none" stroke="#ccc" stroke-width="1.5"/>`
         : `<rect x="${CX - BRAD}" y="${CY - BRAD}" width="${BRAD * 2}" height="${BRAD * 2}" fill="none" stroke="#ccc" stroke-width="1.5"/>`;
 
-    // String lines
+    // String lines — all layers combined
     let svgLines = "";
     for (const L of layers) {
       if (!L.edges?.length) continue;
@@ -1391,7 +1395,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const toMetres = (mm) => (mm / 1000).toFixed(1);
 
-    // Thread requirements section
+    const date = new Date().toLocaleDateString("en-IE", {
+      day: "numeric", month: "long", year: "numeric",
+    });
+
+    // Start nail
+    const firstActiveLayer = layers.find((L) => L.seq?.length > 0);
+    const startNailLabel = firstActiveLayer ? firstActiveLayer.seq[0] + numStart : "—";
+
+    // ── PAGE 1: COVER / COMPLETED DESIGN PREVIEW ──
     let threadRows = "";
     layers.forEach((L, li) => {
       if (!L.edges?.length) return;
@@ -1401,56 +1413,50 @@ document.addEventListener("DOMContentLoaded", function () {
         <td class="tv">~${toMetres(layerThreadMm[li])} m</td>
       </tr>`;
     });
-    const threadHTML = `
-      <div class="section">
-        <h2 class="sh">Thread Requirements</h2>
-        <p class="sn">Based on a ${boardSizeCm} cm board. Add ~10% for tying off.</p>
-        <table class="tt">
-          ${threadRows}
-          <tr class="tt-total"><td>Total</td><td class="tv">~${toMetres(totalThreadMm)} m</td></tr>
-        </table>
-      </div>`;
 
-    // Start nail
-    const firstActiveLayer = layers.find((L) => L.seq?.length > 0);
-    const startNailLabel = firstActiveLayer ? firstActiveLayer.seq[0] + numStart : "—";
+    const coverPageHTML = `
+<div class="page preview-page">
+  <div class="cover-header">
+    <div class="cover-brand">String Art Studio</div>
+    <h1 class="cover-title">Build Pack</h1>
+    <p class="cover-meta">Generated ${date} &nbsp;·&nbsp; ${boardSizeCm} cm board &nbsp;·&nbsp; ${nailCount} nails &nbsp;·&nbsp; ${activeLayers} layer${activeLayers !== 1 ? "s" : ""}</p>
+  </div>
+  <div class="preview-svg-wrap">
+    <svg viewBox="0 0 ${SZ} ${SZ}" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:125mm;max-height:110mm;height:auto;display:block;margin:0 auto">
+      ${outline}
+      <g>${svgLines}</g>
+      <g>${svgNails}</g>
+    </svg>
+    <p class="preview-caption">Completed design — all layers combined</p>
+  </div>
+  <div class="stats">
+    <div class="stat"><b>${nailCount}</b><span>Nails</span></div>
+    <div class="stat"><b>${board.charAt(0).toUpperCase() + board.slice(1)}</b><span>Shape</span></div>
+    <div class="stat"><b>${totalLines}</b><span>Lines</span></div>
+    <div class="stat"><b>${activeLayers}</b><span>Layer${activeLayers !== 1 ? "s" : ""}</span></div>
+    <div class="stat"><b>${boardSizeCm} cm</b><span>Board</span></div>
+  </div>
+  <div class="section">
+    <h2 class="sh">Thread Requirements</h2>
+    <table class="tt">
+      ${threadRows}
+      <tr class="tt-total"><td>Total</td><td class="tv">~${toMetres(totalThreadMm)} m</td></tr>
+    </table>
+    <p class="sn" style="margin-top:2mm">Based on a ${boardSizeCm} cm board. Add ~10% extra for tying off.</p>
+  </div>
+  <div class="early-release-box">
+    <p class="er-msg">${EARLY_RELEASE_MSG}</p>
+    <p class="er-contact">${CONTACT}</p>
+  </div>
+  <div class="pf"><span>${CONTACT}</span><span>Page 1 — Design Overview</span></div>
+</div>`;
 
-    // Sequence + layer sections
-    let seqHTML = "";
-    let isFirst = true;
-    layers.forEach((L, li) => {
-      if (!L.seq?.length) return;
-      const c = hexToRgb(L.color || "#000000");
-      const colorRgb = `rgb(${c.r},${c.g},${c.b})`;
-      const arrowSeq = L.seq.map((n) => n + numStart).join(" → ");
-      const moves = L.seq.length - 1;
-      seqHTML += `<section class="ls${isFirst ? " ls-first" : ""}">
-        <div class="lh">
-          <span class="ldot" style="background:${colorRgb}"></span>
-          <div>
-            <h2 class="lt">Layer ${li + 1} <span style="color:${colorRgb}">(${L.color || "#000000"})</span> — ${moves} moves</h2>
-            <p class="lsub">Follow the full sequence below</p>
-          </div>
-        </div>
-        <p class="arrow-seq">${arrowSeq}</p>
-        <div class="step-grid">`;
-      L.seq.forEach((nail, i) => {
-        seqHTML += `<div class="step"><span class="sl">${i === 0 ? "Start" : "#" + i}</span><span class="sn2">${nail + numStart}</span></div>`;
-      });
-      seqHTML += `</div></section>`;
-      isFirst = false;
-    });
-
-    const date = new Date().toLocaleDateString("en-IE", {
-      day: "numeric", month: "long", year: "numeric",
-    });
-
-    // ── TILING LOGIC ──
+    // ── PAGES 2+: TRUE-SIZE NAIL PLACEMENT TEMPLATE (tiled, not scaled) ──
     // BRAD*2 = 472 SVG units spans the board diameter D_mm
-    const svgPerMm = (BRAD * 2) / D_mm;   // SVG units per physical mm
-    const PAGE_W_MM = 190;                  // A4 with 10mm margins
-    const FOOTER_MM = 13;                   // reserved at bottom of each tile for scale check
-    const SVG_H_MM = 277 - FOOTER_MM;      // SVG area height per tile page
+    const svgPerMm = (BRAD * 2) / D_mm;    // SVG units per physical mm
+    const PAGE_W_MM = 190;                   // A4 usable width (10mm margins each side)
+    const FOOTER_MM = 13;                    // reserved at bottom of each tile for scale check
+    const SVG_H_MM = 277 - FOOTER_MM;       // SVG area height per tile page
     const tileW_svg = PAGE_W_MM * svgPerMm;
     const tileH_svg = SVG_H_MM * svgPerMm;
     const totalCols = Math.ceil(SZ / tileW_svg);
@@ -1458,7 +1464,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const boardPageCount = totalCols * totalRows;
 
     let boardPagesHTML = "";
-    let pageIdx = 0;
+    let pageIdx = 1; // cover is page 1
     for (let row = 0; row < totalRows; row++) {
       for (let col = 0; col < totalCols; col++) {
         pageIdx++;
@@ -1484,11 +1490,15 @@ document.addEventListener("DOMContentLoaded", function () {
           alignMarks += `<line x1="${sx.toFixed(1)}" y1="${ey.toFixed(1)}" x2="${(sx + mk).toFixed(1)}" y2="${ey.toFixed(1)}" stroke="#aaa" stroke-width="1"/>`;
         }
 
+        const tileAssemblyNote = boardPageCount > 1
+          ? `Tile ${tileLabel} of ${boardPageCount} — align marks and tape sheets together before drilling`
+          : `Single-sheet template — print at 100%, do not scale`;
+
         boardPagesHTML += `
 <div class="page tile-page">
   <div class="tile-hdr">
-    <span class="tile-hdr-left">Drill Template · ${boardSizeCm} cm board · Tile ${tileLabel}${boardPageCount > 1 ? ` (${col + 1}/${totalCols} across, ${row + 1}/${totalRows} down)` : ""}</span>
-    <span class="tile-hdr-right">Page ${pageIdx} · PRINT AT 100% — no scaling, no "fit to page"</span>
+    <span class="tile-hdr-left">Nail Placement Template · ${boardSizeCm} cm board · Tile ${tileLabel}${boardPageCount > 1 ? ` (col ${col + 1}/${totalCols}, row ${row + 1}/${totalRows})` : ""}</span>
+    <span class="tile-hdr-right">Page ${pageIdx} of ${1 + boardPageCount + activeLayers + 1} · ⚠ PRINT AT 100% — no scaling, no "fit to page"</span>
   </div>
   <div class="board-wrap">
     <svg viewBox="${sx.toFixed(2)} ${sy.toFixed(2)} ${tileW_svg.toFixed(2)} ${tileH_svg.toFixed(2)}"
@@ -1502,142 +1512,115 @@ document.addEventListener("DOMContentLoaded", function () {
   </div>
   <div class="tile-footer">
     <div class="scale-check">
-      <div style="width:1cm;height:4pt;background:#333;border-radius:1pt;display:inline-block;vertical-align:middle"></div>
-      <span class="scale-lbl">1 cm — verify at 100% print scale</span>
+      <div style="width:1cm;height:5pt;background:#333;border-radius:1pt;display:inline-block;vertical-align:middle"></div>
+      <span class="scale-lbl">← 1 cm scale check — must measure exactly 1 cm when printed at 100%</span>
     </div>
-    <span class="tile-ref">Tile ${tileLabel} · ${boardSizeCm} cm · stephrawlingscreations.ie</span>
+    <span class="tile-ref">${tileAssemblyNote} · ${CONTACT}</span>
   </div>
 </div>`;
       }
     }
 
-    const summaryStats = `
-    <div class="stats">
-      <div class="stat"><b>${nailCount}</b><span>Nails</span></div>
-      <div class="stat"><b>${board.charAt(0).toUpperCase() + board.slice(1)}</b><span>Shape</span></div>
-      <div class="stat"><b>${totalLines}</b><span>Lines</span></div>
-      <div class="stat"><b>${activeLayers}</b><span>Layer${activeLayers !== 1 ? "s" : ""}</span></div>
-      <div class="stat"><b>${boardSizeCm} cm</b><span>Board</span></div>
-    </div>`;
+    // ── LAYER PAGES: one per active layer (reference scale, not true-size) ──
+    let layerPagesHTML = "";
+    layers.forEach((L, li) => {
+      if (!L.edges?.length) return;
+      pageIdx++;
+      const c = hexToRgb(L.color || "#000000");
+      const colorRgb = `rgb(${c.r},${c.g},${c.b})`;
+      const moves = L.seq?.length ? L.seq.length - 1 : L.edges.length;
+      const threadEst = toMetres(layerThreadMm[li]);
+      const layerStartNail = L.seq?.length ? L.seq[0] + numStart : "—";
 
-    const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>String Art Build Guide – stephrawlingscreations.ie</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:system-ui,sans-serif;background:#e5e5e5;color:#1e1e1e;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.toolbar{background:#fff;border-bottom:1px solid #ddd;padding:12px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
-.toolbar h2{font-size:14px;font-weight:600;flex:1;margin:0;color:#444}
-.toolbar .print-warn{font-size:12px;color:#c0392b;font-weight:500}
-.btn-print{background:#1e1e1e;color:#fff;border:none;border-radius:6px;padding:9px 20px;font-size:13px;font-weight:500;cursor:pointer}
-/* All pages */
-.page{width:190mm;min-height:277mm;padding:12mm 12mm 18mm;margin:24px auto;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.14);position:relative}
-/* Tile pages */
-.tile-page{padding:0;display:flex;flex-direction:column}
-.tile-hdr{display:flex;justify-content:space-between;align-items:baseline;padding:3.5mm 5mm;border-bottom:0.5pt solid #ebebeb;flex-shrink:0}
-.tile-hdr-left{font-size:7pt;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#bbb}
-.tile-hdr-right{font-size:7pt;color:#c0392b;font-weight:600;text-align:right}
-.board-wrap{flex:1;display:flex;justify-content:center;align-items:flex-start;padding:3mm 5mm 2mm;overflow:hidden}
-.tile-footer{display:flex;justify-content:space-between;align-items:center;padding:3mm 5mm;border-top:0.5pt solid #ebebeb;flex-shrink:0}
-.scale-check{display:flex;align-items:center;gap:6pt}
-.scale-lbl{font-size:7pt;color:#aaa}
-.tile-ref{font-size:7pt;color:#ccc;text-align:right}
-/* Summary/guide page header */
-.ph{margin-bottom:6mm;padding-bottom:4mm;border-bottom:0.75pt solid #e0e0e0}
-.ph-label{font-size:7pt;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#bbb;margin-bottom:2mm}
-.ph h1{font-size:22pt;font-weight:700;letter-spacing:-.03em;line-height:1;color:#1e1e1e}
-.ph p{font-size:8.5pt;color:#bbb;margin-top:2mm}
-/* Board overview (summary page) */
-.board-overview{display:flex;justify-content:center;margin:3mm 0 2mm}
-/* Stats */
-.stats{display:flex;margin:4mm 0;border:0.5pt solid #ececec;border-radius:8pt;overflow:hidden}
-.stat{flex:1;text-align:center;padding:3mm 2mm;border-right:0.5pt solid #ececec}
-.stat:last-child{border-right:none}
-.stat b{display:block;font-size:14pt;font-weight:700;line-height:1.15}
-.stat span{font-size:7pt;color:#bbb;text-transform:uppercase;letter-spacing:.07em}
-/* Section dividers */
-.section{margin-top:5mm;padding-top:4mm;border-top:0.5pt solid #ececec}
-.sh{font-size:9.5pt;font-weight:700;letter-spacing:.03em;margin-bottom:2.5mm;text-transform:uppercase;color:#555}
-.sn{font-size:7.5pt;color:#bbb;margin-bottom:3mm}
-/* Thread table */
-.tt{width:100%;border-collapse:collapse;font-size:9pt}
-.tt td{padding:2mm 2.5mm;border-bottom:0.3pt solid #f2f2f2;vertical-align:middle}
-.tt tr:last-child td{border-bottom:none}
-.tt-total td{font-weight:700;padding-top:3mm;border-top:0.75pt solid #ccc;border-bottom:none}
-.tv{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;font-size:10pt}
-.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
-/* Start box */
-.start-box{background:#f8f8f8;border-radius:6pt;padding:4mm 5mm;margin-bottom:6mm;border-left:2pt solid #1e1e1e}
-.start-box h3{font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#555;margin-bottom:2mm}
-.start-box ol{padding-left:14pt;font-size:8.5pt;color:#444;line-height:2}
-/* Layer sections */
-.ls{padding-top:6mm;margin-top:6mm;border-top:0.5pt solid #ececec;break-inside:avoid}
-.ls-first{border-top:none;padding-top:0;margin-top:0}
-.lh{display:flex;align-items:flex-start;gap:8pt;margin-bottom:3mm}
-.ldot{display:inline-block;width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:2pt}
-.lt{font-size:11pt;font-weight:700;line-height:1.2;color:#1e1e1e}
-.lsub{font-size:8pt;color:#aaa;margin-top:1mm}
-.arrow-seq{font-size:7pt;color:#666;margin-bottom:3mm;line-height:1.8;word-break:break-all;background:#f8f8f8;padding:3mm 4mm;border-radius:4pt;border-left:2pt solid #ddd;max-height:20mm;overflow:hidden}
-.step-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(28pt,1fr));gap:1.5pt}
-.step{border:0.3pt solid #ebebeb;border-radius:3pt;padding:2pt 3pt}
-.sl{display:block;font-size:5pt;color:#ccc;letter-spacing:.03em}
-.sn2{display:block;font-size:9pt;font-weight:700;color:#1e1e1e}
-/* Build tips */
-.tips-list{list-style:none;padding:0}
-.tips-list li{font-size:8.5pt;color:#555;padding:2mm 0 2mm 12pt;border-bottom:0.3pt solid #f5f5f5;position:relative;line-height:1.4}
-.tips-list li::before{content:"·";position:absolute;left:0;color:#bbb;font-size:16pt;line-height:.9}
-.tips-list li:last-child{border-bottom:none}
-/* Page footer */
-.pf{display:flex;justify-content:space-between;font-size:7.5pt;color:#ccc;border-top:0.3pt solid #f0f0f0;padding-top:3mm;margin-top:6mm}
-@page{size:A4;margin:10mm}
-@media print{
-  .toolbar{display:none}
-  body{background:#fff}
-  .page{margin:0;box-shadow:none;padding:0;break-after:page;width:190mm}
-  .tile-page{height:277mm;overflow:hidden}
-  .page:not(.tile-page){padding:0;min-height:unset}
-  .page:not(.tile-page) .ph{margin:5mm 5mm 4mm;padding-bottom:4mm}
-  .page:not(.tile-page) .stats{margin:4mm 5mm}
-  .page:not(.tile-page) .section{margin:4mm 5mm 0}
-  .page:not(.tile-page) .start-box{margin:4mm 5mm}
-  .page:not(.tile-page) .ls,.page:not(.tile-page) .ls-first{padding-left:5mm;padding-right:5mm}
-  .page:not(.tile-page) .tips-list{padding:0 5mm}
-  .page:not(.tile-page) .pf{margin:4mm 5mm 0;padding-bottom:4mm}
-}
-</style>
-</head>
-<body>
-<div class="toolbar">
-  <h2>String Art Build Guide — stephrawlingscreations.ie</h2>
-  <span class="print-warn">⚠ Set printer scale to 100% — no "Fit to page"</span>
-  <button class="btn-print" onclick="setTimeout(() => window.print(), 150)">🖨 Print / Save as PDF</button>
-</div>
+      // SVG lines for this layer only — slightly bolder for isolation view
+      let layerSvgLines = "";
+      for (const e of L.edges) {
+        if (!svgPts[e.a] || !svgPts[e.b]) continue;
+        const [x1, y1] = svgPts[e.a];
+        const [x2, y2] = svgPts[e.b];
+        layerSvgLines += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="rgb(${c.r},${c.g},${c.b})" stroke-opacity="${Math.max(0.25, (L.opacity || 0.45)).toFixed(2)}" stroke-width="${Math.min((L.lw || 0.7) * 1.3, 1.5)}"/>`;
+      }
 
-<!-- DRILL TEMPLATE TILE PAGES (true size) -->
-${boardPagesHTML}
+      // Full sequence display (arrow format, wrapped if very long)
+      const arrowSeq = L.seq?.length ? L.seq.map(n => n + numStart).join(" → ") : "";
+      const seqTruncated = arrowSeq.length > 500;
+      const seqDisplay = seqTruncated ? arrowSeq.substring(0, 500) + " …" : arrowSeq;
 
-<!-- SUMMARY PAGE -->
-<div class="page">
-  <div class="ph">
-    <div class="ph-label">String Art Studio</div>
-    <h1>Build Summary</h1>
-    <p>Generated ${date} · ${boardSizeCm} cm board · stephrawlingscreations.ie</p>
+      // Step grid (show first 80 steps max to avoid overflow)
+      let stepGridHTML = "";
+      if (L.seq?.length) {
+        const stepsToShow = Math.min(L.seq.length, 80);
+        for (let i = 0; i < stepsToShow; i++) {
+          stepGridHTML += `<div class="step"><span class="sl">${i === 0 ? "Start" : "#" + i}</span><span class="sn2">${L.seq[i] + numStart}</span></div>`;
+        }
+        if (L.seq.length > 80) {
+          stepGridHTML += `<div class="step step-more"><span class="sl">&nbsp;</span><span class="sn2">+${L.seq.length - 80}</span></div>`;
+        }
+      }
+
+      layerPagesHTML += `
+<div class="page preview-page layer-page">
+  <div class="layer-page-hdr" style="border-left:4pt solid ${colorRgb}">
+    <div class="layer-title-row">
+      <span class="ldot" style="background:${colorRgb};width:16px;height:16px;border-radius:50%;flex-shrink:0;display:inline-block"></span>
+      <div>
+        <div class="ph-label">Layer ${li + 1} of ${activeLayers}</div>
+        <h1 class="cover-title" style="font-size:20pt">Layer ${li + 1} <span style="color:${colorRgb};font-size:14pt;font-weight:500">${L.color || ""}</span></h1>
+      </div>
+    </div>
+    <div class="layer-kpis">
+      <div class="kpi"><b>${moves}</b><span>Moves</span></div>
+      <div class="kpi"><b>${layerStartNail}</b><span>Start Nail</span></div>
+      <div class="kpi"><b>~${threadEst} m</b><span>Thread</span></div>
+    </div>
   </div>
-  <div class="board-overview">
-    <svg viewBox="0 0 ${SZ} ${SZ}" xmlns="http://www.w3.org/2000/svg" style="width:90mm;height:90mm">
+  <div class="preview-svg-wrap" style="padding:3mm 0">
+    <svg viewBox="0 0 ${SZ} ${SZ}" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:135mm;max-height:130mm;height:auto;display:block;margin:0 auto">
       ${outline}
-      <g>${svgLines}</g>
+      <g opacity="0.18">${svgLines}</g>
+      <g>${layerSvgLines}</g>
       <g>${svgNails}</g>
     </svg>
+    <p class="preview-caption">Layer ${li + 1} isolated · other layers shown faded for context</p>
   </div>
-  ${summaryStats}
-  ${threadHTML}
-  <div class="pf"><span>stephrawlingscreations.ie</span><span>Page ${pageIdx + 1} — Build Summary</span></div>
-</div>
+  ${arrowSeq ? `<div class="section">
+    <h2 class="sh">Sequence — Layer ${li + 1}</h2>
+    <p class="lsub" style="margin-bottom:2mm">Start at nail <strong>${layerStartNail}</strong> · ${moves} moves · follow in order</p>
+    <p class="arrow-seq">${seqDisplay}</p>
+    ${stepGridHTML ? `<div class="step-grid" style="margin-top:2mm">${stepGridHTML}</div>` : ""}
+  </div>` : ""}
+  <div class="pf"><span>${CONTACT}</span><span>Page ${pageIdx} — Layer ${li + 1} of ${activeLayers}</span></div>
+</div>`;
+    });
 
-<!-- BUILD GUIDE PAGE -->
+    // ── BUILD GUIDE PAGE ──
+    let seqHTML = "";
+    let isFirst = true;
+    layers.forEach((L, li) => {
+      if (!L.seq?.length) return;
+      const c = hexToRgb(L.color || "#000000");
+      const colorRgb = `rgb(${c.r},${c.g},${c.b})`;
+      const arrowSeq = L.seq.map((n) => n + numStart).join(" → ");
+      const moves = L.seq.length - 1;
+      seqHTML += `<section class="ls${isFirst ? " ls-first" : ""}">
+        <div class="lh">
+          <span class="ldot" style="background:${colorRgb}"></span>
+          <div>
+            <h2 class="lt">Layer ${li + 1} <span style="color:${colorRgb}">(${L.color || "#000000"})</span> — ${moves} moves</h2>
+            <p class="lsub">Start at nail ${L.seq[0] + numStart} · follow the sequence below</p>
+          </div>
+        </div>
+        <p class="arrow-seq">${arrowSeq}</p>
+        <div class="step-grid">`;
+      L.seq.forEach((nail, i) => {
+        seqHTML += `<div class="step"><span class="sl">${i === 0 ? "Start" : "#" + i}</span><span class="sn2">${nail + numStart}</span></div>`;
+      });
+      seqHTML += `</div></section>`;
+      isFirst = false;
+    });
+
+    pageIdx++;
+    const buildGuidePageHTML = `
 <div class="page">
   <div class="ph">
     <div class="ph-label">String Art Studio</div>
@@ -1662,8 +1645,140 @@ ${boardPagesHTML}
       <li>Use contrasting colours for clarity between layers</li>
     </ul>
   </div>
-  <div class="pf"><span>stephrawlingscreations.ie</span><span>Page ${pageIdx + 2} — Build Guide</span></div>
+  <div class="pf"><span>${CONTACT}</span><span>Page ${pageIdx} — Build Guide</span></div>
+</div>`;
+
+    const totalPages = pageIdx;
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>String Art Build Pack – ${CONTACT}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,sans-serif;background:#e5e5e5;color:#1e1e1e;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.toolbar{background:#fff;border-bottom:1px solid #ddd;padding:12px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+.toolbar h2{font-size:14px;font-weight:600;flex:1;margin:0;color:#444}
+.toolbar .print-warn{font-size:12px;color:#c0392b;font-weight:500}
+.btn-print{background:#1e1e1e;color:#fff;border:none;border-radius:6px;padding:9px 20px;font-size:13px;font-weight:500;cursor:pointer}
+
+/* ── ALL PAGES ── */
+.page{width:190mm;min-height:277mm;padding:12mm 12mm 10mm;margin:24px auto;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.14);position:relative}
+
+/* ── PREVIEW PAGES (cover + layer pages) — scaled reference, not true-size ── */
+.preview-page{display:flex;flex-direction:column}
+.preview-page .pf{margin-top:auto;padding-top:4mm}
+
+/* Cover page */
+.cover-header{margin-bottom:5mm;padding-bottom:5mm;border-bottom:0.75pt solid #e0e0e0}
+.cover-brand{font-size:7pt;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#bbb;margin-bottom:2mm}
+.cover-title{font-size:26pt;font-weight:700;letter-spacing:-.03em;line-height:1;color:#1e1e1e}
+.cover-meta{font-size:8.5pt;color:#bbb;margin-top:2mm}
+.preview-svg-wrap{display:flex;flex-direction:column;align-items:center;padding:4mm 0}
+.preview-caption{font-size:7.5pt;color:#aaa;text-align:center;margin-top:2mm;letter-spacing:.04em}
+
+/* Early release box */
+.early-release-box{margin-top:5mm;padding:3.5mm 5mm;background:#fffbf0;border:0.5pt solid #e8d060;border-radius:6pt}
+.er-msg{font-size:8.5pt;color:#6b5500;line-height:1.55}
+.er-contact{font-size:7.5pt;color:#aaa;margin-top:1.5mm}
+
+/* Layer pages */
+.layer-page-hdr{padding:4mm 5mm;border-radius:6pt;background:#fafafa;margin-bottom:4mm;border-left:4pt solid #1e1e1e}
+.layer-title-row{display:flex;align-items:center;gap:8pt;margin-bottom:3mm}
+.layer-kpis{display:flex;border:0.5pt solid #ececec;border-radius:6pt;overflow:hidden;margin-top:2mm}
+.kpi{flex:1;text-align:center;padding:2.5mm 2mm;border-right:0.5pt solid #ececec}
+.kpi:last-child{border-right:none}
+.kpi b{display:block;font-size:13pt;font-weight:700;line-height:1.2}
+.kpi span{font-size:7pt;color:#bbb;text-transform:uppercase;letter-spacing:.07em}
+.step-more{opacity:.5}
+
+/* ── TILE PAGES — true-size drill template, never scaled ── */
+.tile-page{padding:0;display:flex;flex-direction:column;min-height:unset}
+.tile-hdr{display:flex;justify-content:space-between;align-items:baseline;padding:3.5mm 5mm;border-bottom:0.5pt solid #ebebeb;flex-shrink:0}
+.tile-hdr-left{font-size:6.5pt;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#bbb}
+.tile-hdr-right{font-size:6.5pt;color:#c0392b;font-weight:600;text-align:right;white-space:nowrap;margin-left:4mm}
+.board-wrap{flex:1;display:flex;justify-content:center;align-items:flex-start;padding:3mm 5mm 2mm;overflow:hidden}
+.tile-footer{display:flex;justify-content:space-between;align-items:center;padding:3mm 5mm;border-top:0.5pt solid #ebebeb;flex-shrink:0;gap:8mm}
+.scale-check{display:flex;align-items:center;gap:5pt;flex-shrink:0}
+.scale-lbl{font-size:7pt;color:#888}
+.tile-ref{font-size:6.5pt;color:#bbb;text-align:right}
+
+/* ── GUIDE PAGES ── */
+.ph{margin-bottom:6mm;padding-bottom:4mm;border-bottom:0.75pt solid #e0e0e0}
+.ph-label{font-size:7pt;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#bbb;margin-bottom:2mm}
+.ph h1{font-size:22pt;font-weight:700;letter-spacing:-.03em;line-height:1;color:#1e1e1e}
+.ph p{font-size:8.5pt;color:#bbb;margin-top:2mm}
+.stats{display:flex;margin:4mm 0;border:0.5pt solid #ececec;border-radius:8pt;overflow:hidden}
+.stat{flex:1;text-align:center;padding:3mm 2mm;border-right:0.5pt solid #ececec}
+.stat:last-child{border-right:none}
+.stat b{display:block;font-size:14pt;font-weight:700;line-height:1.15}
+.stat span{font-size:7pt;color:#bbb;text-transform:uppercase;letter-spacing:.07em}
+.section{margin-top:5mm;padding-top:4mm;border-top:0.5pt solid #ececec}
+.sh{font-size:9.5pt;font-weight:700;letter-spacing:.03em;margin-bottom:2.5mm;text-transform:uppercase;color:#555}
+.sn{font-size:7.5pt;color:#bbb}
+.tt{width:100%;border-collapse:collapse;font-size:9pt}
+.tt td{padding:2mm 2.5mm;border-bottom:0.3pt solid #f2f2f2;vertical-align:middle}
+.tt tr:last-child td{border-bottom:none}
+.tt-total td{font-weight:700;padding-top:3mm;border-top:0.75pt solid #ccc;border-bottom:none}
+.tv{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;font-size:10pt}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.start-box{background:#f8f8f8;border-radius:6pt;padding:4mm 5mm;margin-bottom:6mm;border-left:2pt solid #1e1e1e}
+.start-box h3{font-size:8pt;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#555;margin-bottom:2mm}
+.start-box ol{padding-left:14pt;font-size:8.5pt;color:#444;line-height:2}
+.ls{padding-top:6mm;margin-top:6mm;border-top:0.5pt solid #ececec;break-inside:avoid}
+.ls-first{border-top:none;padding-top:0;margin-top:0}
+.lh{display:flex;align-items:flex-start;gap:8pt;margin-bottom:3mm}
+.ldot{display:inline-block;width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:2pt}
+.lt{font-size:11pt;font-weight:700;line-height:1.2;color:#1e1e1e}
+.lsub{font-size:8pt;color:#aaa;margin-top:1mm}
+.arrow-seq{font-size:7pt;color:#666;margin-bottom:3mm;line-height:1.8;word-break:break-all;background:#f8f8f8;padding:3mm 4mm;border-radius:4pt;border-left:2pt solid #ddd;max-height:22mm;overflow:hidden}
+.step-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(28pt,1fr));gap:1.5pt}
+.step{border:0.3pt solid #ebebeb;border-radius:3pt;padding:2pt 3pt}
+.sl{display:block;font-size:5pt;color:#ccc;letter-spacing:.03em}
+.sn2{display:block;font-size:9pt;font-weight:700;color:#1e1e1e}
+.tips-list{list-style:none;padding:0}
+.tips-list li{font-size:8.5pt;color:#555;padding:2mm 0 2mm 12pt;border-bottom:0.3pt solid #f5f5f5;position:relative;line-height:1.4}
+.tips-list li::before{content:"·";position:absolute;left:0;color:#bbb;font-size:16pt;line-height:.9}
+.tips-list li:last-child{border-bottom:none}
+.pf{display:flex;justify-content:space-between;font-size:7.5pt;color:#ccc;border-top:0.3pt solid #f0f0f0;padding-top:3mm;margin-top:6mm}
+
+/* ── PRINT RULES ── */
+@page{size:A4 portrait;margin:10mm}
+@media print{
+  .toolbar{display:none}
+  body{background:#fff}
+  .page{margin:0;box-shadow:none;break-after:page;width:190mm}
+  /* Tile pages: exact A4 height, never scaled */
+  .tile-page{height:277mm;overflow:hidden;padding:0}
+  /* Preview pages: natural height, allow content to breathe */
+  .preview-page{padding:10mm 12mm;min-height:unset}
+  /* Guide pages */
+  .page:not(.tile-page):not(.preview-page){padding:8mm 10mm;min-height:unset}
+  .page:not(.tile-page):not(.preview-page) .ph{margin-bottom:4mm;padding-bottom:4mm}
+  .page:not(.tile-page):not(.preview-page) .pf{margin-top:4mm}
+}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <h2>String Art Build Pack — ${CONTACT}</h2>
+  <span class="print-warn">⚠ Drill template pages: set printer scale to 100% — no "Fit to page"</span>
+  <button class="btn-print" onclick="setTimeout(() => window.print(), 150)">🖨 Print / Save as PDF</button>
 </div>
+
+<!-- PAGE 1: COMPLETED DESIGN PREVIEW + COVER -->
+${coverPageHTML}
+
+<!-- PAGES 2–${1 + boardPageCount}: TRUE-SIZE NAIL PLACEMENT TEMPLATE (tiled, not scaled) -->
+${boardPagesHTML}
+
+<!-- PAGES ${2 + boardPageCount}–${1 + boardPageCount + activeLayers}: INDIVIDUAL LAYER PAGES -->
+${layerPagesHTML}
+
+<!-- PAGE ${totalPages}: BUILD GUIDE -->
+${buildGuidePageHTML}
+
 </body>
 </html>`;
 
