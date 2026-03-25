@@ -73,6 +73,8 @@ img { max-width: 100%; display: block; }
   display: flex;
   flex-direction: column;
   gap: 3px;
+  text-decoration: none;
+  color: inherit;
 }
 
 .brand strong {
