@@ -1729,14 +1729,16 @@ body{font-family:system-ui,sans-serif;background:#e5e5e5;color:#1e1e1e;-webkit-p
 
   /* ── TILE PAGES ── */
   /* Tile pages must be exactly 277mm (A4 minus 10mm margins each side). */
-  .tile-page{height:277mm;overflow:hidden;padding:0}
+  .tile-page{height:297mm;max-height:297mm;overflow:hidden;padding:0;box-sizing:border-box}
   /* FIX (vertical crop): JS sets SVG_H_MM = 277 - FOOTER_MM (13mm), so it expects
      only 13mm of non-SVG chrome. Screen CSS uses padding:3.5mm on tile-hdr and
      padding:3mm on tile-footer — together ~19mm — so the flex:1 board-wrap gets
      only 258mm and clips the bottom 6mm of the SVG. Tightening padding here to
-     bring header+footer combined to ~13mm matches the JS budget exactly. */
-  .tile-page .tile-hdr{padding-top:1.5mm;padding-bottom:1.5mm}
-  .tile-page .tile-footer{padding-top:2mm;padding-bottom:2mm}
+     bring header+footer combined to ~13mm matches the JS budget exactly.
+     Borders removed: they're decorative and add ~1pt each, enough to push
+     content over the page boundary and generate a blank page after every tile. */
+  .tile-page .tile-hdr{padding-top:1.5mm;padding-bottom:1.5mm;border-bottom:none}
+  .tile-page .tile-footer{padding-top:2mm;padding-bottom:2mm;border-top:none}
   /* FIX (horizontal crop): board-wrap has padding:5mm on each side in screen CSS,
      making its content box 180mm wide. SVG is drawn to 190mm (PAGE_W_MM). With
      overflow:hidden that clips 5mm off each side of every tile. Removing padding
