@@ -466,6 +466,12 @@ document.addEventListener("DOMContentLoaded", function () {
      REDRAW
   ----------------------------- */
 
+  let _saveTimer = null;
+  function debouncedSave() {
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(saveDesign, 500);
+  }
+
   function redrawAll() {
     const { cssW, cssH } = resizeCanvas();
 
@@ -598,7 +604,7 @@ document.addEventListener("DOMContentLoaded", function () {
       ctx.fillText(label, x, y - 10);
     }
 
-    saveDesign();
+    debouncedSave();
   }
 
   /* -----------------------------
