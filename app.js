@@ -233,16 +233,40 @@ document.addEventListener("DOMContentLoaded", function () {
      BOARD POINTS
   ----------------------------- */
 
-  function pointsCircle(n, cx, cy, r) {
+  function pointsCircle(n, cx, cy, r, startAngleDeg) {
+    const startRad = startAngleDeg !== undefined
+      ? (startAngleDeg * Math.PI) / 180
+      : -Math.PI / 2;
     const out = new Array(n);
 
     for (let i = 0; i < n; i++) {
-      const t = (Math.PI * 2 * i) / n;
-      const a = t - Math.PI / 2;
+      const a = (Math.PI * 2 * i) / n + startRad;
       out[i] = [cx + r * Math.cos(a), cy + r * Math.sin(a)];
     }
 
     return out;
+  }
+
+  // Returns the start angle (degrees) for the circle based on nail1pos select.
+  // Top = -90° (12 o'clock), Right = 0°, Bottom = 90°, Left = 180°.
+  function nail1AngleDeg() {
+    const pos = $("nail1pos")?.value || "top";
+    return { top: -90, right: 0, bottom: 90, left: 180 }[pos] ?? -90;
+  }
+
+  // Returns how many positions to rotate the square pts array.
+  function nail1SquareOffset(n) {
+    const pos = $("nail1pos")?.value || "top";
+    const frac = { top: 0, right: 0.25, bottom: 0.5, left: 0.75 }[pos] ?? 0;
+    return Math.round(n * frac);
+  }
+
+  // Rotate an array of points by offset positions (wrapping).
+  function rotatePts(arr, offset) {
+    if (!offset) return arr;
+    const n = arr.length;
+    const o = ((offset % n) + n) % n;
+    return arr.slice(o).concat(arr.slice(0, o));
   }
 
   function pointsSquarePerimeter(n, cx, cy, size) {
@@ -497,10 +521,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const cx = cssW / 2;
     const cy = cssH / 2;
 
-    pts =
-      board === "circle"
-        ? pointsCircle(nails, cx, cy, radius)
-        : pointsSquarePerimeter(nails, cx, cy, radius);
+    if (board === "circle") {
+      pts = pointsCircle(nails, cx, cy, radius, nail1AngleDeg());
+    } else {
+      pts = rotatePts(pointsSquarePerimeter(nails, cx, cy, radius), nail1SquareOffset(nails));
+    }
 
     ctx.lineWidth = 1;
     ctx.strokeStyle = "rgba(0,0,0,0.12)";
@@ -857,6 +882,7 @@ document.addEventListener("DOMContentLoaded", function () {
           numStart: $("numStart")?.value,
           numSize: $("numSize")?.value,
           numOffset: $("numOffset")?.value,
+          nail1pos: $("nail1pos")?.value,
         },
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(state));
@@ -890,6 +916,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (s.numStart != null && $("numStart")) $("numStart").value = s.numStart;
       if (s.numSize != null && $("numSize")) $("numSize").value = s.numSize;
       if (s.numOffset != null && $("numOffset")) $("numOffset").value = s.numOffset;
+      if (s.nail1pos != null && $("nail1pos")) $("nail1pos").value = s.nail1pos;
 
       syncLayerSelect();
       switchLayer(activeLayer);
@@ -1247,6 +1274,7 @@ document.addEventListener("DOMContentLoaded", function () {
       "numStart",
       "numSize",
       "numOffset",
+      "nail1pos",
     ].forEach((id) => {
       $(id)?.addEventListener("change", () => {
         lastNail = null;
@@ -1360,8 +1388,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const svgPts =
       board === "circle"
-        ? pointsCircle(nailCount, CX, CY, BRAD)
-        : pointsSquarePerimeter(nailCount, CX, CY, BRAD);
+        ? pointsCircle(nailCount, CX, CY, BRAD, nail1AngleDeg())
+        : rotatePts(pointsSquarePerimeter(nailCount, CX, CY, BRAD), nail1SquareOffset(nailCount));
 
     // Board outline
     const outline =

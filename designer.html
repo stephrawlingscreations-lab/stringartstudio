@@ -1386,6 +1386,19 @@
                 line.
               </div>
             </div>
+            <div class="continue-row" style="margin-top: 8px;">
+              <input
+                id="continueSteps"
+                type="number"
+                min="1"
+                max="500"
+                value="20"
+              />
+              <label>steps</label>
+              <button id="continuePattern" class="btn-ghost">
+                Continue pattern
+              </button>
+            </div>
           </div>
 
           <button
@@ -1403,45 +1416,25 @@
                 <input id="showNums" type="checkbox" checked />
                 Show nail numbers
               </label>
-              <div class="row3" style="margin-top: 10px">
+              <div class="row" style="margin-top: 10px">
                 <div>
-                  <label
-                    >Every
-                    <span class="help-tip"
-                      >?<span class="tip-text"
-                        >Show a label every X nails. Example: 10 shows 10, 20,
-                        30...</span
-                      ></span
-                    ></label
-                  >
-                  <input
-                    id="numEvery"
-                    type="number"
-                    min="1"
-                    step="1"
-                    value="10"
-                  />
+                  <label>Label every</label>
+                  <input id="numEvery" type="number" min="1" step="1" value="10" />
                 </div>
                 <div>
-                  <label>Start at</label>
-                  <select id="numStart">
-                    <option value="0">0</option>
-                    <option value="1" selected>1</option>
+                  <label>Nail #1 position</label>
+                  <select id="nail1pos">
+                    <option value="top" selected>Top</option>
+                    <option value="right">Right</option>
+                    <option value="bottom">Bottom</option>
+                    <option value="left">Left</option>
                   </select>
                 </div>
-                <div>
-                  <label>Size</label>
-                  <input
-                    id="numSize"
-                    type="number"
-                    min="8"
-                    step="1"
-                    value="12"
-                  />
-                </div>
               </div>
-              <label>Label distance</label>
-              <input id="numOffset" type="number" min="6" step="1" value="22" />
+              <!-- preserved defaults for legacy JS -->
+              <input id="numStart" type="hidden" value="1" />
+              <input id="numSize" type="hidden" value="12" />
+              <input id="numOffset" type="hidden" value="22" />
             </div>
 
             <!-- THREAD -->
@@ -1505,19 +1498,6 @@
               <div class="export-row" style="margin-top: 6px">
                 <button id="exportSeq" class="btn-ghost">Copy sequence</button>
                 <button id="downloadPng">Download PNG</button>
-              </div>
-              <div class="continue-row">
-                <input
-                  id="continueSteps"
-                  type="number"
-                  min="1"
-                  max="500"
-                  value="20"
-                />
-                <label>steps</label>
-                <button id="continuePattern" class="btn-ghost">
-                  Continue pattern
-                </button>
               </div>
               <button class="pro-btn btn-pro-full" onclick="openProModal()">
                 ✦ Download Printable Template
