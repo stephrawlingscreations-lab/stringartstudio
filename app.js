@@ -860,7 +860,11 @@ document.addEventListener("DOMContentLoaded", function () {
         },
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(state));
-    } catch (_) {}
+    } catch (e) {
+      if (e && e.name === "QuotaExceededError") {
+        showToast("Could not save — browser storage is full.", true);
+      }
+    }
   }
 
   function hasSavedDesign() {
@@ -1212,6 +1216,15 @@ document.addEventListener("DOMContentLoaded", function () {
     $("loadDesignBtn")?.addEventListener("click", () => loadSavedDesign(false));
     $("zoomIn")?.addEventListener("click", () => nudgeZoom(1));
     $("zoomOut")?.addEventListener("click", () => nudgeZoom(-1));
+
+    document.addEventListener("keydown", function (e) {
+      // Ignore if focus is on an input/select/textarea
+      const tag = document.activeElement?.tagName;
+      if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
+      if (e.key === "+" || e.key === "=") nudgeZoom(1);
+      else if (e.key === "-") nudgeZoom(-1);
+      else if (e.key === "0" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); fitToScreen(); }
+    });
 
     $("openDrawMode")?.addEventListener("click", openDrawMode);
     $("closeDrawMode")?.addEventListener("click", closeDrawMode);

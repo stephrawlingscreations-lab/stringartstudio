@@ -18,19 +18,24 @@
     </script>
 
     <link
-      href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
 
     <style>
       :root {
-        --brand-blue: #2f56d3;
-        --brand-gold: #d8b85a;
-        --bg-soft: #f4f1ed;
-        --panel-bg: #ffffff;
-        --text-dark: #1e1e1e;
-        --border-soft: #e7e5e2;
-
+        --navy:        #1b2c42;
+        --navy-hover:  #243a56;
+        --gold:        #b8892e;
+        --gold-lt:     rgba(184,137,46,0.13);
+        --bg-soft:     #faf6f0;
+        --panel-bg:    #fffdf9;
+        --text-dark:   #1c1510;
+        --muted:       #6b5c4e;
+        --faint:       #9e8d7e;
+        --border-soft: rgba(60,44,28,0.10);
+        --shadow:      0 16px 48px rgba(28,21,16,0.10);
+        --shadow-sm:   0 4px 18px rgba(28,21,16,0.07);
       }
 
       body {
@@ -66,9 +71,10 @@
 
       .panel {
         background: var(--panel-bg);
-        border-radius: 18px;
-        padding: 20px;
-        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.06);
+        border-radius: 22px;
+        padding: 22px;
+        border: 1px solid var(--border-soft);
+        box-shadow: var(--shadow);
       }
 
       .panel h2 {
@@ -81,7 +87,7 @@
 
       label {
         font-size: 12px;
-        color: #444;
+        color: var(--muted);
         display: block;
         margin: 10px 0 4px;
       }
@@ -90,10 +96,20 @@
       select {
         width: 100%;
         padding: 9px 10px;
-        border: 1px solid #d7d7d7;
+        border: 1px solid rgba(60,44,28,0.12);
         border-radius: 12px;
         font-size: 14px;
         box-sizing: border-box;
+        background: #fff;
+        color: var(--text-dark);
+        outline: none;
+        transition: border-color 0.15s, box-shadow 0.15s;
+      }
+
+      input:focus,
+      select:focus {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 3px rgba(184,137,46,0.10);
       }
 
       input[type="color"] {
@@ -108,27 +124,30 @@
         padding: 10px 14px;
         border-radius: 12px;
         border: none;
-        background: var(--brand-blue);
+        background: var(--navy);
         color: white;
         cursor: pointer;
         font-size: 14px;
+        font-family: Inter, system-ui, sans-serif;
+        transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
       }
 
       button:hover {
-        opacity: 0.9;
+        background: var(--navy-hover);
+        opacity: 1;
       }
 
       .pro-btn {
-        background: linear-gradient(135deg, #e3c774, #d8b85a);
-        color: #1e1e1e;
+        background: linear-gradient(135deg, #c9982f, #a8771e);
+        color: #fff;
         font-weight: 600;
-        box-shadow: 0 4px 14px rgba(216, 184, 90, 0.25);
-        transition: all 0.25s ease;
+        box-shadow: 0 6px 20px rgba(184,137,46,0.28);
+        transition: transform 0.18s, box-shadow 0.18s;
       }
 
       .pro-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 22px rgba(216, 184, 90, 0.35);
+        box-shadow: 0 10px 28px rgba(184,137,46,0.36);
       }
 
       .btns {
@@ -151,12 +170,13 @@
       }
 
       .modal {
-        background: white;
+        background: var(--panel-bg);
         width: 90%;
         max-width: 520px;
-        border-radius: 20px;
-        padding: 30px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        border-radius: 24px;
+        padding: 32px;
+        border: 1px solid var(--border-soft);
+        box-shadow: 0 28px 72px rgba(28,21,16,0.18);
         animation: fadeIn 0.25s ease;
       }
 
@@ -176,7 +196,7 @@
       }
 
       .modal-close {
-        background: var(--brand-blue);
+        background: var(--navy);
         color: white;
         border-radius: 12px;
         padding: 8px 14px;
@@ -215,28 +235,30 @@
         width: 100%;
         max-width: 700px;
         aspect-ratio: 1 / 1;
-        border-radius: 18px;
-        background: white;
+        border-radius: 22px;
+        background: #fffdf9;
         display: block;
         margin: 0 auto;
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
+        border: 1px solid rgba(60,44,28,0.07);
+        box-shadow: 0 16px 48px rgba(28,21,16,0.09);
       }
 
       .mono {
         font-family: ui-monospace, monospace;
         font-size: 12px;
         white-space: pre-wrap;
-        background: #fafafa;
+        background: #f5f0e8;
         border-radius: 12px;
         padding: 12px;
         margin-top: 10px;
+        color: var(--muted);
       }
 
       /* ================= HELP PANEL ================= */
 
       .help-btn {
         margin-top: 20px;
-        background: var(--brand-blue);
+        background: var(--navy);
         color: white;
         padding: 10px 16px;
         border-radius: 12px;
@@ -249,10 +271,11 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        background: white;
-        padding: 28px;
-        border-radius: 16px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+        background: var(--panel-bg);
+        border: 1px solid var(--border-soft);
+        padding: 30px;
+        border-radius: 24px;
+        box-shadow: 0 28px 72px rgba(28,21,16,0.18);
         max-width: 480px;
         width: 90%;
         display: none;
@@ -261,11 +284,14 @@
 
       .help-panel h3 {
         margin-top: 0;
+        font-family: "Playfair Display", serif;
+        font-size: 1.3rem;
+        letter-spacing: -0.02em;
       }
 
       .help-close {
         margin-top: 16px;
-        background: var(--brand-blue);
+        background: var(--navy);
         color: white;
         border: none;
         padding: 8px 14px;
@@ -281,9 +307,10 @@
         width: 16px;
         height: 16px;
         border-radius: 50%;
-        background: var(--brand-blue);
-        color: white;
-        font-size: 11px;
+        background: rgba(60,44,28,0.14);
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 700;
         line-height: 16px;
         text-align: center;
         cursor: pointer;
@@ -316,7 +343,7 @@
       }
 
       .panel-toggle {
-        background: var(--brand-blue);
+        background: var(--navy);
         color: white;
         border: none;
         border-radius: 10px;
@@ -337,24 +364,27 @@
 
       .open-draw-btn {
         width: 100%;
-        background: #b85c38;
+        background: var(--navy);
         color: white;
         border: none;
         border-radius: 24px;
         padding: 15px 24px;
         font-size: 16px;
-        font-family: "DM Sans", sans-serif;
-        font-weight: 500;
+        font-family: Inter, sans-serif;
+        font-weight: 600;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
-        box-shadow: 0 4px 16px rgba(184, 92, 56, 0.28);
+        box-shadow: 0 8px 24px rgba(27,44,66,0.26);
+        transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
       }
 
       .open-draw-btn:hover {
-        opacity: 0.92;
+        background: var(--navy-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 12px 28px rgba(27,44,66,0.30);
       }
 
       .draw-mode-overlay {
@@ -364,6 +394,7 @@
         display: none;
         flex-direction: column;
         z-index: 5000;
+        background: #faf6f0;
       }
 
       .draw-mode-overlay.active {
@@ -375,32 +406,42 @@
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        padding: 12px 14px;
-        background: white;
-        border-bottom: 1px solid var(--border-soft);
+        padding: 14px 18px;
+        background: var(--panel-bg);
+        border-bottom: 1px solid rgba(60,44,28,0.08);
         flex: 0 0 auto;
       }
 
       .draw-mode-brand {
-        font-family: "Playfair Display", serif;
-        font-size: 15px;
+        font-family: "Cormorant Garamond", serif;
+        font-size: 1.2rem;
+        font-weight: 600;
         color: var(--text-dark);
         white-space: nowrap;
+        letter-spacing: -0.01em;
       }
 
       .draw-mode-brand em {
         font-style: italic;
-        color: #b85c38;
+        color: var(--gold);
       }
 
       .draw-mode-exit {
-        background: #b85c38;
+        background: var(--navy);
         color: white;
         border-radius: 20px;
         padding: 9px 20px;
-        font-family: "DM Sans", sans-serif;
+        font-family: Inter, sans-serif;
         font-size: 14px;
+        font-weight: 600;
         white-space: nowrap;
+        border: none;
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+
+      .draw-mode-exit:hover {
+        background: var(--navy-hover);
       }
 
       .draw-mode-canvas-wrap {
@@ -413,8 +454,8 @@
         -webkit-overflow-scrolling: touch;
         background: radial-gradient(
           circle at center,
-          #ffffff 60%,
-          #f6f6f6 100%
+          #fffdf9 55%,
+          #f2ece2 100%
         );
       }
 
@@ -432,10 +473,10 @@
         display: flex;
         flex-direction: column;
         gap: 8px;
-        padding: 12px 14px 20px;
-        background: white;
-        border-top: 0.5px solid var(--border-soft);
-        box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.05);
+        padding: 14px 16px 24px;
+        background: var(--panel-bg);
+        border-top: 1px solid rgba(60,44,28,0.07);
+        box-shadow: 0 -6px 20px rgba(28,21,16,0.06);
         flex: 0 0 auto;
       }
 
@@ -471,12 +512,12 @@
         min-height: 48px;
         background: transparent;
         color: var(--text-dark);
-        border: 1px solid #d7d7d7;
+        border: 1px solid rgba(60,44,28,0.14);
         border-radius: 12px;
         font-size: 14px;
         white-space: nowrap;
         padding: 0 14px;
-        font-family: "DM Sans", sans-serif;
+        font-family: Inter, sans-serif;
       }
 
       .dm-action-row {
@@ -489,15 +530,15 @@
         min-height: 48px;
         border-radius: 12px;
         font-size: 14px;
-        font-family: "DM Sans", sans-serif;
+        font-family: Inter, sans-serif;
         background: transparent;
         color: var(--text-dark);
-        border: 1px solid #d7d7d7;
+        border: 1px solid rgba(60,44,28,0.14);
         white-space: nowrap;
       }
 
       .dm-action-row button:hover {
-        background: #f8f5f1;
+        background: #f5f0e8;
         opacity: 1;
       }
 
@@ -571,12 +612,12 @@
       /* ================= DRAW MODE MINI SEQUENCE ================= */
 
       .draw-mode-seq-mini {
-        background: #faf8f5;
-        border-bottom: 0.5px solid var(--border-soft);
-        padding: 8px 16px;
+        background: rgba(250,246,240,0.90);
+        border-bottom: 1px solid rgba(60,44,28,0.07);
+        padding: 8px 18px;
         font-size: 12px;
         line-height: 1.4;
-        color: #888;
+        color: var(--muted);
         white-space: nowrap;
         overflow-x: auto;
         font-family: ui-monospace, monospace;
@@ -584,19 +625,19 @@
       }
 
       .drawmode-presets {
-        background: white;
-        border-bottom: 0.5px solid var(--border-soft);
-        padding: 10px 14px;
+        background: var(--panel-bg);
+        border-bottom: 1px solid rgba(60,44,28,0.07);
+        padding: 10px 16px;
         flex-shrink: 0;
       }
 
       .drawmode-presets-label {
         font-size: 10px;
-        letter-spacing: 0.1em;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: #b85c38;
+        color: var(--gold);
         font-weight: 600;
-        font-family: "DM Sans", sans-serif;
+        font-family: Inter, sans-serif;
         margin-bottom: 8px;
       }
 
@@ -625,34 +666,48 @@
 
       .designer-intro {
         text-align: center;
-        padding: 56px 20px 0;
+        padding: 52px 20px 8px;
         background: var(--bg-soft);
       }
 
       .designer-intro-label {
-        font-size: 11px;
-        letter-spacing: 0.12em;
+        font-size: 0.70rem;
+        letter-spacing: 0.16em;
         text-transform: uppercase;
-        color: #b85c38;
-        font-weight: 500;
-        font-family: "DM Sans", sans-serif;
-        display: block;
-        margin-bottom: 10px;
+        color: var(--gold);
+        font-weight: 600;
+        font-family: Inter, sans-serif;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 14px;
+      }
+
+      .designer-intro-label::before {
+        content: "";
+        display: inline-block;
+        width: 18px;
+        height: 1px;
+        background: var(--gold);
+        flex-shrink: 0;
       }
 
       .designer-intro h2 {
         font-family: "Playfair Display", serif;
-        font-size: 30px;
-        font-weight: 400;
-        margin: 0 0 10px;
+        font-size: clamp(1.8rem, 3vw, 2.6rem);
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+        margin: 0 0 12px;
         color: var(--text-dark);
       }
 
       .designer-intro p {
-        font-size: 14px;
-        color: #666;
+        font-size: 1rem;
+        color: var(--muted);
         margin: 0;
-        font-family: "DM Sans", sans-serif;
+        font-family: Inter, sans-serif;
+        line-height: 1.65;
       }
 
       /* ================= PANEL SECTIONS ================= */
@@ -664,7 +719,7 @@
 
       .panel-section {
         padding: 16px 0 4px;
-        border-top: 1px solid #f0eeeb;
+        border-top: 1px solid rgba(60,44,28,0.07);
       }
 
       .panel-section:first-child {
@@ -673,12 +728,12 @@
       }
 
       .panel-section-label {
-        font-size: 10px;
-        letter-spacing: 0.12em;
+        font-size: 0.68rem;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: #b85c38;
+        color: var(--gold);
         font-weight: 600;
-        font-family: "DM Sans", sans-serif;
+        font-family: Inter, sans-serif;
         margin-bottom: 10px;
         display: block;
       }
@@ -686,25 +741,29 @@
       /* ================= PANEL BUTTONS ================= */
 
       .panel button {
-        background: #b85c38;
-        font-family: "DM Sans", system-ui, sans-serif;
+        background: var(--navy);
+        font-family: Inter, system-ui, sans-serif;
+      }
+
+      .panel button:hover {
+        background: var(--navy-hover);
       }
 
       .panel .btn-ghost {
         background: transparent;
         color: var(--text-dark);
-        border: 1px solid #d7d7d7;
+        border: 1px solid rgba(60,44,28,0.14);
       }
 
       .panel .btn-ghost:hover {
-        background: #f8f5f1;
+        background: #f5f0e8;
         opacity: 1;
       }
 
       .panel .btn-danger {
         background: #fdf2f1;
         color: #c0392b;
-        border: 1px solid #f5d5d2;
+        border: 1px solid rgba(192,57,43,0.14);
       }
 
       .panel .btn-danger:hover {
@@ -742,7 +801,7 @@
 
       .slider-row input[type="range"] {
         width: 100%;
-        accent-color: #b85c38;
+        accent-color: var(--gold);
         cursor: pointer;
       }
 
@@ -860,10 +919,10 @@
       /* ================= SEQUENCE OUT ================= */
 
       .seq-out-wrap {
-        background: #faf8f5;
-        border: 1px solid #edeae6;
-        border-radius: 12px;
-        padding: 12px;
+        background: #faf6f0;
+        border: 1px solid rgba(60,44,28,0.09);
+        border-radius: 14px;
+        padding: 12px 14px;
         margin-top: 4px;
         max-height: 140px;
         overflow-y: auto;
@@ -875,7 +934,7 @@
         padding: 0;
         margin: 0;
         font-size: 11px;
-        color: #555;
+        color: var(--muted);
       }
 
       /* ================= TOAST ================= */
@@ -885,13 +944,13 @@
         bottom: 32px;
         left: 50%;
         transform: translateX(-50%) translateY(12px);
-        background: #1e1e1e;
+        background: var(--navy);
         color: #fff;
-        font-family: "DM Sans", system-ui, sans-serif;
+        font-family: Inter, system-ui, sans-serif;
         font-size: 14px;
         padding: 10px 20px;
         border-radius: 999px;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+        box-shadow: 0 6px 24px rgba(27,44,66,0.28);
         opacity: 0;
         transition:
           opacity 0.2s ease,
@@ -924,25 +983,27 @@
       }
 
       .quick-patterns-wrap {
-        background: #ffffff;
-        border: 1px solid #e7e5e2;
-        border-radius: 24px;
-        padding: 20px;
-        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.04);
+        background: var(--panel-bg);
+        border: 1px solid var(--border-soft);
+        border-radius: 28px;
+        padding: 22px 26px;
+        box-shadow: var(--shadow-sm);
       }
 
       .quick-patterns-heading h2 {
         margin: 0 0 8px;
+        font-family: "Playfair Display", serif;
         font-size: clamp(1.25rem, 2vw, 1.7rem);
+        letter-spacing: -0.02em;
         line-height: 1.2;
-        color: #1e1e1e;
+        color: var(--text-dark);
       }
 
       .quick-patterns-heading p {
         margin: 0 0 16px;
-        color: #666;
-        font-size: 0.98rem;
-        line-height: 1.5;
+        color: var(--muted);
+        font-size: 0.96rem;
+        line-height: 1.55;
       }
 
       /* MOBILE */
@@ -961,22 +1022,23 @@
 
       .preset-chip {
         flex: 0 0 auto;
-        border: 1px solid #e7e5e2;
+        border: 1px solid rgba(60,44,28,0.12);
         background: #fff;
-        color: #1e1e1e;
+        color: var(--text-dark);
         border-radius: 999px;
         padding: 12px 18px;
         font-size: 0.95rem;
         font-weight: 600;
         cursor: pointer;
         min-height: 46px;
-        transition: all 0.2s ease;
+        transition: all 0.18s ease;
       }
 
       .preset-chip:hover,
       .preset-chip:focus-visible {
-        border-color: #2f56d3;
-        color: #2f56d3;
+        border-color: var(--gold);
+        color: var(--gold);
+        background: rgba(184,137,46,0.05);
         outline: none;
       }
       @media (max-width: 899px) {
@@ -996,22 +1058,23 @@
       }
 
       .preset-btn {
-        border: 1px solid #e7e5e2;
+        border: 1px solid rgba(60,44,28,0.12);
         background: #fff;
-        color: #1e1e1e;
+        color: var(--text-dark);
         border-radius: 999px;
         padding: 11px 18px;
         font-size: 0.95rem;
         font-weight: 600;
         cursor: pointer;
         min-height: 44px;
-        transition: all 0.2s ease;
+        transition: all 0.18s ease;
       }
 
       .preset-btn:hover,
       .preset-btn:focus-visible {
-        border-color: #2f56d3;
-        color: #2f56d3;
+        border-color: var(--gold);
+        color: var(--gold);
+        background: rgba(184,137,46,0.05);
         outline: none;
       }
 
@@ -1035,36 +1098,35 @@
       #presetOffsetValue {
         min-width: 30px;
         font-weight: 700;
-        color: #2f56d3;
+        color: var(--gold);
       }
 
       .generate-preset-btn {
         border: none;
-        background: #2f56d3;
+        background: var(--navy);
         color: #fff;
         border-radius: 999px;
         padding: 11px 20px;
         font-size: 0.95rem;
-        font-weight: 700;
+        font-weight: 600;
         cursor: pointer;
         min-height: 44px;
-        transition:
-          opacity 0.2s ease,
-          transform 0.2s ease;
+        transition: background 0.15s, transform 0.15s;
       }
 
       .generate-preset-btn:hover,
       .generate-preset-btn:focus-visible {
-        opacity: 0.92;
+        background: var(--navy-hover);
+        transform: translateY(-1px);
         outline: none;
       }
 
       /* ACTIVE STATE */
       .preset-chip.active,
       .preset-btn.active {
-        background: #2f56d3;
+        background: var(--navy);
         color: #fff;
-        border-color: #2f56d3;
+        border-color: var(--navy);
       }
 
       /* BREAKPOINT */
@@ -1106,23 +1168,36 @@
       .site-brand {
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 2px;
         text-decoration: none;
         color: inherit;
+        line-height: 1;
       }
 
       .site-brand strong {
-        font-family: "Playfair Display", serif;
-        font-size: 1.35rem;
-        letter-spacing: -0.02em;
-        color: #1e1712;
+        font-family: "Cormorant Garamond", serif;
+        font-size: 1.55rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: var(--text-dark);
+        position: relative;
+        display: inline-block;
+      }
+
+      .site-brand strong::after {
+        content: "";
+        position: absolute;
+        left: 0; bottom: -2px;
+        width: 100%; height: 1.5px;
+        background: linear-gradient(90deg, var(--gold), transparent);
       }
 
       .site-brand span {
-        font-size: 0.78rem;
-        letter-spacing: 0.16em;
+        font-size: 0.68rem;
+        letter-spacing: 0.20em;
         text-transform: uppercase;
-        color: #6f6257;
+        color: var(--faint);
+        margin-top: 6px;
       }
 
       .site-nav-links {
@@ -1152,22 +1227,26 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-height: 44px;
+        min-height: 42px;
         padding: 0 20px;
         border-radius: 999px;
-        border: 1px solid transparent;
+        border: 1.5px solid transparent;
         font-weight: 600;
-        font-size: 0.95rem;
-        font-family: inherit;
+        font-size: 0.90rem;
+        font-family: Inter, sans-serif;
         cursor: pointer;
-        transition: 0.2s ease;
-        background: linear-gradient(135deg, #1e1712, #3b2c21);
+        transition: transform 0.18s, box-shadow 0.18s, background 0.18s;
+        background: var(--navy);
         color: white;
-        box-shadow: 0 8px 20px rgba(30, 23, 18, 0.18);
+        box-shadow: 0 8px 24px rgba(27,44,66,0.24);
         text-decoration: none;
       }
 
-      .site-nav-btn:hover { transform: translateY(-1px); }
+      .site-nav-btn:hover {
+        background: var(--navy-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 12px 28px rgba(27,44,66,0.30);
+      }
 
       @media (max-width: 720px) {
         .site-nav {
@@ -1193,7 +1272,7 @@
           <a href="about.html">About</a>
           <a href="feature.html">Get Featured</a>
           <a href="newsletter.html">Join the list</a>
-          <a class="site-nav-btn" href="index.html">← Home</a>
+          <a class="site-nav-btn" href="index.html">← Back</a>
         </div>
       </nav>
     </div>
@@ -1442,7 +1521,7 @@
           </div>
         </div>
 
-        <canvas id="cv"></canvas>
+        <canvas id="cv" aria-label="String art design canvas"></canvas>
       </div>
 
       <div class="mobile-draw-launch">
@@ -1676,7 +1755,7 @@
       </div>
 
       <div class="draw-mode-canvas-wrap">
-        <canvas id="drawModeCanvas"></canvas>
+        <canvas id="drawModeCanvas" aria-label="String art draw mode canvas"></canvas>
       </div>
 
       <div class="draw-mode-toolbar">
