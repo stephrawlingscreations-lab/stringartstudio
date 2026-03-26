@@ -1710,18 +1710,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ── Sequence pagination constants ──
     // These are used both for pre-calculating totalPages and for rendering.
-    const SCOLS_SEQ         = 4;
-    const SEQ_ROW_H_MM      = 5;    // mm per step row
-    const SEQ_MAX_Y_MM      = 267;  // mm — stay above footer (footer rule is at 273mm)
+    const SCOLS_SEQ          = 3;
+    const SEQ_ROW_H_MM       = 8;    // mm per step row (7 mm cell + 1 mm breathing gap)
+    const CELL_H_MM          = 7;    // drawn cell height in mm
+    const COL_GAP_MM         = 1.5;  // gap between columns in mm
+    const COL_W_MM           = (190 - COL_GAP_MM * (SCOLS_SEQ - 1)) / SCOLS_SEQ;  // ≈62.3 mm
+    const SEQ_MAX_Y_MM       = 267;  // mm — stay above footer (footer rule is at 273mm)
     // Layer preview page: sequence header labels end at sqTop+15 = (46+118+8)+15 = 187mm
     const SEQ_FIRST_START_MM = 187;
-    const firstPageRows      = Math.floor((SEQ_MAX_Y_MM - SEQ_FIRST_START_MM) / SEQ_ROW_H_MM); // 16
-    const firstPageSteps     = firstPageRows * SCOLS_SEQ;  // 64
+    const firstPageRows      = Math.floor((SEQ_MAX_Y_MM - SEQ_FIRST_START_MM) / SEQ_ROW_H_MM); // 10
+    const firstPageSteps     = firstPageRows * SCOLS_SEQ;  // 30
     // Continuation pages: compact 22mm header + 6mm gap before first row = 28mm start
     const CONT_HDR_MM        = 22;
     const CONT_STEPS_START_MM = CONT_HDR_MM + 6;  // 28mm
-    const contPageRows       = Math.floor((SEQ_MAX_Y_MM - CONT_STEPS_START_MM) / SEQ_ROW_H_MM); // 47
-    const contPageSteps      = contPageRows * SCOLS_SEQ;  // 188
+    const contPageRows       = Math.floor((SEQ_MAX_Y_MM - CONT_STEPS_START_MM) / SEQ_ROW_H_MM); // 29
+    const contPageSteps      = contPageRows * SCOLS_SEQ;  // 87
 
     const extraSeqPages = activeLayers.reduce((sum, L) => {
       if (!L.seq?.length || L.seq.length <= 1) return sum;
@@ -2131,7 +2134,6 @@ document.addEventListener("DOMContentLoaded", function () {
           PX2 + PW2 / 2, PTOP2 + PH2 + 3, { size: 7.5, color: C_GRAY, align: "center" });
 
       // Sequence grid — fully paginated, no truncation
-      const COL_W_SEQ = 190 / SCOLS_SEQ;
       if (L.seq?.length > 1) {
         const sqTop      = PTOP2 + PH2 + 8;  // 172mm
         const totalSteps = L.seq.length - 1;
@@ -2144,10 +2146,12 @@ document.addEventListener("DOMContentLoaded", function () {
         let si = 0;
         while (si < totalSteps) {
           const sc3 = si % SCOLS_SEQ, sr = Math.floor(si / SCOLS_SEQ);
-          const stepY = sqTop + 15 + sr * SEQ_ROW_H_MM;
-          if (stepY > SEQ_MAX_Y_MM) break;
-          txt(page, String(si + 1),                                              sc3 * COL_W_SEQ,     stepY, { size: 5.5, color: C_LGRAY });
-          txt(page, `${L.seq[si] + numStart} -> ${L.seq[si + 1] + numStart}`,   sc3 * COL_W_SEQ + 7, stepY, { size: 8.5, font: fBold });
+          const cx  = sc3 * (COL_W_MM + COL_GAP_MM);
+          const cy  = sqTop + 15 + sr * SEQ_ROW_H_MM;
+          if (cy > SEQ_MAX_Y_MM) break;
+          page.drawRectangle({ x: xL(cx), y: yT(cy + CELL_H_MM), width: COL_W_MM * PT, height: CELL_H_MM * PT, color: rgb(0.96, 0.96, 0.96), borderColor: C_LGRAY, borderWidth: 0.4 });
+          txt(page, String(si + 1), cx + 2, cy + 5, { size: 6.5, font: fBold, color: C_GRAY });
+          txt(page, `${L.seq[si] + numStart} \u2192 ${L.seq[si + 1] + numStart}`, cx + 12, cy + 5, { size: 9, font: fBold });
           si++;
         }
         stdFooter(page, CONTACT, `Page ${pageIdx} of ${totalPages} — Layer ${li + 1} of ${activeLayers.length}`);
@@ -2170,10 +2174,12 @@ document.addEventListener("DOMContentLoaded", function () {
           while (si < totalSteps) {
             const relIdx = si - stepsStartOnThisPage;
             const sc3 = relIdx % SCOLS_SEQ, sr = Math.floor(relIdx / SCOLS_SEQ);
-            const stepY = CONT_STEPS_START_MM + sr * SEQ_ROW_H_MM;
-            if (stepY > SEQ_MAX_Y_MM) break;
-            txt(contPage, String(si + 1),                                            sc3 * COL_W_SEQ,     stepY, { size: 5.5, color: C_LGRAY });
-            txt(contPage, `${L.seq[si] + numStart} -> ${L.seq[si + 1] + numStart}`, sc3 * COL_W_SEQ + 7, stepY, { size: 8.5, font: fBold });
+            const cx  = sc3 * (COL_W_MM + COL_GAP_MM);
+            const cy  = CONT_STEPS_START_MM + sr * SEQ_ROW_H_MM;
+            if (cy > SEQ_MAX_Y_MM) break;
+            contPage.drawRectangle({ x: xL(cx), y: yT(cy + CELL_H_MM), width: COL_W_MM * PT, height: CELL_H_MM * PT, color: rgb(0.96, 0.96, 0.96), borderColor: C_LGRAY, borderWidth: 0.4 });
+            txt(contPage, String(si + 1), cx + 2, cy + 5, { size: 6.5, font: fBold, color: C_GRAY });
+            txt(contPage, `${L.seq[si] + numStart} \u2192 ${L.seq[si + 1] + numStart}`, cx + 12, cy + 5, { size: 9, font: fBold });
             si++;
           }
 
