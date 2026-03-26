@@ -1597,7 +1597,7 @@ document.addEventListener("DOMContentLoaded", function () {
      PRINTABLE TEMPLATE
   ----------------------------- */
 
-  function downloadPrintableTemplate() {
+  async function downloadPrintableTemplate() {
     if (!isPro()) {
       openProModal();
       return;
@@ -1610,6 +1610,21 @@ document.addEventListener("DOMContentLoaded", function () {
       showToast("Draw some lines first before downloading a template.", true);
       return;
     }
+
+    showToast("Generating PDF…");
+
+    // Load pdf-lib on demand
+    if (!window.PDFLib) {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = "https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js";
+        s.onload = resolve;
+        s.onerror = () => reject(new Error("Failed to load pdf-lib"));
+        document.head.appendChild(s);
+      });
+    }
+
+    const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
 
     const CONTACT = "stephrawlingscreations.ie";
 
@@ -2082,19 +2097,15 @@ ${buildGuidePageHTML}
 </body>
 </html>`;
 
-    const win = window.open("", "_blank");
-    if (!win) {
-      showToast("Popup blocked — allow popups for this site.", true);
-      return;
-    }
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
-    win.onload = function () {
-      try {
-        win.focus();
-      } catch (_) {}
-    };
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "string-art-template.html";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   init();
