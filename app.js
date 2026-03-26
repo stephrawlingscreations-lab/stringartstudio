@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", function () {
-
   /* -----------------------------
      PRO UNLOCK (Gumroad redirect)
   ----------------------------- */
@@ -36,7 +35,9 @@ document.addEventListener("DOMContentLoaded", function () {
   function isPro() {
     try {
       const k = localStorage.getItem("_sask") || "";
-      return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(k);
+      return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        k,
+      );
     } catch (_) {
       return false;
     }
@@ -117,7 +118,42 @@ document.addEventListener("DOMContentLoaded", function () {
     const { r, g, b } = hexToRgb(hex);
     return `rgba(${r},${g},${b},${a})`;
   }
+  function drawWrappedThread(
+    ctx,
+    x1,
+    y1,
+    x2,
+    y2,
+    nailRadius = 6,
+    wrapSize = 0.35,
+  ) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const dist = Math.hypot(dx, dy);
+    if (!dist) return;
 
+    const ux = dx / dist;
+    const uy = dy / dist;
+
+    // Perpendicular direction for a slight bend
+    const px = -uy;
+    const py = ux;
+
+    // Pull line ends back from the nail centres
+    const sx = x1 + ux * nailRadius;
+    const sy = y1 + uy * nailRadius;
+    const ex = x2 - ux * nailRadius;
+    const ey = y2 - uy * nailRadius;
+
+    // Midpoint with a tiny sideways bend to fake wrapping
+    const mx = (sx + ex) / 2;
+    const my = (sy + ey) / 2;
+    const bend = nailRadius * wrapSize;
+
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.quadraticCurveTo(mx + px * bend, my + py * bend, ex, ey);
+  }
   /* -----------------------------
      MOBILE CONTROL PANEL TOGGLE
   ----------------------------- */
@@ -128,7 +164,9 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!panel || !btn) return;
 
     panel.classList.toggle("hidden");
-    btn.textContent = panel.classList.contains("hidden") ? "▼ Show settings" : "▲ Hide settings";
+    btn.textContent = panel.classList.contains("hidden")
+      ? "▼ Show settings"
+      : "▲ Hide settings";
   }
 
   /* -----------------------------
@@ -234,9 +272,10 @@ document.addEventListener("DOMContentLoaded", function () {
   ----------------------------- */
 
   function pointsCircle(n, cx, cy, r, startAngleDeg) {
-    const startRad = startAngleDeg !== undefined
-      ? (startAngleDeg * Math.PI) / 180
-      : -Math.PI / 2;
+    const startRad =
+      startAngleDeg !== undefined
+        ? (startAngleDeg * Math.PI) / 180
+        : -Math.PI / 2;
     const out = new Array(n);
 
     for (let i = 0; i < n; i++) {
@@ -328,7 +367,9 @@ document.addEventListener("DOMContentLoaded", function () {
       layers.forEach((layer, i) => {
         const opt = document.createElement("option");
         opt.value = String(i);
-        opt.textContent = layer.hidden ? `Layer ${i + 1} (hidden)` : `Layer ${i + 1}`;
+        opt.textContent = layer.hidden
+          ? `Layer ${i + 1} (hidden)`
+          : `Layer ${i + 1}`;
         sel.appendChild(opt);
       });
 
@@ -370,7 +411,8 @@ document.addEventListener("DOMContentLoaded", function () {
     if ($("drawColor")) $("drawColor").value = L.color;
     if ($("opacity")) {
       $("opacity").value = L.opacity;
-      if ($("opacityVal")) $("opacityVal").textContent = Math.round(L.opacity * 100) + "%";
+      if ($("opacityVal"))
+        $("opacityVal").textContent = Math.round(L.opacity * 100) + "%";
     }
     if ($("lw")) {
       $("lw").value = L.lw;
@@ -394,7 +436,9 @@ document.addEventListener("DOMContentLoaded", function () {
     if ($("drawColor")) $("drawColor").value = L.color || "#000000";
     if ($("opacity")) {
       $("opacity").value = L.opacity ?? 0.35;
-      if ($("opacityVal")) $("opacityVal").textContent = Math.round((L.opacity ?? 0.35) * 100) + "%";
+      if ($("opacityVal"))
+        $("opacityVal").textContent =
+          Math.round((L.opacity ?? 0.35) * 100) + "%";
     }
     if ($("lw")) {
       $("lw").value = L.lw ?? 0.7;
@@ -524,7 +568,10 @@ document.addEventListener("DOMContentLoaded", function () {
     if (board === "circle") {
       pts = pointsCircle(nails, cx, cy, radius, nail1AngleDeg());
     } else {
-      pts = rotatePts(pointsSquarePerimeter(nails, cx, cy, radius), nail1SquareOffset(nails));
+      pts = rotatePts(
+        pointsSquarePerimeter(nails, cx, cy, radius),
+        nail1SquareOffset(nails),
+      );
     }
 
     ctx.lineWidth = 1;
@@ -586,9 +633,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const [x1, y1] = pts[e.a];
         const [x2, y2] = pts[e.b];
 
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
+        drawWrappedThread(ctx, x1, y1, x2, y2, 6, 0.35);
         ctx.stroke();
       }
     }
@@ -598,16 +643,15 @@ document.addEventListener("DOMContentLoaded", function () {
       const [x2, y2] = pts[hoverNail];
       const L = layers[activeLayer];
 
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-
       ctx.lineWidth = L.lw;
       ctx.strokeStyle = rgba(L.color, 0.45);
       ctx.shadowColor = rgba(L.color, 0.35);
       ctx.shadowBlur = 6;
       ctx.setLineDash([6, 4]);
+
+      drawWrappedThread(ctx, x1, y1, x2, y2, 6, 0.35);
       ctx.stroke();
+
       ctx.setLineDash([]);
       ctx.shadowBlur = 0;
     }
@@ -698,11 +742,14 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function clearAll() {
-    if (!confirm("Clear everything and start over? This cannot be undone.")) return;
+    if (!confirm("Clear everything and start over? This cannot be undone."))
+      return;
     layers = [];
     activeLayer = 0;
     lastNail = null;
-    try { localStorage.removeItem(SAVE_KEY); } catch (_) {}
+    try {
+      localStorage.removeItem(SAVE_KEY);
+    } catch (_) {}
 
     ensureLayerExists();
     delete layers[activeLayer].step;
@@ -867,7 +914,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const SAVE_KEY = "sas_design_v1";
 
   function saveDesign() {
-    const hasContent = layers.some(L => L.edges && L.edges.length > 0);
+    const hasContent = layers.some((L) => L.edges && L.edges.length > 0);
     if (!hasContent) return;
     try {
       const state = {
@@ -894,15 +941,23 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function hasSavedDesign() {
-    try { return !!localStorage.getItem(SAVE_KEY); } catch (_) { return false; }
+    try {
+      return !!localStorage.getItem(SAVE_KEY);
+    } catch (_) {
+      return false;
+    }
   }
 
   function loadSavedDesign(silent) {
     try {
       const raw = localStorage.getItem(SAVE_KEY);
-      if (!raw) { if (!silent) showToast("No saved design found.", true); return false; }
+      if (!raw) {
+        if (!silent) showToast("No saved design found.", true);
+        return false;
+      }
       const state = JSON.parse(raw);
-      if (!Array.isArray(state.layers) || state.layers.length === 0) return false;
+      if (!Array.isArray(state.layers) || state.layers.length === 0)
+        return false;
 
       layers = state.layers;
       activeLayer = Math.min(state.activeLayer || 0, layers.length - 1);
@@ -911,11 +966,13 @@ document.addEventListener("DOMContentLoaded", function () {
       if (s.board != null && $("board")) $("board").value = s.board;
       if (s.nails != null && $("nails")) $("nails").value = s.nails;
       if (s.radius != null && $("radius")) $("radius").value = s.radius;
-      if (s.showNums != null && $("showNums")) $("showNums").checked = s.showNums;
+      if (s.showNums != null && $("showNums"))
+        $("showNums").checked = s.showNums;
       if (s.numEvery != null && $("numEvery")) $("numEvery").value = s.numEvery;
       if (s.numStart != null && $("numStart")) $("numStart").value = s.numStart;
       if (s.numSize != null && $("numSize")) $("numSize").value = s.numSize;
-      if (s.numOffset != null && $("numOffset")) $("numOffset").value = s.numOffset;
+      if (s.numOffset != null && $("numOffset"))
+        $("numOffset").value = s.numOffset;
       if (s.nail1pos != null && $("nail1pos")) $("nail1pos").value = s.nail1pos;
 
       syncLayerSelect();
@@ -1150,13 +1207,15 @@ document.addEventListener("DOMContentLoaded", function () {
     updateDrawModeSeqMini();
   }
 
-  function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+  function gcd(a, b) {
+    return b === 0 ? a : gcd(b, a % b);
+  }
   function findCoprime(target, total) {
     for (let delta = 0; delta < total; delta++) {
       const hi = target + delta;
       const lo = target - delta;
       if (hi < total && gcd(hi, total) === 1) return hi;
-      if (lo >= 2   && gcd(lo, total) === 1) return lo;
+      if (lo >= 2 && gcd(lo, total) === 1) return lo;
     }
     return target;
   }
@@ -1251,7 +1310,10 @@ document.addEventListener("DOMContentLoaded", function () {
       document.getElementById("proModal").style.display = "none";
       downloadPrintableTemplate();
     });
-    $("saveDesignBtn")?.addEventListener("click", () => { saveDesign(); showToast("Design saved."); });
+    $("saveDesignBtn")?.addEventListener("click", () => {
+      saveDesign();
+      showToast("Design saved.");
+    });
     $("loadDesignBtn")?.addEventListener("click", () => loadSavedDesign(false));
     $("zoomIn")?.addEventListener("click", () => nudgeZoom(1));
     $("zoomOut")?.addEventListener("click", () => nudgeZoom(-1));
@@ -1260,18 +1322,33 @@ document.addEventListener("DOMContentLoaded", function () {
       // Escape closes draw mode or pro modal
       if (e.key === "Escape") {
         const overlay = $("drawModeOverlay");
-        if (overlay && overlay.classList.contains("active")) { closeDrawMode(); return; }
+        if (overlay && overlay.classList.contains("active")) {
+          closeDrawMode();
+          return;
+        }
         const proModal = $("proModal");
-        if (proModal && proModal.style.display !== "none") { proModal.style.display = "none"; return; }
+        if (proModal && proModal.style.display !== "none") {
+          proModal.style.display = "none";
+          return;
+        }
       }
       // Ignore if focus is on an input/select/textarea
       const tag = document.activeElement?.tagName;
       if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
-      if ((e.ctrlKey || e.metaKey) && e.key === "z") { e.preventDefault(); undo(); }
-      else if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); saveDesign(); showToast("Design saved."); }
-      else if (e.key === "+" || e.key === "=") nudgeZoom(1);
+      if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+        e.preventDefault();
+        undo();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        saveDesign();
+        showToast("Design saved.");
+      } else if (e.key === "+" || e.key === "=") nudgeZoom(1);
       else if (e.key === "-") nudgeZoom(-1);
-      else if (e.key === "0" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); fitToScreen(); redrawAll(); }
+      else if (e.key === "0" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        fitToScreen();
+        redrawAll();
+      }
     });
 
     $("openDrawMode")?.addEventListener("click", openDrawMode);
@@ -1398,7 +1475,9 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function dismissOnboarding() {
-    try { localStorage.setItem("_sas_onboard", "1"); } catch (_) {}
+    try {
+      localStorage.setItem("_sas_onboard", "1");
+    } catch (_) {}
     const tip = document.getElementById("onboardingTip");
     if (tip) tip.style.display = "none";
   }
@@ -1412,14 +1491,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function shareDesign() {
     try {
-      const hasContent = layers.some(L => L.seq && L.seq.length > 0);
-      if (!hasContent) { showToast("Draw something first before sharing.", true); return; }
+      const hasContent = layers.some((L) => L.seq && L.seq.length > 0);
+      if (!hasContent) {
+        showToast("Draw something first before sharing.", true);
+        return;
+      }
 
       const state = {
         b: $("board")?.value || "circle",
         n: parseInt($("nails")?.value, 10) || 120,
         p: $("nail1pos")?.value || "top",
-        l: layers.map(L => ({
+        l: layers.map((L) => ({
           c: L.color || "#000000",
           o: +(L.opacity ?? 0.35).toFixed(2),
           w: +(L.lw ?? 0.7).toFixed(1),
@@ -1428,12 +1510,18 @@ document.addEventListener("DOMContentLoaded", function () {
       };
 
       const encoded = btoa(JSON.stringify(state));
-      const url = window.location.origin + window.location.pathname + "?d=" + encoded;
+      const url =
+        window.location.origin + window.location.pathname + "?d=" + encoded;
 
       if (navigator.clipboard) {
-        navigator.clipboard.writeText(url).then(() => {
-          showToast("Share link copied to clipboard!");
-        }).catch(() => { fallbackCopy(url); });
+        navigator.clipboard
+          .writeText(url)
+          .then(() => {
+            showToast("Share link copied to clipboard!");
+          })
+          .catch(() => {
+            fallbackCopy(url);
+          });
       } else {
         fallbackCopy(url);
       }
@@ -1448,7 +1536,12 @@ document.addEventListener("DOMContentLoaded", function () {
     ta.style.cssText = "position:fixed;opacity:0;top:-9999px";
     document.body.appendChild(ta);
     ta.select();
-    try { document.execCommand("copy"); showToast("Share link copied!"); } catch (_) { showToast("Could not copy link.", true); }
+    try {
+      document.execCommand("copy");
+      showToast("Share link copied!");
+    } catch (_) {
+      showToast("Could not copy link.", true);
+    }
     document.body.removeChild(ta);
   }
 
@@ -1459,7 +1552,8 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!d) return false;
 
       const state = JSON.parse(atob(d));
-      if (!state || !Array.isArray(state.l) || state.l.length === 0) return false;
+      if (!state || !Array.isArray(state.l) || state.l.length === 0)
+        return false;
 
       // Clear URL param without reload
       const clean = window.location.pathname;
@@ -1471,7 +1565,7 @@ document.addEventListener("DOMContentLoaded", function () {
       if (state.p && $("nail1pos")) $("nail1pos").value = state.p;
 
       // Rebuild layers with edges from seq
-      layers = state.l.map(L => ({
+      layers = state.l.map((L) => ({
         color: L.c || "#000000",
         opacity: L.o ?? 0.35,
         lw: L.w ?? 0.7,
@@ -1534,7 +1628,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const svgPts =
       board === "circle"
         ? pointsCircle(nailCount, CX, CY, BRAD, nail1AngleDeg())
-        : rotatePts(pointsSquarePerimeter(nailCount, CX, CY, BRAD), nail1SquareOffset(nailCount));
+        : rotatePts(
+            pointsSquarePerimeter(nailCount, CX, CY, BRAD),
+            nail1SquareOffset(nailCount),
+          );
 
     // Board outline
     const outline =
@@ -1558,7 +1655,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Nail dots and labels
     const showEvery =
-      nailCount > 400 ? 50 : nailCount > 200 ? 25 : nailCount > 100 ? 10 : nailCount > 60 ? 5 : 1;
+      nailCount > 400
+        ? 50
+        : nailCount > 200
+          ? 25
+          : nailCount > 100
+            ? 10
+            : nailCount > 60
+              ? 5
+              : 1;
     const labelSize = nailCount > 200 ? 6 : 8;
 
     let svgNails = "";
@@ -1590,7 +1695,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!svgPts[e.a] || !svgPts[e.b]) continue;
         const [x1, y1] = svgPts[e.a];
         const [x2, y2] = svgPts[e.b];
-        const dx = x2 - x1, dy = y2 - y1;
+        const dx = x2 - x1,
+          dy = y2 - y1;
         mm += Math.sqrt(dx * dx + dy * dy) * mmPerSvgUnit;
       }
       totalThreadMm += mm;
@@ -1600,12 +1706,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const toMetres = (mm) => (mm / 1000).toFixed(1);
 
     const date = new Date().toLocaleDateString("en-IE", {
-      day: "numeric", month: "long", year: "numeric",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
     });
 
     // Start nail
     const firstActiveLayer = layers.find((L) => L.seq?.length > 0);
-    const startNailLabel = firstActiveLayer ? firstActiveLayer.seq[0] + numStart : "—";
+    const startNailLabel = firstActiveLayer
+      ? firstActiveLayer.seq[0] + numStart
+      : "—";
 
     // ── PAGE 1: COVER / COMPLETED DESIGN PREVIEW ──
     let threadRows = "";
@@ -1653,10 +1763,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ── PAGES 2+: TRUE-SIZE NAIL PLACEMENT TEMPLATE (tiled, not scaled) ──
     // BRAD*2 = 472 SVG units spans the board diameter D_mm
-    const svgPerMm = (BRAD * 2) / D_mm;    // SVG units per physical mm
-    const PAGE_W_MM = 190;                   // A4 usable width (10mm margins each side)
-    const FOOTER_MM = 20;                    // hdr (~9mm) + footer (~9mm) + borders
-    const SVG_H_MM = 297 - FOOTER_MM;       // SVG area height per tile page
+    const svgPerMm = (BRAD * 2) / D_mm; // SVG units per physical mm
+    const PAGE_W_MM = 190; // A4 usable width (10mm margins each side)
+    const FOOTER_MM = 20; // hdr (~9mm) + footer (~9mm) + borders
+    const SVG_H_MM = 297 - FOOTER_MM; // SVG area height per tile page
     const tileW_svg = PAGE_W_MM * svgPerMm;
     const tileH_svg = SVG_H_MM * svgPerMm;
     const totalCols = Math.ceil(SZ / tileW_svg);
@@ -1691,9 +1801,10 @@ document.addEventListener("DOMContentLoaded", function () {
           alignMarks += `<line x1="${sx.toFixed(1)}" y1="${ey.toFixed(1)}" x2="${(sx + mk).toFixed(1)}" y2="${ey.toFixed(1)}" stroke="#aaa" stroke-width="1"/>`;
         }
 
-        const tileAssemblyNote = boardPageCount > 1
-          ? `Tile ${tileLabel} of ${boardPageCount} — align marks and tape sheets together before drilling`
-          : `Single-sheet template — print at 100%, do not scale`;
+        const tileAssemblyNote =
+          boardPageCount > 1
+            ? `Tile ${tileLabel} of ${boardPageCount} — align marks and tape sheets together before drilling`
+            : `Single-sheet template — print at 100%, do not scale`;
 
         boardPagesHTML += `
 <div class="page tile-page">
@@ -1739,7 +1850,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!svgPts[e.a] || !svgPts[e.b]) continue;
         const [x1, y1] = svgPts[e.a];
         const [x2, y2] = svgPts[e.b];
-        layerSvgLines += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="rgb(${c.r},${c.g},${c.b})" stroke-opacity="${Math.max(0.25, (L.opacity || 0.45)).toFixed(2)}" stroke-width="${Math.min((L.lw || 0.7) * 1.3, 1.5)}"/>`;
+        layerSvgLines += `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="rgb(${c.r},${c.g},${c.b})" stroke-opacity="${Math.max(0.25, L.opacity || 0.45).toFixed(2)}" stroke-width="${Math.min((L.lw || 0.7) * 1.3, 1.5)}"/>`;
       }
 
       // Step-pair rows — each move shown as "N → M", never breaks mid-number
@@ -1782,11 +1893,15 @@ document.addEventListener("DOMContentLoaded", function () {
     </svg>
     <p class="preview-caption">Layer ${li + 1} isolated · other layers shown faded for context</p>
   </div>
-  ${hasSeq ? `<div class="section">
+  ${
+    hasSeq
+      ? `<div class="section">
     <h2 class="sh">Sequence — Layer ${li + 1}</h2>
     <p class="lsub" style="margin-bottom:3mm">Start at nail <b>${layerStartNail}</b> &nbsp;·&nbsp; ${moves} moves &nbsp;·&nbsp; follow each step in order</p>
     <div class="seq-grid">${seqRowsHTML}</div>
-  </div>` : ""}
+  </div>`
+      : ""
+  }
   <div class="pf"><span>${CONTACT}</span><span>Page ${pageIdx} of ${totalPages} — Layer ${li + 1} of ${activeLayers}</span></div>
 </div>`;
     });
@@ -1976,7 +2091,9 @@ ${buildGuidePageHTML}
     win.document.write(html);
     win.document.close();
     win.onload = function () {
-      try { win.focus(); } catch (_) {}
+      try {
+        win.focus();
+      } catch (_) {}
     };
   }
 
