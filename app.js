@@ -2362,10 +2362,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
           const fromNail = L.seq[si] + numStart;
           const toNail = L.seq[si + 1] + numStart;
-
           page.drawRectangle({
             x: xL(cx),
-            y: yT(cy + CELL_H_MM),
+            y: yT(cy + CELL_H_MM + 2),
             width: COL_W_MM * PT,
             height: (CELL_H_MM + 2) * PT,
             color: rgb(0.985, 0.985, 0.985),
@@ -2373,24 +2372,23 @@ document.addEventListener("DOMContentLoaded", function () {
             borderWidth: 0.4,
           });
 
-          // Step number (top, subtle)
-          txt(page, "Step " + (si + 1), cx + 2, cy + 3, {
-            size: 5.5,
+          // Step number (top)
+          txt(page, "Step " + (si + 1), cx + 3, cy + 4, {
+            size: 6,
             color: C_GRAY,
           });
 
-          // Big, clear move (centered feel)
+          // Move
           txt(
             page,
-            String(fromNail) + " → " + String(toNail),
-            cx + 2,
-            cy + 10,
+            String(fromNail) + " -> " + String(toNail),
+            cx + 3,
+            cy + 11,
             {
               size: 11,
               font: fBold,
             },
           );
-
           si++;
         }
 
