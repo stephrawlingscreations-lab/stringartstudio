@@ -1743,18 +1743,49 @@ document.addEventListener("DOMContentLoaded", function () {
     const C_RED   = rgb(0.75, 0.22, 0.17);
     const C_WHITE = rgb(1, 1, 1);
 
-    // Blend a colour with white to simulate transparency (for lines on white bg)
-    function blendW(hexColor, opacity) {
+    // Print-safe colour helpers.
+    // Light colours (luminance > 0.50) are too faint on paper — map them to the
+    // nearest entry in a curated dark palette before drawing anything in the PDF.
+    const PRINT_PALETTE = [
+      [198,  40,  40],  // #C62828 red
+      [239, 108,   0],  // #EF6C00 orange
+      [184, 134,  11],  // #B8860B gold
+      [ 46, 125,  50],  // #2E7D32 green
+      [  0, 109, 119],  // #006D77 teal
+      [ 21, 101, 192],  // #1565C0 blue
+      [106,  27, 154],  // #6A1B9A purple
+      [173,  20,  87],  // #AD1457 magenta
+    ];
+
+    // Returns a full-strength pdf-lib rgb colour that is guaranteed dark enough to print.
+    function printSafeRgb(hexColor) {
       const c = hexToRgb(hexColor || "#000000");
-      return rgb(
-        1 - (1 - c.r / 255) * opacity,
-        1 - (1 - c.g / 255) * opacity,
-        1 - (1 - c.b / 255) * opacity,
-      );
+      const lum = (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255;
+      if (lum < 0.50) return rgb(c.r / 255, c.g / 255, c.b / 255);
+      // Too light — substitute closest dark palette entry (by Euclidean RGB distance)
+      let best = PRINT_PALETTE[0], bestDist = Infinity;
+      for (const p of PRINT_PALETTE) {
+        const d = (c.r - p[0]) ** 2 + (c.g - p[1]) ** 2 + (c.b - p[2]) ** 2;
+        if (d < bestDist) { bestDist = d; best = p; }
+      }
+      return rgb(best[0] / 255, best[1] / 255, best[2] / 255);
     }
-    function hexC(hex) {
-      const c = hexToRgb(hex || "#000000");
-      return rgb(c.r / 255, c.g / 255, c.b / 255);
+
+    // Like printSafeRgb but blended with white at the given opacity.
+    // Used for the cover overview where many lines overlap and full opacity is too heavy.
+    function blendPrintSafe(hexColor, opacity) {
+      const c = hexToRgb(hexColor || "#000000");
+      const lum = (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255;
+      let r = c.r, g = c.g, b = c.b;
+      if (lum >= 0.50) {
+        let best = PRINT_PALETTE[0], bestDist = Infinity;
+        for (const p of PRINT_PALETTE) {
+          const d = (c.r - p[0]) ** 2 + (c.g - p[1]) ** 2 + (c.b - p[2]) ** 2;
+          if (d < bestDist) { bestDist = d; best = p; }
+        }
+        [r, g, b] = best;
+      }
+      return rgb(1 - (1 - r / 255) * opacity, 1 - (1 - g / 255) * opacity, 1 - (1 - b / 255) * opacity);
     }
 
     // ── Page coordinate helpers ──
@@ -1816,18 +1847,18 @@ document.addEventListener("DOMContentLoaded", function () {
         });
       }
 
-      // All string lines (blended faint)
+      // All string lines — print-safe colour, blended at 0.5 so overlapping lines
+      // don't saturate. Much more visible on paper than the old 0.08–0.18 blend.
       for (const L of layers) {
         if (!L.edges?.length) continue;
-        const op = Math.max(0.08, (L.opacity || 0.35) * 0.5);
-        const lc = blendW(L.color, op);
+        const lc = blendPrintSafe(L.color, 0.5);
         for (const e of L.edges) {
           if (!svgPts[e.a] || !svgPts[e.b]) continue;
           const [x1, y1] = svgPts[e.a], [x2, y2] = svgPts[e.b];
           page.drawLine({
             start: { x: pvX(x1), y: pvY(y1) },
             end:   { x: pvX(x2), y: pvY(y2) },
-            thickness: 0.3, color: lc,
+            thickness: 0.45, color: lc,
           });
         }
       }
@@ -1865,10 +1896,9 @@ document.addEventListener("DOMContentLoaded", function () {
       ry += 7;
       layers.forEach((L, li) => {
         if (!L.edges?.length) return;
-        const c = hexToRgb(L.color || "#000000");
         page.drawCircle({
           x: xL(1.5), y: yT(ry - 1.5), size: 2.5,
-          color: rgb(c.r / 255, c.g / 255, c.b / 255),
+          color: printSafeRgb(L.color),
         });
         txt(page, `Layer ${li + 1}`, 4, ry, { size: 9 });
         txt(page, `~${toM(layerThreadMm[li])} m`, 190, ry, { size: 9, font: fBold, align: "right" });
@@ -1936,10 +1966,11 @@ document.addEventListener("DOMContentLoaded", function () {
           });
         }
 
-        // Faint string lines (reference only — accuracy is nail dots, not lines)
+        // Faint string lines — fixed light gray, background reference only.
+        // Nail dots are the accuracy target; lines just show the pattern layout.
+        const TILE_LINE_COLOR = rgb(0.80, 0.80, 0.80);
         for (const L of layers) {
           if (!L.edges?.length) continue;
-          const lc = blendW(L.color, 0.12);
           for (const e of L.edges) {
             if (!svgPts[e.a] || !svgPts[e.b]) continue;
             const [x1, y1] = svgPts[e.a], [x2, y2] = svgPts[e.b];
@@ -1950,7 +1981,7 @@ document.addEventListener("DOMContentLoaded", function () {
             page.drawLine({
               start: { x: tpX(x1), y: tpY(y1) },
               end:   { x: tpX(x2), y: tpY(y2) },
-              thickness: 0.25, color: lc,
+              thickness: 0.25, color: TILE_LINE_COLOR,
             });
           }
         }
@@ -2022,7 +2053,7 @@ document.addEventListener("DOMContentLoaded", function () {
       pageIdx++;
       const page = pdfDoc.addPage([A4W, A4H]);
 
-      const lc        = hexC(L.color);
+      const lc        = printSafeRgb(L.color);
       const moves     = L.seq?.length ? L.seq.length - 1 : L.edges.length;
       const startNail = L.seq?.length ? L.seq[0] + numStart : "\u2014";
       const activeIdx = activeLayers.indexOf(L) + 1;
@@ -2069,12 +2100,12 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
-      // This layer's lines
-      const lBlend = blendW(L.color, Math.max(0.25, L.opacity || 0.45));
+      // This layer's lines — full print-safe colour, thicker stroke for clear printing
+      const lPrint = printSafeRgb(L.color);
       for (const e of L.edges) {
         if (!svgPts[e.a] || !svgPts[e.b]) continue;
         const [x1, y1] = svgPts[e.a], [x2, y2] = svgPts[e.b];
-        page.drawLine({ start: { x: lpX(x1), y: lpY(y1) }, end: { x: lpX(x2), y: lpY(y2) }, thickness: 0.5, color: lBlend });
+        page.drawLine({ start: { x: lpX(x1), y: lpY(y1) }, end: { x: lpX(x2), y: lpY(y2) }, thickness: 1.4, color: lPrint });
       }
 
       // Nail dots
