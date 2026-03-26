@@ -7,6 +7,55 @@
     <title>String Art Designer — Steph Rawlings Creations</title>
     <meta name="description" content="Design beautiful string art patterns online. Place nails, generate thread paths, and get a printable numbered guide — all before you touch a single nail." />
     <link rel="icon" href="logo.png" />
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Steph Rawlings Creations" />
+    <meta property="og:title" content="String Art Designer — Steph Rawlings Creations" />
+    <meta property="og:description" content="Design beautiful string art patterns online. Place nails, generate thread paths, and get a printable numbered guide — all before you touch a single nail." />
+    <meta property="og:url" content="https://stephrawlingscreations.ie/" />
+    <meta property="og:image" content="https://stephrawlingscreations.ie/logo.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="String Art Designer — Steph Rawlings Creations" />
+    <meta name="twitter:description" content="Free browser-based string art designer. Plan your pattern, get a nail sequence, print a guide — no signup needed." />
+    <meta name="twitter:image" content="https://stephrawlingscreations.ie/logo.png" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Steph Rawlings Creations",
+      "url": "https://stephrawlingscreations.ie/",
+      "description": "Free browser-based string art design tools. Plan your pattern, generate a nail sequence, and print a guide — no signup needed.",
+      "author": { "@type": "Person", "name": "Steph Rawlings" }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Do I need to create an account to use the designer?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No account, no signup, no download. Open the designer and start designing immediately. Your work is saved automatically in your browser." }
+        },
+        {
+          "@type": "Question",
+          "name": "What board shapes does it support?",
+          "acceptedAnswer": { "@type": "Answer", "text": "The designer supports circle, square, diamond, hexagon, and heart boards." }
+        },
+        {
+          "@type": "Question",
+          "name": "How does the nail sequence work?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Each nail is numbered. The designer generates the order you visit them — you follow the sequence nail by nail to create your pattern." }
+        },
+        {
+          "@type": "Question",
+          "name": "Is it really free?",
+          "acceptedAnswer": { "@type": "Answer", "text": "The core designer and nail placement guide are completely free. There is an optional Pro upgrade for multi-layer designs." }
+        }
+      ]
+    }
+    </script>
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-LS1B90ZPPS"></script>
     <script>
@@ -980,6 +1029,16 @@
         margin: 0;
       }
 
+      /* ─── FOCUS STYLES (accessibility) ──────────── */
+      :focus-visible {
+        outline: 2.5px solid var(--gold);
+        outline-offset: 3px;
+        border-radius: 4px;
+      }
+      /* FAQ details toggle */
+      details[open] .faq-arrow { transform: rotate(45deg); }
+      details summary::-webkit-details-marker { display: none; }
+
       /* ─── RESPONSIVE ─────────────────────────────── */
       @media (max-width: 1024px) {
         .hero-grid,
@@ -1022,8 +1081,10 @@
   </head>
 
   <body>
+    <!-- Skip to main content (accessibility) -->
+    <a href="#main-content" class="skip-link" style="position:absolute;top:-999px;left:8px;z-index:9999;padding:10px 18px;background:var(--navy);color:#fff;border-radius:0 0 8px 8px;font-weight:600;font-size:0.9rem;text-decoration:none;transition:top 0.1s;" onfocus="this.style.top='0'" onblur="this.style.top='-999px'">Skip to main content</a>
     <!-- Toast -->
-    <div class="toast" id="toast">Thanks! I'll be in touch soon.</div>
+    <div class="toast" id="toast" role="status" aria-live="polite">Thanks! I'll be in touch soon.</div>
 
     <!-- ── NAV ─────────────────────────────────────── -->
     <header class="topbar">
@@ -1041,7 +1102,7 @@
       </div>
     </header>
 
-    <main>
+    <main id="main-content">
 
       <!-- ── HERO ────────────────────────────────────── -->
       <section class="hero">
@@ -1374,6 +1435,82 @@
         </div>
       </section>
 
+      <!-- ── FAQ ──────────────────────────────────────── -->
+      <section class="section section--cream" id="faq">
+        <div class="container--narrow">
+          <div class="section-label">
+            <span class="eyebrow">Common questions</span>
+          </div>
+          <h2 class="section-title">Frequently asked <em>questions</em></h2>
+
+          <div style="display:grid; gap:12px; margin-top:48px;">
+
+            <details style="background:var(--panel); border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden;">
+              <summary style="padding:22px 26px; cursor:pointer; font-weight:600; font-size:1.02rem; list-style:none; display:flex; justify-content:space-between; align-items:center; gap:12px; user-select:none;">
+                Do I need to create an account to use the designer?
+                <span style="font-size:1.3rem; color:var(--gold); flex-shrink:0; transition:transform 0.2s;" class="faq-arrow">+</span>
+              </summary>
+              <div style="padding:0 26px 22px; color:var(--muted); line-height:1.78; font-size:0.97rem;">
+                No account, no signup, no download — nothing. Open the designer and start designing immediately. Your work is saved automatically in your browser so it's there when you come back.
+              </div>
+            </details>
+
+            <details style="background:var(--panel); border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden;">
+              <summary style="padding:22px 26px; cursor:pointer; font-weight:600; font-size:1.02rem; list-style:none; display:flex; justify-content:space-between; align-items:center; gap:12px; user-select:none;">
+                What board shapes does it support?
+                <span style="font-size:1.3rem; color:var(--gold); flex-shrink:0; transition:transform 0.2s;" class="faq-arrow">+</span>
+              </summary>
+              <div style="padding:0 26px 22px; color:var(--muted); line-height:1.78; font-size:0.97rem;">
+                The designer supports circle, square, diamond, hexagon, and heart boards. The nail placement guide also includes a star shape for printable templates.
+              </div>
+            </details>
+
+            <details style="background:var(--panel); border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden;">
+              <summary style="padding:22px 26px; cursor:pointer; font-weight:600; font-size:1.02rem; list-style:none; display:flex; justify-content:space-between; align-items:center; gap:12px; user-select:none;">
+                How does the nail sequence work?
+                <span style="font-size:1.3rem; color:var(--gold); flex-shrink:0; transition:transform 0.2s;" class="faq-arrow">+</span>
+              </summary>
+              <div style="padding:0 26px 22px; color:var(--muted); line-height:1.78; font-size:0.97rem;">
+                Each nail on your board is numbered. A sequence is simply the order you visit them — for example, "1, 8, 15, 22…" tells you exactly which nail to loop your thread around next. The designer generates this for you based on your pattern, and you can print it out to follow step by step at your board.
+              </div>
+            </details>
+
+            <details style="background:var(--panel); border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden;">
+              <summary style="padding:22px 26px; cursor:pointer; font-weight:600; font-size:1.02rem; list-style:none; display:flex; justify-content:space-between; align-items:center; gap:12px; user-select:none;">
+                Can I use this for a board I've already made?
+                <span style="font-size:1.3rem; color:var(--gold); flex-shrink:0; transition:transform 0.2s;" class="faq-arrow">+</span>
+              </summary>
+              <div style="padding:0 26px 22px; color:var(--muted); line-height:1.78; font-size:0.97rem;">
+                Yes. Set the nail count in the designer to match your board, choose the right shape, and design your pattern digitally. You'll get a sequence to follow on the physical board you already have.
+              </div>
+            </details>
+
+            <details style="background:var(--panel); border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden;">
+              <summary style="padding:22px 26px; cursor:pointer; font-weight:600; font-size:1.02rem; list-style:none; display:flex; justify-content:space-between; align-items:center; gap:12px; user-select:none;">
+                What's the nail placement guide for?
+                <span style="font-size:1.3rem; color:var(--gold); flex-shrink:0; transition:transform 0.2s;" class="faq-arrow">+</span>
+              </summary>
+              <div style="padding:0 26px 22px; color:var(--muted); line-height:1.78; font-size:0.97rem;">
+                It generates a printable template at your exact board size. Print it at 100% scale (no "fit to page"), tape it to your board, and use it to mark nail positions perfectly evenly — no measuring, no guessing.
+              </div>
+            </details>
+
+            <details style="background:var(--panel); border:1px solid var(--line); border-radius:var(--r-md); overflow:hidden;">
+              <summary style="padding:22px 26px; cursor:pointer; font-weight:600; font-size:1.02rem; list-style:none; display:flex; justify-content:space-between; align-items:center; gap:12px; user-select:none;">
+                Is it really free?
+                <span style="font-size:1.3rem; color:var(--gold); flex-shrink:0; transition:transform 0.2s;" class="faq-arrow">+</span>
+              </summary>
+              <div style="padding:0 26px 22px; color:var(--muted); line-height:1.78; font-size:0.97rem;">
+                The core designer and nail placement guide are completely free. There's an optional Pro upgrade that unlocks multi-layer designs for more complex patterns, but everything you need to plan and build a great piece is free.
+              </div>
+            </details>
+
+          </div>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
       <!-- ── FINAL CTA ──────────────────────────────── -->
       <section class="cta-section">
         <div class="container--narrow" style="position:relative;">
@@ -1404,7 +1541,7 @@
           <a href="about.html">About</a>
           <a href="newsletter.html">Join the list</a>
           <a href="feature.html">Get Featured</a>
-          <a href="mailto:stephrawlingscreations@gmail.com">Contact</a>
+          <a href="contact.html">Contact</a>
         </div>
       </div>
     </footer>

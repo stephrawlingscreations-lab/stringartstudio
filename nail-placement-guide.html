@@ -6,6 +6,30 @@
     <title>Nail Placement Guide — Steph Rawlings Creations</title>
     <meta name="description" content="Generate a free printable nail placement guide for your string art board. Choose your shape and size, print at 100%, and get perfectly even nail spacing every time." />
     <link rel="icon" href="logo.png" />
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Steph Rawlings Creations" />
+    <meta property="og:title" content="Printable Nail Placement Guide — Steph Rawlings Creations" />
+    <meta property="og:description" content="Generate a free printable nail placement guide for your string art board. Choose your shape and size, print at 100%, and get perfectly even nail spacing every time." />
+    <meta property="og:url" content="https://stephrawlingscreations.ie/nail-placement-guide.html" />
+    <meta property="og:image" content="https://stephrawlingscreations.ie/logo.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Printable Nail Placement Guide — Free Tool" />
+    <meta name="twitter:description" content="Perfect nail spacing every time. Generate a printable template for any board size and shape — free, no signup." />
+    <meta name="twitter:image" content="https://stephrawlingscreations.ie/logo.png" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Nail Placement Guide",
+      "url": "https://stephrawlingscreations.ie/nail-placement-guide.html",
+      "description": "Generate a free printable nail placement guide for any string art board size and shape.",
+      "applicationCategory": "DesignApplication",
+      "operatingSystem": "Any",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+      "author": { "@type": "Person", "name": "Steph Rawlings" }
+    }
+    </script>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-LS1B90ZPPS"></script>
     <script>
@@ -404,7 +428,8 @@
     </style>
   </head>
   <body>
-    <div class="screen-wrapper">
+    <a href="#main-content" style="position:absolute;top:-999px;left:8px;z-index:9999;padding:10px 18px;background:#1a1410;color:#fff;border-radius:0 0 8px 8px;font-weight:600;font-size:0.9rem;text-decoration:none;" onfocus="this.style.top='0'" onblur="this.style.top='-999px'">Skip to main content</a>
+    <div class="screen-wrapper" id="main-content">
       <header>
         <div class="logo-area">
           <h1>Steph Rawlings Creations</h1>
@@ -757,6 +782,13 @@
           .forEach((b) => b.classList.remove("active"));
         document.getElementById("shape-" + s).classList.add("active");
         currentShape = s;
+        // Trigger real-time preview if dimensions are valid
+        const w = parseFloat(document.getElementById("board-w")?.value);
+        const h = parseFloat(document.getElementById("board-h")?.value);
+        if (w >= 5 && h >= 5) {
+          clearTimeout(window._autoGenTimer);
+          window._autoGenTimer = setTimeout(generateGuide, 300);
+        }
       }
 
       function toInches(val) {
@@ -1232,6 +1264,24 @@
           canvas.style.width = canvas.width * scale + "px";
           canvas.style.height = canvas.height * scale + "px";
         }
+      });
+
+      // ── Real-time preview: auto-regenerate on any input change ──
+      let _autoGenTimer = null;
+      function scheduleAutoGen() {
+        clearTimeout(_autoGenTimer);
+        _autoGenTimer = setTimeout(() => {
+          // Only auto-generate if the preview is already visible (user has generated at least once)
+          // OR if all required fields have valid values
+          const w = parseFloat(document.getElementById("board-w")?.value);
+          const h = parseFloat(document.getElementById("board-h")?.value);
+          if (w >= 5 && h >= 5) generateGuide();
+        }, 600);
+      }
+
+      ["board-w", "board-h", "nail-count", "dot-size", "margin"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener("input", scheduleAutoGen);
       });
     </script>
   </body>

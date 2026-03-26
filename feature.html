@@ -6,6 +6,17 @@
     <title>Get Featured — Steph Rawlings Creations</title>
     <meta name="description" content="Made a string art piece using the designer or nail placement guide? Send a photo and get featured in the community gallery." />
     <link rel="icon" href="logo.png" />
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Steph Rawlings Creations" />
+    <meta property="og:title" content="Community Gallery — Steph Rawlings Creations" />
+    <meta property="og:description" content="Made a string art piece using the designer or nail placement guide? Send a photo and get featured in the community gallery." />
+    <meta property="og:url" content="https://stephrawlingscreations.ie/feature.html" />
+    <meta property="og:image" content="https://stephrawlingscreations.ie/logo.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Community Gallery — Steph Rawlings Creations" />
+    <meta name="twitter:description" content="Finished a string art piece? Share a photo and get featured in the community gallery." />
+    <meta name="twitter:image" content="https://stephrawlingscreations.ie/logo.png" />
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-LS1B90ZPPS"></script>
     <script>
@@ -20,6 +31,7 @@
     <link rel="stylesheet" href="site.css" />
   </head>
   <body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
     <div class="site-shell">
       <div class="blur-orb orb-a"></div>
       <div class="blur-orb orb-b"></div>
@@ -41,7 +53,7 @@
         </div>
       </div>
 
-      <main>
+      <main id="main-content">
         <div class="container page-header">
           <div class="eyebrow">Share your work</div>
           <h1>Made something? I'd love to see it.</h1>
@@ -51,6 +63,7 @@
           </p>
         </div>
 
+        <!-- Gallery + submission form -->
         <section>
           <div class="container">
             <div class="section-label" style="margin-bottom: 32px;">
@@ -58,21 +71,133 @@
               <h2 style="margin: 8px 0 0; font-family: 'Playfair Display', serif; font-size: clamp(1.6rem, 2.8vw, 2.2rem); letter-spacing: -0.04em;">Featured makes</h2>
             </div>
 
-            <div style="
-              border: 1.5px dashed var(--line);
-              border-radius: 18px;
-              padding: clamp(48px, 8vw, 80px) 32px;
-              text-align: center;
-              background: rgba(255, 255, 255, 0.55);
-              margin-bottom: 56px;
-            ">
-              <div style="font-size: 2.6rem; margin-bottom: 16px; opacity: 0.35;">🧵</div>
-              <h3 style="font-family: 'Playfair Display', serif; font-size: 1.5rem; margin: 0 0 10px; letter-spacing: -0.03em;">No submissions yet — be the first.</h3>
-              <p style="color: var(--muted); max-width: 44ch; margin: 0 auto 24px; line-height: 1.8;">
-                Finished a piece with the designer or nail placement guide?
-                Send me a photo and yours could be the first featured here.
+            <!-- Example gallery placeholders (replace with real photos as submissions come in) -->
+            <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; margin-bottom:48px;">
+
+              <!-- Placeholder 1 -->
+              <div style="border-radius:16px; overflow:hidden; background:var(--panel); border:1px solid var(--line); box-shadow:0 4px 18px rgba(28,21,16,0.07);">
+                <div style="aspect-ratio:1; background:linear-gradient(135deg,#f5f0e8,#e8e0d0); display:flex; align-items:center; justify-content:center; position:relative;">
+                  <svg viewBox="0 0 100 100" width="70%" fill="none" style="opacity:0.6;">
+                    <circle cx="50" cy="50" r="44" stroke="rgba(184,137,46,0.4)" stroke-width="1"/>
+                    <g stroke="rgba(184,137,46,0.7)" stroke-width="0.7">
+                      <line x1="50" y1="6" x2="30" y2="94"/><line x1="50" y1="6" x2="70" y2="94"/>
+                      <line x1="88" y1="28" x2="12" y2="62"/><line x1="88" y1="28" x2="14" y2="28"/>
+                      <line x1="76" y1="82" x2="10" y2="42"/><line x1="76" y1="82" x2="20" y2="94"/>
+                      <line x1="24" y1="82" x2="90" y2="42"/><line x1="24" y1="82" x2="80" y2="94"/>
+                      <line x1="12" y1="28" x2="86" y2="62"/><line x1="12" y1="28" x2="86" y2="28"/>
+                    </g>
+                  </svg>
+                  <div style="position:absolute;bottom:8px;right:10px;background:rgba(184,137,46,0.14);border-radius:20px;padding:3px 10px;font-size:0.68rem;font-weight:600;color:var(--gold-deep);letter-spacing:0.05em;">YOUR PIECE HERE</div>
+                </div>
+                <div style="padding:12px 14px 14px;">
+                  <div style="font-size:0.78rem;font-weight:600;color:var(--text);margin-bottom:2px;">Be the first featured</div>
+                  <div style="font-size:0.73rem;color:var(--muted);">Submit a photo below</div>
+                </div>
+              </div>
+
+              <!-- Placeholder 2 -->
+              <div style="border-radius:16px; overflow:hidden; background:var(--panel); border:1px solid var(--line); box-shadow:0 4px 18px rgba(28,21,16,0.07);">
+                <div style="aspect-ratio:1; background:linear-gradient(135deg,#eef4f4,#dceaea); display:flex; align-items:center; justify-content:center; position:relative;">
+                  <svg viewBox="0 0 100 100" width="70%" fill="none" style="opacity:0.6;">
+                    <rect x="8" y="8" width="84" height="84" stroke="rgba(42,110,108,0.4)" stroke-width="1"/>
+                    <g stroke="rgba(42,110,108,0.65)" stroke-width="0.7">
+                      <line x1="8" y1="8" x2="92" y2="50"/><line x1="8" y1="8" x2="50" y2="92"/>
+                      <line x1="92" y1="8" x2="8" y2="50"/><line x1="92" y1="8" x2="50" y2="92"/>
+                      <line x1="8" y1="92" x2="92" y2="50"/><line x1="8" y1="50" x2="92" y2="92"/>
+                      <line x1="50" y1="8" x2="8" y2="65"/><line x1="50" y1="8" x2="92" y2="65"/>
+                      <line x1="8" y1="30" x2="65" y2="92"/><line x1="30" y1="8" x2="92" y2="65"/>
+                    </g>
+                  </svg>
+                  <div style="position:absolute;bottom:8px;right:10px;background:rgba(42,110,108,0.12);border-radius:20px;padding:3px 10px;font-size:0.68rem;font-weight:600;color:var(--teal);letter-spacing:0.05em;">YOUR PIECE HERE</div>
+                </div>
+                <div style="padding:12px 14px 14px;">
+                  <div style="font-size:0.78rem;font-weight:600;color:var(--text);margin-bottom:2px;">Share your work</div>
+                  <div style="font-size:0.73rem;color:var(--muted);">Inspire other makers</div>
+                </div>
+              </div>
+
+              <!-- Placeholder 3 -->
+              <div style="border-radius:16px; overflow:hidden; background:var(--panel); border:1px solid var(--line); box-shadow:0 4px 18px rgba(28,21,16,0.07);">
+                <div style="aspect-ratio:1; background:linear-gradient(135deg,#eeeef5,#e2e4f0); display:flex; align-items:center; justify-content:center; position:relative;">
+                  <svg viewBox="0 0 100 100" width="70%" fill="none" style="opacity:0.6;">
+                    <circle cx="50" cy="50" r="44" stroke="rgba(27,44,66,0.35)" stroke-width="1"/>
+                    <g stroke="rgba(27,44,66,0.55)" stroke-width="0.7">
+                      <line x1="50" y1="6" x2="50" y2="94"/><line x1="6" y1="50" x2="94" y2="50"/>
+                      <line x1="18" y1="18" x2="82" y2="82"/><line x1="82" y1="18" x2="18" y2="82"/>
+                      <line x1="50" y1="6" x2="94" y2="68"/><line x1="50" y1="6" x2="6" y2="68"/>
+                      <line x1="8" y1="30" x2="92" y2="30"/><line x1="10" y1="72" x2="90" y2="72"/>
+                    </g>
+                  </svg>
+                  <div style="position:absolute;bottom:8px;right:10px;background:rgba(27,44,66,0.10);border-radius:20px;padding:3px 10px;font-size:0.68rem;font-weight:600;color:var(--navy);letter-spacing:0.05em;">YOUR PIECE HERE</div>
+                </div>
+                <div style="padding:12px 14px 14px;">
+                  <div style="font-size:0.78rem;font-weight:600;color:var(--text);margin-bottom:2px;">Join the gallery</div>
+                  <div style="font-size:0.73rem;color:var(--muted);">Your work featured here</div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Submission form -->
+            <div style="background:var(--panel); border:1px solid var(--line); border-radius:22px; padding:clamp(28px,5vw,44px); max-width:640px; margin:0 auto;">
+              <div class="eyebrow" style="margin-bottom:16px;">Submit your piece</div>
+              <h3 style="font-family:'Playfair Display',serif; font-size:clamp(1.4rem,2.6vw,1.9rem); letter-spacing:-0.03em; margin:0 0 10px;">Want to be featured?</h3>
+              <p style="color:var(--muted); line-height:1.78; margin:0 0 24px; font-size:0.97rem;">
+                Made something with the designer or nail placement guide? Send me a photo and a line about your piece — I'll feature it right here.
               </p>
-              <a class="btn btn-primary" href="mailto:stephrawlingscreations@gmail.com?subject=Feature%20my%20string%20art">Send your photo</a>
+
+              <!-- Formspree form — replace YOUR_FORM_ID with your actual Formspree form ID -->
+              <form id="featureForm" action="https://formspree.io/f/xlgoezqp" method="POST" style="display:grid; gap:14px;">
+                <div>
+                  <label style="display:block; font-size:0.83rem; font-weight:600; margin-bottom:5px; color:var(--muted);">Your name</label>
+                  <input type="text" name="name" required placeholder="e.g. Sarah M." style="width:100%; padding:10px 14px; border:1.5px solid var(--line); border-radius:10px; font-size:0.95rem; font-family:Inter,sans-serif; outline:none; background:#fff; box-sizing:border-box; transition:border-color 0.15s;" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--line)'" />
+                </div>
+                <div>
+                  <label style="display:block; font-size:0.83rem; font-weight:600; margin-bottom:5px; color:var(--muted);">Your email <span style="font-weight:400;font-size:0.78rem;">(so I can confirm before featuring)</span></label>
+                  <input type="email" name="email" required placeholder="you@example.com" style="width:100%; padding:10px 14px; border:1.5px solid var(--line); border-radius:10px; font-size:0.95rem; font-family:Inter,sans-serif; outline:none; background:#fff; box-sizing:border-box; transition:border-color 0.15s;" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--line)'" />
+                </div>
+                <div>
+                  <label style="display:block; font-size:0.83rem; font-weight:600; margin-bottom:5px; color:var(--muted);">Tell me about your piece <span style="font-weight:400;font-size:0.78rem;">(optional)</span></label>
+                  <textarea name="message" rows="3" placeholder="Board size, shape, what inspired it..." style="width:100%; padding:10px 14px; border:1.5px solid var(--line); border-radius:10px; font-size:0.95rem; font-family:Inter,sans-serif; outline:none; background:#fff; box-sizing:border-box; resize:vertical; transition:border-color 0.15s;" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--line)'"></textarea>
+                </div>
+                <div>
+                  <label style="display:block; font-size:0.83rem; font-weight:600; margin-bottom:5px; color:var(--muted);">Photo of your piece</label>
+                  <p style="font-size:0.82rem; color:var(--muted); margin:0 0 8px; line-height:1.55;">Attach a clear photo to your email — the form will send me your contact details, then I'll reply so you can send the photo.</p>
+                  <a href="mailto:stephrawlingscreations@gmail.com?subject=Gallery%20submission" style="font-size:0.85rem; color:var(--gold); font-weight:600; text-decoration:underline; text-underline-offset:2px;">Or email it directly →</a>
+                </div>
+                <input type="hidden" name="_subject" value="New gallery submission — Steph Rawlings Creations" />
+                <button type="submit" class="btn btn-primary" style="justify-self:start; min-height:46px; padding:0 28px;">Send submission</button>
+                <p id="formSuccess" style="display:none; color:#2e7b52; font-size:0.9rem; font-weight:600; margin:0;">✓ Sent! I'll be in touch soon.</p>
+                <p id="formError" style="display:none; color:var(--rust); font-size:0.9rem; margin:0;">Something went wrong. Please try emailing directly.</p>
+              </form>
+
+              <script>
+                document.getElementById("featureForm")?.addEventListener("submit", async function(e) {
+                  e.preventDefault();
+                  const form = e.target;
+                  const btn = form.querySelector("button[type=submit]");
+                  btn.disabled = true;
+                  btn.textContent = "Sending…";
+                  try {
+                    const res = await fetch(form.action, {
+                      method: "POST",
+                      body: new FormData(form),
+                      headers: { "Accept": "application/json" }
+                    });
+                    if (res.ok) {
+                      form.reset();
+                      document.getElementById("formSuccess").style.display = "block";
+                      btn.style.display = "none";
+                    } else {
+                      throw new Error();
+                    }
+                  } catch (_) {
+                    document.getElementById("formError").style.display = "block";
+                    btn.disabled = false;
+                    btn.textContent = "Send submission";
+                  }
+                });
+              </script>
             </div>
           </div>
         </section>
@@ -151,7 +276,7 @@
           <div class="footer-links">
             <a href="designer.html">Designer</a>
             <a href="nail-placement-guide.html">Nail Guide</a>
-            <a href="mailto:stephrawlingscreations@gmail.com">Contact</a>
+            <a href="contact.html">Contact</a>
           </div>
         </div>
       </footer>

@@ -1150,6 +1150,17 @@ document.addEventListener("DOMContentLoaded", function () {
     updateDrawModeSeqMini();
   }
 
+  function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+  function findCoprime(target, total) {
+    for (let delta = 0; delta < total; delta++) {
+      const hi = target + delta;
+      const lo = target - delta;
+      if (hi < total && gcd(hi, total) === 1) return hi;
+      if (lo >= 2   && gcd(lo, total) === 1) return lo;
+    }
+    return target;
+  }
+
   function generateFlowerPattern(total, offset) {
     const edges = [];
 
@@ -1162,53 +1173,54 @@ document.addEventListener("DOMContentLoaded", function () {
     return edges;
   }
 
+  // Cardioid — times-3 nephroid with a shift so it looks distinct from flower (times-2)
   function generateCardioidPattern(total, offset) {
+    const shift = Math.round((offset / 60) * Math.floor(total / 3));
     const edges = [];
-    const multiplier = Math.max(2, Math.min(20, offset));
-
     for (let i = 0; i < total; i++) {
-      const b = (i * multiplier) % total;
+      const b = wrapIndex(i * 3 + shift, total);
       if (i !== b) edges.push({ a: i, b });
     }
-
     return edges;
   }
 
+  // Web — single starburst chord; skip near n/2 means long chords that cross the centre
   function generateWebPattern(total, offset) {
+    const half = Math.round(total / 2);
+    const spread = Math.round((offset / 60) * Math.floor(total / 4));
+    const skip = Math.max(2, Math.min(total - 2, half - spread));
     const edges = [];
-    const skip = Math.max(2, Math.floor(total / 3) + offset);
-
     for (let i = 0; i < total; i++) {
       edges.push({ a: i, b: wrapIndex(i + skip, total) });
-      edges.push({ a: i, b: wrapIndex(i + total - skip, total) });
     }
-
     return edges;
   }
 
+  // Spiral — coprime step guarantees the path visits every nail in one continuous loop
   function generateSpiralSequence(total, offset) {
-    const seq = [];
-    const baseStep = Math.max(2, offset);
+    const half = Math.round(total / 2);
+    const spread = Math.round((offset / 60) * Math.floor(total / 4));
+    const targetStep = Math.max(3, half - spread);
+    const step = findCoprime(targetStep, total);
+    const seq = [0];
     let current = 0;
-    seq.push(current);
-
-    for (let i = 0; i < total * 3; i++) {
-      const step = baseStep + Math.floor(i / total);
+    for (let i = 0; i < total - 1; i++) {
       current = wrapIndex(current + step, total);
       seq.push(current);
     }
-
     return seq;
   }
 
+  // Star — coprime skip creates a single connected star polygon
   function generateStarPattern(total, offset) {
+    const quarter = Math.round(total / 4);
+    const spread = Math.round((offset / 60) * Math.floor(total / 4));
+    const targetSkip = Math.max(2, quarter + spread);
+    const skip = findCoprime(targetSkip, total);
     const edges = [];
-    const skip = Math.max(2, Math.floor(total / 2) - offset);
-
     for (let i = 0; i < total; i++) {
       edges.push({ a: i, b: wrapIndex(i + skip, total) });
     }
-
     return edges;
   }
   /* -----------------------------
@@ -1245,13 +1257,21 @@ document.addEventListener("DOMContentLoaded", function () {
     $("zoomOut")?.addEventListener("click", () => nudgeZoom(-1));
 
     document.addEventListener("keydown", function (e) {
+      // Escape closes draw mode or pro modal
+      if (e.key === "Escape") {
+        const overlay = $("drawModeOverlay");
+        if (overlay && overlay.classList.contains("active")) { closeDrawMode(); return; }
+        const proModal = $("proModal");
+        if (proModal && proModal.style.display !== "none") { proModal.style.display = "none"; return; }
+      }
       // Ignore if focus is on an input/select/textarea
       const tag = document.activeElement?.tagName;
       if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
-      if (e.key === "z" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); undo(); }
+      if ((e.ctrlKey || e.metaKey) && e.key === "z") { e.preventDefault(); undo(); }
+      else if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); saveDesign(); showToast("Design saved."); }
       else if (e.key === "+" || e.key === "=") nudgeZoom(1);
       else if (e.key === "-") nudgeZoom(-1);
-      else if (e.key === "0" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); fitToScreen(); }
+      else if (e.key === "0" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); fitToScreen(); redrawAll(); }
     });
 
     $("openDrawMode")?.addEventListener("click", openDrawMode);
@@ -1344,7 +1364,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
     syncHideButton();
 
-    if (hasSavedDesign()) {
+    // Share design button
+    $("shareDesignBtn")?.addEventListener("click", shareDesign);
+
+    // First-time onboarding tip
+    initOnboarding();
+
+    // Check for shared design in URL
+    if (loadSharedDesign()) {
+      // loaded from URL param — don't also load saved
+    } else if (hasSavedDesign()) {
       loadSavedDesign(true);
       showToast("Last design restored.");
     } else {
@@ -1352,6 +1381,122 @@ document.addEventListener("DOMContentLoaded", function () {
       updateSeqOutput();
       updateDrawModeSeqMini();
     }
+  }
+
+  /* -----------------------------
+     ONBOARDING TIP
+  ----------------------------- */
+
+  function initOnboarding() {
+    try {
+      const seen = localStorage.getItem("_sas_onboard");
+      if (!seen) {
+        const tip = document.getElementById("onboardingTip");
+        if (tip) tip.style.display = "block";
+      }
+    } catch (_) {}
+  }
+
+  function dismissOnboarding() {
+    try { localStorage.setItem("_sas_onboard", "1"); } catch (_) {}
+    const tip = document.getElementById("onboardingTip");
+    if (tip) tip.style.display = "none";
+  }
+
+  // Make dismissOnboarding globally accessible for the inline onclick
+  window.dismissOnboarding = dismissOnboarding;
+
+  /* -----------------------------
+     SHARE DESIGN (URL encoding)
+  ----------------------------- */
+
+  function shareDesign() {
+    try {
+      const hasContent = layers.some(L => L.seq && L.seq.length > 0);
+      if (!hasContent) { showToast("Draw something first before sharing.", true); return; }
+
+      const state = {
+        b: $("board")?.value || "circle",
+        n: parseInt($("nails")?.value, 10) || 120,
+        p: $("nail1pos")?.value || "top",
+        l: layers.map(L => ({
+          c: L.color || "#000000",
+          o: +(L.opacity ?? 0.35).toFixed(2),
+          w: +(L.lw ?? 0.7).toFixed(1),
+          s: L.seq || [],
+        })),
+      };
+
+      const encoded = btoa(JSON.stringify(state));
+      const url = window.location.origin + window.location.pathname + "?d=" + encoded;
+
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+          showToast("Share link copied to clipboard!");
+        }).catch(() => { fallbackCopy(url); });
+      } else {
+        fallbackCopy(url);
+      }
+    } catch (e) {
+      showToast("Could not generate share link.", true);
+    }
+  }
+
+  function fallbackCopy(text) {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;opacity:0;top:-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); showToast("Share link copied!"); } catch (_) { showToast("Could not copy link.", true); }
+    document.body.removeChild(ta);
+  }
+
+  function loadSharedDesign() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const d = params.get("d");
+      if (!d) return false;
+
+      const state = JSON.parse(atob(d));
+      if (!state || !Array.isArray(state.l) || state.l.length === 0) return false;
+
+      // Clear URL param without reload
+      const clean = window.location.pathname;
+      history.replaceState({}, "", clean);
+
+      // Restore settings
+      if (state.b && $("board")) $("board").value = state.b;
+      if (state.n && $("nails")) $("nails").value = state.n;
+      if (state.p && $("nail1pos")) $("nail1pos").value = state.p;
+
+      // Rebuild layers with edges from seq
+      layers = state.l.map(L => ({
+        color: L.c || "#000000",
+        opacity: L.o ?? 0.35,
+        lw: L.w ?? 0.7,
+        seq: L.s || [],
+        edges: seqToEdges(L.s || []),
+        step: null,
+      }));
+      activeLayer = 0;
+      lastNail = null;
+
+      syncLayerSelect();
+      switchLayer(0);
+      showToast("Shared design loaded!");
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function seqToEdges(seq) {
+    const edges = [];
+    for (let i = 0; i + 1 < seq.length; i++) {
+      edges.push({ a: seq[i], b: seq[i + 1] });
+    }
+    return edges;
   }
 
   /* -----------------------------

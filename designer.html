@@ -8,6 +8,32 @@
     <title>Steph Rawlings Creations – String Art Designer</title>
 
     <link rel="icon" href="logo.png" />
+    <meta name="description" content="Free online string art designer. Choose your board shape, set your nail count, build a pattern, and get a printable step-by-step guide — no signup needed." />
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Steph Rawlings Creations" />
+    <meta property="og:title" content="String Art Designer — Free Online Tool" />
+    <meta property="og:description" content="Design string art patterns in your browser. Choose board shape, generate nail sequences, and print a step-by-step guide — free, no signup needed." />
+    <meta property="og:url" content="https://stephrawlingscreations.ie/designer.html" />
+    <meta property="og:image" content="https://stephrawlingscreations.ie/logo.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="String Art Designer — Free Online Tool" />
+    <meta name="twitter:description" content="Design string art patterns in your browser. Free, no signup needed." />
+    <meta name="twitter:image" content="https://stephrawlingscreations.ie/logo.png" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "String Art Designer",
+      "url": "https://stephrawlingscreations.ie/designer.html",
+      "description": "Free browser-based string art designer. Choose board shape, set nail count, generate thread paths, and print a step-by-step guide.",
+      "applicationCategory": "DesignApplication",
+      "operatingSystem": "Any",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+      "author": { "@type": "Person", "name": "Steph Rawlings" },
+      "featureList": ["Circle and square boards", "Nail sequence generation", "Printable pattern guide", "Multiple preset patterns"]
+    }
+    </script>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-LS1B90ZPPS"></script>
     <script>
@@ -1283,6 +1309,18 @@
         </div>
       </nav>
     </div>
+    <!-- First-time onboarding tip -->
+    <div id="onboardingTip" style="display:none; background:linear-gradient(135deg,#1b2c42,#243a56); color:#fff; padding:14px 20px; font-size:0.88rem; line-height:1.6; position:relative;">
+      <div style="max-width:900px; margin:0 auto; display:flex; align-items:flex-start; gap:14px; flex-wrap:wrap;">
+        <span style="font-size:1.3rem; flex-shrink:0; margin-top:2px;">💡</span>
+        <div style="flex:1; min-width:220px;">
+          <strong style="display:block; margin-bottom:4px; font-size:0.92rem;">New here? Here's how it works:</strong>
+          <span style="opacity:0.85;">1. Pick a preset pattern above <em>or</em> tap nails on the canvas to draw manually. &nbsp;2. The nail sequence appears in the panel. &nbsp;3. Export PNG or copy your sequence — then follow it at your board.</span>
+          <span style="display:block; margin-top:6px; opacity:0.65; font-size:0.80rem;">Keyboard shortcuts: <kbd style="background:rgba(255,255,255,0.12);padding:1px 5px;border-radius:4px;">Ctrl+Z</kbd> undo &nbsp;·&nbsp; <kbd style="background:rgba(255,255,255,0.12);padding:1px 5px;border-radius:4px;">Ctrl+S</kbd> save &nbsp;·&nbsp; <kbd style="background:rgba(255,255,255,0.12);padding:1px 5px;border-radius:4px;">+</kbd> / <kbd style="background:rgba(255,255,255,0.12);padding:1px 5px;border-radius:4px;">−</kbd> zoom</span>
+        </div>
+        <button onclick="dismissOnboarding()" aria-label="Dismiss tip" style="background:rgba(255,255,255,0.14);border:none;color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:0.82rem;white-space:nowrap;flex-shrink:0;">Got it ✕</button>
+      </div>
+    </div>
     <div class="designer-intro">
       <span class="designer-intro-label">Try it now</span>
       <h2>Your string art designer</h2>
@@ -1305,6 +1343,8 @@
           <button class="preset-chip" data-preset="flower">Flower</button>
           <button class="preset-chip" data-preset="cardioid">Cardioid</button>
           <button class="preset-chip" data-preset="web">Web</button>
+          <button class="preset-chip" data-preset="star">Star</button>
+          <button class="preset-chip" data-preset="spiral">Spiral</button>
         </div>
 
         <!-- Desktop preset panel -->
@@ -1313,6 +1353,8 @@
             <button class="preset-btn" data-preset="flower">Flower</button>
             <button class="preset-btn" data-preset="cardioid">Cardioid</button>
             <button class="preset-btn" data-preset="web">Web</button>
+            <button class="preset-btn" data-preset="star">Star</button>
+            <button class="preset-btn" data-preset="spiral">Spiral</button>
           </div>
 
           <div class="preset-controls">
@@ -1379,7 +1421,9 @@
 
           <!-- SEQUENCE -->
           <div class="panel-section">
-            <span class="panel-section-label">Sequence</span>
+            <span class="panel-section-label">Sequence
+              <span class="help-tip" style="margin-left:6px;">?<span class="tip-text">The numbered order to visit nails with your thread. Copy or print this to follow at your board.</span></span>
+            </span>
             <div class="seq-out-wrap">
               <div id="seqOut" class="mono">
                 Tap a nail to start your thread. Then tap another nail to draw a
@@ -1394,7 +1438,9 @@
                 max="500"
                 value="20"
               />
-              <label>steps</label>
+              <label>steps
+                <span class="help-tip">?<span class="tip-text" style="left:auto;right:0;transform:none;">Detects your drawing's interval pattern and extends it by this many steps. Draw at least 2 lines first.</span></span>
+              </label>
               <button id="continuePattern" class="btn-ghost">
                 Continue pattern
               </button>
@@ -1456,11 +1502,15 @@
                 </button>
               </div>
               <div class="slider-row">
-                <label>Opacity <span id="opacityVal">35%</span></label>
+                <label>Opacity <span id="opacityVal">35%</span>
+                  <span class="help-tip">?<span class="tip-text">Lower opacity creates the see-through layering effect that makes string art look its best. 20–40% works for most patterns.</span></span>
+                </label>
                 <input id="opacity" type="range" min="0.05" max="1" step="0.05" value="0.35" />
               </div>
               <div class="slider-row">
-                <label>Thread weight <span id="lwVal">0.7</span></label>
+                <label>Thread weight <span id="lwVal">0.7</span>
+                  <span class="help-tip">?<span class="tip-text">Thickness of the drawn lines. Lower = delicate and intricate. Higher = bold and visible from a distance.</span></span>
+                </label>
                 <input id="lw" type="range" min="0.1" max="5" step="0.1" value="0.7" />
               </div>
               <div class="action-row" style="margin-top: 6px;">
@@ -1498,6 +1548,9 @@
               <div class="export-row" style="margin-top: 6px">
                 <button id="exportSeq" class="btn-ghost">Copy sequence</button>
                 <button id="downloadPng">Download PNG</button>
+              </div>
+              <div class="export-row" style="margin-top: 6px">
+                <button id="shareDesignBtn" class="btn-ghost" style="width:100%;">🔗 Share this design</button>
               </div>
               <button class="pro-btn btn-pro-full" onclick="openProModal()">
                 ✦ Download Printable Template
@@ -1769,7 +1822,7 @@
           <a href="index.html" style="color: #6f6257; font-size: 0.92rem; text-decoration: none;">Home</a>
           <a href="tools.html" style="color: #6f6257; font-size: 0.92rem; text-decoration: none;">Tools</a>
           <a href="nail-placement-guide.html" style="color: #6f6257; font-size: 0.92rem; text-decoration: none;">Nail Guide</a>
-          <a href="mailto:stephrawlingscreations@gmail.com" style="color: #6f6257; font-size: 0.92rem; text-decoration: none;">Contact</a>
+          <a href="contact.html" style="color: #6f6257; font-size: 0.92rem; text-decoration: none;">Contact</a>
         </div>
       </div>
     </footer>

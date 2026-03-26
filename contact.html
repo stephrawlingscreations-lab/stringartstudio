@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contact — Steph Rawlings Creations</title>
+    <meta name="description" content="Get in touch with Steph Rawlings Creations. Questions about the string art designer, feedback, or just want to say hello — send a message." />
+    <link rel="icon" href="logo.png" />
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Steph Rawlings Creations" />
+    <meta property="og:title" content="Contact — Steph Rawlings Creations" />
+    <meta property="og:description" content="Get in touch with Steph. Questions, feedback, or just want to say hello." />
+    <meta property="og:url" content="https://stephrawlingscreations.ie/contact.html" />
+    <meta property="og:image" content="https://stephrawlingscreations.ie/logo.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Contact — Steph Rawlings Creations" />
+    <meta name="twitter:description" content="Get in touch with Steph. Questions, feedback, or just want to say hello." />
+    <meta name="twitter:image" content="https://stephrawlingscreations.ie/logo.png" />
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LS1B90ZPPS"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag("js", new Date());
+      gtag("config", "G-LS1B90ZPPS");
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="site.css" />
+  </head>
+  <body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <div class="site-shell">
+      <div class="blur-orb orb-a"></div>
+      <div class="blur-orb orb-b"></div>
+
+      <div class="topbar">
+        <div class="container nav">
+          <a class="brand" href="index.html">
+            <strong>Steph Rawlings Creations</strong>
+            <span>String Art Designer</span>
+          </a>
+          <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="tools.html">Tools</a>
+            <a href="about.html">About</a>
+            <a href="feature.html">Get Featured</a>
+            <a href="newsletter.html">Join the list</a>
+            <a class="btn btn-primary" href="designer.html">Open the Designer</a>
+          </div>
+        </div>
+      </div>
+
+      <main id="main-content">
+        <div class="container page-header">
+          <div class="eyebrow">Say hello</div>
+          <h1>Get in touch</h1>
+          <p>Questions, feedback, or just want to say hello — I'd love to hear from you.</p>
+        </div>
+
+        <section>
+          <div class="container" style="max-width: 680px;">
+
+            <div style="background:var(--panel); border:1px solid var(--line); border-radius:22px; padding:clamp(28px,5vw,48px);">
+
+              <form id="contactForm" action="https://formspree.io/f/mlgoezyp" method="POST" style="display:grid; gap:16px;">
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                  <div>
+                    <label style="display:block; font-size:0.83rem; font-weight:600; margin-bottom:5px; color:var(--muted);">Your name</label>
+                    <input
+                      type="text"
+                      name="name"
+                      required
+                      placeholder="e.g. Sarah"
+                      style="width:100%; padding:11px 14px; border:1.5px solid var(--line); border-radius:10px; font-size:0.95rem; font-family:Inter,sans-serif; outline:none; background:#fff; box-sizing:border-box; transition:border-color 0.15s;"
+                      onfocus="this.style.borderColor='var(--gold)'"
+                      onblur="this.style.borderColor='var(--line)'"
+                    />
+                  </div>
+                  <div>
+                    <label style="display:block; font-size:0.83rem; font-weight:600; margin-bottom:5px; color:var(--muted);">Your email</label>
+                    <input
+                      type="email"
+                      name="email"
+                      required
+                      placeholder="you@example.com"
+                      style="width:100%; padding:11px 14px; border:1.5px solid var(--line); border-radius:10px; font-size:0.95rem; font-family:Inter,sans-serif; outline:none; background:#fff; box-sizing:border-box; transition:border-color 0.15s;"
+                      onfocus="this.style.borderColor='var(--gold)'"
+                      onblur="this.style.borderColor='var(--line)'"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style="display:block; font-size:0.83rem; font-weight:600; margin-bottom:5px; color:var(--muted);">Subject</label>
+                  <select
+                    name="subject"
+                    style="width:100%; padding:11px 14px; border:1.5px solid var(--line); border-radius:10px; font-size:0.95rem; font-family:Inter,sans-serif; outline:none; background:#fff; box-sizing:border-box; transition:border-color 0.15s; appearance:none; cursor:pointer;"
+                    onfocus="this.style.borderColor='var(--gold)'"
+                    onblur="this.style.borderColor='var(--line)'"
+                  >
+                    <option value="General question">General question</option>
+                    <option value="Designer feedback">Designer feedback</option>
+                    <option value="Bug report">Bug report</option>
+                    <option value="Feature request">Feature request</option>
+                    <option value="Pro / purchase">Pro / purchase</option>
+                    <option value="Just saying hello">Just saying hello</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style="display:block; font-size:0.83rem; font-weight:600; margin-bottom:5px; color:var(--muted);">Message</label>
+                  <textarea
+                    name="message"
+                    rows="5"
+                    required
+                    placeholder="What's on your mind?"
+                    style="width:100%; padding:11px 14px; border:1.5px solid var(--line); border-radius:10px; font-size:0.95rem; font-family:Inter,sans-serif; outline:none; background:#fff; box-sizing:border-box; resize:vertical; transition:border-color 0.15s;"
+                    onfocus="this.style.borderColor='var(--gold)'"
+                    onblur="this.style.borderColor='var(--line)'"
+                  ></textarea>
+                </div>
+
+                <input type="hidden" name="_subject" value="New message — Steph Rawlings Creations" />
+
+                <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                  <button type="submit" class="btn btn-primary" id="contactSubmitBtn" style="min-height:46px; padding:0 28px;">Send message</button>
+                  <p id="contactSuccess" style="display:none; color:#2e7b52; font-size:0.9rem; font-weight:600; margin:0;">✓ Message sent — I'll be in touch soon.</p>
+                  <p id="contactError" style="display:none; color:var(--rust); font-size:0.9rem; margin:0;">Something went wrong. Try emailing me directly.</p>
+                </div>
+
+              </form>
+
+            </div>
+
+            <!-- Alternatives -->
+            <div style="margin-top:28px; display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+              <div style="background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:20px 22px;">
+                <div style="font-size:0.7rem; letter-spacing:0.12em; text-transform:uppercase; font-weight:600; color:var(--gold); margin-bottom:8px;">Email directly</div>
+                <a href="mailto:stephrawlingscreations@gmail.com" style="font-size:0.9rem; color:var(--text); font-weight:500; word-break:break-all;">stephrawlingscreations@gmail.com</a>
+              </div>
+              <div style="background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:20px 22px;">
+                <div style="font-size:0.7rem; letter-spacing:0.12em; text-transform:uppercase; font-weight:600; color:var(--gold); margin-bottom:8px;">Share your work</div>
+                <a href="feature.html" style="font-size:0.9rem; color:var(--text); font-weight:500;">Get featured in the gallery →</a>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <section class="cta-band">
+          <div class="container">
+            <div class="feature-callout">
+              <div>
+                <div class="eyebrow" style="margin-bottom: 16px">Free to use · no signup needed</div>
+                <h2 style="margin: 0 0 12px; font-family: 'Playfair Display', serif; font-size: clamp(2rem, 3.6vw, 3rem); letter-spacing: -0.05em;">
+                  Ready to plan your next piece?
+                </h2>
+                <p style="margin: 0; color: var(--muted); line-height: 1.8; max-width: 60ch;">
+                  Open the designer, start laying out your pattern, and see your
+                  idea come together before you commit a single nail to the board.
+                </p>
+              </div>
+              <div class="callout-panel">
+                <h3 style="margin: 0;">Start right now</h3>
+                <p>The designer is free, works in your browser, and needs no account or download.</p>
+                <a class="btn btn-primary" href="designer.html">Open the designer</a>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <div class="container footer-box">
+          <span>© 2025 Steph Rawlings Creations</span>
+          <div class="footer-links">
+            <a href="designer.html">Designer</a>
+            <a href="nail-placement-guide.html">Nail Guide</a>
+            <a href="contact.html">Contact</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      document.getElementById("contactForm")?.addEventListener("submit", async function(e) {
+        e.preventDefault();
+        const form = e.target;
+        const btn = document.getElementById("contactSubmitBtn");
+        btn.disabled = true;
+        btn.textContent = "Sending…";
+        try {
+          const res = await fetch(form.action, {
+            method: "POST",
+            body: new FormData(form),
+            headers: { "Accept": "application/json" }
+          });
+          if (res.ok) {
+            form.reset();
+            document.getElementById("contactSuccess").style.display = "block";
+            btn.style.display = "none";
+          } else {
+            throw new Error();
+          }
+        } catch (_) {
+          document.getElementById("contactError").style.display = "block";
+          btn.disabled = false;
+          btn.textContent = "Send message";
+        }
+      });
+    </script>
+  </body>
+</html>
