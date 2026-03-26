@@ -1483,6 +1483,22 @@
               <input id="numOffset" type="hidden" value="22" />
             </div>
 
+            <!-- BOARD COLOUR -->
+            <div class="panel-section">
+              <span class="panel-section-label">Board Colour</span>
+              <label>Board Colour</label>
+              <input id="boardColor" type="color" value="#ffffff" />
+              <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center;">
+                <button type="button" class="color-preset btn-ghost" data-color="#ffffff" style="background:#ffffff;border:1px solid rgba(60,44,28,0.2);width:32px;height:32px;padding:0;border-radius:8px;flex-shrink:0;" title="White"></button>
+                <button type="button" class="color-preset btn-ghost" data-color="#000000" style="background:#000000;width:32px;height:32px;padding:0;border-radius:8px;flex-shrink:0;" title="Black"></button>
+                <button type="button" class="color-preset btn-ghost" data-color="#d2a679" style="background:#d2a679;width:32px;height:32px;padding:0;border-radius:8px;flex-shrink:0;" title="Wood tone"></button>
+                <button type="button" class="color-preset btn-ghost" data-color="#888888" style="background:#888888;width:32px;height:32px;padding:0;border-radius:8px;flex-shrink:0;" title="Grey"></button>
+              </div>
+              <p style="font-size:11px;color:var(--muted);margin:8px 0 0;line-height:1.5;">
+                🖨️ <strong>Note:</strong> When printing, the board always prints on a white background regardless of the colour shown here.
+              </p>
+            </div>
+
             <!-- THREAD -->
             <div class="panel-section">
               <span class="panel-section-label">Thread &amp; Layers</span>
