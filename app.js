@@ -2090,16 +2090,6 @@ document.addEventListener("DOMContentLoaded", function () {
         page.drawRectangle({ x: lpX(CX - BRAD), y: lpY(CY + BRAD), width: BRAD * 2 * sc2, height: BRAD * 2 * sc2, color: undefined, borderColor: C_LGRAY, borderWidth: 1 });
       }
 
-      // Other layers faded
-      for (const OL of layers) {
-        if (!OL.edges?.length || OL === L) continue;
-        for (const e of OL.edges) {
-          if (!svgPts[e.a] || !svgPts[e.b]) continue;
-          const [x1, y1] = svgPts[e.a], [x2, y2] = svgPts[e.b];
-          page.drawLine({ start: { x: lpX(x1), y: lpY(y1) }, end: { x: lpX(x2), y: lpY(y2) }, thickness: 0.25, color: C_LGRAY });
-        }
-      }
-
       // This layer's lines — full print-safe colour, thicker stroke for clear printing
       const lPrint = printSafeRgb(L.color);
       for (const e of L.edges) {
@@ -2114,7 +2104,7 @@ document.addEventListener("DOMContentLoaded", function () {
         page.drawCircle({ x: lpX(x), y: lpY(y), size: Math.max(1.2 * sc2, 1), color: C_BLACK });
       }
 
-      txt(page, `Layer ${li + 1} isolated  \u00b7  other layers faded for context`,
+      txt(page, `Layer ${li + 1} isolated`,
           PX2 + PW2 / 2, PTOP2 + PH2 + 3, { size: 7.5, color: C_GRAY, align: "center" });
 
       // Sequence grid
