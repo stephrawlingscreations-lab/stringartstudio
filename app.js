@@ -1707,7 +1707,30 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const activeLayers = layers.filter((L) => L.edges?.length > 0);
     const totalLines   = layers.reduce((s, L) => s + (L.edges?.length || 0), 0);
-    const totalPages   = 1 + boardPageCount + activeLayers.length + 1;
+
+    // ── Sequence pagination constants ──
+    // These are used both for pre-calculating totalPages and for rendering.
+    const SCOLS_SEQ         = 4;
+    const SEQ_ROW_H_MM      = 5;    // mm per step row
+    const SEQ_MAX_Y_MM      = 267;  // mm — stay above footer (footer rule is at 273mm)
+    // Layer preview page: sequence header labels end at sqTop+15 = (46+118+8)+15 = 187mm
+    const SEQ_FIRST_START_MM = 187;
+    const firstPageRows      = Math.floor((SEQ_MAX_Y_MM - SEQ_FIRST_START_MM) / SEQ_ROW_H_MM); // 16
+    const firstPageSteps     = firstPageRows * SCOLS_SEQ;  // 64
+    // Continuation pages: compact 22mm header + 6mm gap before first row = 28mm start
+    const CONT_HDR_MM        = 22;
+    const CONT_STEPS_START_MM = CONT_HDR_MM + 6;  // 28mm
+    const contPageRows       = Math.floor((SEQ_MAX_Y_MM - CONT_STEPS_START_MM) / SEQ_ROW_H_MM); // 47
+    const contPageSteps      = contPageRows * SCOLS_SEQ;  // 188
+
+    const extraSeqPages = activeLayers.reduce((sum, L) => {
+      if (!L.seq?.length || L.seq.length <= 1) return sum;
+      const totalSteps = L.seq.length - 1;
+      if (totalSteps <= firstPageSteps) return sum;
+      return sum + Math.ceil((totalSteps - firstPageSteps) / contPageSteps);
+    }, 0);
+
+    const totalPages   = 1 + boardPageCount + activeLayers.length + 1 + extraSeqPages;
 
     // Thread length estimates
     const physRadMm = D_mm / 2;
@@ -2107,32 +2130,63 @@ document.addEventListener("DOMContentLoaded", function () {
       txt(page, `Layer ${li + 1} isolated`,
           PX2 + PW2 / 2, PTOP2 + PH2 + 3, { size: 7.5, color: C_GRAY, align: "center" });
 
-      // Sequence grid
+      // Sequence grid — fully paginated, no truncation
+      const COL_W_SEQ = 190 / SCOLS_SEQ;
       if (L.seq?.length > 1) {
-        const sqTop = PTOP2 + PH2 + 8;
+        const sqTop      = PTOP2 + PH2 + 8;  // 172mm
+        const totalSteps = L.seq.length - 1;
         hRule(page, sqTop);
         txt(page, `SEQUENCE — LAYER ${li + 1}`, 0, sqTop + 4.5, { size: 8.5, font: fBold, color: C_GRAY });
-        txt(page, `Start at nail ${startNail}  \u00b7  ${moves} moves  \u00b7  follow each step in order`,
+        txt(page, `Start at nail ${startNail}  \u00b7  ${totalSteps} moves  \u00b7  follow each step in order`,
             0, sqTop + 9, { size: 7.5, color: C_GRAY });
 
-        const SCOLS = 4, COL_W = 190 / SCOLS;
-        const MAX_STEPS = 120;
-        const showMoves = Math.min(L.seq.length - 1, MAX_STEPS);
-        for (let si = 0; si < showMoves; si++) {
-          const sc3 = si % SCOLS, sr = Math.floor(si / SCOLS);
-          const stepY = sqTop + 15 + sr * 5;
-          if (stepY > 267) break;
-          txt(page, String(si + 1),                                    sc3 * COL_W,     stepY, { size: 5.5, color: C_LGRAY });
-          txt(page, `${L.seq[si] + numStart} -> ${L.seq[si + 1] + numStart}`, sc3 * COL_W + 7, stepY, { size: 8.5, font: fBold });
+        // Render steps on the layer preview page
+        let si = 0;
+        while (si < totalSteps) {
+          const sc3 = si % SCOLS_SEQ, sr = Math.floor(si / SCOLS_SEQ);
+          const stepY = sqTop + 15 + sr * SEQ_ROW_H_MM;
+          if (stepY > SEQ_MAX_Y_MM) break;
+          txt(page, String(si + 1),                                              sc3 * COL_W_SEQ,     stepY, { size: 5.5, color: C_LGRAY });
+          txt(page, `${L.seq[si] + numStart} -> ${L.seq[si + 1] + numStart}`,   sc3 * COL_W_SEQ + 7, stepY, { size: 8.5, font: fBold });
+          si++;
         }
-        if (L.seq.length - 1 > MAX_STEPS) {
-          const lastRow = Math.floor(MAX_STEPS / SCOLS);
-          txt(page, `+${L.seq.length - 1 - MAX_STEPS} more moves — refer to the designer for full sequence`,
-              0, sqTop + 15 + lastRow * 5 + 6, { size: 7, color: C_GRAY });
-        }
-      }
+        stdFooter(page, CONTACT, `Page ${pageIdx} of ${totalPages} — Layer ${li + 1} of ${activeLayers.length}`);
 
-      stdFooter(page, CONTACT, `Page ${pageIdx} of ${totalPages} — Layer ${li + 1} of ${activeLayers.length}`);
+        // Continuation pages for remaining steps
+        while (si < totalSteps) {
+          pageIdx++;
+          const contPage             = pdfDoc.addPage([A4W, A4H]);
+          const rangeStart           = si + 1;
+          const stepsStartOnThisPage = si;
+
+          // Compact header
+          contPage.drawRectangle({ x: MG, y: yT(CONT_HDR_MM), width: 4, height: CONT_HDR_MM * PT, color: lc });
+          txt(contPage, `LAYER ${activeIdx} OF ${activeLayers.length}`,     7, 6.5, { size: 7,  font: fBold, color: C_LGRAY });
+          txt(contPage, `Layer ${li + 1} — Sequence continued`,             7, 17,  { size: 16, font: fBold });
+          txt(contPage, L.color || "",                                       7, 22,  { size: 9,  color: lc });
+          hRule(contPage, CONT_HDR_MM);
+
+          // Fill this page with steps
+          while (si < totalSteps) {
+            const relIdx = si - stepsStartOnThisPage;
+            const sc3 = relIdx % SCOLS_SEQ, sr = Math.floor(relIdx / SCOLS_SEQ);
+            const stepY = CONT_STEPS_START_MM + sr * SEQ_ROW_H_MM;
+            if (stepY > SEQ_MAX_Y_MM) break;
+            txt(contPage, String(si + 1),                                            sc3 * COL_W_SEQ,     stepY, { size: 5.5, color: C_LGRAY });
+            txt(contPage, `${L.seq[si] + numStart} -> ${L.seq[si + 1] + numStart}`, sc3 * COL_W_SEQ + 7, stepY, { size: 8.5, font: fBold });
+            si++;
+          }
+
+          // Step range label (drawn after loop so rangeEnd is known)
+          const rangeEnd = si;
+          txt(contPage, `Steps ${rangeStart}–${rangeEnd} of ${totalSteps}  \u00b7  Layer ${li + 1}`,
+              0, CONT_HDR_MM + 3.5, { size: 7.5, color: C_GRAY });
+          stdFooter(contPage, CONTACT,
+            `Page ${pageIdx} of ${totalPages} — Layer ${li + 1} of ${activeLayers.length} (steps ${rangeStart}–${rangeEnd})`);
+        }
+      } else {
+        stdFooter(page, CONTACT, `Page ${pageIdx} of ${totalPages} — Layer ${li + 1} of ${activeLayers.length}`);
+      }
     });
 
     // ── BUILD GUIDE PAGE ──
