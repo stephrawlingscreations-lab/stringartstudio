@@ -1669,7 +1669,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const D_mm = boardSizeCm * 10;
 
     // SVG coordinate space (same layout as the canvas — do not change)
-    const SZ = 560, CX = 280, CY = 280, BRAD = 236;
+    const SZ = 560,
+      CX = 280,
+      CY = 280,
+      BRAD = 236;
 
     const svgPts =
       board === "circle"
@@ -1679,52 +1682,55 @@ document.addEventListener("DOMContentLoaded", function () {
             nail1SquareOffset(nailCount),
           );
 
-
     // ── PDF constants ──
     // 1 pt = 1/72 inch; 1 mm = 72/25.4 pt
-    const PT       = 72 / 25.4;
-    const A4W      = 210 * PT;   // 595.28 pt
-    const A4H      = 297 * PT;   // 841.89 pt
-    const MG       = 10 * PT;    // 10 mm margin
-    const CW       = 190 * PT;   // content width
+    const PT = 72 / 25.4;
+    const A4W = 210 * PT; // 595.28 pt
+    const A4H = 297 * PT; // 841.89 pt
+    const MG = 10 * PT; // 10 mm margin
+    const CW = 190 * PT; // content width
 
     // Board scaling: BRAD*2 SVG units = D_mm physical mm
-    const mmPerSVG = D_mm / (BRAD * 2);  // physical mm per SVG unit (for true-size pages)
-    const svgPerMm = (BRAD * 2) / D_mm;  // SVG units per mm
+    const mmPerSVG = D_mm / (BRAD * 2); // physical mm per SVG unit (for true-size pages)
+    const svgPerMm = (BRAD * 2) / D_mm; // SVG units per mm
 
     // Tile layout for true-size nail placement pages
     // A4 (297mm) minus 10mm top/bottom margins = 277mm content height.
     // Header (9mm) + footer (9mm) leaves 259mm for the SVG drill area per tile.
-    const TILE_HDR_MM    = 9;
-    const TILE_FTR_MM    = 9;
-    const TILE_W_MM      = 190;                              // content width
-    const TILE_H_MM      = 277 - TILE_HDR_MM - TILE_FTR_MM; // 259 mm SVG area
-    const tileW_svg      = TILE_W_MM * svgPerMm;
-    const tileH_svg      = TILE_H_MM * svgPerMm;
-    const totalCols      = Math.ceil(SZ / tileW_svg);
-    const totalRows      = Math.ceil(SZ / tileH_svg);
+    const TILE_HDR_MM = 9;
+    const TILE_FTR_MM = 9;
+    const TILE_W_MM = 190; // content width
+    const TILE_H_MM = 277 - TILE_HDR_MM - TILE_FTR_MM; // 259 mm SVG area
+    const tileW_svg = TILE_W_MM * svgPerMm;
+    const tileH_svg = TILE_H_MM * svgPerMm;
+    const totalCols = Math.ceil(SZ / tileW_svg);
+    const totalRows = Math.ceil(SZ / tileH_svg);
     const boardPageCount = totalCols * totalRows;
 
     const activeLayers = layers.filter((L) => L.edges?.length > 0);
-    const totalLines   = layers.reduce((s, L) => s + (L.edges?.length || 0), 0);
+    const totalLines = layers.reduce((s, L) => s + (L.edges?.length || 0), 0);
 
     // ── Sequence pagination constants ──
     // These are used both for pre-calculating totalPages and for rendering.
-    const SCOLS_SEQ          = 3;
-    const SEQ_ROW_H_MM       = 8;    // mm per step row (7 mm cell + 1 mm breathing gap)
-    const CELL_H_MM          = 7;    // drawn cell height in mm
-    const COL_GAP_MM         = 1.5;  // gap between columns in mm
-    const COL_W_MM           = (190 - COL_GAP_MM * (SCOLS_SEQ - 1)) / SCOLS_SEQ;  // ≈62.3 mm
-    const SEQ_MAX_Y_MM       = 267;  // mm — stay above footer (footer rule is at 273mm)
+    const SCOLS_SEQ = 3;
+    const SEQ_ROW_H_MM = 8; // mm per step row (7 mm cell + 1 mm breathing gap)
+    const CELL_H_MM = 7; // drawn cell height in mm
+    const COL_GAP_MM = 1.5; // gap between columns in mm
+    const COL_W_MM = (190 - COL_GAP_MM * (SCOLS_SEQ - 1)) / SCOLS_SEQ; // ≈62.3 mm
+    const SEQ_MAX_Y_MM = 267; // mm — stay above footer (footer rule is at 273mm)
     // Layer preview page: sequence header labels end at sqTop+15 = (46+118+8)+15 = 187mm
     const SEQ_FIRST_START_MM = 187;
-    const firstPageRows      = Math.floor((SEQ_MAX_Y_MM - SEQ_FIRST_START_MM) / SEQ_ROW_H_MM); // 10
-    const firstPageSteps     = firstPageRows * SCOLS_SEQ;  // 30
+    const firstPageRows = Math.floor(
+      (SEQ_MAX_Y_MM - SEQ_FIRST_START_MM) / SEQ_ROW_H_MM,
+    ); // 10
+    const firstPageSteps = firstPageRows * SCOLS_SEQ; // 30
     // Continuation pages: compact 22mm header + 6mm gap before first row = 28mm start
-    const CONT_HDR_MM        = 22;
-    const CONT_STEPS_START_MM = CONT_HDR_MM + 6;  // 28mm
-    const contPageRows       = Math.floor((SEQ_MAX_Y_MM - CONT_STEPS_START_MM) / SEQ_ROW_H_MM); // 29
-    const contPageSteps      = contPageRows * SCOLS_SEQ;  // 87
+    const CONT_HDR_MM = 22;
+    const CONT_STEPS_START_MM = CONT_HDR_MM + 6; // 28mm
+    const contPageRows = Math.floor(
+      (SEQ_MAX_Y_MM - CONT_STEPS_START_MM) / SEQ_ROW_H_MM,
+    ); // 29
+    const contPageSteps = contPageRows * SCOLS_SEQ; // 87
 
     const extraSeqPages = activeLayers.reduce((sum, L) => {
       if (!L.seq?.length || L.seq.length <= 1) return sum;
@@ -1733,7 +1739,8 @@ document.addEventListener("DOMContentLoaded", function () {
       return sum + Math.ceil((totalSteps - firstPageSteps) / contPageSteps);
     }, 0);
 
-    const totalPages   = 1 + boardPageCount + activeLayers.length + 1 + extraSeqPages;
+    const totalPages =
+      1 + boardPageCount + activeLayers.length + 1 + extraSeqPages;
 
     // Thread length estimates
     const physRadMm = D_mm / 2;
@@ -1744,7 +1751,8 @@ document.addEventListener("DOMContentLoaded", function () {
       let mm = 0;
       for (const e of L.edges) {
         if (!svgPts[e.a] || !svgPts[e.b]) continue;
-        const [x1, y1] = svgPts[e.a], [x2, y2] = svgPts[e.b];
+        const [x1, y1] = svgPts[e.a],
+          [x2, y2] = svgPts[e.b];
         mm += Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2) * mmPerSVGt;
       }
       totalThreadMm += mm;
@@ -1753,46 +1761,52 @@ document.addEventListener("DOMContentLoaded", function () {
     const toM = (mm) => (mm / 1000).toFixed(1);
 
     const date = new Date().toLocaleDateString("en-IE", {
-      day: "numeric", month: "long", year: "numeric",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
     });
 
     // ── Create PDF document ──
     const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
     const pdfDoc = await PDFDocument.create();
-    const fBold  = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const fReg   = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const fBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const fReg = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
     // Colour palette
     const C_BLACK = rgb(0.12, 0.12, 0.12);
-    const C_GRAY  = rgb(0.55, 0.55, 0.55);
+    const C_GRAY = rgb(0.55, 0.55, 0.55);
     const C_LGRAY = rgb(0.82, 0.82, 0.82);
-    const C_RED   = rgb(0.75, 0.22, 0.17);
+    const C_RED = rgb(0.75, 0.22, 0.17);
     const C_WHITE = rgb(1, 1, 1);
 
     // Print-safe colour helpers.
     // Light colours (luminance > 0.50) are too faint on paper — map them to the
     // nearest entry in a curated dark palette before drawing anything in the PDF.
     const PRINT_PALETTE = [
-      [198,  40,  40],  // #C62828 red
-      [239, 108,   0],  // #EF6C00 orange
-      [184, 134,  11],  // #B8860B gold
-      [ 46, 125,  50],  // #2E7D32 green
-      [  0, 109, 119],  // #006D77 teal
-      [ 21, 101, 192],  // #1565C0 blue
-      [106,  27, 154],  // #6A1B9A purple
-      [173,  20,  87],  // #AD1457 magenta
+      [198, 40, 40], // #C62828 red
+      [239, 108, 0], // #EF6C00 orange
+      [184, 134, 11], // #B8860B gold
+      [46, 125, 50], // #2E7D32 green
+      [0, 109, 119], // #006D77 teal
+      [21, 101, 192], // #1565C0 blue
+      [106, 27, 154], // #6A1B9A purple
+      [173, 20, 87], // #AD1457 magenta
     ];
 
     // Returns a full-strength pdf-lib rgb colour that is guaranteed dark enough to print.
     function printSafeRgb(hexColor) {
       const c = hexToRgb(hexColor || "#000000");
       const lum = (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255;
-      if (lum < 0.50) return rgb(c.r / 255, c.g / 255, c.b / 255);
+      if (lum < 0.5) return rgb(c.r / 255, c.g / 255, c.b / 255);
       // Too light — substitute closest dark palette entry (by Euclidean RGB distance)
-      let best = PRINT_PALETTE[0], bestDist = Infinity;
+      let best = PRINT_PALETTE[0],
+        bestDist = Infinity;
       for (const p of PRINT_PALETTE) {
         const d = (c.r - p[0]) ** 2 + (c.g - p[1]) ** 2 + (c.b - p[2]) ** 2;
-        if (d < bestDist) { bestDist = d; best = p; }
+        if (d < bestDist) {
+          bestDist = d;
+          best = p;
+        }
       }
       return rgb(best[0] / 255, best[1] / 255, best[2] / 255);
     }
@@ -1802,43 +1816,56 @@ document.addEventListener("DOMContentLoaded", function () {
     function blendPrintSafe(hexColor, opacity) {
       const c = hexToRgb(hexColor || "#000000");
       const lum = (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255;
-      let r = c.r, g = c.g, b = c.b;
-      if (lum >= 0.50) {
-        let best = PRINT_PALETTE[0], bestDist = Infinity;
+      let r = c.r,
+        g = c.g,
+        b = c.b;
+      if (lum >= 0.5) {
+        let best = PRINT_PALETTE[0],
+          bestDist = Infinity;
         for (const p of PRINT_PALETTE) {
           const d = (c.r - p[0]) ** 2 + (c.g - p[1]) ** 2 + (c.b - p[2]) ** 2;
-          if (d < bestDist) { bestDist = d; best = p; }
+          if (d < bestDist) {
+            bestDist = d;
+            best = p;
+          }
         }
         [r, g, b] = best;
       }
-      return rgb(1 - (1 - r / 255) * opacity, 1 - (1 - g / 255) * opacity, 1 - (1 - b / 255) * opacity);
+      return rgb(
+        1 - (1 - r / 255) * opacity,
+        1 - (1 - g / 255) * opacity,
+        1 - (1 - b / 255) * opacity,
+      );
     }
 
     // ── Page coordinate helpers ──
     // All layout values expressed as mm from top-left of content area (inside 10mm margins).
     // pdf-lib y=0 is bottom of page, increasing upward.
     const xL = (mm) => MG + mm * PT;
-    const yT = (mm) => A4H - MG - mm * PT;   // PDF y for a point mm below content top
+    const yT = (mm) => A4H - MG - mm * PT; // PDF y for a point mm below content top
 
     function txt(page, text, x_mm, y_mm, opts = {}) {
       const { size = 9, font = fReg, color = C_BLACK, align = "left" } = opts;
       let x = xL(x_mm);
-      if (align === "right")  x -= font.widthOfTextAtSize(text, size);
+      if (align === "right") x -= font.widthOfTextAtSize(text, size);
       if (align === "center") x -= font.widthOfTextAtSize(text, size) / 2;
-      try { page.drawText(text, { x, y: yT(y_mm), size, font, color }); } catch (_) {}
+      try {
+        page.drawText(text, { x, y: yT(y_mm), size, font, color });
+      } catch (_) {}
     }
 
     function hRule(page, y_mm, thick = 0.4, color = C_LGRAY) {
       page.drawLine({
-        start: { x: MG,      y: yT(y_mm) },
-        end:   { x: MG + CW, y: yT(y_mm) },
-        thickness: thick, color,
+        start: { x: MG, y: yT(y_mm) },
+        end: { x: MG + CW, y: yT(y_mm) },
+        thickness: thick,
+        color,
       });
     }
 
     function stdFooter(page, left, right) {
       hRule(page, 273, 0.3);
-      txt(page, left,  0,   275, { size: 7, color: C_GRAY });
+      txt(page, left, 0, 275, { size: 7, color: C_GRAY });
       txt(page, right, 190, 275, { size: 7, color: C_GRAY, align: "right" });
     }
 
@@ -1846,30 +1873,49 @@ document.addEventListener("DOMContentLoaded", function () {
     {
       const page = pdfDoc.addPage([A4W, A4H]);
 
-      txt(page, "STRING ART STUDIO", 0, 7,  { size: 7, font: fBold, color: C_LGRAY });
-      txt(page, "Build Pack",         0, 18, { size: 26, font: fBold });
-      txt(page,
+      txt(page, "STRING ART STUDIO", 0, 7, {
+        size: 7,
+        font: fBold,
+        color: C_LGRAY,
+      });
+      txt(page, "Build Pack", 0, 18, { size: 26, font: fBold });
+      txt(
+        page,
         `Generated ${date}  \u00b7  ${boardSizeCm} cm board  \u00b7  ${nailCount} nails  \u00b7  ${activeLayers.length} layer${activeLayers.length !== 1 ? "s" : ""}`,
-        0, 25, { size: 8, color: C_GRAY });
+        0,
+        25,
+        { size: 8, color: C_GRAY },
+      );
       hRule(page, 28);
 
       // Preview diagram — scaled to fit, reference only (not true-size)
-      const PW = 120, PH = 110, PX = 35, PTOP = 31;
-      const sc = Math.min(PW / SZ, PH / SZ) * PT;  // points per SVG unit
+      const PW = 120,
+        PH = 110,
+        PX = 35,
+        PTOP = 31;
+      const sc = Math.min(PW / SZ, PH / SZ) * PT; // points per SVG unit
       // SVG (0,0) maps to top-left of preview box
       const pvX = (sx) => xL(PX) + sx * sc;
-      const pvY = (sy) => (A4H - MG - PTOP * PT) - sy * sc;
+      const pvY = (sy) => A4H - MG - PTOP * PT - sy * sc;
 
       if (board === "circle") {
         page.drawCircle({
-          x: pvX(CX), y: pvY(CY), size: BRAD * sc,
-          color: undefined, borderColor: C_LGRAY, borderWidth: 1,
+          x: pvX(CX),
+          y: pvY(CY),
+          size: BRAD * sc,
+          color: undefined,
+          borderColor: C_LGRAY,
+          borderWidth: 1,
         });
       } else {
         page.drawRectangle({
-          x: pvX(CX - BRAD), y: pvY(CY + BRAD),
-          width: BRAD * 2 * sc, height: BRAD * 2 * sc,
-          color: undefined, borderColor: C_LGRAY, borderWidth: 1,
+          x: pvX(CX - BRAD),
+          y: pvY(CY + BRAD),
+          width: BRAD * 2 * sc,
+          height: BRAD * 2 * sc,
+          color: undefined,
+          borderColor: C_LGRAY,
+          borderWidth: 1,
         });
       }
 
@@ -1880,11 +1926,13 @@ document.addEventListener("DOMContentLoaded", function () {
         const lc = blendPrintSafe(L.color, 0.5);
         for (const e of L.edges) {
           if (!svgPts[e.a] || !svgPts[e.b]) continue;
-          const [x1, y1] = svgPts[e.a], [x2, y2] = svgPts[e.b];
+          const [x1, y1] = svgPts[e.a],
+            [x2, y2] = svgPts[e.b];
           page.drawLine({
             start: { x: pvX(x1), y: pvY(y1) },
-            end:   { x: pvX(x2), y: pvY(y2) },
-            thickness: 0.45, color: lc,
+            end: { x: pvX(x2), y: pvY(y2) },
+            thickness: 0.45,
+            color: lc,
           });
         }
       }
@@ -1892,17 +1940,27 @@ document.addEventListener("DOMContentLoaded", function () {
       // Nail dots (preview size)
       for (let i = 0; i < nailCount; i++) {
         const [x, y] = svgPts[i];
-        page.drawCircle({ x: pvX(x), y: pvY(y), size: Math.max(1.2 * sc, 1), color: C_BLACK });
+        page.drawCircle({
+          x: pvX(x),
+          y: pvY(y),
+          size: Math.max(1.2 * sc, 1),
+          color: C_BLACK,
+        });
       }
 
-      txt(page, "Completed design — all layers combined",
-          PX + PW / 2, PTOP + PH + 3, { size: 7.5, color: C_GRAY, align: "center" });
+      txt(
+        page,
+        "Completed design — all layers combined",
+        PX + PW / 2,
+        PTOP + PH + 3,
+        { size: 7.5, color: C_GRAY, align: "center" },
+      );
       hRule(page, PTOP + PH + 7);
 
       // Stats row
       const sY = PTOP + PH + 12;
       const stats = [
-        [String(nailCount),  "NAILS"],
+        [String(nailCount), "NAILS"],
         [board.charAt(0).toUpperCase() + board.slice(1), "SHAPE"],
         [String(totalLines), "LINES"],
         [String(activeLayers.length), "LAYERS"],
@@ -1910,33 +1968,52 @@ document.addEventListener("DOMContentLoaded", function () {
       ];
       stats.forEach(([v, l], i) => {
         const x = i * 38 + 19;
-        txt(page, v, x, sY,     { size: 14, font: fBold, align: "center" });
+        txt(page, v, x, sY, { size: 14, font: fBold, align: "center" });
         txt(page, l, x, sY + 7, { size: 6.5, color: C_GRAY, align: "center" });
       });
       hRule(page, sY + 11);
 
       // Thread requirements table
       let ry = sY + 16;
-      txt(page, "THREAD REQUIREMENTS", 0, ry, { size: 8, font: fBold, color: C_GRAY });
+      txt(page, "THREAD REQUIREMENTS", 0, ry, {
+        size: 8,
+        font: fBold,
+        color: C_GRAY,
+      });
       hRule(page, ry + 2.5, 0.3);
       ry += 7;
       layers.forEach((L, li) => {
         if (!L.edges?.length) return;
         page.drawCircle({
-          x: xL(1.5), y: yT(ry - 1.5), size: 2.5,
+          x: xL(1.5),
+          y: yT(ry - 1.5),
+          size: 2.5,
           color: printSafeRgb(L.color),
         });
         txt(page, `Layer ${li + 1}`, 4, ry, { size: 9 });
-        txt(page, `~${toM(layerThreadMm[li])} m`, 190, ry, { size: 9, font: fBold, align: "right" });
+        txt(page, `~${toM(layerThreadMm[li])} m`, 190, ry, {
+          size: 9,
+          font: fBold,
+          align: "right",
+        });
         ry += 6;
       });
       hRule(page, ry, 0.75, rgb(0.75, 0.75, 0.75));
       ry += 4;
       txt(page, "Total", 0, ry, { size: 9, font: fBold });
-      txt(page, `~${toM(totalThreadMm)} m`, 190, ry, { size: 9, font: fBold, align: "right" });
+      txt(page, `~${toM(totalThreadMm)} m`, 190, ry, {
+        size: 9,
+        font: fBold,
+        align: "right",
+      });
       ry += 5;
-      txt(page, `Based on a ${boardSizeCm} cm board. Add ~10% extra for tying off.`,
-          0, ry, { size: 7.5, color: C_GRAY });
+      txt(
+        page,
+        `Based on a ${boardSizeCm} cm board. Add ~10% extra for tying off.`,
+        0,
+        ry,
+        { size: 7.5, color: C_GRAY },
+      );
 
       stdFooter(page, CONTACT, `Page 1 of ${totalPages} — Design Overview`);
     }
@@ -1950,27 +2027,38 @@ document.addEventListener("DOMContentLoaded", function () {
         pageIdx++;
         const page = pdfDoc.addPage([A4W, A4H]);
 
-        const ox = col * tileW_svg;  // SVG x-origin of this tile
-        const oy = row * tileH_svg;  // SVG y-origin of this tile
+        const ox = col * tileW_svg; // SVG x-origin of this tile
+        const oy = row * tileH_svg; // SVG y-origin of this tile
         const tileLabel = `${String.fromCharCode(65 + row)}${col + 1}`;
-        const tileNote  = boardPageCount > 1
-          ? `Tile ${tileLabel} of ${boardPageCount} — align marks and tape sheets before drilling`
-          : `Single-sheet template — print at 100%, do not scale`;
+        const tileNote =
+          boardPageCount > 1
+            ? `Tile ${tileLabel} of ${boardPageCount} — align marks and tape sheets before drilling`
+            : `Single-sheet template — print at 100%, do not scale`;
 
         // Header
-        txt(page,
+        txt(
+          page,
           `Nail Placement Template  \u00b7  ${boardSizeCm} cm board  \u00b7  Tile ${tileLabel}` +
-          (boardPageCount > 1 ? ` (col ${col + 1}/${totalCols}, row ${row + 1}/${totalRows})` : ""),
-          0, 5.5, { size: 6.5, font: fBold, color: C_GRAY });
-        txt(page,
+            (boardPageCount > 1
+              ? ` (col ${col + 1}/${totalCols}, row ${row + 1}/${totalRows})`
+              : ""),
+          0,
+          5.5,
+          { size: 6.5, font: fBold, color: C_GRAY },
+        );
+        txt(
+          page,
           `Page ${pageIdx} of ${totalPages}  \u00b7  PRINT AT 100% -- no scaling, no fit-to-page`,
-          190, 5.5, { size: 6.5, font: fBold, color: C_RED, align: "right" });
+          190,
+          5.5,
+          { size: 6.5, font: fBold, color: C_RED, align: "right" },
+        );
         hRule(page, 8, 0.4);
 
         // ── True-size coordinate transform ──
         // The SVG area starts at TILE_HDR_MM below the content top.
         // Each SVG unit maps to exactly mmPerSVG * PT PDF points — no scaling anywhere.
-        const SVG_TOP_PT = A4H - MG - TILE_HDR_MM * PT;  // PDF y of SVG area top
+        const SVG_TOP_PT = A4H - MG - TILE_HDR_MM * PT; // PDF y of SVG area top
         const tpX = (sx) => MG + (sx - ox) * mmPerSVG * PT;
         const tpY = (sy) => SVG_TOP_PT - (sy - oy) * mmPerSVG * PT;
 
@@ -1980,83 +2068,141 @@ document.addEventListener("DOMContentLoaded", function () {
         // Board outline (circle or square)
         if (board === "circle") {
           page.drawCircle({
-            x: tpX(CX), y: tpY(CY), size: BRAD * mmPerSVG * PT,
-            color: undefined, borderColor: C_LGRAY, borderWidth: 1,
+            x: tpX(CX),
+            y: tpY(CY),
+            size: BRAD * mmPerSVG * PT,
+            color: undefined,
+            borderColor: C_LGRAY,
+            borderWidth: 1,
           });
         } else {
           const side = BRAD * 2 * mmPerSVG * PT;
           page.drawRectangle({
-            x: tpX(CX - BRAD), y: tpY(CY + BRAD),
-            width: side, height: side,
-            color: undefined, borderColor: C_LGRAY, borderWidth: 1,
+            x: tpX(CX - BRAD),
+            y: tpY(CY + BRAD),
+            width: side,
+            height: side,
+            color: undefined,
+            borderColor: C_LGRAY,
+            borderWidth: 1,
           });
         }
 
         // Faint string lines — fixed light gray, background reference only.
         // Nail dots are the accuracy target; lines just show the pattern layout.
-        const TILE_LINE_COLOR = rgb(0.80, 0.80, 0.80);
+        const TILE_LINE_COLOR = rgb(0.8, 0.8, 0.8);
         for (const L of layers) {
           if (!L.edges?.length) continue;
           for (const e of L.edges) {
             if (!svgPts[e.a] || !svgPts[e.b]) continue;
-            const [x1, y1] = svgPts[e.a], [x2, y2] = svgPts[e.b];
+            const [x1, y1] = svgPts[e.a],
+              [x2, y2] = svgPts[e.b];
             if (x1 < ox - 8 && x2 < ox - 8) continue;
             if (x1 > txMax + 8 && x2 > txMax + 8) continue;
             if (y1 < oy - 8 && y2 < oy - 8) continue;
             if (y1 > tyMax + 8 && y2 > tyMax + 8) continue;
             page.drawLine({
               start: { x: tpX(x1), y: tpY(y1) },
-              end:   { x: tpX(x2), y: tpY(y2) },
-              thickness: 0.25, color: TILE_LINE_COLOR,
+              end: { x: tpX(x2), y: tpY(y2) },
+              thickness: 0.25,
+              color: TILE_LINE_COLOR,
             });
           }
         }
 
         // Nail dots — centred at exact physical position, for drilling
-        const showEvery = nailCount > 400 ? 50 : nailCount > 200 ? 25 : nailCount > 100 ? 10 : nailCount > 60 ? 5 : 1;
-        const nailR_pt  = Math.max(0.5 * PT, 1.0);  // ~0.5 mm radius, min 1 pt
-        const lblSz     = nailCount > 200 ? 5 : 6.5;
+        const showEvery =
+          nailCount > 400
+            ? 50
+            : nailCount > 200
+              ? 25
+              : nailCount > 100
+                ? 10
+                : nailCount > 60
+                  ? 5
+                  : 1;
+        const nailR_pt = Math.max(0.5 * PT, 1.0); // ~0.5 mm radius, min 1 pt
+        const lblSz = nailCount > 200 ? 5 : 6.5;
 
         for (let i = 0; i < nailCount; i++) {
           const [sx, sy] = svgPts[i];
-          if (sx < ox - 6 || sx > txMax + 6 || sy < oy - 6 || sy > tyMax + 6) continue;
-          const px = tpX(sx), py = tpY(sy);
+          if (sx < ox - 6 || sx > txMax + 6 || sy < oy - 6 || sy > tyMax + 6)
+            continue;
+          const px = tpX(sx),
+            py = tpY(sy);
 
           // Drill-point dot (solid circle centred on nail position)
           page.drawCircle({ x: px, y: py, size: nailR_pt, color: C_BLACK });
 
           // Number label offset outward from board centre
           if (i % showEvery === 0) {
-            const dx = sx - CX, dy = sy - CY;
+            const dx = sx - CX,
+              dy = sy - CY;
             const len = Math.sqrt(dx * dx + dy * dy) || 1;
-            const offPt = 5 * PT;  // 5 mm outward
+            const offPt = 5 * PT; // 5 mm outward
             const lx = px + (dx / len) * offPt;
-            const ly = py - (dy / len) * offPt;  // dy is SVG-down, flip for PDF
+            const ly = py - (dy / len) * offPt; // dy is SVG-down, flip for PDF
             const label = String(i + numStart);
             const lw = fReg.widthOfTextAtSize(label, lblSz);
             try {
-              page.drawText(label, { x: lx - lw / 2, y: ly - lblSz / 2, size: lblSz, font: fReg, color: C_GRAY });
+              page.drawText(label, {
+                x: lx - lw / 2,
+                y: ly - lblSz / 2,
+                size: lblSz,
+                font: fReg,
+                color: C_GRAY,
+              });
             } catch (_) {}
           }
         }
 
         // Alignment marks at tile cut edges (solid lines — no dash support needed)
-        const mkPt = 6 * PT;  // 6 mm arm
+        const mkPt = 6 * PT; // 6 mm arm
         if (col < totalCols - 1) {
-          const ex  = tpX(ox + tileW_svg);
+          const ex = tpX(ox + tileW_svg);
           const ey0 = tpY(oy);
           const ey1 = tpY(Math.min(oy + tileH_svg, SZ));
-          page.drawLine({ start: { x: ex, y: ey0 },       end: { x: ex,       y: ey1      }, thickness: 0.5, color: C_LGRAY });
-          page.drawLine({ start: { x: ex - mkPt, y: ey0 }, end: { x: ex,       y: ey0      }, thickness: 1,   color: C_GRAY });
-          page.drawLine({ start: { x: ex, y: ey0 },        end: { x: ex,       y: ey0 - mkPt }, thickness: 1, color: C_GRAY });
+          page.drawLine({
+            start: { x: ex, y: ey0 },
+            end: { x: ex, y: ey1 },
+            thickness: 0.5,
+            color: C_LGRAY,
+          });
+          page.drawLine({
+            start: { x: ex - mkPt, y: ey0 },
+            end: { x: ex, y: ey0 },
+            thickness: 1,
+            color: C_GRAY,
+          });
+          page.drawLine({
+            start: { x: ex, y: ey0 },
+            end: { x: ex, y: ey0 - mkPt },
+            thickness: 1,
+            color: C_GRAY,
+          });
         }
         if (row < totalRows - 1) {
-          const ey  = tpY(oy + tileH_svg);
+          const ey = tpY(oy + tileH_svg);
           const ex0 = tpX(ox);
           const ex1 = tpX(Math.min(ox + tileW_svg, SZ));
-          page.drawLine({ start: { x: ex0, y: ey },        end: { x: ex1,      y: ey       }, thickness: 0.5, color: C_LGRAY });
-          page.drawLine({ start: { x: ex0, y: ey + mkPt }, end: { x: ex0,      y: ey       }, thickness: 1,   color: C_GRAY });
-          page.drawLine({ start: { x: ex0, y: ey },        end: { x: ex0 + mkPt, y: ey     }, thickness: 1,   color: C_GRAY });
+          page.drawLine({
+            start: { x: ex0, y: ey },
+            end: { x: ex1, y: ey },
+            thickness: 0.5,
+            color: C_LGRAY,
+          });
+          page.drawLine({
+            start: { x: ex0, y: ey + mkPt },
+            end: { x: ex0, y: ey },
+            thickness: 1,
+            color: C_GRAY,
+          });
+          page.drawLine({
+            start: { x: ex0, y: ey },
+            end: { x: ex0 + mkPt, y: ey },
+            thickness: 1,
+            color: C_GRAY,
+          });
         }
 
         // Footer: 1 cm scale-check bar + reference text
@@ -2065,11 +2211,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Scale bar: exactly 10 mm wide — must measure 1 cm when printed at 100%
         const ONE_CM_PT = 10 * PT;
-        page.drawRectangle({ x: MG, y: yT(fY + 5.5), width: ONE_CM_PT, height: 3.5, color: C_BLACK });
-        txt(page, "< 1 cm  (must measure exactly 1 cm at 100%)",
-            12, fY + 5, { size: 6.5, color: C_GRAY });
-        txt(page, `${tileNote}  \u00b7  ${CONTACT}`,
-            190, fY + 5, { size: 6, color: C_LGRAY, align: "right" });
+        page.drawRectangle({
+          x: MG,
+          y: yT(fY + 5.5),
+          width: ONE_CM_PT,
+          height: 3.5,
+          color: C_BLACK,
+        });
+        txt(page, "< 1 cm  (must measure exactly 1 cm at 100%)", 12, fY + 5, {
+          size: 6.5,
+          color: C_GRAY,
+        });
+        txt(page, `${tileNote}  \u00b7  ${CONTACT}`, 190, fY + 5, {
+          size: 6,
+          color: C_LGRAY,
+          align: "right",
+        });
       }
     }
 
@@ -2079,23 +2236,33 @@ document.addEventListener("DOMContentLoaded", function () {
       pageIdx++;
       const page = pdfDoc.addPage([A4W, A4H]);
 
-      const lc        = printSafeRgb(L.color);
-      const moves     = L.seq?.length ? L.seq.length - 1 : L.edges.length;
+      const lc = printSafeRgb(L.color);
+      const moves = L.seq?.length ? L.seq.length - 1 : L.edges.length;
       const startNail = L.seq?.length ? L.seq[0] + numStart : "\u2014";
       const activeIdx = activeLayers.indexOf(L) + 1;
 
       // Colour accent bar
-      page.drawRectangle({ x: MG, y: yT(25), width: 4, height: 25 * PT, color: lc });
-      txt(page, `LAYER ${activeIdx} OF ${activeLayers.length}`, 7, 6.5,  { size: 7, font: fBold, color: C_LGRAY });
-      txt(page, `Layer ${li + 1}`,  7, 18,   { size: 20, font: fBold });
-      txt(page, L.color || "",      7, 23.5, { size: 9, color: lc });
+      page.drawRectangle({
+        x: MG,
+        y: yT(25),
+        width: 4,
+        height: 25 * PT,
+        color: lc,
+      });
+      txt(page, `LAYER ${activeIdx} OF ${activeLayers.length}`, 7, 6.5, {
+        size: 7,
+        font: fBold,
+        color: C_LGRAY,
+      });
+      txt(page, `Layer ${li + 1}`, 7, 18, { size: 20, font: fBold });
+      txt(page, L.color || "", 7, 23.5, { size: 9, color: lc });
       hRule(page, 27);
 
       // KPI strip
       const kpis = [
-        [String(moves),                   "MOVES"],
-        [String(startNail),               "START NAIL"],
-        [`~${toM(layerThreadMm[li])} m`,  "THREAD"],
+        [String(moves), "MOVES"],
+        [String(startNail), "START NAIL"],
+        [`~${toM(layerThreadMm[li])} m`, "THREAD"],
       ];
       kpis.forEach(([v, l], i) => {
         const x = i * 63.3 + 31.7;
@@ -2105,93 +2272,225 @@ document.addEventListener("DOMContentLoaded", function () {
       hRule(page, 43);
 
       // Layer preview diagram (scaled to fit, not true-size)
-      const PW2 = 130, PH2 = 118, PX2 = 30, PTOP2 = 46;
+      const PW2 = 130,
+        PH2 = 118,
+        PX2 = 30,
+        PTOP2 = 46;
       const sc2 = Math.min(PW2 / SZ, PH2 / SZ) * PT;
       const lpX = (sx) => xL(PX2) + sx * sc2;
-      const lpY = (sy) => (A4H - MG - PTOP2 * PT) - sy * sc2;
+      const lpY = (sy) => A4H - MG - PTOP2 * PT - sy * sc2;
 
       if (board === "circle") {
-        page.drawCircle({ x: lpX(CX), y: lpY(CY), size: BRAD * sc2, color: undefined, borderColor: C_LGRAY, borderWidth: 1 });
+        page.drawCircle({
+          x: lpX(CX),
+          y: lpY(CY),
+          size: BRAD * sc2,
+          color: undefined,
+          borderColor: C_LGRAY,
+          borderWidth: 1,
+        });
       } else {
-        page.drawRectangle({ x: lpX(CX - BRAD), y: lpY(CY + BRAD), width: BRAD * 2 * sc2, height: BRAD * 2 * sc2, color: undefined, borderColor: C_LGRAY, borderWidth: 1 });
+        page.drawRectangle({
+          x: lpX(CX - BRAD),
+          y: lpY(CY + BRAD),
+          width: BRAD * 2 * sc2,
+          height: BRAD * 2 * sc2,
+          color: undefined,
+          borderColor: C_LGRAY,
+          borderWidth: 1,
+        });
       }
 
       // This layer's lines — full print-safe colour, thicker stroke for clear printing
       const lPrint = printSafeRgb(L.color);
       for (const e of L.edges) {
         if (!svgPts[e.a] || !svgPts[e.b]) continue;
-        const [x1, y1] = svgPts[e.a], [x2, y2] = svgPts[e.b];
-        page.drawLine({ start: { x: lpX(x1), y: lpY(y1) }, end: { x: lpX(x2), y: lpY(y2) }, thickness: 1.4, color: lPrint });
+        const [x1, y1] = svgPts[e.a],
+          [x2, y2] = svgPts[e.b];
+        page.drawLine({
+          start: { x: lpX(x1), y: lpY(y1) },
+          end: { x: lpX(x2), y: lpY(y2) },
+          thickness: 1.4,
+          color: lPrint,
+        });
       }
 
       // Nail dots
       for (let i = 0; i < nailCount; i++) {
         const [x, y] = svgPts[i];
-        page.drawCircle({ x: lpX(x), y: lpY(y), size: Math.max(1.2 * sc2, 1), color: C_BLACK });
+        page.drawCircle({
+          x: lpX(x),
+          y: lpY(y),
+          size: Math.max(1.2 * sc2, 1),
+          color: C_BLACK,
+        });
       }
 
-      txt(page, `Layer ${li + 1} isolated`,
-          PX2 + PW2 / 2, PTOP2 + PH2 + 3, { size: 7.5, color: C_GRAY, align: "center" });
+      txt(page, `Layer ${li + 1} isolated`, PX2 + PW2 / 2, PTOP2 + PH2 + 3, {
+        size: 7.5,
+        color: C_GRAY,
+        align: "center",
+      });
 
       // Sequence grid — fully paginated, no truncation
       if (L.seq?.length > 1) {
-        const sqTop      = PTOP2 + PH2 + 8;  // 172mm
+        const sqTop = PTOP2 + PH2 + 8; // 172mm
         const totalSteps = L.seq.length - 1;
         hRule(page, sqTop);
-        txt(page, `SEQUENCE — LAYER ${li + 1}`, 0, sqTop + 4.5, { size: 8.5, font: fBold, color: C_GRAY });
-        txt(page, `Start at nail ${startNail}  \u00b7  ${totalSteps} moves  \u00b7  follow each step in order`,
-            0, sqTop + 9, { size: 7.5, color: C_GRAY });
+        txt(page, `SEQUENCE — LAYER ${li + 1}`, 0, sqTop + 4.5, {
+          size: 8.5,
+          font: fBold,
+          color: C_GRAY,
+        });
+        txt(
+          page,
+          `Start at nail ${startNail}  \u00b7  ${totalSteps} moves  \u00b7  follow each step in order`,
+          0,
+          sqTop + 9,
+          { size: 7.5, color: C_GRAY },
+        );
 
         // Render steps on the layer preview page
         let si = 0;
         while (si < totalSteps) {
-          const sc3 = si % SCOLS_SEQ, sr = Math.floor(si / SCOLS_SEQ);
-          const cx  = sc3 * (COL_W_MM + COL_GAP_MM);
-          const cy  = sqTop + 15 + sr * SEQ_ROW_H_MM;
+          const sc3 = si % SCOLS_SEQ;
+          const sr = Math.floor(si / SCOLS_SEQ);
+          const cx = sc3 * (COL_W_MM + COL_GAP_MM);
+          const cy = sqTop + 15 + sr * SEQ_ROW_H_MM;
+
           if (cy > SEQ_MAX_Y_MM) break;
-          page.drawRectangle({ x: xL(cx), y: yT(cy + CELL_H_MM), width: COL_W_MM * PT, height: CELL_H_MM * PT, color: rgb(0.96, 0.96, 0.96), borderColor: C_LGRAY, borderWidth: 0.4 });
-          txt(page, String(si + 1), cx + 2, cy + 5, { size: 6.5, font: fBold, color: C_GRAY });
-          txt(page, `${L.seq[si] + numStart} \u2192 ${L.seq[si + 1] + numStart}`, cx + 12, cy + 5, { size: 9, font: fBold });
+
+          const fromNail = L.seq[si] + numStart;
+          const toNail = L.seq[si + 1] + numStart;
+
+          page.drawRectangle({
+            x: xL(cx),
+            y: yT(cy + CELL_H_MM),
+            width: COL_W_MM * PT,
+            height: CELL_H_MM * PT,
+            color: rgb(0.985, 0.985, 0.985),
+            borderColor: C_LGRAY,
+            borderWidth: 0.4,
+          });
+
+          txt(page, "#" + (si + 1), cx + 2, cy + 3.2, {
+            size: 5.8,
+            font: fBold,
+            color: C_GRAY,
+          });
+
+          txt(
+            page,
+            String(fromNail) + " -> " + String(toNail),
+            cx + 2,
+            cy + 8.4,
+            {
+              size: 9.5,
+              font: fBold,
+            },
+          );
+
           si++;
         }
-        stdFooter(page, CONTACT, `Page ${pageIdx} of ${totalPages} — Layer ${li + 1} of ${activeLayers.length}`);
+
+        stdFooter(
+          page,
+          CONTACT,
+          `Page ${pageIdx} of ${totalPages} - Layer ${li + 1} of ${activeLayers.length}`,
+        );
 
         // Continuation pages for remaining steps
         while (si < totalSteps) {
           pageIdx++;
-          const contPage             = pdfDoc.addPage([A4W, A4H]);
-          const rangeStart           = si + 1;
+          const contPage = pdfDoc.addPage([A4W, A4H]);
+          const rangeStart = si + 1;
           const stepsStartOnThisPage = si;
 
           // Compact header
-          contPage.drawRectangle({ x: MG, y: yT(CONT_HDR_MM), width: 4, height: CONT_HDR_MM * PT, color: lc });
-          txt(contPage, `LAYER ${activeIdx} OF ${activeLayers.length}`,     7, 6.5, { size: 7,  font: fBold, color: C_LGRAY });
-          txt(contPage, `Layer ${li + 1} — Sequence continued`,             7, 17,  { size: 16, font: fBold });
-          txt(contPage, L.color || "",                                       7, 22,  { size: 9,  color: lc });
+          contPage.drawRectangle({
+            x: MG,
+            y: yT(CONT_HDR_MM),
+            width: 4,
+            height: CONT_HDR_MM * PT,
+            color: lc,
+          });
+          txt(
+            contPage,
+            `LAYER ${activeIdx} OF ${activeLayers.length}`,
+            7,
+            6.5,
+            { size: 7, font: fBold, color: C_LGRAY },
+          );
+          txt(contPage, `Layer ${li + 1} - Sequence continued`, 7, 17, {
+            size: 16,
+            font: fBold,
+          });
+          txt(contPage, L.color || "", 7, 22, { size: 9, color: lc });
           hRule(contPage, CONT_HDR_MM);
 
           // Fill this page with steps
           while (si < totalSteps) {
             const relIdx = si - stepsStartOnThisPage;
-            const sc3 = relIdx % SCOLS_SEQ, sr = Math.floor(relIdx / SCOLS_SEQ);
-            const cx  = sc3 * (COL_W_MM + COL_GAP_MM);
-            const cy  = CONT_STEPS_START_MM + sr * SEQ_ROW_H_MM;
+            const sc3 = relIdx % SCOLS_SEQ;
+            const sr = Math.floor(relIdx / SCOLS_SEQ);
+            const cx = sc3 * (COL_W_MM + COL_GAP_MM);
+            const cy = CONT_STEPS_START_MM + sr * SEQ_ROW_H_MM;
+
             if (cy > SEQ_MAX_Y_MM) break;
-            contPage.drawRectangle({ x: xL(cx), y: yT(cy + CELL_H_MM), width: COL_W_MM * PT, height: CELL_H_MM * PT, color: rgb(0.96, 0.96, 0.96), borderColor: C_LGRAY, borderWidth: 0.4 });
-            txt(contPage, String(si + 1), cx + 2, cy + 5, { size: 6.5, font: fBold, color: C_GRAY });
-            txt(contPage, `${L.seq[si] + numStart} \u2192 ${L.seq[si + 1] + numStart}`, cx + 12, cy + 5, { size: 9, font: fBold });
+
+            const fromNail = L.seq[si] + numStart;
+            const toNail = L.seq[si + 1] + numStart;
+
+            contPage.drawRectangle({
+              x: xL(cx),
+              y: yT(cy + CELL_H_MM),
+              width: COL_W_MM * PT,
+              height: CELL_H_MM * PT,
+              color: rgb(0.985, 0.985, 0.985),
+              borderColor: C_LGRAY,
+              borderWidth: 0.4,
+            });
+
+            txt(contPage, "#" + (si + 1), cx + 2, cy + 3.2, {
+              size: 5.8,
+              font: fBold,
+              color: C_GRAY,
+            });
+
+            txt(
+              contPage,
+              String(fromNail) + " -> " + String(toNail),
+              cx + 2,
+              cy + 8.4,
+              {
+                size: 9.5,
+                font: fBold,
+              },
+            );
+
             si++;
           }
 
-          // Step range label (drawn after loop so rangeEnd is known)
           const rangeEnd = si;
-          txt(contPage, `Steps ${rangeStart}–${rangeEnd} of ${totalSteps}  \u00b7  Layer ${li + 1}`,
-              0, CONT_HDR_MM + 3.5, { size: 7.5, color: C_GRAY });
-          stdFooter(contPage, CONTACT,
-            `Page ${pageIdx} of ${totalPages} — Layer ${li + 1} of ${activeLayers.length} (steps ${rangeStart}–${rangeEnd})`);
+          txt(
+            contPage,
+            `Steps ${rangeStart}-${rangeEnd} of ${totalSteps} - Layer ${li + 1}`,
+            0,
+            CONT_HDR_MM + 3.5,
+            { size: 7.5, color: C_GRAY },
+          );
+          stdFooter(
+            contPage,
+            CONTACT,
+            `Page ${pageIdx} of ${totalPages} - Layer ${li + 1} of ${activeLayers.length} (steps ${rangeStart}-${rangeEnd})`,
+          );
         }
       } else {
-        stdFooter(page, CONTACT, `Page ${pageIdx} of ${totalPages} — Layer ${li + 1} of ${activeLayers.length}`);
+        stdFooter(
+          page,
+          CONTACT,
+          `Page ${pageIdx} of ${totalPages} - Layer ${li + 1} of ${activeLayers.length}`,
+        );
       }
     });
 
@@ -2200,29 +2499,54 @@ document.addEventListener("DOMContentLoaded", function () {
     {
       const page = pdfDoc.addPage([A4W, A4H]);
 
-      txt(page, "STRING ART STUDIO", 0, 7,  { size: 7, font: fBold, color: C_LGRAY });
-      txt(page, "How To Build",      0, 19, { size: 22, font: fBold });
+      txt(page, "STRING ART STUDIO", 0, 7, {
+        size: 7,
+        font: fBold,
+        color: C_LGRAY,
+      });
+      txt(page, "How To Build", 0, 19, { size: 22, font: fBold });
       hRule(page, 23);
 
       const steps = [
-        ["1", "Start at the listed nail",
-              "Each layer page shows the start nail — tie a knot here before you begin."],
-        ["2", "Follow the sequence in order",
-              "Each step shows one nail move. Work through the list exactly as shown, nail by nail."],
-        ["3", "Keep even tension on the thread",
-              "Thread should be snug but not so tight it bows the board."],
-        ["4", "Complete one full layer before stopping",
-              "Finish the entire sequence for a layer before moving to the next colour."],
+        [
+          "1",
+          "Start at the listed nail",
+          "Each layer page shows the start nail — tie a knot here before you begin.",
+        ],
+        [
+          "2",
+          "Follow the sequence in order",
+          "Each step shows one nail move. Work through the list exactly as shown, nail by nail.",
+        ],
+        [
+          "3",
+          "Keep even tension on the thread",
+          "Thread should be snug but not so tight it bows the board.",
+        ],
+        [
+          "4",
+          "Complete one full layer before stopping",
+          "Finish the entire sequence for a layer before moving to the next colour.",
+        ],
       ];
 
       let sy = 28;
       for (const [num, title, desc] of steps) {
-        const cx2 = xL(4.5), cy2 = yT(sy + 3);
+        const cx2 = xL(4.5),
+          cy2 = yT(sy + 3);
         page.drawCircle({ x: cx2, y: cy2, size: 4.5 * PT, color: C_BLACK });
         const nw = fBold.widthOfTextAtSize(num, 11);
-        try { page.drawText(num, { x: cx2 - nw / 2, y: cy2 - 4.5, size: 11, font: fBold, color: C_WHITE }); } catch (_) {}
+        try {
+          page.drawText(num, {
+            x: cx2 - nw / 2,
+            y: cy2 - 4.5,
+            size: 11,
+            font: fBold,
+            color: C_WHITE,
+          });
+        } catch (_) {}
         txt(page, title, 12, sy + 1.5, { size: 10, font: fBold });
-        txt(page, desc,  12, sy + 7,   { size: 8, color: C_GRAY });
+        txt(page, desc, 12, sy + 7, { size: 8, color: C_GRAY });
         hRule(page, sy + 12, 0.3, rgb(0.92, 0.92, 0.92));
         sy += 15;
       }
@@ -2243,21 +2567,24 @@ document.addEventListener("DOMContentLoaded", function () {
         sy += 7.5;
       }
 
-      stdFooter(page, CONTACT, `Page ${pageIdx} of ${totalPages} — Build Guide`);
+      stdFooter(
+        page,
+        CONTACT,
+        `Page ${pageIdx} of ${totalPages} — Build Guide`,
+      );
     }
 
     // ── SAVE & DOWNLOAD ──
     const pdfBytes = await pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: "application/pdf" });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href     = url;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
     a.download = "string-art-template.pdf";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-
   }
 
   init();
