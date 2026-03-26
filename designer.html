@@ -605,6 +605,13 @@
           color: var(--text-dark);
           border: 1px solid #d7d7d7;
         }
+
+        .panel {
+          max-height: calc(100vh - 40px);
+          overflow-y: auto;
+          scrollbar-width: thin;
+          scrollbar-color: rgba(60,44,28,0.15) transparent;
+        }
       }
 
       /* ================= FLOATING UNDO ================= */
@@ -1365,6 +1372,22 @@
             <input id="radius" type="hidden" value="320" />
           </div>
 
+          <!-- UNDO -->
+          <div class="undo-row">
+            <button id="undo">↶ Undo</button>
+          </div>
+
+          <!-- SEQUENCE -->
+          <div class="panel-section">
+            <span class="panel-section-label">Sequence</span>
+            <div class="seq-out-wrap">
+              <div id="seqOut" class="mono">
+                Tap a nail to start your thread. Then tap another nail to draw a
+                line.
+              </div>
+            </div>
+          </div>
+
           <button
             id="toggleControlsBtn"
             class="panel-settings-toggle btn-ghost"
@@ -1503,22 +1526,6 @@
             </div>
           </div>
           <!-- end #controlsPanel -->
-
-          <!-- UNDO -->
-          <div class="undo-row">
-            <button id="undo">↶ Undo last line</button>
-          </div>
-
-          <!-- SEQUENCE -->
-          <div class="panel-section">
-            <span class="panel-section-label">Sequence</span>
-            <div class="seq-out-wrap">
-              <div id="seqOut" class="mono">
-                Tap a nail to start your thread. Then tap another nail to draw a
-                line.
-              </div>
-            </div>
-          </div>
         </div>
 
         <canvas id="cv" aria-label="String art design canvas"></canvas>

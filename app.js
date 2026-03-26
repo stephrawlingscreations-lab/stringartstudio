@@ -1221,7 +1221,8 @@ document.addEventListener("DOMContentLoaded", function () {
       // Ignore if focus is on an input/select/textarea
       const tag = document.activeElement?.tagName;
       if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
-      if (e.key === "+" || e.key === "=") nudgeZoom(1);
+      if (e.key === "z" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); undo(); }
+      else if (e.key === "+" || e.key === "=") nudgeZoom(1);
       else if (e.key === "-") nudgeZoom(-1);
       else if (e.key === "0" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); fitToScreen(); }
     });
