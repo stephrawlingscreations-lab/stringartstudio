@@ -2367,25 +2367,26 @@ document.addEventListener("DOMContentLoaded", function () {
             x: xL(cx),
             y: yT(cy + CELL_H_MM),
             width: COL_W_MM * PT,
-            height: CELL_H_MM * PT,
+            height: (CELL_H_MM + 2) * PT,
             color: rgb(0.985, 0.985, 0.985),
             borderColor: C_LGRAY,
             borderWidth: 0.4,
           });
 
-          txt(page, "#" + (si + 1), cx + 2, cy + 3.2, {
-            size: 5.8,
-            font: fBold,
+          // Step number (top, subtle)
+          txt(page, "Step " + (si + 1), cx + 2, cy + 3, {
+            size: 5.5,
             color: C_GRAY,
           });
 
+          // Big, clear move (centered feel)
           txt(
             page,
-            String(fromNail) + " -> " + String(toNail),
+            String(fromNail) + " → " + String(toNail),
             cx + 2,
-            cy + 8.4,
+            cy + 10,
             {
-              size: 9.5,
+              size: 11,
               font: fBold,
             },
           );
