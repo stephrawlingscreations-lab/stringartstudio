@@ -2364,28 +2364,28 @@ document.addEventListener("DOMContentLoaded", function () {
           const toNail = L.seq[si + 1] + numStart;
           page.drawRectangle({
             x: xL(cx),
-            y: yT(cy + CELL_H_MM + 2),
+            y: yT(cy + CELL_H_MM),
             width: COL_W_MM * PT,
-            height: (CELL_H_MM + 2) * PT,
+            height: CELL_H_MM * PT,
             color: rgb(0.985, 0.985, 0.985),
             borderColor: C_LGRAY,
             borderWidth: 0.4,
           });
 
-          // Step number (top)
+          // Step label near top
           txt(page, "Step " + (si + 1), cx + 3, cy + 4, {
             size: 6,
             color: C_GRAY,
           });
 
-          // Move
+          // Move text INSIDE the card
           txt(
             page,
             String(fromNail) + " -> " + String(toNail),
             cx + 3,
-            cy + 11,
+            cy + 7.2,
             {
-              size: 11,
+              size: 10,
               font: fBold,
             },
           );
