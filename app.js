@@ -2373,7 +2373,7 @@ document.addEventListener("DOMContentLoaded", function () {
           });
 
           // Step label near top
-          txt(page, "Step " + (si + 1), cx + 3, cy + 4, {
+          txt(page, "Step " + (si + 1), cx + 3, cy + 2.8, {
             size: 6,
             color: C_GRAY,
           });
@@ -2382,11 +2382,12 @@ document.addEventListener("DOMContentLoaded", function () {
           txt(
             page,
             String(fromNail) + " -> " + String(toNail),
-            cx + 3,
-            cy + 7.2,
+            cx + COL_W_MM / 2,
+            cy + 5.5,
             {
               size: 10,
               font: fBold,
+              align: "center",
             },
           );
           si++;
@@ -2450,7 +2451,7 @@ document.addEventListener("DOMContentLoaded", function () {
               borderWidth: 0.4,
             });
 
-            txt(contPage, "#" + (si + 1), cx + 2, cy + 3.2, {
+            txt(contPage, "#" + (si + 1), cx + 2, cy + 2.8, {
               size: 5.8,
               font: fBold,
               color: C_GRAY,
@@ -2459,11 +2460,12 @@ document.addEventListener("DOMContentLoaded", function () {
             txt(
               contPage,
               String(fromNail) + " -> " + String(toNail),
-              cx + 2,
-              cy + 8.4,
+              cx + COL_W_MM / 2,
+              cy + 5.5,
               {
                 size: 9.5,
                 font: fBold,
+                align: "center",
               },
             );
 
