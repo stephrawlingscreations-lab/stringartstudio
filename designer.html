@@ -1289,6 +1289,285 @@
         }
         .site-nav-links { width: 100%; justify-content: flex-start; }
       }
+
+      /* ================= BEGINNER / ADVANCED MODE ================= */
+      .advanced-only { display: none !important; }
+      body.mode-advanced .advanced-only { display: block !important; }
+
+      /* ================= MODE TOGGLE ================= */
+      .mode-toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 14px;
+        margin-bottom: 14px;
+        border-bottom: 1px solid rgba(60,44,28,0.07);
+      }
+      .mode-toggle-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--faint);
+        text-transform: uppercase;
+        letter-spacing: 0.10em;
+      }
+      .mode-toggle {
+        display: flex;
+        background: rgba(60,44,28,0.07);
+        border-radius: 999px;
+        padding: 3px;
+        gap: 2px;
+      }
+      .mode-btn {
+        background: transparent;
+        border: none;
+        border-radius: 999px;
+        padding: 5px 14px;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--muted);
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+        font-family: Inter, system-ui, sans-serif;
+      }
+      .mode-btn.active {
+        background: var(--navy);
+        color: white;
+        box-shadow: 0 2px 8px rgba(27,44,66,0.22);
+      }
+      .mode-btn:hover:not(.active) {
+        color: var(--text-dark);
+        background: rgba(60,44,28,0.05);
+        opacity: 1;
+      }
+
+      /* ================= CUSTOM LAYOUT SECTION ================= */
+      .custom-layout-section {
+        background: linear-gradient(135deg,rgba(184,137,46,0.05),rgba(184,137,46,0.02));
+        border: 1px solid rgba(184,137,46,0.14);
+        border-radius: 16px;
+        padding: 14px;
+        margin: 10px 0;
+      }
+      .layout-mode-bar {
+        display: flex;
+        background: rgba(60,44,28,0.06);
+        border-radius: 12px;
+        padding: 3px;
+        gap: 3px;
+        margin-bottom: 8px;
+      }
+      .layout-mode-btn {
+        flex: 1;
+        background: transparent;
+        border: none;
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        font-family: Inter, system-ui, sans-serif;
+      }
+      .layout-mode-btn.active {
+        background: white;
+        color: var(--text-dark);
+        box-shadow: 0 2px 12px rgba(28,21,16,0.10);
+      }
+      .layout-mode-btn:hover:not(.active) { color: var(--text-dark); opacity: 1; }
+      .layout-hint {
+        font-size: 11.5px;
+        color: var(--muted);
+        margin: 4px 0 8px;
+        line-height: 1.5;
+      }
+
+      /* ================= SUB-MODE TABS ================= */
+      .sub-mode-tabs {
+        display: flex;
+        background: rgba(60,44,28,0.05);
+        border-radius: 10px;
+        padding: 3px;
+        gap: 3px;
+        margin-bottom: 12px;
+      }
+      .sub-tab {
+        flex: 1;
+        background: transparent;
+        border: none;
+        border-radius: 8px;
+        padding: 7px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--muted);
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s;
+        font-family: Inter, system-ui, sans-serif;
+      }
+      .sub-tab.active {
+        background: white;
+        color: var(--text-dark);
+        box-shadow: 0 1px 6px rgba(28,21,16,0.08);
+      }
+      .sub-tab:hover:not(.active) { color: var(--text-dark); opacity: 1; }
+
+      /* ================= EDGE MAP (SQUARE) ================= */
+      .edge-map {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 4px;
+        margin: 8px 0 10px;
+      }
+      .edge-map-middle {
+        display: flex;
+        align-items: stretch;
+        gap: 4px;
+      }
+      .edge-board-box {
+        flex: 1;
+        min-height: 44px;
+        background: rgba(60,44,28,0.05);
+        border: 1.5px dashed rgba(60,44,28,0.14);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        color: var(--faint);
+        font-weight: 500;
+        pointer-events: none;
+      }
+      .edge-btn {
+        background: rgba(60,44,28,0.07);
+        border: 1.5px solid rgba(60,44,28,0.12);
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--muted);
+        cursor: pointer;
+        transition: all 0.16s ease;
+        padding: 8px 10px;
+        letter-spacing: 0.03em;
+        font-family: Inter, system-ui, sans-serif;
+      }
+      .edge-btn[data-edge="top"],
+      .edge-btn[data-edge="bottom"] { width: 100%; padding: 8px; }
+      .edge-btn[data-edge="left"],
+      .edge-btn[data-edge="right"] {
+        width: 38px;
+        flex-shrink: 0;
+        writing-mode: vertical-lr;
+        padding: 10px 6px;
+      }
+      .edge-btn[data-edge="left"] { transform: rotate(180deg); }
+      .edge-btn.active {
+        background: linear-gradient(135deg,var(--gold),#a8781e);
+        border-color: var(--gold);
+        color: white;
+        box-shadow: 0 2px 10px rgba(184,137,46,0.32);
+      }
+      .edge-btn:hover:not(.active) {
+        border-color: var(--gold);
+        color: var(--gold);
+        background: rgba(184,137,46,0.09);
+        opacity: 1;
+      }
+
+      /* ================= ARC CONTROLS ================= */
+      .arc-control { margin: 4px 0 8px; }
+      .arc-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: var(--muted);
+        margin: 8px 0 3px;
+      }
+      .arc-label span { font-weight: 700; color: var(--gold); }
+
+      /* ================= MANUAL HINT ================= */
+      .manual-hint {
+        background: rgba(184,137,46,0.07);
+        border: 1px solid rgba(184,137,46,0.18);
+        border-radius: 12px;
+        padding: 14px;
+        text-align: center;
+        margin-bottom: 10px;
+      }
+      .manual-hint-icon { font-size: 20px; color: var(--gold); margin-bottom: 6px; }
+      .manual-hint p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.65; }
+
+      /* ================= NAIL COUNT BADGE ================= */
+      .nail-count-row { display: flex; justify-content: flex-end; margin: 6px 0; }
+      .nail-count-badge {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--gold);
+        background: var(--gold-lt);
+        padding: 3px 10px;
+        border-radius: 999px;
+      }
+
+      /* ================= SMART TOOLS ================= */
+      .smart-tools-header {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--faint);
+        display: block;
+        margin: 12px 0 7px;
+      }
+      .smart-tools-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+      .tool-btn {
+        font-size: 12px !important;
+        padding: 8px 8px !important;
+        border-radius: 10px !important;
+        white-space: nowrap;
+      }
+
+      /* ================= CUSTOM PRESETS ================= */
+      .custom-presets-header {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--faint);
+        display: block;
+        margin: 12px 0 7px;
+      }
+      .preset-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+      .preset-chip-sm {
+        background: rgba(255,255,255,0.9);
+        border: 1px solid rgba(60,44,28,0.13);
+        color: var(--text-dark);
+        border-radius: 999px;
+        padding: 5px 11px;
+        font-size: 11.5px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s;
+        white-space: nowrap;
+        font-family: Inter, system-ui, sans-serif;
+      }
+      .preset-chip-sm:hover {
+        border-color: var(--gold);
+        color: var(--gold);
+        background: rgba(184,137,46,0.05);
+        opacity: 1;
+      }
     </style>
   </head>
 
@@ -1372,6 +1651,15 @@
     <div class="container" id="designer">
       <div class="wrap">
         <div class="panel">
+          <!-- MODE TOGGLE -->
+          <div class="mode-toggle-row">
+            <span class="mode-toggle-label">Experience</span>
+            <div class="mode-toggle" role="group" aria-label="Experience level">
+              <button class="mode-btn active" id="modeBeginner">Beginner</button>
+              <button class="mode-btn" id="modeAdvanced">Advanced</button>
+            </div>
+          </div>
+
           <!-- BOARD -->
           <div class="panel-section">
             <span class="panel-section-label">Board</span>
@@ -1414,6 +1702,93 @@
             <input id="radius" type="hidden" value="320" />
           </div>
 
+          <!-- NAIL LAYOUT — advanced only -->
+          <div class="custom-layout-section advanced-only" id="customLayoutSect">
+            <span class="panel-section-label" style="margin-bottom:10px;display:block;">Nail Layout</span>
+
+            <div class="layout-mode-bar" role="group" aria-label="Nail layout mode">
+              <button class="layout-mode-btn active" id="layoutModeAuto">⊙ Auto</button>
+              <button class="layout-mode-btn" id="layoutModeCustom">✦ Custom</button>
+            </div>
+
+            <p class="layout-hint" id="layoutAutoHint">Nails placed evenly around the full perimeter automatically.</p>
+
+            <div id="customLayoutControls" style="display:none">
+              <p class="layout-hint">Choose where nails appear — build patterns from selected edges only.</p>
+
+              <div class="sub-mode-tabs" role="group">
+                <button class="sub-tab active" id="subModeEdges">Edge Select</button>
+                <button class="sub-tab" id="subModeManual">Manual Place</button>
+              </div>
+
+              <!-- EDGE SELECT: Square -->
+              <div id="edgeSelectSquare" style="display:none">
+                <div class="edge-map">
+                  <button class="edge-btn active" data-edge="top">Top</button>
+                  <div class="edge-map-middle">
+                    <button class="edge-btn active" data-edge="left">Left</button>
+                    <div class="edge-board-box">Board</div>
+                    <button class="edge-btn active" data-edge="right">Right</button>
+                  </div>
+                  <button class="edge-btn active" data-edge="bottom">Bottom</button>
+                </div>
+              </div>
+
+              <!-- EDGE SELECT: Circle -->
+              <div id="edgeSelectCircle" style="display:none">
+                <div class="arc-control">
+                  <label class="arc-label">Start angle <span id="arcStartVal">−90°</span></label>
+                  <input type="range" id="arcStart" min="-180" max="270" step="5" value="-90" style="width:100%;accent-color:var(--gold);" />
+                  <label class="arc-label">End angle <span id="arcEndVal">270°</span></label>
+                  <input type="range" id="arcEnd" min="-90" max="360" step="5" value="270" style="width:100%;accent-color:var(--gold);" />
+                </div>
+              </div>
+
+              <!-- MANUAL PLACEMENT -->
+              <div id="manualPlacementPanel" style="display:none">
+                <div class="manual-hint">
+                  <div class="manual-hint-icon">✦</div>
+                  <p><strong>Click the board</strong> to place a nail.<br><strong>Click a nail</strong> to remove it.<br><strong>Drag</strong> to reposition.</p>
+                </div>
+              </div>
+
+              <!-- Nail count badge -->
+              <div class="nail-count-row">
+                <span id="customNailCount" class="nail-count-badge">0 nails</span>
+              </div>
+
+              <!-- Smart tools -->
+              <span class="smart-tools-header">Tools</span>
+              <div class="smart-tools-grid">
+                <button id="distributeNails" class="tool-btn btn-ghost">⟷ Distribute</button>
+                <button id="mirrorNails" class="tool-btn btn-ghost">⇔ Mirror</button>
+                <button id="resetToPerimeter" class="tool-btn btn-ghost">↺ Reset</button>
+                <button id="clearCustomNails" class="tool-btn btn-ghost btn-danger">✕ Clear nails</button>
+              </div>
+
+              <!-- Presets -->
+              <span class="custom-presets-header">Presets</span>
+              <div id="squarePresets" class="preset-chip-row" style="display:none">
+                <button class="preset-chip-sm" data-custom-preset="full">Full</button>
+                <button class="preset-chip-sm" data-custom-preset="top">Top</button>
+                <button class="preset-chip-sm" data-custom-preset="bottom">Bottom</button>
+                <button class="preset-chip-sm" data-custom-preset="left-right">L+R</button>
+                <button class="preset-chip-sm" data-custom-preset="top-bottom">T+B</button>
+                <button class="preset-chip-sm" data-custom-preset="opposing">Opposing</button>
+                <button class="preset-chip-sm" data-custom-preset="l-shape">L-shape</button>
+              </div>
+              <div id="circlePresets" class="preset-chip-row">
+                <button class="preset-chip-sm" data-custom-preset="full">Full</button>
+                <button class="preset-chip-sm" data-custom-preset="top-half">Top ½</button>
+                <button class="preset-chip-sm" data-custom-preset="bottom-half">Bot ½</button>
+                <button class="preset-chip-sm" data-custom-preset="left-half">Left ½</button>
+                <button class="preset-chip-sm" data-custom-preset="right-half">Right ½</button>
+                <button class="preset-chip-sm" data-custom-preset="quarter">¼ Arc</button>
+                <button class="preset-chip-sm" data-custom-preset="three-quarter">¾ Arc</button>
+              </div>
+            </div>
+          </div>
+
           <!-- UNDO -->
           <div class="undo-row">
             <button id="undo">↶ Undo</button>
@@ -1430,7 +1805,7 @@
                 line.
               </div>
             </div>
-            <div class="continue-row" style="margin-top: 8px;">
+            <div class="continue-row advanced-only" style="margin-top: 8px;">
               <input
                 id="continueSteps"
                 type="number"
@@ -1517,13 +1892,13 @@
                   + Layer
                 </button>
               </div>
-              <div class="slider-row">
+              <div class="slider-row advanced-only">
                 <label>Opacity <span id="opacityVal">35%</span>
                   <span class="help-tip">?<span class="tip-text">Lower opacity creates the see-through layering effect that makes string art look its best. 20–40% works for most patterns.</span></span>
                 </label>
                 <input id="opacity" type="range" min="0.05" max="1" step="0.05" value="0.35" />
               </div>
-              <div class="slider-row">
+              <div class="slider-row advanced-only">
                 <label>Thread weight <span id="lwVal">0.7</span>
                   <span class="help-tip">?<span class="tip-text">Thickness of the drawn lines. Lower = delicate and intricate. Higher = bold and visible from a distance.</span></span>
                 </label>
@@ -1540,7 +1915,7 @@
             </div>
 
             <!-- TAP SENSITIVITY -->
-            <div class="panel-section">
+            <div class="panel-section advanced-only">
               <span class="panel-section-label">Advanced</span>
               <label
                 >Tap sensitivity

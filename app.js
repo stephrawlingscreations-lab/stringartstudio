@@ -54,6 +54,19 @@ document.addEventListener("DOMContentLoaded", function () {
   let hoverNail = null;
   let boardColor = localStorage.getItem("sas_board_color") || "#ffffff";
 
+  // ---- Custom Nail Layout State ----
+  let nailLayoutMode = 'auto';   // 'auto' | 'custom'
+  let customSubMode  = 'edges';  // 'edges' | 'manual'
+  let customNails    = [];       // [{nx, ny}] normalised by radius
+  let edgesEnabled   = { top: true, right: true, bottom: true, left: true };
+  let arcRange       = { start: -90, end: 270 };
+  let customNailHistory = [];
+  let isDraggingCustom  = false;
+  let dragCustomIdx     = null;
+  let dragStartPos      = null;
+  let uiMode       = 'beginner';
+  let lastCx = 0, lastCy = 0, lastRadius = 320;
+
   /* -----------------------------
      CANVAS SWITCHING
   ----------------------------- */
@@ -566,13 +579,21 @@ document.addEventListener("DOMContentLoaded", function () {
     const cx = cssW / 2;
     const cy = cssH / 2;
 
-    if (board === "circle") {
-      pts = pointsCircle(nails, cx, cy, radius, nail1AngleDeg());
+    lastCx = cx; lastCy = cy; lastRadius = radius;
+
+    if (nailLayoutMode === 'custom' && customNails.length > 0) {
+      pts = customNails.map(n => [cx + n.nx * radius, cy + n.ny * radius]);
+    } else if (nailLayoutMode === 'custom') {
+      pts = [];
     } else {
-      pts = rotatePts(
-        pointsSquarePerimeter(nails, cx, cy, radius),
-        nail1SquareOffset(nails),
-      );
+      if (board === "circle") {
+        pts = pointsCircle(nails, cx, cy, radius, nail1AngleDeg());
+      } else {
+        pts = rotatePts(
+          pointsSquarePerimeter(nails, cx, cy, radius),
+          nail1SquareOffset(nails),
+        );
+      }
     }
 
     // Board background fill (sits behind everything)
@@ -593,12 +614,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
     ctx.stroke();
 
-    for (let i = 0; i < nails; i++) {
+    for (let i = 0; i < pts.length; i++) {
       const [x, y] = pts[i];
       ctx.beginPath();
       ctx.arc(x, y, 1.8, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(0,0,0,0.6)";
+      ctx.fillStyle = (nailLayoutMode === 'custom' && customSubMode === 'manual')
+        ? "rgba(184,137,46,0.85)" : "rgba(0,0,0,0.6)";
       ctx.fill();
+    }
+
+    if (nailLayoutMode === 'custom' && pts.length === 0) {
+      ctx.save();
+      ctx.font = '13px Inter, system-ui';
+      ctx.fillStyle = 'rgba(0,0,0,0.28)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Click anywhere on the board to place a nail', cx, cy);
+      ctx.restore();
     }
 
     if ($("showNums")?.checked) {
@@ -612,9 +644,9 @@ document.addEventListener("DOMContentLoaded", function () {
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
 
-      for (let i = 0; i < nails; i++) {
+      for (let i = 0; i < pts.length; i++) {
         const label = i + start;
-        if (label === nails) continue;
+        if (label === pts.length) continue;
         if (every > 1 && label % every !== 0 && label !== start) continue;
 
         const [x, y] = pts[i];
@@ -731,6 +763,11 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function undo() {
+    if (nailLayoutMode === 'custom' && customSubMode === 'manual') {
+      undoCustomNail();
+      return;
+    }
+
     ensureLayerExists();
 
     const L = layers[activeLayer];
@@ -825,26 +862,44 @@ document.addEventListener("DOMContentLoaded", function () {
     cv.onpointermove = null;
     cv.onpointerleave = null;
     cv.onpointerdown = null;
+    cv.onpointerup   = null;
 
-    function handleHover(ev) {
-      if (ev.pointerType === "touch") return;
-
+    cv.onpointermove = (ev) => {
       const { x, y } = canvasXYFromPointerEvent(ev);
+
+      // Handle custom nail drag (works for all pointer types)
+      if (isDraggingCustom && dragCustomIdx !== null) {
+        if (isInsideBoard(x, y)) {
+          customNails[dragCustomIdx] = {
+            nx: (x - lastCx) / lastRadius,
+            ny: (y - lastCy) / lastRadius
+          };
+          redrawAll();
+        }
+        return;
+      }
+
+      if (ev.pointerType === "touch") return;
       hoverNail = nearestNail(x, y);
       redrawAll();
-    }
-
-    cv.onpointermove = handleHover;
+    };
 
     cv.onpointerleave = () => {
-      hoverNail = null;
-      redrawAll();
+      if (!isDraggingCustom) {
+        hoverNail = null;
+        redrawAll();
+      }
     };
 
     cv.onpointerdown = (ev) => {
       const { x, y } = canvasXYFromPointerEvent(ev);
-      const idx = nearestNail(x, y);
 
+      if (nailLayoutMode === 'custom' && customSubMode === 'manual') {
+        handleCustomPointerDown(ev, x, y);
+        return;
+      }
+
+      const idx = nearestNail(x, y);
       if (idx === null) return;
 
       addNailToSequence(idx);
@@ -852,6 +907,32 @@ document.addEventListener("DOMContentLoaded", function () {
       updateSeqOutput();
       updateDrawModeSeqMini();
       panDrawModeToLastNail();
+    };
+
+    cv.onpointerup = (ev) => {
+      if (!isDraggingCustom) return;
+      const { x, y } = canvasXYFromPointerEvent(ev);
+      // If barely moved, treat as a click → remove nail
+      if (dragStartPos && Math.hypot(x - dragStartPos.x, y - dragStartPos.y) < 6) {
+        if (dragCustomIdx !== null) {
+          saveCustomNailHistory();
+          const removed = dragCustomIdx;
+          isDraggingCustom = false;
+          dragCustomIdx = null;
+          dragStartPos = null;
+          customNails.splice(removed, 1);
+          cleanEdgesForRemovedNail(removed);
+          updateCustomNailCount();
+          redrawAll();
+          showToast('Nail removed.');
+          return;
+        }
+      }
+      isDraggingCustom = false;
+      dragCustomIdx = null;
+      dragStartPos = null;
+      try { ev.target?.releasePointerCapture(ev.pointerId); } catch(_) {}
+      redrawAll();
     };
   }
 
@@ -1299,6 +1380,362 @@ document.addEventListener("DOMContentLoaded", function () {
     return edges;
   }
   /* -----------------------------
+     CUSTOM NAIL LAYOUT
+  ----------------------------- */
+
+  function isInsideBoard(x, y) {
+    const board = $('board')?.value || 'circle';
+    const dx = x - lastCx, dy = y - lastCy;
+    if (board === 'circle') return Math.hypot(dx, dy) <= lastRadius;
+    return Math.abs(dx) <= lastRadius && Math.abs(dy) <= lastRadius;
+  }
+
+  function saveCustomNailHistory() {
+    customNailHistory.push(customNails.map(n => ({ ...n })));
+    if (customNailHistory.length > 40) customNailHistory.shift();
+  }
+
+  function undoCustomNail() {
+    if (customNailHistory.length === 0) {
+      showToast('Nothing to undo.', true);
+      return;
+    }
+    customNails = customNailHistory.pop();
+    updateCustomNailCount();
+    redrawAll();
+    showToast('Nail change undone.');
+  }
+
+  function handleCustomPointerDown(ev, x, y) {
+    const snapR = 22;
+    let nearestIdx = null, nearestDist = snapR;
+    for (let i = 0; i < customNails.length; i++) {
+      const nx = lastCx + customNails[i].nx * lastRadius;
+      const ny = lastCy + customNails[i].ny * lastRadius;
+      const d = Math.hypot(nx - x, ny - y);
+      if (d < nearestDist) { nearestDist = d; nearestIdx = i; }
+    }
+    dragStartPos = { x, y };
+    if (nearestIdx !== null) {
+      isDraggingCustom = true;
+      dragCustomIdx = nearestIdx;
+      try { ev.target.setPointerCapture(ev.pointerId); } catch(_) {}
+    } else if (isInsideBoard(x, y)) {
+      saveCustomNailHistory();
+      customNails.push({
+        nx: (x - lastCx) / lastRadius,
+        ny: (y - lastCy) / lastRadius
+      });
+      updateCustomNailCount();
+      redrawAll();
+    }
+  }
+
+  function cleanEdgesForRemovedNail(removedIdx) {
+    layers.forEach(L => {
+      L.edges = L.edges
+        .filter(e => e.a !== removedIdx && e.b !== removedIdx)
+        .map(e => ({ a: e.a > removedIdx ? e.a - 1 : e.a,
+                     b: e.b > removedIdx ? e.b - 1 : e.b }));
+      L.seq = L.seq
+        .filter(i => i !== removedIdx)
+        .map(i => i > removedIdx ? i - 1 : i);
+      if (lastNail === removedIdx) lastNail = null;
+      else if (lastNail !== null && lastNail > removedIdx) lastNail--;
+    });
+    updateSeqOutput();
+    updateDrawModeSeqMini();
+  }
+
+  function updateCustomNailCount() {
+    const el = $('customNailCount');
+    if (el) el.textContent = customNails.length + ' nail' + (customNails.length === 1 ? '' : 's');
+  }
+
+  function generateEdgeNails() {
+    const n = parseInt($('nails')?.value || '120', 10);
+    const board = $('board')?.value || 'circle';
+    const result = [];
+    if (board === 'circle') {
+      const span = arcRange.end - arcRange.start;
+      if (n < 1 || Math.abs(span) < 1) return result;
+      const full = Math.abs(span) >= 359.9;
+      for (let i = 0; i < n; i++) {
+        const frac = full ? i / n : i / (n - 1);
+        const a = (arcRange.start + frac * span) * Math.PI / 180;
+        result.push({ nx: Math.cos(a), ny: Math.sin(a) });
+      }
+    } else {
+      const enabled = ['top','right','bottom','left'].filter(e => edgesEnabled[e]);
+      if (!enabled.length) return result;
+      const base = Math.floor(n / enabled.length);
+      const extra = n - base * enabled.length;
+      enabled.forEach((edge, idx) => {
+        const count = base + (idx < extra ? 1 : 0);
+        for (let i = 0; i < count; i++) {
+          const t = count > 1 ? i / (count - 1) : 0.5;
+          let nx = 0, ny = 0;
+          if      (edge === 'top')    { nx = -1 + 2*t; ny = -1; }
+          else if (edge === 'right')  { nx = 1;        ny = -1 + 2*t; }
+          else if (edge === 'bottom') { nx = 1 - 2*t;  ny = 1; }
+          else if (edge === 'left')   { nx = -1;       ny = 1 - 2*t; }
+          result.push({ nx, ny });
+        }
+      });
+    }
+    return result;
+  }
+
+  function applyEdgeLayout() {
+    saveCustomNailHistory();
+    customNails = generateEdgeNails();
+    updateCustomNailCount();
+    redrawAll();
+  }
+
+  function switchNailLayoutMode(mode) {
+    if (mode === 'custom' && nailLayoutMode === 'auto' && pts.length > 0) {
+      customNails = pts.map(([x, y]) => ({
+        nx: (x - lastCx) / lastRadius,
+        ny: (y - lastCy) / lastRadius
+      }));
+    }
+    nailLayoutMode = mode;
+    updateCustomLayoutUI();
+    updateCustomNailCount();
+    redrawAll();
+  }
+
+  function switchCustomSubMode(mode) {
+    customSubMode = mode;
+    updateCustomLayoutUI();
+    redrawAll();
+  }
+
+  function updateCustomLayoutUI() {
+    $('layoutModeAuto')?.classList.toggle('active', nailLayoutMode === 'auto');
+    $('layoutModeCustom')?.classList.toggle('active', nailLayoutMode === 'custom');
+
+    const cc = $('customLayoutControls');
+    if (cc) cc.style.display = nailLayoutMode === 'custom' ? 'block' : 'none';
+
+    const autoHint = $('layoutAutoHint');
+    if (autoHint) autoHint.style.display = nailLayoutMode === 'auto' ? 'block' : 'none';
+
+    $('subModeEdges')?.classList.toggle('active', customSubMode === 'edges');
+    $('subModeManual')?.classList.toggle('active', customSubMode === 'manual');
+
+    const board = $('board')?.value || 'circle';
+    const edgeSq  = $('edgeSelectSquare');
+    const edgeCir = $('edgeSelectCircle');
+    const manual  = $('manualPlacementPanel');
+
+    if (customSubMode === 'edges') {
+      if (edgeSq)  edgeSq.style.display  = board === 'square' ? 'block' : 'none';
+      if (edgeCir) edgeCir.style.display  = board === 'circle' ? 'block' : 'none';
+      if (manual)  manual.style.display   = 'none';
+    } else {
+      if (edgeSq)  edgeSq.style.display  = 'none';
+      if (edgeCir) edgeCir.style.display  = 'none';
+      if (manual)  manual.style.display   = 'block';
+    }
+
+    if ($('squarePresets')) $('squarePresets').style.display = board === 'square' ? 'flex' : 'none';
+    if ($('circlePresets')) $('circlePresets').style.display = board === 'circle' ? 'flex' : 'none';
+
+    if (cv) cv.style.cursor = (nailLayoutMode === 'custom' && customSubMode === 'manual') ? 'crosshair' : '';
+
+    updateEdgeToggleVisuals();
+  }
+
+  function updateEdgeToggleVisuals() {
+    ['top','right','bottom','left'].forEach(edge => {
+      const btn = document.querySelector(`.edge-btn[data-edge="${edge}"]`);
+      if (btn) btn.classList.toggle('active', !!edgesEnabled[edge]);
+    });
+  }
+
+  function updateArcSliderDisplay() {
+    const s = $('arcStart'), e = $('arcEnd');
+    const sl = $('arcStartVal'), el = $('arcEndVal');
+    if (s)  s.value  = arcRange.start;
+    if (e)  e.value  = arcRange.end;
+    if (sl) sl.textContent = arcRange.start + '°';
+    if (el) el.textContent = arcRange.end + '°';
+  }
+
+  function applyCustomLayoutPreset(key) {
+    const board = $('board')?.value || 'circle';
+    const sq = {
+      'full':        { top:true,  right:true,  bottom:true,  left:true  },
+      'top':         { top:true,  right:false, bottom:false, left:false },
+      'bottom':      { top:false, right:false, bottom:true,  left:false },
+      'left-right':  { top:false, right:true,  bottom:false, left:true  },
+      'top-bottom':  { top:true,  right:false, bottom:true,  left:false },
+      'left':        { top:false, right:false, bottom:false, left:true  },
+      'right':       { top:false, right:true,  bottom:false, left:false },
+      'l-shape':     { top:true,  right:false, bottom:false, left:true  },
+      'opposing':    { top:true,  right:false, bottom:true,  left:false },
+    };
+    const ci = {
+      'full':          { start: -90,  end: 270  },
+      'top-half':      { start: -180, end: 0    },
+      'bottom-half':   { start: 0,    end: 180  },
+      'left-half':     { start: 90,   end: 270  },
+      'right-half':    { start: -90,  end: 90   },
+      'quarter':       { start: -90,  end: 0    },
+      'three-quarter': { start: -90,  end: 180  },
+    };
+    if (board === 'circle') {
+      const p = ci[key]; if (!p) return;
+      arcRange.start = p.start; arcRange.end = p.end;
+      updateArcSliderDisplay();
+    } else {
+      const p = sq[key]; if (!p) return;
+      edgesEnabled = { ...p };
+      updateEdgeToggleVisuals();
+    }
+    applyEdgeLayout();
+    showToast('Preset applied.');
+  }
+
+  function clearCustomNails() {
+    if (!confirm('Clear all custom nails? Thread lines will also be cleared.')) return;
+    saveCustomNailHistory();
+    customNails = [];
+    layers.forEach(L => { L.edges = []; L.seq = []; });
+    lastNail = null;
+    updateCustomNailCount();
+    updateSeqOutput();
+    updateDrawModeSeqMini();
+    redrawAll();
+    showToast('Custom nails cleared.');
+  }
+
+  function resetToFullPerimeter() {
+    const board = $('board')?.value || 'circle';
+    if (board === 'circle') {
+      arcRange = { start: -90, end: 270 };
+      updateArcSliderDisplay();
+    } else {
+      edgesEnabled = { top:true, right:true, bottom:true, left:true };
+      updateEdgeToggleVisuals();
+    }
+    applyEdgeLayout();
+    showToast('Reset to full perimeter.');
+  }
+
+  function distributeCustomNails() {
+    if (customNails.length < 2) { showToast('Add nails first.', true); return; }
+    saveCustomNailHistory();
+    const board = $('board')?.value || 'circle';
+    const n = customNails.length;
+    if (board === 'circle') {
+      customNails = Array.from({ length: n }, (_, i) => {
+        const a = (2 * Math.PI * i / n) - Math.PI / 2;
+        return { nx: Math.cos(a), ny: Math.sin(a) };
+      });
+    } else {
+      customNails = Array.from({ length: n }, (_, i) => {
+        const d = (4 * i) / n;
+        let nx = 0, ny = 0;
+        if      (d < 1) { nx = -1 + 2*d;    ny = -1; }
+        else if (d < 2) { nx = 1;            ny = -1 + 2*(d-1); }
+        else if (d < 3) { nx = 1 - 2*(d-2); ny = 1; }
+        else            { nx = -1;           ny = 1 - 2*(d-3); }
+        return { nx, ny };
+      });
+    }
+    updateCustomNailCount();
+    redrawAll();
+    showToast('Nails distributed evenly.');
+  }
+
+  function mirrorCustomNails() {
+    if (!customNails.length) { showToast('No custom nails to mirror.', true); return; }
+    saveCustomNailHistory();
+    const mirrored = customNails.map(n => ({ nx: -n.nx, ny: n.ny }));
+    mirrored.forEach(m => {
+      const dup = customNails.some(n =>
+        Math.abs(n.nx - m.nx) < 0.015 && Math.abs(n.ny - m.ny) < 0.015
+      );
+      if (!dup) customNails.push(m);
+    });
+    updateCustomNailCount();
+    redrawAll();
+    showToast('Nails mirrored horizontally.');
+  }
+
+  function setUiMode(mode) {
+    uiMode = mode;
+    document.body.classList.toggle('mode-advanced', mode === 'advanced');
+    document.body.classList.toggle('mode-beginner', mode !== 'advanced');
+    $('modeBeginner')?.classList.toggle('active', mode !== 'advanced');
+    $('modeAdvanced')?.classList.toggle('active', mode === 'advanced');
+    try { localStorage.setItem('sas_ui_mode', mode); } catch(_) {}
+  }
+
+  function initModeToggles() {
+    try {
+      const saved = localStorage.getItem('sas_ui_mode');
+      setUiMode(saved === 'advanced' ? 'advanced' : 'beginner');
+    } catch(_) { setUiMode('beginner'); }
+    $('modeBeginner')?.addEventListener('click', () => setUiMode('beginner'));
+    $('modeAdvanced')?.addEventListener('click', () => setUiMode('advanced'));
+  }
+
+  function initCustomNailLayout() {
+    $('layoutModeAuto')?.addEventListener('click',   () => switchNailLayoutMode('auto'));
+    $('layoutModeCustom')?.addEventListener('click', () => switchNailLayoutMode('custom'));
+    $('subModeEdges')?.addEventListener('click',  () => switchCustomSubMode('edges'));
+    $('subModeManual')?.addEventListener('click', () => switchCustomSubMode('manual'));
+
+    document.querySelectorAll('.edge-btn[data-edge]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const edge = btn.dataset.edge;
+        edgesEnabled[edge] = !edgesEnabled[edge];
+        updateEdgeToggleVisuals();
+        applyEdgeLayout();
+      });
+    });
+
+    $('arcStart')?.addEventListener('input', e => {
+      arcRange.start = parseInt(e.target.value, 10);
+      if ($('arcStartVal')) $('arcStartVal').textContent = arcRange.start + '°';
+      applyEdgeLayout();
+    });
+    $('arcEnd')?.addEventListener('input', e => {
+      arcRange.end = parseInt(e.target.value, 10);
+      if ($('arcEndVal')) $('arcEndVal').textContent = arcRange.end + '°';
+      applyEdgeLayout();
+    });
+
+    $('distributeNails')?.addEventListener('click',  distributeCustomNails);
+    $('mirrorNails')?.addEventListener('click',      mirrorCustomNails);
+    $('clearCustomNails')?.addEventListener('click', clearCustomNails);
+    $('resetToPerimeter')?.addEventListener('click', resetToFullPerimeter);
+
+    document.querySelectorAll('[data-custom-preset]').forEach(btn => {
+      btn.addEventListener('click', () => applyCustomLayoutPreset(btn.dataset.customPreset));
+    });
+
+    // When board type changes, re-sync the custom layout UI panels
+    $('board')?.addEventListener('change', () => {
+      if (nailLayoutMode === 'custom') {
+        customNails = [];
+        updateCustomLayoutUI();
+        applyEdgeLayout();
+      } else {
+        updateCustomLayoutUI();
+      }
+    });
+
+    updateCustomLayoutUI();
+    updateArcSliderDisplay();
+    updateCustomNailCount();
+  }
+
+  /* -----------------------------
      INIT
   ----------------------------- */
 
@@ -1307,6 +1744,8 @@ document.addEventListener("DOMContentLoaded", function () {
     syncLayerSelect();
     initActiveCanvasPointerControls();
     initQuickPatterns();
+    initModeToggles();
+    initCustomNailLayout();
     $("fit")?.addEventListener("click", () => {
       fitToScreen();
       redrawAll();
