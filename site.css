@@ -654,6 +654,8 @@ footer { padding: 0 0 30px; color: var(--muted); }
 .footer-links { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
 .footer-links a { color: var(--muted); font-size: 0.92rem; transition: color 0.15s; }
 .footer-links a:hover { color: var(--text); }
+.footer-policy-group { display: flex; align-items: center; gap: 14px; padding-left: 18px; border-left: 1px solid rgba(70,52,36,0.15); }
+.footer-policy-label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.5; }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 1080px) {
