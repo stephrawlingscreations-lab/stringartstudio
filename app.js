@@ -2527,28 +2527,6 @@ document.addEventListener("DOMContentLoaded", function () {
           });
         }
 
-        // Faint string lines — fixed light gray, background reference only.
-        // Nail dots are the accuracy target; lines just show the pattern layout.
-        const TILE_LINE_COLOR = rgb(0.8, 0.8, 0.8);
-        for (const L of layers) {
-          if (!L.edges?.length) continue;
-          for (const e of L.edges) {
-            if (!svgPts[e.a] || !svgPts[e.b]) continue;
-            const [x1, y1] = svgPts[e.a],
-              [x2, y2] = svgPts[e.b];
-            if (x1 < ox - 8 && x2 < ox - 8) continue;
-            if (x1 > txMax + 8 && x2 > txMax + 8) continue;
-            if (y1 < oy - 8 && y2 < oy - 8) continue;
-            if (y1 > tyMax + 8 && y2 > tyMax + 8) continue;
-            page.drawLine({
-              start: { x: tpX(x1), y: tpY(y1) },
-              end: { x: tpX(x2), y: tpY(y2) },
-              thickness: 0.25,
-              color: TILE_LINE_COLOR,
-            });
-          }
-        }
-
         // Nail dots — centred at exact physical position, for drilling
         const showEvery =
           nailCount > 400
