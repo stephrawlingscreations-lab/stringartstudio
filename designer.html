@@ -636,7 +636,15 @@
           max-height: calc(100vh - 40px);
           overflow-y: auto;
           scrollbar-width: thin;
-          scrollbar-color: rgba(60,44,28,0.15) transparent;
+          scrollbar-color: rgba(60,44,28,0.3) transparent;
+        }
+
+        .panel-wrap::after {
+          display: block;
+        }
+
+        .panel-wrap.at-bottom::after {
+          opacity: 0;
         }
       }
 
@@ -745,9 +753,28 @@
 
       /* ================= PANEL SECTIONS ================= */
 
-      .panel {
+      .panel-wrap {
         position: sticky;
         top: 20px;
+      }
+
+      .panel-wrap::after {
+        content: '';
+        display: none;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 64px;
+        border-radius: 0 0 22px 22px;
+        background: linear-gradient(to bottom, transparent, var(--panel-bg));
+        pointer-events: none;
+        z-index: 2;
+        transition: opacity 0.2s;
+      }
+
+      .panel {
+        position: static;
       }
 
       .panel-section {
@@ -1650,6 +1677,7 @@
     </section>
     <div class="container" id="designer">
       <div class="wrap">
+        <div class="panel-wrap">
         <div class="panel">
           <!-- MODE TOGGLE -->
           <div class="mode-toggle-row">
@@ -1951,6 +1979,7 @@
           </div>
           <!-- end #controlsPanel -->
         </div>
+        </div><!-- end .panel-wrap -->
 
         <canvas id="cv" aria-label="String art design canvas"></canvas>
       </div>
@@ -2164,6 +2193,18 @@
 
         text.style.display = visible ? "none" : "block";
       });
+
+      (function() {
+        var panel = document.querySelector('.panel');
+        var wrap = document.querySelector('.panel-wrap');
+        if (!panel || !wrap) return;
+        function updateFade() {
+          var atBottom = panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 4;
+          wrap.classList.toggle('at-bottom', atBottom);
+        }
+        panel.addEventListener('scroll', updateFade, { passive: true });
+        updateFade();
+      })();
     </script>
 
     <div id="drawModeOverlay" class="draw-mode-overlay" aria-hidden="true">
