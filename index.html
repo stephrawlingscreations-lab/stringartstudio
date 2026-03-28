@@ -1034,6 +1034,95 @@
         margin: 0;
       }
 
+      /* ─── WHO IT'S FOR STRIP ─────────────────────── */
+      .audience-strip {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2px;
+        background: var(--line);
+        border: 1px solid var(--line);
+        border-radius: var(--r-md);
+        overflow: hidden;
+      }
+      .audience-strip-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 24px 26px;
+        background: var(--panel-s);
+      }
+      .audience-strip-icon {
+        font-size: 1.4rem;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+      .audience-strip-item strong {
+        display: block;
+        font-size: 0.97rem;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 4px;
+      }
+      .audience-strip-item span {
+        font-size: 0.88rem;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      /* ─── STEP FEATURES ──────────────────────────── */
+      .step-features {
+        list-style: none;
+        padding: 0;
+        margin: 14px 0 0;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .step-features li {
+        font-size: 0.85rem;
+        color: var(--muted);
+        padding-left: 16px;
+        position: relative;
+      }
+      .step-features li::before {
+        content: '·';
+        position: absolute;
+        left: 4px;
+        color: var(--gold);
+        font-weight: 700;
+      }
+
+      /* ─── PREVIEW GRID ───────────────────────────── */
+      .preview-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 48px;
+      }
+      .preview-item {
+        border-radius: var(--r-md);
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--line);
+      }
+      .preview-item img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+      .preview-caption {
+        padding: 12px 18px;
+        font-size: 0.84rem;
+        color: var(--muted);
+        background: var(--panel-s);
+        border-top: 1px solid var(--line);
+        margin: 0;
+      }
+      .preview-cta {
+        text-align: center;
+        margin-top: 40px;
+      }
+
       /* ─── FOCUS STYLES (accessibility) ──────────── */
       :focus-visible {
         outline: 2.5px solid var(--gold);
@@ -1047,7 +1136,6 @@
       /* ─── RESPONSIVE ─────────────────────────────── */
       @media (max-width: 1024px) {
         .hero-grid,
-        .showcase-grid,
         .trust-grid {
           grid-template-columns: 1fr;
         }
@@ -1055,8 +1143,7 @@
         .hero-visual { max-width: 520px; margin: 0 auto; }
         .trust-copy { order: 1; }
         .trust-visual { order: 2; }
-        .features-grid { grid-template-columns: repeat(2, 1fr); }
-        .audience-grid { grid-template-columns: 1fr 1fr; }
+        .audience-strip { grid-template-columns: 1fr; }
         .steps-grid::before { display: none; }
       }
 
@@ -1065,20 +1152,16 @@
         .section { padding: 64px 0; }
         .section--tight { padding: 48px 0; }
         .cta-section { padding: 72px 0; }
-        .steps-grid,
-        .features-grid,
-        .audience-grid { grid-template-columns: 1fr; }
-        .trust-stat-row { grid-template-columns: 1fr; }
+        .steps-grid { grid-template-columns: 1fr; }
+        .preview-grid { grid-template-columns: 1fr; }
         .nav-links a:not(.btn) { display: none; }
         .hero h1 { font-size: 2.6rem; }
         .hero-actions { gap: 10px; }
         .hero-badge { display: none; }
         .nav-links { gap: 8px; }
-        .showcase-main { padding: 24px; min-height: auto; }
       }
 
       @media (max-width: 480px) {
-        .audience-grid { grid-template-columns: 1fr; }
         .container { width: calc(100% - 28px); }
         .btn { padding: 0 20px; font-size: 0.88rem; }
       }
@@ -1100,6 +1183,7 @@
         </a>
         <nav class="nav-links">
           <a href="tools.html">Tools</a>
+          <a href="nail-placement-guide.html">Nail Guide</a>
           <a href="about.html">About</a>
           <a href="newsletter.html">Join the list</a>
           <a class="btn btn-primary btn-sm" href="designer.html">Start Designing</a>
@@ -1159,6 +1243,38 @@
 
       <div class="divider"></div>
 
+      <!-- ── WHO IT'S FOR (strip) ──────────────────── -->
+      <section class="section section--tight">
+        <div class="container">
+          <p style="text-align:center; font-size:0.82rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:16px;">Made for makers like you</p>
+          <div class="audience-strip">
+            <div class="audience-strip-item">
+              <span class="audience-strip-icon">🧶</span>
+              <div>
+                <strong>Hobby crafters</strong>
+                <span>See the finished look before you commit to the board. No experience needed.</span>
+              </div>
+            </div>
+            <div class="audience-strip-item">
+              <span class="audience-strip-icon">🏪</span>
+              <div>
+                <strong>Etsy sellers</strong>
+                <span>Repeatable patterns and consistent results, order after order.</span>
+              </div>
+            </div>
+            <div class="audience-strip-item">
+              <span class="audience-strip-icon">🎁</span>
+              <div>
+                <strong>Gift makers</strong>
+                <span>Custom designs that look professional and genuinely personal.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="divider"></div>
+
       <!-- ── HOW IT WORKS ──────────────────────────── -->
       <section class="section section--tight">
         <div class="container">
@@ -1172,204 +1288,57 @@
             <div class="step-card">
               <div class="step-number">1</div>
               <h3>Design your pattern</h3>
-              <p>Choose your board shape — circle or square — set your nail count, and start placing your design. Watch your string art take shape in real time as you build.</p>
+              <p>Choose your board shape, set your nail count, and start placing your design. Watch your string art take shape in real time as you build.</p>
+              <ul class="step-features">
+                <li>Circle and square boards</li>
+                <li>Live visual preview — adjusts instantly</li>
+                <li>Flexible nail counts and spacing</li>
+              </ul>
             </div>
             <div class="step-card">
               <div class="step-number">2</div>
               <h3>Generate your sequence</h3>
               <p>The designer calculates the exact thread path and gives you a numbered nail sequence — the precise order to follow so your pattern comes out exactly as planned.</p>
+              <ul class="step-features">
+                <li>Algorithmically calculated nail order</li>
+                <li>Visual thread path mapping</li>
+                <li>No guesswork, no manual counting</li>
+              </ul>
             </div>
             <div class="step-card">
               <div class="step-number">3</div>
               <h3>Build your artwork</h3>
               <p>Print your pattern guide and take it to your board. Follow the numbered sequence nail by nail and watch your design appear — exactly as you designed it on screen.</p>
+              <ul class="step-features">
+                <li>Print-ready guide at true size</li>
+                <li>Clean layout for use at the workbench</li>
+                <li>Pro: full build pack with thread estimate</li>
+              </ul>
             </div>
           </div>
         </div>
       </section>
 
-      <div class="divider"></div>
-
-      <!-- ── WHAT YOU GET ──────────────────────────── -->
-      <section class="section section--cream">
-        <div class="container">
-          <div class="section-label">
-            <span class="eyebrow">Everything included</span>
-          </div>
-          <h2 class="section-title">What you get with the designer</h2>
-          <p class="section-sub">Everything you need to plan a real project — nothing you don't.</p>
-
-          <div class="features-grid">
-            <div class="feature-card">
-              <div class="feature-icon">🧭</div>
-              <h3>Numbered nail guide</h3>
-              <p>Every nail is numbered in sequence so you always know exactly where to go next. No guessing, no mistakes.</p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon">🧵</div>
-              <h3>Thread path generation</h3>
-              <p>The designer maps out your complete thread route — showing you visually how each line connects across your board.</p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon">👁</div>
-              <h3>Live visual preview</h3>
-              <p>See your design build in real time. Adjust nail placement, change the pattern, and fine-tune until it looks exactly right.</p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon">🖨</div>
-              <h3>Printable pattern support</h3>
-              <p>Export a clean print-ready version of your pattern guide. Take it to your workspace and follow it step by step.</p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon">⬡</div>
-              <h3>Circle and square boards</h3>
-              <p>Design for both common board shapes. Whether you prefer a classic circle or a structured square layout, the tool adapts.</p>
-            </div>
-            <div class="feature-card">
-              <div class="feature-icon">✦</div>
-              <h3>Creative flexibility</h3>
-              <p>Adjust nail counts, spacing, and patterns freely. The designer is open-ended — use it for simple beginner pieces or complex original designs.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ── VISUAL SHOWCASE ───────────────────────── -->
+      <!-- ── DESIGNER PREVIEW ──────────────────────── -->
       <section class="section">
         <div class="container">
           <div class="section-label" style="margin-bottom:14px;">
             <span class="eyebrow">See it in action</span>
           </div>
-          <h2 class="section-title" style="margin-bottom:48px;">Your pattern, <em>exactly</em> as you planned it</h2>
-          <div class="showcase-grid">
-            <div class="showcase-main">
-              <canvas id="showcaseCanvas" width="260" height="260" aria-label="Animated string art showcase" style="border-radius:50%;"></canvas>
-              <div class="sequence-bar">
-                <div class="seq-label">Thread sequence — nail order</div>
-                <div class="seq-numbers">
-                  <span class="seq-num faint">1</span>
-                  <span class="seq-num faint">6</span>
-                  <span class="seq-num faint">11</span>
-                  <span class="seq-num faint">16</span>
-                  <span class="seq-num faint">21</span>
-                  <span class="seq-num faint">3</span>
-                  <span class="seq-num active">8</span>
-                  <span class="seq-arrow">→</span>
-                  <span class="seq-num" style="background:var(--teal); opacity:0.9;">13</span>
-                  <span class="seq-num faint">18</span>
-                  <span class="seq-num faint">23</span>
-                  <span class="seq-num faint">5</span>
-                </div>
-              </div>
+          <h2 class="section-title">What you can make with the designer</h2>
+          <p class="section-sub">Real outputs from the tool — every line and nail planned on screen before a single nail is hammered.</p>
+          <div class="preview-grid">
+            <div class="preview-item">
+              <img src="Designer%20Previews/Designer%20Preview%201.png" alt="Complex multi-colour string art fan pattern on a square board, light background" loading="lazy">
+              <p class="preview-caption">Square board · multi-colour fan pattern · light theme</p>
             </div>
-
-            <div class="showcase-side">
-              <div>
-                <span class="eyebrow" style="margin-bottom:16px; display:block;">What it looks like in action</span>
-                <h2 style="font-family:'Playfair Display',serif; font-size:clamp(1.9rem,3vw,2.6rem); letter-spacing:-0.03em; line-height:1.1; margin-bottom:16px;">
-                  Your pattern, planned to <em style="color:var(--gold);font-style:italic;">perfection</em>
-                </h2>
-                <p style="color:var(--muted); line-height:1.78; margin-bottom:28px; font-size:1.0rem;">
-                  The canvas shows you exactly how your finished piece will look. Adjust the design, watch it update live, and only commit to the board when you're happy.
-                </p>
-                <a class="btn btn-primary" href="designer.html">Try the designer now</a>
-              </div>
-
-              <div class="showcase-card">
-                <div class="showcase-card-label">Example layouts</div>
-                <h4>Design styles you can create</h4>
-                <p>Geometric stars, mandalas, portrait outlines, initials, and abstract patterns — the same tool, endless possibilities.</p>
-                <div class="mini-pattern-grid">
-                  <div class="mini-pattern">
-                    <!-- Star polygon SVG -->
-                    <svg viewBox="0 0 80 80" fill="none">
-                      <circle cx="40" cy="40" r="34" stroke="rgba(184,137,46,0.3)" stroke-width="1"/>
-                      <g stroke="rgba(184,137,46,0.75)" stroke-width="0.8">
-                        <line x1="40" y1="6" x2="30" y2="74"/><line x1="40" y1="6" x2="55" y2="72"/>
-                        <line x1="70" y1="26" x2="10" y2="52"/><line x1="70" y1="26" x2="12" y2="22"/>
-                        <line x1="63" y1="68" x2="8" y2="34"/><line x1="63" y1="68" x2="17" y2="72"/>
-                        <line x1="17" y1="68" x2="72" y2="34"/><line x1="17" y1="68" x2="63" y2="72"/>
-                        <line x1="10" y1="26" x2="68" y2="52"/><line x1="10" y1="26" x2="68" y2="22"/>
-                        <line x1="40" y1="74" x2="50" y2="6"/><line x1="40" y1="74" x2="25" y2="8"/>
-                      </g>
-                    </svg>
-                  </div>
-                  <div class="mini-pattern">
-                    <svg viewBox="0 0 80 80" fill="none">
-                      <rect x="8" y="8" width="64" height="64" stroke="rgba(42,110,108,0.3)" stroke-width="1"/>
-                      <g stroke="rgba(42,110,108,0.70)" stroke-width="0.8">
-                        <line x1="8" y1="8" x2="72" y2="40"/><line x1="8" y1="8" x2="40" y2="72"/>
-                        <line x1="72" y1="8" x2="8" y2="40"/><line x1="72" y1="8" x2="40" y2="72"/>
-                        <line x1="8" y1="72" x2="72" y2="40"/><line x1="8" y1="40" x2="72" y2="72"/>
-                        <line x1="40" y1="8" x2="8" y2="56"/><line x1="40" y1="8" x2="72" y2="56"/>
-                        <line x1="8" y1="24" x2="56" y2="72"/><line x1="24" y1="8" x2="72" y2="56"/>
-                      </g>
-                    </svg>
-                  </div>
-                  <div class="mini-pattern">
-                    <svg viewBox="0 0 80 80" fill="none">
-                      <circle cx="40" cy="40" r="34" stroke="rgba(27,44,66,0.3)" stroke-width="1"/>
-                      <g stroke="rgba(27,44,66,0.65)" stroke-width="0.8">
-                        <line x1="40" y1="6" x2="40" y2="74"/><line x1="6" y1="40" x2="74" y2="40"/>
-                        <line x1="16" y1="16" x2="64" y2="64"/><line x1="64" y1="16" x2="16" y2="64"/>
-                        <line x1="40" y1="6" x2="74" y2="56"/><line x1="40" y1="6" x2="6" y2="56"/>
-                        <line x1="6" y1="24" x2="74" y2="24"/><line x1="8" y1="58" x2="72" y2="58"/>
-                        <line x1="22" y1="6" x2="58" y2="74"/><line x1="58" y1="6" x2="22" y2="74"/>
-                      </g>
-                    </svg>
-                  </div>
-                </div>
-              </div>
+            <div class="preview-item">
+              <img src="Designer%20Previews/Designer%20Preview%202.png" alt="Complex multi-colour string art fan pattern on a square board, dark background" loading="lazy">
+              <p class="preview-caption">Square board · same design · dark theme</p>
             </div>
           </div>
-        </div>
-      </section>
-
-      <!-- ── WHO IT'S FOR ──────────────────────────── -->
-      <section class="section">
-        <div class="container">
-          <div class="section-label">
-            <span class="eyebrow">Made for makers</span>
-          </div>
-          <h2 class="section-title">Who the designer is <em>for</em></h2>
-          <p class="section-sub">Whether you're making your first piece or running a small craft business, the tool works for you.</p>
-
-          <div class="audience-grid">
-            <div class="audience-card">
-              <span class="audience-icon">🧶</span>
-              <h3>Hobby crafters</h3>
-              <p>You make things with your hands and you want your string art to actually look the way you imagined it.</p>
-              <ul class="audience-list">
-                <li>No experience needed to get started</li>
-                <li>Guided step-by-step nail sequences</li>
-                <li>See the finished look before you commit</li>
-                <li>Make something genuinely impressive</li>
-              </ul>
-            </div>
-
-            <div class="audience-card">
-              <span class="audience-icon">🏪</span>
-              <h3>Etsy sellers</h3>
-              <p>String art sells — but hand-calculating patterns for every order eats time. The designer gives you a repeatable process you can actually rely on.</p>
-              <ul class="audience-list">
-                <li>Plan unique designs for each order</li>
-                <li>Reproduce patterns consistently</li>
-                <li>Speed up your design process</li>
-                <li>Create patterns your customers can't find elsewhere</li>
-              </ul>
-            </div>
-
-            <div class="audience-card">
-              <span class="audience-icon">🎁</span>
-              <h3>Personalised gift makers</h3>
-              <p>You want to give something handmade and personal. The designer lets you plan a custom piece properly — so it looks like it was made by someone who knew what they were doing.</p>
-              <ul class="audience-list">
-                <li>Custom initials and name designs</li>
-                <li>Unique shapes for any occasion</li>
-                <li>Gifts that look professional and personal</li>
-                <li>Make it once — treasure it forever</li>
-              </ul>
-            </div>
+          <div class="preview-cta">
+            <a class="btn btn-primary" href="designer.html">Try the designer now</a>
           </div>
         </div>
       </section>
@@ -1409,27 +1378,9 @@
             </div>
 
             <div class="trust-visual">
-              <div class="trust-stat-row">
-                <div class="trust-stat">
-                  <div class="trust-stat-num">Free</div>
-                  <div class="trust-stat-label">Core designer, always free to use</div>
-                </div>
-                <div class="trust-stat">
-                  <div class="trust-stat-num">0</div>
-                  <div class="trust-stat-label">Account or download required</div>
-                </div>
-                <div class="trust-stat">
-                  <div class="trust-stat-num">2</div>
-                  <div class="trust-stat-label">Board shapes — circle and square</div>
-                </div>
-                <div class="trust-stat">
-                  <div class="trust-stat-num">∞</div>
-                  <div class="trust-stat-label">Designs you can create and print</div>
-                </div>
-              </div>
               <div class="trust-quote">
                 <p>"I used to sketch my patterns on paper and just hope for the best. Designing it properly first made such a difference."</p>
-                <cite>— Early user, string art maker</cite>
+                <cite>— String art maker</cite>
               </div>
             </div>
           </div>
@@ -1529,7 +1480,7 @@
           <h2>Start designing your <em>next piece</em> today</h2>
           <p>The designer is free, works right in your browser, and takes less than a minute to get started. Your next finished piece is closer than you think.</p>
           <div class="cta-actions">
-            <a class="btn btn-gold" href="designer.html" style="min-height:58px; padding: 0 36px; font-size:1rem;">Start Designing — It's Free</a>
+            <a class="btn btn-gold" href="designer.html" style="min-height:58px; padding: 0 36px; font-size:1rem;">Open the Designer</a>
             <a class="btn btn-outline" href="tools.html">Browse all tools</a>
           </div>
           <p class="cta-note">No signup · No download · Works in any browser</p>
@@ -1543,7 +1494,7 @@
       <div class="container footer-inner">
         <div>
           <div class="footer-brand">Steph Rawlings Creations</div>
-          <div class="footer-copy">© 2025 · String Art Designer</div>
+          <div class="footer-copy">© 2026 · String Art Designer</div>
         </div>
         <div class="footer-links">
           <a href="designer.html">Designer</a>
