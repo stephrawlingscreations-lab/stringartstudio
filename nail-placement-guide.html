@@ -398,23 +398,29 @@
       }
 
       @media print {
-        body { background: white; }
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;
+          height: auto !important;
+          min-height: 0 !important;
+          background: white;
+        }
         .screen-wrapper { display: none !important; }
         #print-pages { display: block !important; }
 
         .print-page {
-          width: 190mm;
-          height: 277mm;
-          page-break-after: always;
-          break-after: page;
+          width: 210mm;
+          height: 297mm;
+          padding: 10mm;
+          box-sizing: border-box;
           overflow: hidden;
           background: white;
         }
-        .print-page:last-child {
-          page-break-after: auto;
-          break-after: auto;
+        .print-page + .print-page {
+          page-break-before: always;
+          break-before: page;
         }
-        .print-page canvas {
+        .print-page img {
           width: 190mm !important;
           height: 277mm !important;
           max-width: none !important;
@@ -422,7 +428,7 @@
         }
         @page {
           size: A4 portrait;
-          margin: 10mm;
+          margin: 0;
         }
       }
     </style>
@@ -435,7 +441,10 @@
           <h1>Steph Rawlings Creations</h1>
           <p>Nail Placement Guide Generator</p>
         </div>
-        <span class="badge">Free Tool</span>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <a href="index.html" style="font-size:13px;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:5px;" onmouseover="this.style.color='var(--ink)'" onmouseout="this.style.color='var(--muted)'">← Back to site</a>
+          <span class="badge">Free Tool</span>
+        </div>
       </header>
 
       <!-- Step 1: Board Size -->
@@ -696,7 +705,7 @@
         <div class="preview-toolbar">
           <h2>Your Printable Guide</h2>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
-            <button class="print-btn" onclick="window.print()">
+            <button class="print-btn" id="download-pdf-btn" onclick="downloadPDF()">
               <svg
                 width="16"
                 height="16"
@@ -705,15 +714,12 @@
                 stroke="currentColor"
                 stroke-width="2"
               >
-                <polyline points="6 9 6 2 18 2 18 9" />
-                <path
-                  d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"
-                />
-                <rect x="6" y="14" width="12" height="8" />
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
-              Print / Save as PDF
+              Download PDF
             </button>
-            <span style="font-size:11px;color:var(--muted);">Set print scale to 100% — no "Fit to page"</span>
           </div>
         </div>
 
@@ -734,7 +740,7 @@
           — made with love for the string art community 🧵
         </p>
         <p style="margin-top: 8px">
-          Print at 100% scale (no scaling) for accurate measurements.
+          Download the PDF and print at 100% scale — no scaling, no "fit to page".
         </p>
       </footer>
     </div>
@@ -1131,7 +1137,7 @@
         );
 
         // Build print-ready tiled pages
-        buildPrintPages(canvas, PX_W, PX_H);
+        const printPageCount = buildPrintPages(canvas, PX_W, PX_H);
 
         // Show section
         document.getElementById("preview-section").classList.add("visible");
@@ -1149,6 +1155,7 @@
       <div class="stat"><strong>${avgSpacing_disp}</strong> Avg. spacing</div>
       <div class="stat"><strong>${sizeStr}</strong> Board size</div>
       <div class="stat"><strong>${currentShape.charAt(0).toUpperCase() + currentShape.slice(1)}</strong> Shape</div>
+      <div class="stat"><strong>${printPageCount} page${printPageCount === 1 ? '' : 's'}</strong> When printed</div>
     `;
 
         // Scroll to preview
@@ -1244,12 +1251,16 @@
               PAGE_H_PX - FOOTER_PX / 2
             );
 
+            const img = document.createElement("img");
+            img.src = tile.toDataURL("image/png");
+
             const pageDiv = document.createElement("div");
             pageDiv.className = "print-page";
-            pageDiv.appendChild(tile);
+            pageDiv.appendChild(img);
             container.appendChild(pageDiv);
           }
         }
+        return total;
       }
 
       // Recalculate canvas display size on resize
@@ -1283,6 +1294,70 @@
         const el = document.getElementById(id);
         if (el) el.addEventListener("input", scheduleAutoGen);
       });
+
+      async function downloadPDF() {
+        const imgs = document.querySelectorAll("#print-pages img");
+        if (!imgs.length) {
+          alert("Please generate the guide first.");
+          return;
+        }
+
+        const btn = document.getElementById("download-pdf-btn");
+        btn.disabled = true;
+        btn.textContent = "Generating PDF…";
+
+        try {
+          if (!window.PDFLib) {
+            await new Promise((resolve, reject) => {
+              const s = document.createElement("script");
+              s.src = "https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js";
+              s.onload = resolve;
+              s.onerror = () => reject(new Error("Failed to load pdf-lib"));
+              document.head.appendChild(s);
+            });
+          }
+
+          const { PDFDocument } = window.PDFLib;
+          const pdfDoc = await PDFDocument.create();
+
+          const A4W = 595.28;
+          const A4H = 841.89;
+          const MG  = 28.35;   // 10mm in points
+
+          for (const img of imgs) {
+            const base64 = img.src.split(",")[1];
+            const binary = atob(base64);
+            const bytes  = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+            const pngImage = await pdfDoc.embedPng(bytes);
+            const page = pdfDoc.addPage([A4W, A4H]);
+            page.drawImage(pngImage, {
+              x: MG,
+              y: MG,
+              width:  A4W - 2 * MG,
+              height: A4H - 2 * MG,
+            });
+          }
+
+          const pdfBytes = await pdfDoc.save();
+          const blob = new Blob([pdfBytes], { type: "application/pdf" });
+          const url  = URL.createObjectURL(blob);
+          const a    = document.createElement("a");
+          a.href     = url;
+          a.download = "nail-placement-guide.pdf";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        } catch (err) {
+          console.error("PDF generation failed:", err);
+          alert("PDF generation failed — please try again.");
+        } finally {
+          btn.disabled = false;
+          btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download PDF`;
+        }
+      }
     </script>
   </body>
 </html>
