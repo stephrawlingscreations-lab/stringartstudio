@@ -1763,7 +1763,9 @@ document.addEventListener("DOMContentLoaded", function () {
     $("downloadPng")?.addEventListener("click", downloadPreview);
     $("downloadTemplateBtn")?.addEventListener("click", () => {
       document.getElementById("proModal").style.display = "none";
-      downloadPrintableTemplate().catch((err) => {
+      downloadPrintableTemplate().then(() => {
+        showToast("✅ Download started — check your downloads folder.");
+      }).catch((err) => {
         console.error("PDF generation failed:", err);
         showToast("PDF generation failed — please try again.", true);
       });
