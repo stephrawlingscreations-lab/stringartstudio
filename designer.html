@@ -1595,6 +1595,13 @@
         background: rgba(184,137,46,0.05);
         opacity: 1;
       }
+      .footer-policy-dropdown { position: relative; }
+      .footer-policy-dropdown > summary { list-style: none; cursor: pointer; font-size: 0.92rem; color: #6f6257; transition: color 0.15s; user-select: none; }
+      .footer-policy-dropdown > summary::-webkit-details-marker { display: none; }
+      .footer-policy-dropdown > summary::marker { display: none; }
+      .footer-policy-links-drop { position: absolute; bottom: calc(100% + 8px); right: 0; background: #fff; border: 1px solid rgba(70,52,36,0.12); border-radius: 8px; padding: 6px 0; display: flex; flex-direction: column; min-width: 110px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); z-index: 100; }
+      .footer-policy-links-drop a { color: #6f6257; font-size: 0.88rem; text-decoration: none; padding: 7px 16px; display: block; white-space: nowrap; }
+      .footer-policy-links-drop a:hover { color: #3a2a1a; background: rgba(70,52,36,0.05); }
     </style>
     <!-- Start cookieyes banner -->
     <script id="cookieyes" type="text/javascript" src="https://cdn-cookieyes.com/client_data/771647e94dbf7af170e4e1dbcdc9dc79/script.js"></script>
@@ -2266,6 +2273,14 @@
           <a href="tools.html" style="color: #6f6257; font-size: 0.92rem; text-decoration: none;">Tools</a>
           <a href="nail-placement-guide.html" style="color: #6f6257; font-size: 0.92rem; text-decoration: none;">Nail Guide</a>
           <a href="contact.html" style="color: #6f6257; font-size: 0.92rem; text-decoration: none;">Contact</a>
+          <details class="footer-policy-dropdown">
+            <summary>Policies</summary>
+            <div class="footer-policy-links-drop">
+              <a href="policies/privacy-policy.html">Privacy</a>
+              <a href="policies/cookie-policy.html">Cookies</a>
+              <a href="policies/terms.html">Terms</a>
+            </div>
+          </details>
         </div>
       </div>
     </footer>

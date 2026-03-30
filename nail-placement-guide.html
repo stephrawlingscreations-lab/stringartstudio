@@ -431,6 +431,13 @@
           margin: 0;
         }
       }
+      .footer-policy-dropdown { position: relative; display: inline-block; }
+      .footer-policy-dropdown > summary { list-style: none; cursor: pointer; color: var(--thread-teal); transition: opacity 0.15s; user-select: none; }
+      .footer-policy-dropdown > summary::-webkit-details-marker { display: none; }
+      .footer-policy-dropdown > summary::marker { display: none; }
+      .footer-policy-links-drop { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #fff; border: 1px solid rgba(70,52,36,0.12); border-radius: 8px; padding: 6px 0; display: flex; flex-direction: column; min-width: 110px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); z-index: 100; }
+      .footer-policy-links-drop a { color: var(--muted); font-size: 0.88rem; text-decoration: none; padding: 7px 16px; display: block; white-space: nowrap; }
+      .footer-policy-links-drop a:hover { color: var(--thread-teal); background: rgba(70,52,36,0.05); }
     </style>
     <!-- Start cookieyes banner -->
     <script id="cookieyes" type="text/javascript" src="https://cdn-cookieyes.com/client_data/771647e94dbf7af170e4e1dbcdc9dc79/script.js"></script>
@@ -751,6 +758,16 @@
         </p>
         <p style="margin-top: 8px">
           Download the PDF and print at 100% scale — no scaling, no "fit to page".
+        </p>
+        <p style="margin-top: 12px;">
+          <details class="footer-policy-dropdown">
+            <summary>Policies</summary>
+            <div class="footer-policy-links-drop">
+              <a href="policies/privacy-policy.html">Privacy</a>
+              <a href="policies/cookie-policy.html">Cookies</a>
+              <a href="policies/terms.html">Terms</a>
+            </div>
+          </details>
         </p>
       </footer>
     </div>

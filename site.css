@@ -654,8 +654,14 @@ footer { padding: 0 0 30px; color: var(--muted); }
 .footer-links { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
 .footer-links a { color: var(--muted); font-size: 0.92rem; transition: color 0.15s; }
 .footer-links a:hover { color: var(--text); }
-.footer-policy-group { display: flex; align-items: center; gap: 14px; padding-left: 18px; border-left: 1px solid rgba(70,52,36,0.15); }
-.footer-policy-label { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.5; }
+.footer-policy-dropdown { position: relative; }
+.footer-policy-dropdown > summary { list-style: none; cursor: pointer; font-size: 0.92rem; color: var(--muted); transition: color 0.15s; user-select: none; }
+.footer-policy-dropdown > summary::-webkit-details-marker { display: none; }
+.footer-policy-dropdown > summary::marker { display: none; }
+.footer-policy-dropdown > summary:hover { color: var(--text); }
+.footer-policy-links-drop { position: absolute; bottom: calc(100% + 8px); right: 0; background: #fff; border: 1px solid rgba(70,52,36,0.12); border-radius: 8px; padding: 6px 0; display: flex; flex-direction: column; min-width: 110px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); z-index: 100; }
+.footer-policy-links-drop a { color: var(--muted); font-size: 0.88rem; text-decoration: none; padding: 7px 16px; display: block; transition: color 0.15s, background 0.15s; white-space: nowrap; }
+.footer-policy-links-drop a:hover { color: var(--text); background: rgba(70,52,36,0.05); }
 
 /* ── RESPONSIVE ── */
 @media (max-width: 1080px) {
