@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pattern Library — Steph Rawlings Creations</title>
+    <meta name="description" content="Free string art pattern templates. Browse starter patterns for your string art projects — from beginner flower designs to cardioids and spirals. Open any pattern in the designer in one click." />
+    <link rel="icon" href="logo.png" />
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Steph Rawlings Creations" />
+    <meta property="og:title" content="String Art Pattern Library — Steph Rawlings Creations" />
+    <meta property="og:description" content="Free starter patterns for string art. Open any pattern in the designer and start building." />
+    <meta property="og:url" content="https://stephrawlingscreations.ie/patterns.html" />
+    <meta property="og:image" content="https://stephrawlingscreations.ie/logo.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="String Art Pattern Library — Steph Rawlings Creations" />
+    <meta name="twitter:description" content="Free starter patterns for string art. Open any pattern in the designer and start building." />
+    <meta name="twitter:image" content="https://stephrawlingscreations.ie/logo.png" />
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LS1B90ZPPS"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag("js", new Date());
+      gtag("config", "G-LS1B90ZPPS");
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="site.css" />
+    <!-- Start cookieyes banner -->
+    <script id="cookieyes" type="text/javascript" src="https://cdn-cookieyes.com/client_data/771647e94dbf7af170e4e1dbcdc9dc79/script.js"></script>
+    <!-- End cookieyes banner -->
+    <script type="text/javascript">
+      (function(c,l,a,r,i,t,y){
+          c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+          t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+          y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+      })(window, document, "clarity", "script", "w2wknqs1d2");
+    </script>
+    <style>
+      .pattern-hero {
+        padding: 72px 0 56px;
+        text-align: center;
+      }
+      .pattern-hero h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(2rem, 4.5vw, 3.2rem);
+        letter-spacing: -0.04em;
+        line-height: 1.1;
+        margin: 0 0 16px;
+        color: var(--ink);
+      }
+      .pattern-hero p {
+        color: var(--muted);
+        font-size: 1.05rem;
+        line-height: 1.75;
+        max-width: 52ch;
+        margin: 0 auto 32px;
+      }
+      .pattern-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 24px;
+        margin-top: 48px;
+      }
+      .pattern-card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 28px 24px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        transition: box-shadow 0.18s, transform 0.18s;
+      }
+      .pattern-card:hover {
+        box-shadow: 0 6px 28px rgba(28, 21, 16, 0.10);
+        transform: translateY(-2px);
+      }
+      .pattern-preview {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 4px;
+        flex-shrink: 0;
+      }
+      .pattern-preview svg {
+        width: 62px;
+        height: 62px;
+      }
+      .pattern-card h3 {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.25rem;
+        letter-spacing: -0.02em;
+        margin: 0;
+        color: var(--ink);
+        text-align: center;
+      }
+      .pattern-meta {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .badge-board {
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 3px 9px;
+        border-radius: 20px;
+        background: rgba(46, 123, 121, 0.10);
+        color: var(--teal);
+        border: 1px solid rgba(46, 123, 121, 0.20);
+      }
+      .badge-beginner {
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 3px 9px;
+        border-radius: 20px;
+        background: rgba(199, 154, 59, 0.12);
+        color: var(--gold-deep);
+        border: 1px solid rgba(199, 154, 59, 0.25);
+      }
+      .badge-intermediate {
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 3px 9px;
+        border-radius: 20px;
+        background: rgba(27, 44, 66, 0.08);
+        color: var(--navy);
+        border: 1px solid rgba(27, 44, 66, 0.18);
+      }
+      .pattern-desc {
+        color: var(--muted);
+        font-size: 0.9rem;
+        line-height: 1.7;
+        margin: 0;
+        text-align: center;
+        flex: 1;
+      }
+      .pattern-detail {
+        font-size: 0.78rem;
+        color: var(--muted);
+        text-align: center;
+        opacity: 0.8;
+      }
+      .pattern-card .btn-try {
+        display: block;
+        text-align: center;
+        padding: 11px 20px;
+        background: var(--gold);
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.88rem;
+        border-radius: 10px;
+        text-decoration: none;
+        transition: background 0.15s;
+        margin-top: auto;
+      }
+      .pattern-card .btn-try:hover {
+        background: var(--gold-deep);
+      }
+      .patterns-note {
+        text-align: center;
+        margin-top: 48px;
+        padding: 28px 24px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        max-width: 560px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .patterns-note p {
+        color: var(--muted);
+        font-size: 0.95rem;
+        line-height: 1.75;
+        margin: 0 0 16px;
+      }
+      .patterns-note p:last-child {
+        margin: 0;
+      }
+      @media (max-width: 600px) {
+        .pattern-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <div class="site-shell">
+      <div class="blur-orb orb-a"></div>
+      <div class="blur-orb orb-b"></div>
+
+      <div class="topbar">
+        <div class="container nav">
+          <a class="brand" href="index.html">
+            <strong>Steph Rawlings Creations</strong>
+            <span>String Art Designer</span>
+          </a>
+          <button class="hamburger" aria-label="Toggle menu" aria-expanded="false"><span></span><span></span><span></span></button>
+          <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="tools.html">Tools</a>
+            <a href="patterns.html" class="active">Patterns</a>
+            <a href="about.html">About</a>
+            <a href="feature.html">Gallery</a>
+            <a class="btn btn-primary" href="designer.html">Open the Designer</a>
+          </div>
+        </div>
+      </div>
+
+      <main id="main-content">
+        <div class="container">
+          <div class="pattern-hero">
+            <span class="eyebrow" style="display:block; margin-bottom:16px;">Free starter patterns</span>
+            <h1>Not sure where to <em>start?</em></h1>
+            <p>Pick a pattern below and it'll open straight in the designer, ready to adjust and build. All patterns work on a circular board and are completely free to use.</p>
+          </div>
+
+          <div class="pattern-grid">
+
+            <!-- Flower -->
+            <div class="pattern-card">
+              <div class="pattern-preview" style="background: rgba(199,154,59,0.10);">
+                <svg viewBox="0 0 62 62" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <circle cx="31" cy="19" r="12" stroke="#c79a3b" stroke-width="1.4" opacity="0.9"/>
+                  <circle cx="42.4" cy="25" r="12" stroke="#c79a3b" stroke-width="1.4" opacity="0.9"/>
+                  <circle cx="42.4" cy="37" r="12" stroke="#c79a3b" stroke-width="1.4" opacity="0.9"/>
+                  <circle cx="31" cy="43" r="12" stroke="#c79a3b" stroke-width="1.4" opacity="0.9"/>
+                  <circle cx="19.6" cy="37" r="12" stroke="#c79a3b" stroke-width="1.4" opacity="0.9"/>
+                  <circle cx="19.6" cy="25" r="12" stroke="#c79a3b" stroke-width="1.4" opacity="0.9"/>
+                </svg>
+              </div>
+              <h3>Flower</h3>
+              <div class="pattern-meta">
+                <span class="badge-board">Circle</span>
+                <span class="badge-beginner">Beginner</span>
+              </div>
+              <p class="pattern-desc">Overlapping petal shapes arranged around the board. A classic first project — satisfying to build and beautiful to hang.</p>
+              <p class="pattern-detail">90 nails · single layer</p>
+              <a class="btn-try" href="designer.html?preset=flower&board=circle&nails=90">Try this pattern →</a>
+            </div>
+
+            <!-- Web -->
+            <div class="pattern-card">
+              <div class="pattern-preview" style="background: rgba(46,123,121,0.09);">
+                <svg viewBox="0 0 62 62" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <circle cx="31" cy="31" r="27" stroke="#2e7b79" stroke-width="1.3" opacity="0.5"/>
+                  <circle cx="31" cy="31" r="18" stroke="#2e7b79" stroke-width="1.3" opacity="0.5"/>
+                  <circle cx="31" cy="31" r="9" stroke="#2e7b79" stroke-width="1.3" opacity="0.5"/>
+                  <line x1="31" y1="4" x2="31" y2="58" stroke="#2e7b79" stroke-width="1.3" opacity="0.8"/>
+                  <line x1="4" y1="31" x2="58" y2="31" stroke="#2e7b79" stroke-width="1.3" opacity="0.8"/>
+                  <line x1="11.9" y1="11.9" x2="50.1" y2="50.1" stroke="#2e7b79" stroke-width="1.3" opacity="0.8"/>
+                  <line x1="50.1" y1="11.9" x2="11.9" y2="50.1" stroke="#2e7b79" stroke-width="1.3" opacity="0.8"/>
+                </svg>
+              </div>
+              <h3>Web</h3>
+              <div class="pattern-meta">
+                <span class="badge-board">Circle</span>
+                <span class="badge-beginner">Beginner</span>
+              </div>
+              <p class="pattern-desc">Radiating lines from every nail across the board, creating a clean geometric web effect. Simple, structured, and striking.</p>
+              <p class="pattern-detail">60 nails · single layer</p>
+              <a class="btn-try" href="designer.html?preset=web&board=circle&nails=60">Try this pattern →</a>
+            </div>
+
+            <!-- Cardioid -->
+            <div class="pattern-card">
+              <div class="pattern-preview" style="background: rgba(168,78,58,0.09);">
+                <svg viewBox="0 0 62 62" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M31 52 C8 40 4 14 18 10 C24 8 28 13 31 18 C34 13 38 8 44 10 C58 14 54 40 31 52Z" stroke="#a84e3a" stroke-width="1.5" opacity="0.9"/>
+                  <path d="M31 46 C13 36 10 17 20 14 C24.5 12.5 28 16.5 31 21 C34 16.5 37.5 12.5 42 14 C52 17 49 36 31 46Z" stroke="#a84e3a" stroke-width="1.2" opacity="0.55"/>
+                  <path d="M31 39 C18 32 16 20 23 18 C26 17 28.5 20 31 23.5 C33.5 20 36 17 39 18 C46 20 44 32 31 39Z" stroke="#a84e3a" stroke-width="1.0" opacity="0.35"/>
+                </svg>
+              </div>
+              <h3>Cardioid</h3>
+              <div class="pattern-meta">
+                <span class="badge-board">Circle</span>
+                <span class="badge-intermediate">Intermediate</span>
+              </div>
+              <p class="pattern-desc">A heart-shaped mathematical curve made entirely from straight threads. One of the most elegant patterns in string art.</p>
+              <p class="pattern-detail">120 nails · single layer</p>
+              <a class="btn-try" href="designer.html?preset=cardioid&board=circle&nails=120">Try this pattern →</a>
+            </div>
+
+            <!-- Star -->
+            <div class="pattern-card">
+              <div class="pattern-preview" style="background: rgba(27,44,66,0.07);">
+                <svg viewBox="0 0 62 62" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <polygon points="31,4 37.5,23 57,23 41.5,35 47.5,54 31,42 14.5,54 20.5,35 5,23 24.5,23" stroke="#1b2c42" stroke-width="1.5" opacity="0.9"/>
+                  <polygon points="31,12 36,26 51,26 39,35 44,50 31,41 18,50 23,35 11,26 26,26" stroke="#1b2c42" stroke-width="1.0" opacity="0.35"/>
+                </svg>
+              </div>
+              <h3>Star</h3>
+              <div class="pattern-meta">
+                <span class="badge-board">Circle</span>
+                <span class="badge-intermediate">Intermediate</span>
+              </div>
+              <p class="pattern-desc">A sharp, geometric star shape built from threads that skip across the board. Instantly recognisable and very satisfying to make.</p>
+              <p class="pattern-detail">100 nails · single layer</p>
+              <a class="btn-try" href="designer.html?preset=star&board=circle&nails=100">Try this pattern →</a>
+            </div>
+
+            <!-- Spiral -->
+            <div class="pattern-card">
+              <div class="pattern-preview" style="background: rgba(199,154,59,0.10);">
+                <svg viewBox="0 0 62 62" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M31 31 Q39 20 48 24 Q58 30 54 42 Q49 55 35 56 Q18 57 10 44 Q2 30 10 17 Q19 3 34 5 Q52 7 57 24" stroke="#c79a3b" stroke-width="1.5" fill="none" opacity="0.9"/>
+                  <path d="M31 31 Q36 24 42 27 Q49 32 46 40 Q42 49 33 49 Q22 49 17 41 Q11 32 17 23 Q24 13 34 15 Q46 17 50 28" stroke="#c79a3b" stroke-width="1.2" fill="none" opacity="0.55"/>
+                  <circle cx="31" cy="31" r="2" fill="#c79a3b" opacity="0.7"/>
+                </svg>
+              </div>
+              <h3>Spiral</h3>
+              <div class="pattern-meta">
+                <span class="badge-board">Circle</span>
+                <span class="badge-intermediate">Intermediate</span>
+              </div>
+              <p class="pattern-desc">A smooth outward spiral that fills the board evenly. The thread wraps around in a continuous path — mesmerising to build and to look at.</p>
+              <p class="pattern-detail">120 nails · single layer</p>
+              <a class="btn-try" href="designer.html?preset=spiral&board=circle&nails=120">Try this pattern →</a>
+            </div>
+
+          </div>
+
+          <div class="patterns-note">
+            <p>These are starting points, not finished pieces. Once a pattern loads in the designer you can change the nail count, adjust colours, add extra layers, or combine patterns to make something completely your own.</p>
+            <p><a href="designer.html" style="color:var(--gold); font-weight:600; text-decoration:underline; text-underline-offset:3px;">Open the designer from scratch →</a></p>
+          </div>
+        </div>
+      </main>
+
+      <footer>
+        <div class="container footer-inner">
+          <div>
+            <div class="footer-brand">Steph Rawlings Creations</div>
+            <div class="footer-copy">© 2026 · String Art Designer</div>
+          </div>
+          <div class="footer-links">
+            <a href="designer.html">Designer</a>
+            <a href="tools.html">Tools</a>
+            <a href="patterns.html">Patterns</a>
+            <a href="about.html">About</a>
+            <a href="feature.html">Gallery</a>
+            <a href="contact.html">Contact</a>
+            <details class="footer-policy-dropdown">
+              <summary>Policies</summary>
+              <div class="footer-policy-links-drop">
+                <a href="policies/privacy-policy.html">Privacy</a>
+                <a href="policies/cookie-policy.html">Cookies</a>
+                <a href="policies/terms.html">Terms</a>
+              </div>
+            </details>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <script src="nav.js"></script>
+  </body>
+</html>

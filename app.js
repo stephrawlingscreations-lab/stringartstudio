@@ -2015,9 +2015,11 @@ document.addEventListener("DOMContentLoaded", function () {
     // First-time onboarding tip
     initOnboarding();
 
-    // Check for shared design in URL
+    // Check for shared design or preset in URL
     if (loadSharedDesign()) {
       // loaded from URL param — don't also load saved
+    } else if (loadPresetFromURL()) {
+      // loaded preset from patterns page
     } else if (hasSavedDesign()) {
       loadSavedDesign(true);
       showToast("Last design restored.");
@@ -2111,6 +2113,36 @@ document.addEventListener("DOMContentLoaded", function () {
       showToast("Could not copy link.", true);
     }
     document.body.removeChild(ta);
+  }
+
+  function loadPresetFromURL() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const preset = params.get("preset");
+      if (!preset) return false;
+
+      const board = params.get("board") || "circle";
+      const nails = parseInt(params.get("nails"), 10) || 120;
+
+      history.replaceState({}, "", window.location.pathname);
+
+      if ($("board")) $("board").value = board;
+      if ($("nails")) $("nails").value = nails;
+
+      ensureLayerExists();
+      redrawAll();
+      generatePreset(preset, 0);
+      syncLayerSelect();
+      switchLayer(activeLayer);
+      updateSeqOutput();
+      updateDrawModeSeqMini();
+
+      const name = preset.charAt(0).toUpperCase() + preset.slice(1);
+      showToast(name + " pattern loaded — customise it below.");
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   function loadSharedDesign() {
