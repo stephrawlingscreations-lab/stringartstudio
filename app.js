@@ -1082,6 +1082,91 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   /* -----------------------------
+     EXPORT / IMPORT DESIGN FILE
+  ----------------------------- */
+
+  function exportDesignFile() {
+    const hasContent = layers.some((L) => L.edges && L.edges.length > 0);
+    if (!hasContent) {
+      showToast("Nothing to export — draw something first.", true);
+      return;
+    }
+    try {
+      const state = {
+        _type: "sas_design",
+        _version: 1,
+        layers,
+        activeLayer,
+        settings: {
+          board: $("board")?.value,
+          nails: $("nails")?.value,
+          radius: $("radius")?.value,
+          showNums: $("showNums")?.checked,
+          numEvery: $("numEvery")?.value,
+          numStart: $("numStart")?.value,
+          numSize: $("numSize")?.value,
+          numOffset: $("numOffset")?.value,
+          nail1pos: $("nail1pos")?.value,
+          boardColor,
+        },
+      };
+      const blob = new Blob([JSON.stringify(state)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const stamp = new Date().toISOString().slice(0, 10);
+      a.download = `string-art-design-${stamp}.sas`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Design exported.");
+    } catch (_) {
+      showToast("Export failed — please try again.", true);
+    }
+  }
+
+  function importDesignFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      try {
+        const state = JSON.parse(e.target.result);
+        if (!Array.isArray(state.layers) || state.layers.length === 0) {
+          showToast("Invalid design file.", true);
+          return;
+        }
+
+        layers = state.layers;
+        activeLayer = Math.min(state.activeLayer || 0, layers.length - 1);
+
+        const s = state.settings || {};
+        if (s.board != null && $("board")) $("board").value = s.board;
+        if (s.nails != null && $("nails")) $("nails").value = s.nails;
+        if (s.radius != null && $("radius")) $("radius").value = s.radius;
+        if (s.showNums != null && $("showNums")) $("showNums").checked = s.showNums;
+        if (s.numEvery != null && $("numEvery")) $("numEvery").value = s.numEvery;
+        if (s.numStart != null && $("numStart")) $("numStart").value = s.numStart;
+        if (s.numSize != null && $("numSize")) $("numSize").value = s.numSize;
+        if (s.numOffset != null && $("numOffset")) $("numOffset").value = s.numOffset;
+        if (s.nail1pos != null && $("nail1pos")) $("nail1pos").value = s.nail1pos;
+        if (s.boardColor != null) {
+          boardColor = s.boardColor;
+          localStorage.setItem("sas_board_color", boardColor);
+          if ($("boardColor")) $("boardColor").value = boardColor;
+        }
+
+        syncLayerSelect();
+        switchLayer(activeLayer);
+        redrawAll();
+        updateSeqOutput();
+        showToast("Design loaded from file.");
+      } catch (_) {
+        showToast("Could not read file — is it a valid .sas design?", true);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  /* -----------------------------
      CONTINUE PATTERN
   ----------------------------- */
 
@@ -1775,6 +1860,12 @@ document.addEventListener("DOMContentLoaded", function () {
       showToast("Design saved.");
     });
     $("loadDesignBtn")?.addEventListener("click", () => loadSavedDesign(false));
+    $("exportDesignBtn")?.addEventListener("click", exportDesignFile);
+    $("importDesignBtn")?.addEventListener("click", () => $("importDesignInput")?.click());
+    $("importDesignInput")?.addEventListener("change", (e) => {
+      importDesignFile(e.target.files?.[0]);
+      e.target.value = "";
+    });
     $("zoomIn")?.addEventListener("click", () => nudgeZoom(1));
     $("zoomOut")?.addEventListener("click", () => nudgeZoom(-1));
 
