@@ -80,18 +80,21 @@
         transform: translateY(-2px);
       }
       .pattern-preview {
-        width: 96px;
-        height: 96px;
+        width: 140px;
+        height: 140px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         margin: 0 auto 4px;
         flex-shrink: 0;
+        overflow: hidden;
       }
-      .pattern-preview svg {
-        width: 62px;
-        height: 62px;
+      .pattern-preview canvas {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        display: block;
       }
       .pattern-card h3 {
         font-family: 'Playfair Display', serif;
@@ -233,15 +236,8 @@
 
             <!-- Flower -->
             <div class="pattern-card">
-              <div class="pattern-preview" style="background: rgba(199,154,59,0.10);">
-                <svg viewBox="0 0 62 62" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <circle cx="31" cy="19" r="12" stroke="#c79a3b" stroke-width="1.4" opacity="0.9"/>
-                  <circle cx="42.4" cy="25" r="12" stroke="#c79a3b" stroke-width="1.4" opacity="0.9"/>
-                  <circle cx="42.4" cy="37" r="12" stroke="#c79a3b" stroke-width="1.4" opacity="0.9"/>
-                  <circle cx="31" cy="43" r="12" stroke="#c79a3b" stroke-width="1.4" opacity="0.9"/>
-                  <circle cx="19.6" cy="37" r="12" stroke="#c79a3b" stroke-width="1.4" opacity="0.9"/>
-                  <circle cx="19.6" cy="25" r="12" stroke="#c79a3b" stroke-width="1.4" opacity="0.9"/>
-                </svg>
+              <div class="pattern-preview">
+                <canvas id="preview-flower" width="280" height="280" aria-hidden="true"></canvas>
               </div>
               <h3>Flower</h3>
               <div class="pattern-meta">
@@ -255,16 +251,8 @@
 
             <!-- Web -->
             <div class="pattern-card">
-              <div class="pattern-preview" style="background: rgba(46,123,121,0.09);">
-                <svg viewBox="0 0 62 62" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <circle cx="31" cy="31" r="27" stroke="#2e7b79" stroke-width="1.3" opacity="0.5"/>
-                  <circle cx="31" cy="31" r="18" stroke="#2e7b79" stroke-width="1.3" opacity="0.5"/>
-                  <circle cx="31" cy="31" r="9" stroke="#2e7b79" stroke-width="1.3" opacity="0.5"/>
-                  <line x1="31" y1="4" x2="31" y2="58" stroke="#2e7b79" stroke-width="1.3" opacity="0.8"/>
-                  <line x1="4" y1="31" x2="58" y2="31" stroke="#2e7b79" stroke-width="1.3" opacity="0.8"/>
-                  <line x1="11.9" y1="11.9" x2="50.1" y2="50.1" stroke="#2e7b79" stroke-width="1.3" opacity="0.8"/>
-                  <line x1="50.1" y1="11.9" x2="11.9" y2="50.1" stroke="#2e7b79" stroke-width="1.3" opacity="0.8"/>
-                </svg>
+              <div class="pattern-preview">
+                <canvas id="preview-web" width="280" height="280" aria-hidden="true"></canvas>
               </div>
               <h3>Web</h3>
               <div class="pattern-meta">
@@ -278,12 +266,8 @@
 
             <!-- Cardioid -->
             <div class="pattern-card">
-              <div class="pattern-preview" style="background: rgba(168,78,58,0.09);">
-                <svg viewBox="0 0 62 62" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M31 52 C8 40 4 14 18 10 C24 8 28 13 31 18 C34 13 38 8 44 10 C58 14 54 40 31 52Z" stroke="#a84e3a" stroke-width="1.5" opacity="0.9"/>
-                  <path d="M31 46 C13 36 10 17 20 14 C24.5 12.5 28 16.5 31 21 C34 16.5 37.5 12.5 42 14 C52 17 49 36 31 46Z" stroke="#a84e3a" stroke-width="1.2" opacity="0.55"/>
-                  <path d="M31 39 C18 32 16 20 23 18 C26 17 28.5 20 31 23.5 C33.5 20 36 17 39 18 C46 20 44 32 31 39Z" stroke="#a84e3a" stroke-width="1.0" opacity="0.35"/>
-                </svg>
+              <div class="pattern-preview">
+                <canvas id="preview-cardioid" width="280" height="280" aria-hidden="true"></canvas>
               </div>
               <h3>Cardioid</h3>
               <div class="pattern-meta">
@@ -297,11 +281,8 @@
 
             <!-- Star -->
             <div class="pattern-card">
-              <div class="pattern-preview" style="background: rgba(27,44,66,0.07);">
-                <svg viewBox="0 0 62 62" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <polygon points="31,4 37.5,23 57,23 41.5,35 47.5,54 31,42 14.5,54 20.5,35 5,23 24.5,23" stroke="#1b2c42" stroke-width="1.5" opacity="0.9"/>
-                  <polygon points="31,12 36,26 51,26 39,35 44,50 31,41 18,50 23,35 11,26 26,26" stroke="#1b2c42" stroke-width="1.0" opacity="0.35"/>
-                </svg>
+              <div class="pattern-preview">
+                <canvas id="preview-star" width="280" height="280" aria-hidden="true"></canvas>
               </div>
               <h3>Star</h3>
               <div class="pattern-meta">
@@ -315,12 +296,8 @@
 
             <!-- Spiral -->
             <div class="pattern-card">
-              <div class="pattern-preview" style="background: rgba(199,154,59,0.10);">
-                <svg viewBox="0 0 62 62" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M31 31 Q39 20 48 24 Q58 30 54 42 Q49 55 35 56 Q18 57 10 44 Q2 30 10 17 Q19 3 34 5 Q52 7 57 24" stroke="#c79a3b" stroke-width="1.5" fill="none" opacity="0.9"/>
-                  <path d="M31 31 Q36 24 42 27 Q49 32 46 40 Q42 49 33 49 Q22 49 17 41 Q11 32 17 23 Q24 13 34 15 Q46 17 50 28" stroke="#c79a3b" stroke-width="1.2" fill="none" opacity="0.55"/>
-                  <circle cx="31" cy="31" r="2" fill="#c79a3b" opacity="0.7"/>
-                </svg>
+              <div class="pattern-preview">
+                <canvas id="preview-spiral" width="280" height="280" aria-hidden="true"></canvas>
               </div>
               <h3>Spiral</h3>
               <div class="pattern-meta">
@@ -367,5 +344,112 @@
       </footer>
     </div>
     <script src="nav.js"></script>
+    <script>
+      // Pattern preview renderer — uses the same algorithms as the designer
+      (function () {
+        function wrapIndex(i, total) { return ((i % total) + total) % total; }
+
+        function nailsCircle(n, cx, cy, r) {
+          var pts = [];
+          for (var i = 0; i < n; i++) {
+            var a = (Math.PI * 2 * i) / n - Math.PI / 2;
+            pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+          }
+          return pts;
+        }
+
+        function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+        function findCoprime(target, total) {
+          for (var d = 0; d < total; d++) {
+            var hi = target + d, lo = target - d;
+            if (hi < total && gcd(hi, total) === 1) return hi;
+            if (lo >= 2 && gcd(lo, total) === 1) return lo;
+          }
+          return target;
+        }
+
+        function edgesFlower(total) {
+          var edges = [];
+          for (var i = 0; i < total; i++) edges.push([i, wrapIndex(i * 2, total)]);
+          return edges;
+        }
+        function edgesCardioid(total) {
+          var edges = [];
+          for (var i = 0; i < total; i++) {
+            var b = wrapIndex(i * 3, total);
+            if (i !== b) edges.push([i, b]);
+          }
+          return edges;
+        }
+        function edgesWeb(total) {
+          var skip = Math.round(total / 2);
+          var edges = [];
+          for (var i = 0; i < total; i++) edges.push([i, wrapIndex(i + skip, total)]);
+          return edges;
+        }
+        function edgesStar(total) {
+          var skip = findCoprime(Math.round(total / 4), total);
+          var edges = [];
+          for (var i = 0; i < total; i++) edges.push([i, wrapIndex(i + skip, total)]);
+          return edges;
+        }
+        function edgesSpiral(total) {
+          var step = findCoprime(Math.round(total / 2), total);
+          var seq = [0], cur = 0;
+          for (var i = 0; i < total - 1; i++) { cur = wrapIndex(cur + step, total); seq.push(cur); }
+          var edges = [];
+          for (var j = 0; j < seq.length - 1; j++) edges.push([seq[j], seq[j + 1]]);
+          return edges;
+        }
+
+        var patterns = [
+          { id: 'preview-flower',   nails: 90,  color: '#c79a3b', fn: edgesFlower },
+          { id: 'preview-web',      nails: 60,  color: '#2e7b79', fn: edgesWeb },
+          { id: 'preview-cardioid', nails: 120, color: '#a84e3a', fn: edgesCardioid },
+          { id: 'preview-star',     nails: 100, color: '#1b2c42', fn: edgesStar },
+          { id: 'preview-spiral',   nails: 120, color: '#c79a3b', fn: edgesSpiral },
+        ];
+
+        patterns.forEach(function (p) {
+          var canvas = document.getElementById(p.id);
+          if (!canvas) return;
+          var size = canvas.width; // 280
+          var ctx = canvas.getContext('2d');
+          var cx = size / 2, cy = size / 2;
+          var r = size * 0.44;
+
+          // Background
+          ctx.beginPath();
+          ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
+          ctx.fillStyle = '#faf6f0';
+          ctx.fill();
+
+          // Board circle
+          ctx.beginPath();
+          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(70,52,36,0.12)';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          var pts = nailsCircle(p.nails, cx, cy, r);
+          var edges = p.fn(p.nails);
+
+          // Convert hex color to rgba
+          var hex = p.color;
+          var rv = parseInt(hex.slice(1,3),16), gv = parseInt(hex.slice(3,5),16), bv = parseInt(hex.slice(5,7),16);
+          ctx.strokeStyle = 'rgba(' + rv + ',' + gv + ',' + bv + ',0.38)';
+          ctx.lineWidth = 0.8;
+
+          edges.forEach(function (e) {
+            var a = pts[e[0]], b = pts[e[1]];
+            if (!a || !b) return;
+            ctx.beginPath();
+            ctx.moveTo(a[0], a[1]);
+            ctx.lineTo(b[0], b[1]);
+            ctx.stroke();
+          });
+        });
+      })();
+    </script>
   </body>
 </html>
