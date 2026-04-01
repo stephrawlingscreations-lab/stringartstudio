@@ -1758,6 +1758,7 @@ document.addEventListener("DOMContentLoaded", function () {
     $('modeBeginner')?.classList.toggle('active', mode !== 'advanced');
     $('modeAdvanced')?.classList.toggle('active', mode === 'advanced');
     try { localStorage.setItem('sas_ui_mode', mode); } catch(_) {}
+    showOnboardingIfUnseen();
   }
 
   function initModeToggles() {
@@ -2035,9 +2036,16 @@ document.addEventListener("DOMContentLoaded", function () {
   ----------------------------- */
 
   function initOnboarding() {
+    showOnboardingIfUnseen();
+  }
+
+  function showOnboardingIfUnseen() {
     try {
-      const seen = localStorage.getItem("_sas_onboard");
-      if (!seen) {
+      const key = "_sas_onboard_" + uiMode;
+      // If legacy key is set, treat beginner as already seen
+      const legacySeen = localStorage.getItem("_sas_onboard");
+      if (uiMode === 'beginner' && legacySeen) return;
+      if (!localStorage.getItem(key)) {
         const tip = document.getElementById("onboardingTip");
         if (tip) tip.style.display = "block";
       }
@@ -2046,6 +2054,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function dismissOnboarding() {
     try {
+      localStorage.setItem("_sas_onboard_" + uiMode, "1");
+      // legacy key so old dismissed users aren't reshown the beginner tip
       localStorage.setItem("_sas_onboard", "1");
     } catch (_) {}
     const tip = document.getElementById("onboardingTip");

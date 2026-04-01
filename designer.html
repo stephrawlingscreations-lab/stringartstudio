@@ -1358,6 +1358,12 @@
       .advanced-only { display: none !important; }
       body.mode-advanced .advanced-only { display: block !important; }
 
+      /* Onboarding tip visibility by mode */
+      body.mode-advanced .onboarding-beginner { display: none !important; }
+      body.mode-advanced .onboarding-advanced { display: block !important; }
+      body.mode-beginner  .onboarding-advanced { display: none !important; }
+      body.mode-beginner  .onboarding-beginner { display: block !important; }
+
       /* ================= MODE TOGGLE ================= */
       .mode-toggle-row {
         display: flex;
@@ -1675,11 +1681,31 @@
     <div id="onboardingTip" style="display:none; background:linear-gradient(135deg,#1b2c42,#243a56); color:#fff; padding:14px 20px; font-size:0.88rem; line-height:1.6; position:relative;">
       <div style="max-width:900px; margin:0 auto; display:flex; align-items:flex-start; gap:14px; flex-wrap:wrap;">
         <span style="font-size:1.3rem; flex-shrink:0; margin-top:2px;">💡</span>
-        <div style="flex:1; min-width:220px;">
-          <strong style="display:block; margin-bottom:4px; font-size:0.92rem;">New here? Here's how it works:</strong>
-          <span style="opacity:0.85;">1. Pick a preset pattern below <em>or</em> tap nails on the canvas to draw manually. &nbsp;2. The nail sequence appears in the panel. &nbsp;3. Export PNG or copy your sequence — then follow it at your board.</span>
-          <span style="display:block; margin-top:6px; opacity:0.65; font-size:0.80rem;">Keyboard shortcuts: <kbd style="background:rgba(255,255,255,0.12);padding:1px 5px;border-radius:4px;">Ctrl+Z</kbd> undo &nbsp;·&nbsp; <kbd style="background:rgba(255,255,255,0.12);padding:1px 5px;border-radius:4px;">Ctrl+S</kbd> save &nbsp;·&nbsp; <kbd style="background:rgba(255,255,255,0.12);padding:1px 5px;border-radius:4px;">+</kbd> / <kbd style="background:rgba(255,255,255,0.12);padding:1px 5px;border-radius:4px;">−</kbd> zoom</span>
+
+        <!-- BEGINNER tip — hidden in advanced mode -->
+        <div class="onboarding-beginner" style="flex:1; min-width:220px;">
+          <strong style="display:block; margin-bottom:4px; font-size:0.92rem;">New here? Start here 👇</strong>
+          <span style="opacity:0.85;">
+            1. Choose your board (shape + number of nails). &nbsp;
+            2. Tap nails on the board to create your design. &nbsp;
+            3. Your string path builds automatically as you go. &nbsp;
+            4. When you're happy, export or copy it to follow on your real board.
+          </span>
+          <span style="display:block; margin-top:6px; opacity:0.75; font-size:0.82rem;">👉 Tip: Just start tapping — you can always undo.</span>
         </div>
+
+        <!-- ADVANCED tip — hidden in beginner mode -->
+        <div class="onboarding-advanced" style="flex:1; min-width:220px; display:none;">
+          <strong style="display:block; margin-bottom:4px; font-size:0.92rem;">Advanced mode unlocked ✦</strong>
+          <span style="opacity:0.85;">
+            1. Set a custom nail layout — choose edges or place nails manually. &nbsp;
+            2. Add multiple layers for multi-colour designs, each with its own colour and opacity. &nbsp;
+            3. Fine-tune thread weight and opacity per layer. &nbsp;
+            4. Use <em>Continue pattern</em> to auto-extend your sequence by a set number of steps.
+          </span>
+          <span style="display:block; margin-top:6px; opacity:0.65; font-size:0.80rem;">Keyboard shortcuts: <kbd style="background:rgba(255,255,255,0.12);padding:1px 5px;border-radius:4px;">⌘/Ctrl+Z</kbd> undo &nbsp;·&nbsp; <kbd style="background:rgba(255,255,255,0.12);padding:1px 5px;border-radius:4px;">⌘/Ctrl+S</kbd> save &nbsp;·&nbsp; <kbd style="background:rgba(255,255,255,0.12);padding:1px 5px;border-radius:4px;">+</kbd> / <kbd style="background:rgba(255,255,255,0.12);padding:1px 5px;border-radius:4px;">−</kbd> zoom</span>
+        </div>
+
         <button onclick="dismissOnboarding()" aria-label="Dismiss tip" style="background:rgba(255,255,255,0.14);border:none;color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:0.82rem;white-space:nowrap;flex-shrink:0;">Got it ✕</button>
       </div>
     </div>
