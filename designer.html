@@ -1645,6 +1645,46 @@
       .footer-policy-links-drop { position: absolute; bottom: calc(100% + 8px); right: 0; background: #fff; border: 1px solid rgba(70,52,36,0.12); border-radius: 8px; padding: 6px 0; display: flex; flex-direction: column; min-width: 110px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); z-index: 100; }
       .footer-policy-links-drop a { color: #6f6257; font-size: 0.88rem; text-decoration: none; padding: 7px 16px; display: block; white-space: nowrap; }
       .footer-policy-links-drop a:hover { color: #3a2a1a; background: rgba(70,52,36,0.05); }
+
+      /* ================= 4-TAB NAIL PLACEMENT BAR ================= */
+      /* With 4 buttons the text must be smaller to fit */
+      #customLayoutSect .layout-mode-btn {
+        font-size: 11px;
+        padding: 7px 4px;
+        gap: 3px;
+      }
+
+      /* ================= TEMPLATE SHAPE GRID ================= */
+      .template-shape-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 5px;
+        margin: 8px 0 4px;
+      }
+      .template-shape-btn {
+        background: rgba(255,255,255,0.9);
+        border: 1.5px solid rgba(60,44,28,0.13);
+        color: var(--text-dark);
+        border-radius: 10px;
+        padding: 8px 6px;
+        font-size: 11.5px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s;
+        font-family: Inter, system-ui, sans-serif;
+        text-align: center;
+      }
+      .template-shape-btn:hover {
+        border-color: var(--gold);
+        color: var(--gold);
+        background: rgba(184,137,46,0.05);
+        opacity: 1;
+      }
+      .template-shape-btn.active {
+        background: var(--navy);
+        color: #fff;
+        border-color: var(--navy);
+      }
     </style>
     <!-- Start cookieyes banner -->
     <script id="cookieyes" type="text/javascript" src="https://cdn-cookieyes.com/client_data/771647e94dbf7af170e4e1dbcdc9dc79/script.js"></script>
@@ -1741,6 +1781,7 @@
                 <select id="board">
                   <option value="circle" selected>Circle</option>
                   <option value="square">Square</option>
+                  <option value="rectangle">Rectangle</option>
                 </select>
               </div>
               <div>
@@ -1772,28 +1813,40 @@
               </button>
             </div>
             <input id="radius" type="hidden" value="320" />
+            <div id="rectAspectRow" style="display:none; margin-top:8px;">
+              <label>Aspect ratio</label>
+              <select id="rectAspectSelect">
+                <option value="3:2" selected>3 : 2 (landscape)</option>
+                <option value="2:3">2 : 3 (portrait)</option>
+                <option value="4:3">4 : 3</option>
+                <option value="16:9">16 : 9</option>
+                <option value="1:1">1 : 1 (square)</option>
+              </select>
+            </div>
           </div>
 
-          <!-- NAIL LAYOUT — advanced only -->
+          <!-- NAIL PLACEMENT — advanced only -->
           <div class="custom-layout-section advanced-only" id="customLayoutSect">
-            <span class="panel-section-label" style="margin-bottom:10px;display:block;">Nail Layout</span>
+            <span class="panel-section-label" style="margin-bottom:10px;display:block;">Nail Placement</span>
 
-            <div class="layout-mode-bar" role="group" aria-label="Nail layout mode">
-              <button class="layout-mode-btn active" id="layoutModeAuto">⊙ Auto</button>
-              <button class="layout-mode-btn" id="layoutModeCustom">✦ Custom</button>
+            <!-- 4-tab bar -->
+            <div class="layout-mode-bar" role="group" aria-label="Nail placement mode">
+              <button class="layout-mode-btn active" id="npmBtn_perimeter">⊙ Full</button>
+              <button class="layout-mode-btn" id="npmBtn_partial-edge">◑ Edge</button>
+              <button class="layout-mode-btn" id="npmBtn_manual">✦ Manual</button>
+              <button class="layout-mode-btn" id="npmBtn_template">⬡ Shape</button>
             </div>
 
-            <p class="layout-hint" id="layoutAutoHint">Nails placed evenly around the full perimeter automatically.</p>
+            <!-- PERIMETER panel -->
+            <div id="perimeterPanel">
+              <p class="layout-hint">Nails placed evenly around the full perimeter automatically.</p>
+            </div>
 
-            <div id="customLayoutControls" style="display:none">
-              <p class="layout-hint">Choose where nails appear — build patterns from selected edges only.</p>
+            <!-- PARTIAL-EDGE panel -->
+            <div id="partialEdgePanel" style="display:none">
+              <p class="layout-hint">Choose which edges have nails.</p>
 
-              <div class="sub-mode-tabs" role="group">
-                <button class="sub-tab active" id="subModeEdges">Edge Select</button>
-                <button class="sub-tab" id="subModeManual">Manual Place</button>
-              </div>
-
-              <!-- EDGE SELECT: Square -->
+              <!-- Edge Select: Square / Rectangle -->
               <div id="edgeSelectSquare" style="display:none">
                 <div class="edge-map">
                   <button class="edge-btn active" data-edge="top">Top</button>
@@ -1804,9 +1857,19 @@
                   </div>
                   <button class="edge-btn active" data-edge="bottom">Bottom</button>
                 </div>
+                <!-- Square presets -->
+                <div id="squarePresets" class="preset-chip-row" style="margin-top:6px;">
+                  <button class="preset-chip-sm" data-custom-preset="full">Full</button>
+                  <button class="preset-chip-sm" data-custom-preset="top">Top</button>
+                  <button class="preset-chip-sm" data-custom-preset="bottom">Bottom</button>
+                  <button class="preset-chip-sm" data-custom-preset="left-right">L+R</button>
+                  <button class="preset-chip-sm" data-custom-preset="top-bottom">T+B</button>
+                  <button class="preset-chip-sm" data-custom-preset="opposing">Opposing</button>
+                  <button class="preset-chip-sm" data-custom-preset="l-shape">L-shape</button>
+                </div>
               </div>
 
-              <!-- EDGE SELECT: Circle -->
+              <!-- Edge Select: Circle -->
               <div id="edgeSelectCircle" style="display:none">
                 <div class="arc-control">
                   <label class="arc-label">Start angle <span id="arcStartVal">−90°</span></label>
@@ -1814,49 +1877,51 @@
                   <label class="arc-label">End angle <span id="arcEndVal">270°</span></label>
                   <input type="range" id="arcEnd" min="-90" max="360" step="5" value="270" style="width:100%;accent-color:var(--gold);" />
                 </div>
-              </div>
-
-              <!-- MANUAL PLACEMENT -->
-              <div id="manualPlacementPanel" style="display:none">
-                <div class="manual-hint">
-                  <div class="manual-hint-icon">✦</div>
-                  <p><strong>Click the board</strong> to place a nail.<br><strong>Click a nail</strong> to remove it.<br><strong>Drag</strong> to reposition.</p>
+                <!-- Circle presets -->
+                <div id="circlePresets" class="preset-chip-row" style="margin-top:6px;">
+                  <button class="preset-chip-sm" data-custom-preset="full">Full</button>
+                  <button class="preset-chip-sm" data-custom-preset="top-half">Top ½</button>
+                  <button class="preset-chip-sm" data-custom-preset="bottom-half">Bot ½</button>
+                  <button class="preset-chip-sm" data-custom-preset="left-half">Left ½</button>
+                  <button class="preset-chip-sm" data-custom-preset="right-half">Right ½</button>
+                  <button class="preset-chip-sm" data-custom-preset="quarter">¼ Arc</button>
+                  <button class="preset-chip-sm" data-custom-preset="three-quarter">¾ Arc</button>
                 </div>
               </div>
+            </div>
 
-              <!-- Nail count badge -->
-              <div class="nail-count-row">
-                <span id="customNailCount" class="nail-count-badge">0 nails</span>
+            <!-- MANUAL panel -->
+            <div id="manualPanel" style="display:none">
+              <div class="manual-hint">
+                <div class="manual-hint-icon">✦</div>
+                <p><strong>Click the board</strong> to place a nail.<br><strong>Click a nail</strong> to remove it.<br><strong>Drag</strong> to reposition.</p>
               </div>
-
+              <!-- Nail count badge + manual input -->
+              <div class="nail-count-row" style="align-items:center;gap:8px;">
+                <span id="customNailCount" class="nail-count-badge">0 nails</span>
+                <input id="customNailCountManual" type="number" min="1" max="8000" value="0"
+                  style="width:70px;padding:4px 8px;font-size:12px;border-radius:8px;border:1px solid rgba(60,44,28,0.14);text-align:center;" />
+              </div>
               <!-- Smart tools -->
               <span class="smart-tools-header">Tools</span>
               <div class="smart-tools-grid">
                 <button id="distributeNails" class="tool-btn btn-ghost">⟷ Distribute</button>
                 <button id="mirrorNails" class="tool-btn btn-ghost">⇔ Mirror</button>
                 <button id="resetToPerimeter" class="tool-btn btn-ghost">↺ Reset</button>
-                <button id="clearCustomNails" class="tool-btn btn-ghost btn-danger">✕ Clear nails</button>
+                <button id="clearCustomNails" class="tool-btn btn-ghost btn-danger">✕ Clear</button>
               </div>
+            </div>
 
-              <!-- Presets -->
-              <span class="custom-presets-header">Presets</span>
-              <div id="squarePresets" class="preset-chip-row" style="display:none">
-                <button class="preset-chip-sm" data-custom-preset="full">Full</button>
-                <button class="preset-chip-sm" data-custom-preset="top">Top</button>
-                <button class="preset-chip-sm" data-custom-preset="bottom">Bottom</button>
-                <button class="preset-chip-sm" data-custom-preset="left-right">L+R</button>
-                <button class="preset-chip-sm" data-custom-preset="top-bottom">T+B</button>
-                <button class="preset-chip-sm" data-custom-preset="opposing">Opposing</button>
-                <button class="preset-chip-sm" data-custom-preset="l-shape">L-shape</button>
-              </div>
-              <div id="circlePresets" class="preset-chip-row">
-                <button class="preset-chip-sm" data-custom-preset="full">Full</button>
-                <button class="preset-chip-sm" data-custom-preset="top-half">Top ½</button>
-                <button class="preset-chip-sm" data-custom-preset="bottom-half">Bot ½</button>
-                <button class="preset-chip-sm" data-custom-preset="left-half">Left ½</button>
-                <button class="preset-chip-sm" data-custom-preset="right-half">Right ½</button>
-                <button class="preset-chip-sm" data-custom-preset="quarter">¼ Arc</button>
-                <button class="preset-chip-sm" data-custom-preset="three-quarter">¾ Arc</button>
+            <!-- TEMPLATE / SHAPE panel -->
+            <div id="templatePanel" style="display:none">
+              <p class="layout-hint">Place nails evenly along a shape outline.</p>
+              <div class="template-shape-grid">
+                <button class="template-shape-btn active" data-template-shape="circle">● Circle</button>
+                <button class="template-shape-btn" data-template-shape="square">■ Square</button>
+                <button class="template-shape-btn" data-template-shape="diamond">◆ Diamond</button>
+                <button class="template-shape-btn" data-template-shape="hexagon">⬡ Hexagon</button>
+                <button class="template-shape-btn" data-template-shape="heart">♥ Heart</button>
+                <button class="template-shape-btn" data-template-shape="star">★ Star</button>
               </div>
             </div>
           </div>
@@ -2124,7 +2189,7 @@
             <p style="margin:0; font-size:12px; color:#6b4f00; line-height:1.6;"><strong>Colour note:</strong> Printed colours may vary slightly. Very light or white threads may appear faint on paper — refer to your thread colours when building.</p>
           </div>
           <div style="margin: 14px 0 0">
-            <label style="font-size: 12px; font-weight: 500; color: #888; display: block; margin-bottom: 5px; letter-spacing: 0.06em; text-transform: uppercase;">Board diameter (cm)</label>
+            <label id="templateBoardSizeLabel" style="font-size: 12px; font-weight: 500; color: #888; display: block; margin-bottom: 5px; letter-spacing: 0.06em; text-transform: uppercase;">Board diameter (cm)</label>
             <input id="templateBoardSize" type="number" min="5" max="200" value="30" step="0.5"
               style="width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; color: #1e1e1e; box-sizing: border-box;">
             <p style="font-size: 11px; color: #bbb; margin-top: 5px;">Sets the drill template to true size. Print at 100% — no "fit to page".</p>
