@@ -1394,7 +1394,7 @@
         padding: 5px 14px;
         font-size: 12.5px;
         font-weight: 600;
-        color: var(--muted);
+        color: var(--text-dark);
         cursor: pointer;
         transition: background 0.2s, color 0.2s, box-shadow 0.2s;
         font-family: Inter, system-ui, sans-serif;
@@ -1638,6 +1638,70 @@
         background: rgba(184,137,46,0.05);
         opacity: 1;
       }
+      /* ================= PANEL TABS ================= */
+      .panel-tabs {
+        display: flex;
+        gap: 3px;
+        background: rgba(60,44,28,0.07);
+        border-radius: 12px;
+        padding: 3px;
+        margin-bottom: 16px;
+      }
+      .panel-tab {
+        flex: 1;
+        background: transparent;
+        border: none;
+        border-radius: 10px;
+        padding: 8px 6px;
+        font-size: 12.5px;
+        font-weight: 600;
+        color: var(--text-dark);
+        cursor: pointer;
+        transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+        font-family: Inter, system-ui, sans-serif;
+        white-space: nowrap;
+      }
+      .panel-tab.active {
+        background: white;
+        color: var(--text-dark);
+        box-shadow: 0 2px 8px rgba(28,21,16,0.09);
+      }
+      .panel-tab:hover:not(.active) {
+        color: var(--text-dark);
+        background: rgba(60,44,28,0.04);
+        opacity: 1;
+      }
+      .tab-content { display: none; }
+      .tab-content.active { display: block; }
+
+      /* Override the .panel button navy rule for tabs and mode toggle */
+      .panel-tabs .panel-tab {
+        background: transparent;
+        color: var(--text-dark);
+      }
+      .panel-tabs .panel-tab.active {
+        background: white;
+        color: var(--text-dark);
+        box-shadow: 0 2px 8px rgba(28,21,16,0.09);
+      }
+      .panel-tabs .panel-tab:hover:not(.active) {
+        background: rgba(60,44,28,0.04);
+        opacity: 1;
+      }
+      .mode-toggle .mode-btn {
+        background: transparent;
+        color: var(--text-dark);
+      }
+      .mode-toggle .mode-btn.active {
+        background: var(--navy);
+        color: white;
+        box-shadow: 0 2px 8px rgba(27,44,66,0.22);
+      }
+      .mode-toggle .mode-btn:hover:not(.active) {
+        background: rgba(60,44,28,0.05);
+        opacity: 1;
+      }
+
       .footer-policy-dropdown { position: relative; }
       .footer-policy-dropdown > summary { list-style: none; cursor: pointer; font-size: 0.92rem; color: #6f6257; transition: color 0.15s; user-select: none; }
       .footer-policy-dropdown > summary::-webkit-details-marker { display: none; }
@@ -1771,6 +1835,16 @@
               <button class="mode-btn" id="modeAdvanced">Advanced</button>
             </div>
           </div>
+
+          <!-- PANEL TABS -->
+          <div class="panel-tabs" role="tablist">
+            <button class="panel-tab active" data-tab="design">✏ Design</button>
+            <button class="panel-tab" data-tab="style">🎨 Style</button>
+            <button class="panel-tab" data-tab="export">↗ Export</button>
+          </div>
+
+          <!-- DESIGN TAB -->
+          <div class="tab-content active" id="tab-design">
 
           <!-- BOARD -->
           <div class="panel-section">
@@ -1971,60 +2045,13 @@
             </div>
           </div>
 
-          <button
-            id="toggleControlsBtn"
-            class="panel-settings-toggle btn-ghost"
-          >
-            ▼ Show settings
-          </button>
+          </div><!-- end #tab-design -->
 
-          <div id="controlsPanel">
-            <!-- NUMBERS -->
-            <div class="panel-section">
-              <span class="panel-section-label">Nail Numbers</span>
-              <label style="margin-top: 0">
-                <input id="showNums" type="checkbox" checked />
-                Show nail numbers
-              </label>
-              <div class="row" style="margin-top: 10px">
-                <div>
-                  <label>Label every</label>
-                  <input id="numEvery" type="number" min="1" step="1" value="10" />
-                </div>
-                <div>
-                  <label>Nail #1 position</label>
-                  <select id="nail1pos">
-                    <option value="top" selected>Top</option>
-                    <option value="right">Right</option>
-                    <option value="bottom">Bottom</option>
-                    <option value="left">Left</option>
-                  </select>
-                </div>
-              </div>
-              <!-- preserved defaults for legacy JS -->
-              <input id="numStart" type="hidden" value="1" />
-              <input id="numSize" type="hidden" value="12" />
-              <input id="numOffset" type="hidden" value="22" />
-            </div>
-
-            <!-- BOARD COLOUR -->
-            <div class="panel-section">
-              <span class="panel-section-label">Board Colour</span>
-              <label>Board Colour</label>
-              <input id="boardColor" type="color" value="#ffffff" />
-              <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center;">
-                <button type="button" class="color-preset btn-ghost" data-color="#ffffff" style="background:#ffffff;border:1px solid rgba(60,44,28,0.2);width:32px;height:32px;padding:0;border-radius:8px;flex-shrink:0;" title="White"></button>
-                <button type="button" class="color-preset btn-ghost" data-color="#000000" style="background:#000000;width:32px;height:32px;padding:0;border-radius:8px;flex-shrink:0;" title="Black"></button>
-                <button type="button" class="color-preset btn-ghost" data-color="#d2a679" style="background:#d2a679;width:32px;height:32px;padding:0;border-radius:8px;flex-shrink:0;" title="Wood tone"></button>
-                <button type="button" class="color-preset btn-ghost" data-color="#888888" style="background:#888888;width:32px;height:32px;padding:0;border-radius:8px;flex-shrink:0;" title="Grey"></button>
-              </div>
-              <p style="font-size:11px;color:var(--muted);margin:8px 0 0;line-height:1.5;">
-                🖨️ <strong>Note:</strong> When printing, the board always prints on a white background regardless of the colour shown here.
-              </p>
-            </div>
+          <!-- STYLE TAB -->
+          <div class="tab-content" id="tab-style">
 
             <!-- THREAD -->
-            <div class="panel-section">
+            <div class="panel-section" style="border-top:none;padding-top:0;">
               <span class="panel-section-label">Thread &amp; Layers</span>
               <div class="color-layer-row">
                 <input id="color" type="color" value="#000000" />
@@ -2063,6 +2090,50 @@
               </div>
             </div>
 
+            <!-- BOARD COLOUR -->
+            <div class="panel-section">
+              <span class="panel-section-label">Board Colour</span>
+              <label>Board Colour</label>
+              <input id="boardColor" type="color" value="#ffffff" />
+              <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center;">
+                <button type="button" class="color-preset btn-ghost" data-color="#ffffff" style="background:#ffffff;border:1px solid rgba(60,44,28,0.2);width:32px;height:32px;padding:0;border-radius:8px;flex-shrink:0;" title="White"></button>
+                <button type="button" class="color-preset btn-ghost" data-color="#000000" style="background:#000000;width:32px;height:32px;padding:0;border-radius:8px;flex-shrink:0;" title="Black"></button>
+                <button type="button" class="color-preset btn-ghost" data-color="#d2a679" style="background:#d2a679;width:32px;height:32px;padding:0;border-radius:8px;flex-shrink:0;" title="Wood tone"></button>
+                <button type="button" class="color-preset btn-ghost" data-color="#888888" style="background:#888888;width:32px;height:32px;padding:0;border-radius:8px;flex-shrink:0;" title="Grey"></button>
+              </div>
+              <p style="font-size:11px;color:var(--muted);margin:8px 0 0;line-height:1.5;">
+                🖨️ <strong>Note:</strong> When printing, the board always prints on a white background regardless of the colour shown here.
+              </p>
+            </div>
+
+            <!-- NUMBERS -->
+            <div class="panel-section">
+              <span class="panel-section-label">Nail Numbers</span>
+              <label style="margin-top: 0">
+                <input id="showNums" type="checkbox" checked />
+                Show nail numbers
+              </label>
+              <div class="row" style="margin-top: 10px">
+                <div>
+                  <label>Label every</label>
+                  <input id="numEvery" type="number" min="1" step="1" value="10" />
+                </div>
+                <div>
+                  <label>Nail #1 position</label>
+                  <select id="nail1pos">
+                    <option value="top" selected>Top</option>
+                    <option value="right">Right</option>
+                    <option value="bottom">Bottom</option>
+                    <option value="left">Left</option>
+                  </select>
+                </div>
+              </div>
+              <!-- preserved defaults for legacy JS -->
+              <input id="numStart" type="hidden" value="1" />
+              <input id="numSize" type="hidden" value="12" />
+              <input id="numOffset" type="hidden" value="22" />
+            </div>
+
             <!-- TAP SENSITIVITY -->
             <div class="panel-section advanced-only">
               <span class="panel-section-label">Advanced</span>
@@ -2077,6 +2148,11 @@
               >
               <input id="snap" type="number" min="6" step="1" value="22" />
             </div>
+
+          </div><!-- end #tab-style -->
+
+          <!-- EXPORT TAB -->
+          <div class="tab-content" id="tab-export">
 
             <!-- EXPORT -->
             <div class="panel-section">
@@ -2103,8 +2179,8 @@
                 <span class="pro-label">Pro</span>
               </button>
             </div>
-          </div>
-          <!-- end #controlsPanel -->
+
+          </div><!-- end #tab-export -->
         </div>
         </div><!-- end .panel-wrap -->
 

@@ -1999,6 +1999,18 @@ document.addEventListener("DOMContentLoaded", function () {
     showOnboardingIfUnseen();
   }
 
+  function initPanelTabs() {
+    const tabs = document.querySelectorAll('.panel-tab');
+    const contents = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.dataset.tab;
+        tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === target));
+        contents.forEach(c => c.classList.toggle('active', c.id === 'tab-' + target));
+      });
+    });
+  }
+
   function initModeToggles() {
     try {
       const saved = localStorage.getItem('sas_ui_mode');
@@ -2099,6 +2111,7 @@ document.addEventListener("DOMContentLoaded", function () {
     syncLayerSelect();
     initActiveCanvasPointerControls();
     initQuickPatterns();
+    initPanelTabs();
     initModeToggles();
     initNailPlacement();
     $("fit")?.addEventListener("click", () => {
