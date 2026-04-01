@@ -1845,6 +1845,9 @@
             <!-- PARTIAL-EDGE panel -->
             <div id="partialEdgePanel" style="display:none">
               <p class="layout-hint">Choose which edges have nails.</p>
+              <div class="nail-count-row">
+                <span id="customNailCount" class="nail-count-badge">0 nails</span>
+              </div>
 
               <!-- Edge Select: Square / Rectangle -->
               <div id="edgeSelectSquare" style="display:none">
@@ -1896,11 +1899,9 @@
                 <div class="manual-hint-icon">✦</div>
                 <p><strong>Click the board</strong> to place a nail.<br><strong>Click a nail</strong> to remove it.<br><strong>Drag</strong> to reposition.</p>
               </div>
-              <!-- Nail count badge + manual input -->
-              <div class="nail-count-row" style="align-items:center;gap:8px;">
-                <span id="customNailCount" class="nail-count-badge">0 nails</span>
-                <input id="customNailCountManual" type="number" min="1" max="8000" value="0"
-                  style="width:70px;padding:4px 8px;font-size:12px;border-radius:8px;border:1px solid rgba(60,44,28,0.14);text-align:center;" />
+              <!-- Nail count badge -->
+              <div class="nail-count-row">
+                <span id="customNailCountManual" class="nail-count-badge">0 nails</span>
               </div>
               <!-- Smart tools -->
               <span class="smart-tools-header">Tools</span>

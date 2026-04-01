@@ -1245,7 +1245,10 @@ document.addEventListener("DOMContentLoaded", function () {
         else nailPlacementMode = 'partial-edge';
       }
       if (s.nailTemplateShape != null) nailTemplateShape = s.nailTemplateShape;
-      if (s.rectAspect != null) rectAspect = s.rectAspect;
+      if (s.rectAspect != null) {
+        rectAspect = s.rectAspect;
+        if ($('rectAspectSelect')) $('rectAspectSelect').value = s.rectAspect.w + ':' + s.rectAspect.h;
+      }
       if (Array.isArray(s.customNails)) customNails = s.customNails;
 
       syncLayerSelect();
@@ -1344,7 +1347,10 @@ document.addEventListener("DOMContentLoaded", function () {
           else nailPlacementMode = 'partial-edge';
         }
         if (s.nailTemplateShape != null) nailTemplateShape = s.nailTemplateShape;
-        if (s.rectAspect != null) rectAspect = s.rectAspect;
+        if (s.rectAspect != null) {
+          rectAspect = s.rectAspect;
+          if ($('rectAspectSelect')) $('rectAspectSelect').value = s.rectAspect.w + ':' + s.rectAspect.h;
+        }
         if (Array.isArray(s.customNails)) customNails = s.customNails;
 
         syncLayerSelect();
@@ -1729,10 +1735,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function updateCustomNailCount() {
     const n = customNails.length;
+    const text = n + ' nail' + (n === 1 ? '' : 's');
     const el = $('customNailCount');
-    if (el) el.textContent = n + ' nail' + (n === 1 ? '' : 's');
-    const manual = $('customNailCountManual');
-    if (manual) manual.value = n;
+    if (el) el.textContent = text;
+    const elManual = $('customNailCountManual');
+    if (elManual) elManual.textContent = text;
   }
 
   function generateEdgeNails() {
@@ -1814,11 +1821,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const edgeSq  = $('edgeSelectSquare');
     const edgeCir = $('edgeSelectCircle');
     if (nailPlacementMode === 'partial-edge') {
-      if (edgeSq)  edgeSq.style.display  = board === 'square' ? 'block' : 'none';
-      if (edgeCir) edgeCir.style.display  = board === 'circle' ? 'block' : 'none';
+      const squareLike = board === 'square' || board === 'rectangle';
+      if (edgeSq)  edgeSq.style.display  = squareLike     ? 'block' : 'none';
+      if (edgeCir) edgeCir.style.display = board === 'circle' ? 'block' : 'none';
     }
 
-    if ($('squarePresets')) $('squarePresets').style.display = board === 'square' ? 'flex' : 'none';
+    const squareLike = board === 'square' || board === 'rectangle';
+    if ($('squarePresets')) $('squarePresets').style.display = squareLike     ? 'flex' : 'none';
     if ($('circlePresets')) $('circlePresets').style.display = board === 'circle' ? 'flex' : 'none';
 
     if (cv) cv.style.cursor = nailPlacementMode === 'manual' ? 'crosshair' : '';
@@ -2027,12 +2036,6 @@ document.addEventListener("DOMContentLoaded", function () {
       redrawAll();
     });
 
-    // Custom nail count manual input
-    $('customNailCountManual')?.addEventListener('change', e => {
-      const n = clampInt(e.target.value, 1, 8000, customNails.length);
-      if ($('nails')) $('nails').value = n;
-      redrawAll();
-    });
 
     updateNailPlacementUI();
     updateArcSliderDisplay();
@@ -2411,7 +2414,10 @@ document.addEventListener("DOMContentLoaded", function () {
       if (state.p && $("nail1pos")) $("nail1pos").value = state.p;
       if (state.npm) nailPlacementMode = state.npm;
       if (state.nts) nailTemplateShape = state.nts;
-      if (state.ra) rectAspect = state.ra;
+      if (state.ra) {
+        rectAspect = state.ra;
+        if ($('rectAspectSelect')) $('rectAspectSelect').value = state.ra.w + ':' + state.ra.h;
+      }
       if (Array.isArray(state.cn)) customNails = state.cn;
 
       // Rebuild layers with edges from seq
@@ -2499,15 +2505,18 @@ document.addEventListener("DOMContentLoaded", function () {
       ? Math.round(D_mm * rectAspect.h / rectAspect.w)
       : D_mm;
 
-    const svgPts =
-      board === "circle"
-        ? pointsCircle(nailCount, CX, CY, BRAD, nail1AngleDeg())
-        : board === "rectangle"
-          ? pointsRectPerimeter(nailCount, CX, CY, BRAD, svgRy)
-          : rotatePts(
-              pointsSquarePerimeter(nailCount, CX, CY, BRAD),
-              nail1SquareOffset(nailCount),
-            );
+    let svgPts;
+    if (nailPlacementMode === 'template') {
+      svgPts = nailPositionsFromTemplate(nailTemplateShape, nailCount, CX, CY, BRAD, svgRy);
+    } else if (nailPlacementMode === 'manual' || nailPlacementMode === 'partial-edge') {
+      svgPts = customNails.map(n => [CX + n.nx * BRAD, CY + n.ny * svgRy]);
+    } else if (board === "circle") {
+      svgPts = pointsCircle(nailCount, CX, CY, BRAD, nail1AngleDeg());
+    } else if (board === "rectangle") {
+      svgPts = pointsRectPerimeter(nailCount, CX, CY, BRAD, svgRy);
+    } else {
+      svgPts = rotatePts(pointsSquarePerimeter(nailCount, CX, CY, BRAD), nail1SquareOffset(nailCount));
+    }
 
     // ── PDF constants ──
     // 1 pt = 1/72 inch; 1 mm = 72/25.4 pt
@@ -2575,7 +2584,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Thread length estimates
     const physRadMm = D_mm / 2;
-    const mmPerSVGt = physRadMm / BRAD;
+    const mmPerSVGt = physRadMm / ((BRAD + svgRy) / 2);
     let totalThreadMm = 0;
     const layerThreadMm = layers.map((L) => {
       if (!L.edges?.length) return 0;
@@ -3104,9 +3113,9 @@ document.addEventListener("DOMContentLoaded", function () {
       } else {
         page.drawRectangle({
           x: lpX(CX - BRAD),
-          y: lpY(CY + BRAD),
+          y: lpY(CY + svgRy),
           width: BRAD * 2 * sc2,
-          height: BRAD * 2 * sc2,
+          height: svgRy * 2 * sc2,
           color: undefined,
           borderColor: C_LGRAY,
           borderWidth: 1,
