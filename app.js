@@ -58,6 +58,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let nailPlacementMode = 'perimeter'; // 'perimeter' | 'partial-edge' | 'manual' | 'template'
   let nailTemplateShape = 'circle';    // 'circle'|'square'|'diamond'|'hexagon'|'heart'|'star'
   let rectAspect = { w: 3, h: 2 };    // for rectangle board
+  let manualGrid = { show: false, divisions: 8 }; // grid overlay for manual placement
   let customNails    = [];       // [{nx, ny}] normalised by radius
   let edgesEnabled   = { top: true, right: true, bottom: true, left: true };
   let arcRange       = { start: -90, end: 270 };
@@ -765,6 +766,41 @@ document.addEventListener("DOMContentLoaded", function () {
     ctx.fillStyle = boardColor;
     ctx.fill();
     ctx.restore();
+
+    // Grid overlay — manual placement mode only
+    if (nailPlacementMode === 'manual' && manualGrid.show) {
+      const div = manualGrid.divisions;
+      ctx.save();
+      // Clip to board shape
+      ctx.beginPath();
+      if (board === 'circle') ctx.arc(cx, cy, rx, 0, Math.PI * 2);
+      else ctx.rect(cx - rx, cy - ry, rx * 2, ry * 2);
+      ctx.clip();
+      ctx.strokeStyle = 'rgba(0,0,0,0.10)';
+      ctx.lineWidth = 0.7;
+      // Vertical lines
+      for (let i = -div; i <= div; i++) {
+        const x = cx + (i / div) * rx;
+        ctx.beginPath();
+        ctx.moveTo(x, cy - ry);
+        ctx.lineTo(x, cy + ry);
+        ctx.stroke();
+      }
+      // Horizontal lines
+      for (let i = -div; i <= div; i++) {
+        const y = cy + (i / div) * ry;
+        ctx.beginPath();
+        ctx.moveTo(cx - rx, y);
+        ctx.lineTo(cx + rx, y);
+        ctx.stroke();
+      }
+      // Centre crosshair slightly stronger
+      ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(cx, cy - ry); ctx.lineTo(cx, cy + ry); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx - rx, cy); ctx.lineTo(cx + rx, cy); ctx.stroke();
+      ctx.restore();
+    }
 
     ctx.lineWidth = 1;
     ctx.strokeStyle = "rgba(0,0,0,0.12)";
@@ -2027,6 +2063,18 @@ document.addEventListener("DOMContentLoaded", function () {
         updateNailPlacementUI();
       }
       redrawAll();
+    });
+
+    // Manual grid toggle + divisions
+    $('manualGridToggle')?.addEventListener('click', () => {
+      manualGrid.show = !manualGrid.show;
+      const btn = $('manualGridToggle');
+      if (btn) btn.classList.toggle('active', manualGrid.show);
+      redrawAll();
+    });
+    $('manualGridDivisions')?.addEventListener('change', e => {
+      manualGrid.divisions = clampInt(e.target.value, 2, 32, 8);
+      if (manualGrid.show) redrawAll();
     });
 
     // Rectangle aspect ratio
