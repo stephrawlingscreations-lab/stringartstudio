@@ -2739,6 +2739,24 @@ document.addEventListener("DOMContentLoaded", function () {
     const boardSVG_W = BRAD * 2;
     const boardSVG_H = svgRy * 2;
 
+    // PDF nail positions — inset 15 mm from the board edge so nails sit
+    // realistically inside the board, not right at the physical boundary.
+    // Manual / partial-edge placements are left as-is (user-defined positions).
+    const NAIL_INSET_MM = 15;
+    const insetSvg = NAIL_INSET_MM * svgPerMm; // 15 mm expressed in SVG units
+    let pdfNailPts;
+    if (nailPlacementMode === 'manual' || nailPlacementMode === 'partial-edge') {
+      pdfNailPts = svgPts; // no inset for manually placed nails
+    } else if (nailPlacementMode === 'template') {
+      pdfNailPts = nailPositionsFromTemplate(nailTemplateShape, nailCount, CX, CY, BRAD - insetSvg, svgRy - insetSvg);
+    } else if (board === "circle") {
+      pdfNailPts = pointsCircle(nailCount, CX, CY, BRAD - insetSvg, nail1AngleDeg());
+    } else if (board === "rectangle") {
+      pdfNailPts = pointsRectPerimeter(nailCount, CX, CY, BRAD - insetSvg, svgRy - insetSvg);
+    } else {
+      pdfNailPts = rotatePts(pointsSquarePerimeter(nailCount, CX, CY, BRAD - insetSvg), nail1SquareOffset(nailCount));
+    }
+
     // Tile layout for true-size nail placement pages
     // A4 (297mm) minus 10mm top/bottom margins = 277mm content height.
     // Header (9mm) + footer (9mm) leaves 259mm for the SVG drill area per tile.
@@ -3114,36 +3132,34 @@ document.addEventListener("DOMContentLoaded", function () {
         const txMax = ox + tileW_svg;
         const tyMax = oy + tileH_svg;
 
-        // Cut line — 15 mm outside the nail circle (board edge, nails inset from edge)
-        const CUT_MARGIN_MM = 15;
-        const cutR_pt = BRAD * mmPerSVG * PT + CUT_MARGIN_MM * PT; // nail radius + 15mm
-        const cutRy_pt = svgRy * mmPerSVG * PT + CUT_MARGIN_MM * PT;
-        const C_CUT = rgb(0.25, 0.25, 0.25);
-        const cutDash = 4 * PT;
-        const cutGap  = 2 * PT;
-        const cutThick = 0.75;
+        // Outer dotted guide — board edge (nails are 15mm inset from this line)
+        const guideR_pt  = BRAD  * mmPerSVG * PT; // exact board edge, circle/square
+        const guideRy_pt = svgRy * mmPerSVG * PT; // vertical radius for rectangle
+        const guideDash = 2 * PT; // 2 mm dot
+        const guideGap  = 2 * PT; // 2 mm gap  → tight dotted look
+        const guideThick = 0.5;
         if (board === "circle") {
           const cx_pt = tpX(CX);
           const cy_pt = tpY(CY);
-          const circ  = 2 * Math.PI * cutR_pt;
-          const period = cutDash + cutGap;
+          const circ   = 2 * Math.PI * guideR_pt;
+          const period = guideDash + guideGap;
           let dist = 0;
           while (dist < circ) {
             const a1 = (dist / circ) * 2 * Math.PI;
-            const a2 = (Math.min(dist + cutDash, circ) / circ) * 2 * Math.PI;
+            const a2 = (Math.min(dist + guideDash, circ) / circ) * 2 * Math.PI;
             page.drawLine({
-              start: { x: cx_pt + Math.cos(a1) * cutR_pt, y: cy_pt + Math.sin(a1) * cutR_pt },
-              end:   { x: cx_pt + Math.cos(a2) * cutR_pt, y: cy_pt + Math.sin(a2) * cutR_pt },
-              thickness: cutThick, color: C_CUT,
+              start: { x: cx_pt + Math.cos(a1) * guideR_pt, y: cy_pt + Math.sin(a1) * guideR_pt },
+              end:   { x: cx_pt + Math.cos(a2) * guideR_pt, y: cy_pt + Math.sin(a2) * guideR_pt },
+              thickness: guideThick, color: C_LGRAY,
             });
             dist += period;
           }
         } else {
-          const rx_pt = tpX(CX) - cutR_pt;
-          const ry_pt = tpY(CY) - cutRy_pt; // bottom-left in PDF coords
-          const rw_pt = cutR_pt * 2;
-          const rh_pt = cutRy_pt * 2;
-          const period = cutDash + cutGap;
+          const rx_pt = tpX(CX) - guideR_pt;
+          const ry_pt = tpY(CY) - guideRy_pt; // bottom-left in PDF coords
+          const rw_pt = guideR_pt  * 2;
+          const rh_pt = guideRy_pt * 2;
+          const period = guideDash + guideGap;
           const sides = [
             [rx_pt,          ry_pt,          1,  0, rw_pt],
             [rx_pt + rw_pt,  ry_pt,          0,  1, rh_pt],
@@ -3153,11 +3169,11 @@ document.addEventListener("DOMContentLoaded", function () {
           for (const [sx, sy, dx, dy, len] of sides) {
             let d = 0;
             while (d < len) {
-              const d2 = Math.min(d + cutDash, len);
+              const d2 = Math.min(d + guideDash, len);
               page.drawLine({
                 start: { x: sx + dx * d,  y: sy + dy * d  },
                 end:   { x: sx + dx * d2, y: sy + dy * d2 },
-                thickness: cutThick, color: C_CUT,
+                thickness: guideThick, color: C_LGRAY,
               });
               d += period;
             }
@@ -3170,7 +3186,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const offMm = nailCount > 200 ? 3.5 : 5; // mm offset outward for label
 
         for (let i = 0; i < nailCount; i++) {
-          const [sx, sy] = svgPts[i];
+          const [sx, sy] = pdfNailPts[i];
           if (sx < ox - 6 || sx > txMax + 6 || sy < oy - 6 || sy > tyMax + 6)
             continue;
           const px = tpX(sx),
@@ -3261,7 +3277,7 @@ document.addEventListener("DOMContentLoaded", function () {
           height: 3.5,
           color: C_BLACK,
         });
-        txt(page, "< 1 cm  (must measure exactly 1 cm at 100%)  \u00b7  Dashed line = cut line (15 mm outside nails = board edge)", 12, fY + 5, {
+        txt(page, "< 1 cm  (must measure exactly 1 cm at 100%)  \u00b7  Outer dotted line = board edge  \u00b7  Nails are 15 mm inset", 12, fY + 5, {
           size: 6.5,
           color: C_GRAY,
         });
