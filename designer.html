@@ -2611,7 +2611,7 @@
           if (!comingSoon) {
             card.onclick = function() {
               if (locked) { closeTemplatesModal(); openProModal(); return; }
-              if (!confirm("Load "" + t.name + "" template? This will replace your current design.")) return;
+              if (!confirm('Load "' + t.name + '" template? This will replace your current design.')) return;
               closeTemplatesModal();
               fetch(t.file)
                 .then(function(r){ return r.json(); })
