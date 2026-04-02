@@ -2363,6 +2363,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // Check for shared design or preset in URL
     if (loadSharedDesign()) {
       // loaded from URL param — don't also load saved
+    } else if (loadTemplateFromURL()) {
+      // loaded template from patterns page
     } else if (loadPresetFromURL()) {
       // loaded preset from patterns page
     } else if (hasSavedDesign()) {
@@ -2471,6 +2473,24 @@ document.addEventListener("DOMContentLoaded", function () {
       showToast("Could not copy link.", true);
     }
     document.body.removeChild(ta);
+  }
+
+  function loadTemplateFromURL() {
+    const params = new URLSearchParams(window.location.search);
+    const templateId = params.get("template");
+    if (!templateId) return false;
+    history.replaceState({}, "", window.location.pathname);
+    fetch("templates/templates.json")
+      .then((r) => r.json())
+      .then((list) => {
+        const t = list.find((x) => x.id === templateId);
+        if (!t || !t.file) return;
+        return fetch(t.file).then((r) => r.json()).then((data) => {
+          applyTemplateDesign(data, t.name);
+        });
+      })
+      .catch(() => showToast("Could not load template.", true));
+    return true;
   }
 
   function loadPresetFromURL() {
