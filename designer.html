@@ -2717,6 +2717,12 @@
           prefer: 'left'
         },
         {
+          selector: '#manualGridToggle',
+          title: "Show grid (Manual mode)",
+          body: "In <strong>Advanced \u2192 Nail Placement \u2192 Manual</strong> mode, this button overlays a grid on the board to help you place nails symmetrically and evenly. Use the size dropdown next to it to pick how fine the grid is.",
+          prefer: 'right'
+        },
+        {
           selector: '.panel-tab[data-tab="style"]',
           title: "Change your thread colour",
           body: "Click this tab whenever you want to change colour, adjust thread thickness, or add a new layer for a multi-colour design.",
@@ -2748,7 +2754,8 @@
         var selectors = step.selector.split(',');
         for (var i = 0; i < selectors.length; i++) {
           var t = document.querySelector(selectors[i].trim());
-          if (t) return t;
+          // Only use the target if it's actually visible (has dimensions on screen)
+          if (t && t.getBoundingClientRect().width > 0) return t;
         }
         return null;
       }
