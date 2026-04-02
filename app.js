@@ -2779,8 +2779,38 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Centre offset: how far the first tile's left/top edge is from the board's
     // physical left/top edge (may be negative — tile starts before the board edge).
-    const tileOffset_X_mm = (D_mm   - (TILE_W_MM + STRIDE_W_MM * (totalCols - 1))) / 2;
-    const tileOffset_Y_mm = (D_mm_h - (TILE_H_MM + STRIDE_H_MM * (totalRows - 1))) / 2;
+    let tileOffset_X_mm = (D_mm   - (TILE_W_MM + STRIDE_W_MM * (totalCols - 1))) / 2;
+    let tileOffset_Y_mm = (D_mm_h - (TILE_H_MM + STRIDE_H_MM * (totalRows - 1))) / 2;
+
+    // Seam safety: the centring formula can land a seam within a few mm of x = D_mm/2
+    // (the top of the circle / centre-top of a square), which is exactly where nail 1
+    // sits. This causes nail numbers to wrap (90→1→2) right at a tile join — the worst
+    // possible position. Detect this and shift the tile grid so the seam lands at ~45°
+    // around the circle instead (well away from nail 1 and nail N).
+    if (boardPageCount > 1 &&
+        nailPlacementMode !== 'manual' && nailPlacementMode !== 'partial-edge') {
+      const SEAM_DANGER_MM = 30; // flag any seam within 30mm of board x-centre
+      const nailR_mm   = D_mm   / 2 - NAIL_INSET_MM;
+      const nailR_mm_y = D_mm_h / 2 - NAIL_INSET_MM;
+      // Target: place the seam at the 45° position on the nail circle (sin 45° ≈ 0.707),
+      // well away from the top (nail 1) and bottom (nail N/2).
+      const targetSeamX_mm = D_mm   / 2 - nailR_mm   * Math.SQRT1_2;
+      const targetSeamY_mm = D_mm_h / 2 - nailR_mm_y * Math.SQRT1_2;
+      for (let c = 0; c < totalCols - 1; c++) {
+        const seamX_mm = c * STRIDE_W_MM + tileOffset_X_mm + STRIDE_W_MM;
+        if (Math.abs(seamX_mm - D_mm / 2) < SEAM_DANGER_MM) {
+          tileOffset_X_mm += targetSeamX_mm - seamX_mm;
+          break;
+        }
+      }
+      for (let r = 0; r < totalRows - 1; r++) {
+        const seamY_mm = r * STRIDE_H_MM + tileOffset_Y_mm + STRIDE_H_MM;
+        if (Math.abs(seamY_mm - D_mm_h / 2) < SEAM_DANGER_MM) {
+          tileOffset_Y_mm += targetSeamY_mm - seamY_mm;
+          break;
+        }
+      }
+    }
 
     // SVG coordinates of the board's physical top-left corner
     const boardLeft_svg = CX - BRAD;
@@ -3246,9 +3276,11 @@ document.addEventListener("DOMContentLoaded", function () {
           // Drill-point dot (solid circle centred on nail position)
           page.drawCircle({ x: px, y: py, size: nailR_pt, color: C_BLACK });
 
-          // Number label — suppress in overlap zone (adjacent tile shows it cleanly)
-          const inColOverlap = col < totalCols - 1 && sx >= strideX_svg;
-          const inRowOverlap = row < totalRows - 1 && sy >= strideY_svg;
+          // Number label — suppress near trim line (8mm safe margin) so no label
+          // gets awkwardly cut or crowded at the join. The adjacent tile shows it cleanly.
+          const LABEL_SAFE_SVG = 8 * svgPerMm;
+          const inColOverlap = col < totalCols - 1 && sx >= strideX_svg - LABEL_SAFE_SVG;
+          const inRowOverlap = row < totalRows - 1 && sy >= strideY_svg - LABEL_SAFE_SVG;
           if (!inColOverlap && !inRowOverlap) {
             const dx = sx - CX,
               dy = sy - CY;
@@ -3288,8 +3320,9 @@ document.addEventListener("DOMContentLoaded", function () {
             page.drawLine({ start: { x: trimX_pt - mkPt, y: xhY }, end: { x: trimX_pt + mkPt, y: xhY }, thickness: 0.6, color: C_RED });
             page.drawLine({ start: { x: trimX_pt, y: xhY - mkPt }, end: { x: trimX_pt, y: xhY + mkPt }, thickness: 0.6, color: C_RED });
           }
-          // Label on the trim line
-          txt(page, "TRIM", (trimX_pt - MG) / PT + 1, TILE_HDR_MM + 3, { size: 5, color: C_RED });
+          // "TRIM THIS EDGE" label at top of the trim line, "TAB — GOES UNDER" in grey zone
+          txt(page, "\u2702 TRIM THIS EDGE", (trimX_pt - MG) / PT + 1.5, TILE_HDR_MM + 4, { size: 5, font: fBold, color: C_RED });
+          txt(page, "TAB \u2192 GOES UNDER", (trimX_pt - MG) / PT + 1.5, TILE_HDR_MM + 9, { size: 4.5, color: C_GRAY });
         }
 
         // Bottom trim line + crosshairs: shown on non-last-row tiles
@@ -3306,7 +3339,7 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         }
 
-        // Left tab crosshairs: matching marks on the non-first-column tiles
+        // Left tab crosshairs + annotation on non-first-column tiles
         if (col > 0) {
           const tabX = tpX(ox);
           for (const frac of [0.25, 0.75]) {
@@ -3314,6 +3347,8 @@ document.addEventListener("DOMContentLoaded", function () {
             page.drawLine({ start: { x: tabX - mkPt, y: xhY }, end: { x: tabX + mkPt, y: xhY }, thickness: 0.6, color: C_RED });
             page.drawLine({ start: { x: tabX, y: xhY - mkPt }, end: { x: tabX, y: xhY + mkPt }, thickness: 0.6, color: C_RED });
           }
+          // Label: this left edge is the overlap tab — goes under the previous tile
+          txt(page, "\u2190 OVERLAP TAB — place under previous sheet", 0, TILE_HDR_MM + 4, { size: 4.5, color: C_GRAY });
         }
 
         // Top tab crosshairs: matching marks on non-first-row tiles
@@ -3339,7 +3374,7 @@ document.addEventListener("DOMContentLoaded", function () {
           height: 3.5,
           color: C_BLACK,
         });
-        txt(page, "< 1 cm \u00b7 Board edge = dotted line \u00b7 Nails 15mm inset \u00b7 Grey = overlap tab \u00b7 Trim at red line \u00b7 Match crosshairs \u00b7 Tape, then drill", 12, fY + 5, {
+        txt(page, "< 1 cm \u00b7 Dotted line = board edge \u00b7 Nails 15mm inset \u00b7 ASSEMBLE: trim at red line \u21d2 slide tab under previous sheet \u21d2 align crosshairs \u21d2 tape \u21d2 drill", 12, fY + 5, {
           size: 6,
           color: C_GRAY,
         });
