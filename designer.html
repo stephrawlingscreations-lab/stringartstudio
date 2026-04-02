@@ -1674,7 +1674,7 @@
       .tab-content { display: none; }
       .tab-content.active { display: block; }
 
-      /* Override the .panel button navy rule for tabs and mode toggle */
+      /* Override the .panel button navy rule for tabs, toggles, and small chips */
       .panel-tabs .panel-tab {
         background: transparent;
         color: var(--text-dark);
@@ -1691,6 +1691,45 @@
       .mode-toggle .mode-btn {
         background: transparent;
         color: var(--text-dark);
+      }
+      /* layout-mode-btn (Perimeter / Edge / Manual / Shape tabs) */
+      .panel .layout-mode-btn {
+        background: transparent;
+        color: var(--text-dark);
+      }
+      .panel .layout-mode-btn.active {
+        background: white;
+        color: var(--text-dark);
+      }
+      .panel .layout-mode-btn:hover:not(.active) {
+        background: rgba(60,44,28,0.05);
+        color: var(--text-dark);
+        opacity: 1;
+      }
+      /* sub-tab (Edge / Arc sub-tabs) */
+      .panel .sub-tab {
+        background: transparent;
+        color: var(--muted);
+      }
+      .panel .sub-tab.active {
+        background: white;
+        color: var(--text-dark);
+      }
+      .panel .sub-tab:hover:not(.active) {
+        background: rgba(60,44,28,0.04);
+        color: var(--text-dark);
+        opacity: 1;
+      }
+      /* preset-chip-sm (Full / Top / Bottom etc. small layout chips) */
+      .panel .preset-chip-sm {
+        background: rgba(255,255,255,0.9);
+        color: var(--text-dark);
+      }
+      .panel .preset-chip-sm:hover {
+        background: rgba(184,137,46,0.05);
+        color: var(--gold);
+        border-color: var(--gold);
+        opacity: 1;
       }
       .mode-toggle .mode-btn.active {
         background: var(--navy);
@@ -1749,6 +1788,13 @@
         color: #fff;
         border-color: var(--navy);
       }
+
+      /* Tour entry: hide button on mobile, show desktop-only note instead */
+      @media (max-width: 899px) {
+        .wt-entry-btn { display: none !important; }
+        .wt-desktop-note { display: block !important; }
+      }
+      .wt-desktop-note { display: none; }
 
       /* ─── WALKTHROUGH TOUR ─── */
       /* Soft dim - pointer-events:none so controls stay fully interactive */
@@ -1826,7 +1872,7 @@
         font-weight: 700;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: rgba(184,137,46,0.9);
+        color: rgba(255,255,255,0.55);
         margin-bottom: 7px;
       }
       .wt-tt-title {
@@ -1960,7 +2006,7 @@
         </div>
 
         <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;">
-          <button onclick="startWalkthrough()" style="background:var(--gold);border:none;color:#fff;border-radius:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem;font-weight:600;white-space:nowrap;">Walk me through it →</button>
+          <button onclick="startWalkthrough()" class="wt-entry-btn" style="background:var(--gold);border:none;color:#fff;border-radius:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem;font-weight:600;white-space:nowrap;">Walk me through it →</button>
           <button onclick="dismissOnboarding()" aria-label="Dismiss tip" style="background:rgba(255,255,255,0.14);border:none;color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:0.82rem;white-space:nowrap;">Got it ✕</button>
         </div>
       </div>
@@ -1975,8 +2021,11 @@
     <div style="text-align:center; padding: 10px 20px 4px;">
       <a href="patterns.html" style="display:inline-block; color:var(--gold); font-size:0.9rem; font-weight:600; text-decoration:underline; text-underline-offset:3px;">Need inspiration? Browse starter patterns →</a>
     </div>
-    <div style="text-align:center; padding: 6px 20px 18px;">
+    <div class="wt-entry-btn" style="text-align:center; padding: 6px 20px 18px;">
       <button onclick="startWalkthrough()" style="background:none;border:1.5px solid var(--gold);color:var(--gold);font-size:0.86rem;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;padding:8px 20px;border-radius:999px;transition:background 0.15s,color 0.15s;" onmouseover="this.style.background='var(--gold)';this.style.color='#fff';" onmouseout="this.style.background='none';this.style.color='var(--gold)';">Never used this before? Walk me through it →</button>
+    </div>
+    <div class="wt-desktop-note" style="text-align:center; padding: 0 20px 18px; font-size:0.82rem; color:var(--muted);">
+      💻 New here? Visit on desktop for a step-by-step guided tour.
     </div>
     <div class="container" id="designer">
       <div class="wrap">
