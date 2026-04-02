@@ -1,0 +1,29 @@
+[
+  {
+    "id": "rainbow-arch",
+    "name": "Rainbow Arch",
+    "description": "7-colour rainbow fan on a black square board. Great first project.",
+    "tags": ["Beginner", "Colourful"],
+    "pro": false,
+    "file": "templates/rainbow-arch.sas",
+    "colors": ["#ff2600", "#ff9300", "#fffb00", "#00f900", "#00fdff", "#0433ff", "#ff40ff"]
+  },
+  {
+    "id": "pro-placeholder-1",
+    "name": "Coming Soon",
+    "description": "More templates on the way.",
+    "tags": ["Pro"],
+    "pro": true,
+    "file": null,
+    "colors": ["#b8892e", "#1b2c42", "#c0a060"]
+  },
+  {
+    "id": "pro-placeholder-2",
+    "name": "Coming Soon",
+    "description": "More templates on the way.",
+    "tags": ["Pro"],
+    "pro": true,
+    "file": null,
+    "colors": ["#cc4444", "#882222", "#ff8888"]
+  }
+]

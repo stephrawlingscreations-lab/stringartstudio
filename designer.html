@@ -2358,6 +2358,13 @@
           <!-- EXPORT TAB -->
           <div class="tab-content" id="tab-export">
 
+            <!-- TEMPLATES -->
+            <div class="panel-section">
+              <span class="panel-section-label">Templates</span>
+              <button id="browseTemplatesBtn" style="width:100%; padding:10px 16px; background:var(--navy); color:#c9a84c; border:none; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit;">✦ Browse Templates</button>
+              <p class="layout-hint">Start from a ready-made design — fully editable once loaded.</p>
+            </div>
+
             <!-- EXPORT -->
             <div class="panel-section">
               <span class="panel-section-label">Export</span>
@@ -2522,6 +2529,18 @@
       </div>
     </div>
 
+    <!-- TEMPLATES MODAL -->
+    <div class="modal-overlay" id="templatesModal" style="display:none;">
+      <div class="modal" style="max-width:500px; width:90vw;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+          <h3 style="margin:0; font-size:17px;">✦ Templates</h3>
+          <button onclick="closeTemplatesModal()" style="background:none; border:none; font-size:20px; cursor:pointer; color:#888; line-height:1; padding:4px;">✕</button>
+        </div>
+        <p style="font-size:13px; color:#888; margin:0 0 16px;">Start from a ready-made design — fully editable once loaded.</p>
+        <div id="templatesGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;"></div>
+      </div>
+    </div>
+
     <script>
       function _isProKey(k) {
         return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(k || "");
@@ -2543,6 +2562,66 @@
         document.getElementById("proModal").style.display = "none";
       }
 
+
+      function openTemplatesModal() {
+        var modal = document.getElementById("templatesModal");
+        var grid = document.getElementById("templatesGrid");
+        modal.style.display = "flex";
+        grid.innerHTML = '<p style="grid-column:1/-1;font-size:13px;color:#aaa;text-align:center;">Loading…</p>';
+        fetch("templates/templates.json")
+          .then(function(r){ return r.json(); })
+          .then(function(templates){ renderTemplateCards(templates); })
+          .catch(function(){ grid.innerHTML = '<p style="grid-column:1/-1;font-size:13px;color:#e05;">Could not load templates.</p>'; });
+      }
+
+      function closeTemplatesModal() {
+        document.getElementById("templatesModal").style.display = "none";
+      }
+
+      function renderTemplateCards(templates) {
+        var grid = document.getElementById("templatesGrid");
+        var unlocked = _isProKey(localStorage.getItem("_sask"));
+        grid.innerHTML = "";
+        templates.forEach(function(t) {
+          var card = document.createElement("div");
+          var locked = t.pro && !unlocked;
+          var comingSoon = t.pro && !t.file;
+          card.style.cssText = "border-radius:10px; border:1.5px solid #e8e0d4; padding:12px; cursor:" + (comingSoon ? "default" : "pointer") + "; position:relative; background:#fffdf9; transition:border-color 0.15s;";
+          if (!comingSoon) card.onmouseenter = function(){ this.style.borderColor="#b8892e"; };
+          if (!comingSoon) card.onmouseleave = function(){ this.style.borderColor="#e8e0d4"; };
+
+          // colour swatches
+          var swatches = (t.colors || []).slice(0,7).map(function(c){
+            return '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+c+';margin-right:2px;"></span>';
+          }).join("");
+
+          var badge = t.pro
+            ? '<span style="background:#1b2c42;color:#c9a84c;font-size:10px;font-weight:700;padding:2px 6px;border-radius:20px;letter-spacing:0.04em;">PRO</span>'
+            : '<span style="background:#e8f5e9;color:#388e3c;font-size:10px;font-weight:700;padding:2px 6px;border-radius:20px;">FREE</span>';
+
+          card.innerHTML =
+            '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">' +
+              '<span style="font-size:13px;font-weight:600;color:#1c1510;">' + t.name + '</span>' +
+              badge +
+            '</div>' +
+            '<div style="margin-bottom:8px;">' + swatches + '</div>' +
+            '<p style="margin:0;font-size:11px;color:#888;line-height:1.4;">' + t.description + '</p>' +
+            (comingSoon ? '<p style="margin:6px 0 0;font-size:11px;color:#bbb;">Coming soon</p>' : '');
+
+          if (!comingSoon) {
+            card.onclick = function() {
+              if (locked) { closeTemplatesModal(); openProModal(); return; }
+              if (!confirm("Load "" + t.name + "" template? This will replace your current design.")) return;
+              closeTemplatesModal();
+              fetch(t.file)
+                .then(function(r){ return r.json(); })
+                .then(function(data){ applyTemplateDesign(data, t.name); })
+                .catch(function(){ alert("Could not load template file."); });
+            };
+          }
+          grid.appendChild(card);
+        });
+      }
 
       function activateLicense() {
         var inp = document.getElementById("licenseKeyInput");

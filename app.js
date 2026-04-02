@@ -1404,6 +1404,54 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   /* -----------------------------
+     LOAD TEMPLATE
+  ----------------------------- */
+
+  function applyTemplateDesign(state, name) {
+    if (!Array.isArray(state.layers) || state.layers.length === 0) {
+      showToast("Invalid template.", true);
+      return;
+    }
+    layers = state.layers;
+    activeLayer = Math.min(state.activeLayer || 0, layers.length - 1);
+    const s = state.settings || {};
+    if (s.board != null && $("board")) $("board").value = s.board;
+    if (s.nails != null && $("nails")) $("nails").value = s.nails;
+    if (s.radius != null && $("radius")) $("radius").value = s.radius;
+    if (s.showNums != null && $("showNums")) $("showNums").checked = s.showNums;
+    if (s.numEvery != null && $("numEvery")) $("numEvery").value = s.numEvery;
+    if (s.numStart != null && $("numStart")) $("numStart").value = s.numStart;
+    if (s.numSize != null && $("numSize")) $("numSize").value = s.numSize;
+    if (s.numOffset != null && $("numOffset")) $("numOffset").value = s.numOffset;
+    if (s.nail1pos != null && $("nail1pos")) $("nail1pos").value = s.nail1pos;
+    if (s.boardColor != null) {
+      boardColor = s.boardColor;
+      localStorage.setItem("sas_board_color", boardColor);
+      if ($("boardColor")) $("boardColor").value = boardColor;
+    }
+    if (s.nailPlacementMode != null) {
+      nailPlacementMode = s.nailPlacementMode;
+    } else if (s.nailLayoutMode != null) {
+      if (s.nailLayoutMode === 'auto') nailPlacementMode = 'perimeter';
+      else if (s.customSubMode === 'manual') nailPlacementMode = 'manual';
+      else nailPlacementMode = 'partial-edge';
+    }
+    if (s.nailTemplateShape != null) nailTemplateShape = s.nailTemplateShape;
+    if (s.rectAspect != null) {
+      rectAspect = s.rectAspect;
+      if ($('rectAspectSelect')) $('rectAspectSelect').value = s.rectAspect.w + ':' + s.rectAspect.h;
+    }
+    if (Array.isArray(s.customNails)) customNails = s.customNails;
+    syncLayerSelect();
+    switchLayer(activeLayer);
+    updateNailPlacementUI();
+    updateCustomNailCount();
+    redrawAll();
+    updateSeqOutput();
+    showToast("Template \u201c" + name + "\u201d loaded.");
+  }
+
+  /* -----------------------------
      CONTINUE PATTERN
   ----------------------------- */
 
@@ -2127,6 +2175,7 @@ document.addEventListener("DOMContentLoaded", function () {
     $("toggleLayerVis")?.addEventListener("click", toggleLayerVisibility);
     $("continuePattern")?.addEventListener("click", continuePattern);
     $("toggleControlsBtn")?.addEventListener("click", toggleControls);
+    $("browseTemplatesBtn")?.addEventListener("click", openTemplatesModal);
     $("exportSeq")?.addEventListener("click", copySequence);
     $("downloadPng")?.addEventListener("click", downloadPreview);
     $("downloadTemplateBtn")?.addEventListener("click", () => {
@@ -3469,6 +3518,8 @@ document.addEventListener("DOMContentLoaded", function () {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
+
+  window.applyTemplateDesign = applyTemplateDesign;
 
   init();
 });
