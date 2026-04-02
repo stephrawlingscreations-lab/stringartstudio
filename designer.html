@@ -902,17 +902,47 @@
         margin-top: 4px;
       }
 
-      .undo-row button {
-        width: 100%;
+      .undo-controls {
+        display: flex;
+        gap: 6px;
+        align-items: stretch;
+      }
+
+      .undo-controls select {
+        flex: 0 0 62px;
+        font-size: 13px;
+        border: 1px solid #d7d7d7;
+        border-radius: 6px;
+        padding: 4px 4px;
+        background: transparent;
+        color: var(--text-dark);
+        cursor: pointer;
+      }
+
+      .undo-controls button {
+        flex: 1;
         background: transparent;
         color: var(--text-dark);
         border: 1px solid #d7d7d7;
         font-size: 14px;
       }
 
-      .undo-row button:hover {
+      .undo-controls button:hover {
         background: #f8f5f1;
         opacity: 1;
+      }
+
+      .dm-undo-count {
+        flex: 0 0 58px;
+        min-height: 48px;
+        border: 1px solid rgba(60,44,28,0.14);
+        border-radius: 12px;
+        font-size: 13px;
+        font-family: Inter, sans-serif;
+        background: transparent;
+        color: var(--text-dark);
+        text-align: center;
+        cursor: pointer;
       }
 
       /* ================= EXPORT ================= */
@@ -2216,9 +2246,19 @@
             </div>
           </div>
 
-          <!-- UNDO -->
+          <!-- UNDO / REDO -->
           <div class="undo-row">
-            <button id="undo">↶ Undo</button>
+            <div class="undo-controls">
+              <select id="undoCount" title="How many steps to undo">
+                <option value="1">1</option>
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="all">All</option>
+              </select>
+              <button id="undo">↶ Undo</button>
+              <button id="redo">↷ Redo</button>
+            </div>
           </div>
 
           <!-- SEQUENCE -->
@@ -2659,7 +2699,15 @@
           <button id="drawNewLayer" class="dm-new-layer">+ Layer</button>
         </div>
         <div class="dm-action-row">
+          <select id="drawUndoCount" class="dm-undo-count" title="How many steps to undo">
+            <option value="1">1</option>
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="all">All</option>
+          </select>
           <button id="drawUndo">↶ Undo</button>
+          <button id="drawRedo">↷ Redo</button>
           <button id="drawZoomOut">−</button>
           <button id="drawZoomIn">+</button>
           <button id="drawContinue">Continue</button>

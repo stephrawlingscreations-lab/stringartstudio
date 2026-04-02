@@ -63,6 +63,9 @@ document.addEventListener("DOMContentLoaded", function () {
   let edgesEnabled   = { top: true, right: true, bottom: true, left: true };
   let arcRange       = { start: -90, end: 270 };
   let customNailHistory = [];
+  let undoStack = [];
+  let redoStack = [];
+  const UNDO_MAX = 200;
   let isDraggingCustom  = false;
   let dragCustomIdx     = null;
   let dragStartPos      = null;
@@ -943,6 +946,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function addNailToSequence(idx) {
     ensureLayerExists();
+    pushUndoSnapshot();
 
     const L = currentLayer();
     L.generatedPreset = false;
@@ -959,30 +963,81 @@ document.addEventListener("DOMContentLoaded", function () {
     updateDrawModeSeqMini();
   }
 
+  function pushUndoSnapshot() {
+    undoStack.push({
+      layers: JSON.parse(JSON.stringify(layers)),
+      activeLayer,
+      lastNail
+    });
+    if (undoStack.length > UNDO_MAX) undoStack.shift();
+    redoStack = [];
+  }
+
+  function getUndoCount() {
+    const inDrawMode = document.body.classList.contains('draw-mode-open');
+    const val = (inDrawMode ? $('drawUndoCount') : $('undoCount'))?.value || '1';
+    return val === 'all' ? Infinity : parseInt(val, 10);
+  }
+
   function undo() {
     if (nailPlacementMode === 'manual') {
       undoCustomNail();
       return;
     }
 
-    ensureLayerExists();
-
-    const L = layers[activeLayer];
-
-    if (L.edges.length > 0) {
-      L.edges.pop();
-      if (L.seq.length > 1) L.seq.pop();
-      lastNail = L.seq.length ? L.seq[L.seq.length - 1] : null;
-    } else {
-      lastNail = null;
-      L.seq = [];
-      L.step = null;
+    if (undoStack.length === 0) {
+      showToast('Nothing to undo.', true);
+      return;
     }
 
+    const n = Math.min(getUndoCount(), undoStack.length);
+
+    // Save current state to redo stack before restoring
+    redoStack.push({
+      layers: JSON.parse(JSON.stringify(layers)),
+      activeLayer,
+      lastNail
+    });
+
+    let snapshot;
+    for (let i = 0; i < n; i++) {
+      snapshot = undoStack.pop();
+    }
+
+    layers = snapshot.layers;
+    activeLayer = snapshot.activeLayer;
+    lastNail = snapshot.lastNail;
+
+    syncLayerSelect();
     redrawAll();
     updateSeqOutput();
     updateDrawModeSeqMini();
-    if (L.edges.length > 0 || L.seq.length > 0) showToast("Line removed.");
+    showToast(`Undone ${n} step${n !== 1 ? 's' : ''}.`);
+  }
+
+  function redo() {
+    if (redoStack.length === 0) {
+      showToast('Nothing to redo.', true);
+      return;
+    }
+
+    // Save current state to undo stack before re-applying
+    undoStack.push({
+      layers: JSON.parse(JSON.stringify(layers)),
+      activeLayer,
+      lastNail
+    });
+
+    const snapshot = redoStack.pop();
+    layers = snapshot.layers;
+    activeLayer = snapshot.activeLayer;
+    lastNail = snapshot.lastNail;
+
+    syncLayerSelect();
+    redrawAll();
+    updateSeqOutput();
+    updateDrawModeSeqMini();
+    showToast('Redone.');
   }
 
   function clearAll() {
@@ -991,6 +1046,8 @@ document.addEventListener("DOMContentLoaded", function () {
     layers = [];
     activeLayer = 0;
     lastNail = null;
+    undoStack = [];
+    redoStack = [];
     try {
       localStorage.removeItem(SAVE_KEY);
     } catch (_) {}
@@ -1487,6 +1544,8 @@ document.addEventListener("DOMContentLoaded", function () {
       const nextA = (a + stepA) % nails;
       const nextB = (b + stepB) % nails;
 
+      pushUndoSnapshot();
+
       L.edges.push({ a: b, b: nextA });
       L.seq.push(nextA);
 
@@ -1623,6 +1682,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function generatePreset(presetName, offset) {
     if (!pts || pts.length < 3) return;
 
+    pushUndoSnapshot();
     clearActiveLayerForPreset();
 
     const total = pts.length;
@@ -2220,6 +2280,9 @@ document.addEventListener("DOMContentLoaded", function () {
       if ((e.ctrlKey || e.metaKey) && e.key === "z") {
         e.preventDefault();
         undo();
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === "y" || (e.shiftKey && e.key === "Z"))) {
+        e.preventDefault();
+        redo();
       } else if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
         saveDesign();
@@ -2236,6 +2299,19 @@ document.addEventListener("DOMContentLoaded", function () {
     $("openDrawMode")?.addEventListener("click", openDrawMode);
     $("closeDrawMode")?.addEventListener("click", closeDrawMode);
     $("drawUndo")?.addEventListener("click", undo);
+    $("drawRedo")?.addEventListener("click", redo);
+    $("redo")?.addEventListener("click", redo);
+
+    // Keep both undo count selects in sync
+    $("undoCount")?.addEventListener("change", (e) => {
+      const drawSel = $("drawUndoCount");
+      if (drawSel) drawSel.value = e.target.value;
+    });
+    $("drawUndoCount")?.addEventListener("change", (e) => {
+      const sel = $("undoCount");
+      if (sel) sel.value = e.target.value;
+    });
+
     $("drawNewLayer")?.addEventListener("click", addLayer);
     $("drawContinue")?.addEventListener("click", continuePattern);
     $("drawZoomIn")?.addEventListener("click", () => nudgeZoom(1));
