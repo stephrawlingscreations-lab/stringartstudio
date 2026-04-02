@@ -2175,7 +2175,6 @@ document.addEventListener("DOMContentLoaded", function () {
     $("toggleLayerVis")?.addEventListener("click", toggleLayerVisibility);
     $("continuePattern")?.addEventListener("click", continuePattern);
     $("toggleControlsBtn")?.addEventListener("click", toggleControls);
-    $("browseTemplatesBtn")?.addEventListener("click", openTemplatesModal);
     $("exportSeq")?.addEventListener("click", copySequence);
     $("downloadPng")?.addEventListener("click", downloadPreview);
     $("downloadTemplateBtn")?.addEventListener("click", () => {
