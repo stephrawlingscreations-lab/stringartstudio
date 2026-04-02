@@ -3114,41 +3114,58 @@ document.addEventListener("DOMContentLoaded", function () {
         const txMax = ox + tileW_svg;
         const tyMax = oy + tileH_svg;
 
-        // Board outline (circle or square)
+        // Cut line (dashed board outline — cut along this line to fit board)
+        const C_CUT = rgb(0.25, 0.25, 0.25);
+        const cutDash = 4 * PT; // 4 mm dash
+        const cutGap  = 2 * PT; // 2 mm gap
+        const cutThick = 0.75;
         if (board === "circle") {
-          page.drawCircle({
-            x: tpX(CX),
-            y: tpY(CY),
-            size: BRAD * mmPerSVG * PT,
-            color: undefined,
-            borderColor: C_LGRAY,
-            borderWidth: 1,
-          });
+          const cx_pt = tpX(CX);
+          const cy_pt = tpY(CY);
+          const r_pt  = BRAD * mmPerSVG * PT;
+          const circ  = 2 * Math.PI * r_pt;
+          const period = cutDash + cutGap;
+          let dist = 0;
+          while (dist < circ) {
+            const a1 = (dist / circ) * 2 * Math.PI;
+            const a2 = (Math.min(dist + cutDash, circ) / circ) * 2 * Math.PI;
+            page.drawLine({
+              start: { x: cx_pt + Math.cos(a1) * r_pt, y: cy_pt + Math.sin(a1) * r_pt },
+              end:   { x: cx_pt + Math.cos(a2) * r_pt, y: cy_pt + Math.sin(a2) * r_pt },
+              thickness: cutThick, color: C_CUT,
+            });
+            dist += period;
+          }
         } else {
-          page.drawRectangle({
-            x: tpX(CX - BRAD),
-            y: tpY(CY + svgRy),
-            width: BRAD * 2 * mmPerSVG * PT,
-            height: svgRy * 2 * mmPerSVG * PT,
-            color: undefined,
-            borderColor: C_LGRAY,
-            borderWidth: 1,
-          });
+          const rx_pt = tpX(CX - BRAD);
+          const ry_pt = tpY(CY + svgRy); // bottom-left in PDF coords
+          const rw_pt = BRAD * 2 * mmPerSVG * PT;
+          const rh_pt = svgRy * 2 * mmPerSVG * PT;
+          const period = cutDash + cutGap;
+          const sides = [
+            [rx_pt,          ry_pt,          1,  0, rw_pt],
+            [rx_pt + rw_pt,  ry_pt,          0,  1, rh_pt],
+            [rx_pt + rw_pt,  ry_pt + rh_pt, -1,  0, rw_pt],
+            [rx_pt,          ry_pt + rh_pt,  0, -1, rh_pt],
+          ];
+          for (const [sx, sy, dx, dy, len] of sides) {
+            let d = 0;
+            while (d < len) {
+              const d2 = Math.min(d + cutDash, len);
+              page.drawLine({
+                start: { x: sx + dx * d,  y: sy + dy * d  },
+                end:   { x: sx + dx * d2, y: sy + dy * d2 },
+                thickness: cutThick, color: C_CUT,
+              });
+              d += period;
+            }
+          }
         }
 
         // Nail dots — centred at exact physical position, for drilling
-        const showEvery =
-          nailCount > 400
-            ? 50
-            : nailCount > 200
-              ? 25
-              : nailCount > 100
-                ? 10
-                : nailCount > 60
-                  ? 5
-                  : 1;
-        const nailR_pt = Math.max(0.5 * PT, 1.0); // ~0.5 mm radius, min 1 pt
-        const lblSz = nailCount > 200 ? 5 : 6.5;
+        const nailR_pt = Math.max(0.35 * PT, 0.8); // ~0.35 mm radius
+        const lblSz = nailCount > 400 ? 4 : nailCount > 200 ? 4.5 : nailCount > 100 ? 5.5 : 6.5;
+        const offMm = nailCount > 200 ? 3.5 : 5; // mm offset outward for label
 
         for (let i = 0; i < nailCount; i++) {
           const [sx, sy] = svgPts[i];
@@ -3160,26 +3177,24 @@ document.addEventListener("DOMContentLoaded", function () {
           // Drill-point dot (solid circle centred on nail position)
           page.drawCircle({ x: px, y: py, size: nailR_pt, color: C_BLACK });
 
-          // Number label offset outward from board centre
-          if (i % showEvery === 0) {
-            const dx = sx - CX,
-              dy = sy - CY;
-            const len = Math.sqrt(dx * dx + dy * dy) || 1;
-            const offPt = 5 * PT; // 5 mm outward
-            const lx = px + (dx / len) * offPt;
-            const ly = py - (dy / len) * offPt; // dy is SVG-down, flip for PDF
-            const label = String(i + numStart);
-            const lw = fReg.widthOfTextAtSize(label, lblSz);
-            try {
-              page.drawText(label, {
-                x: lx - lw / 2,
-                y: ly - lblSz / 2,
-                size: lblSz,
-                font: fReg,
-                color: C_GRAY,
-              });
-            } catch (_) {}
-          }
+          // Number label — every nail, offset outward from board centre
+          const dx = sx - CX,
+            dy = sy - CY;
+          const len = Math.sqrt(dx * dx + dy * dy) || 1;
+          const offPt = offMm * PT;
+          const lx = px + (dx / len) * offPt;
+          const ly = py - (dy / len) * offPt; // dy is SVG-down, flip for PDF
+          const label = String(i + numStart);
+          const lw = fReg.widthOfTextAtSize(label, lblSz);
+          try {
+            page.drawText(label, {
+              x: lx - lw / 2,
+              y: ly - lblSz / 2,
+              size: lblSz,
+              font: fReg,
+              color: C_GRAY,
+            });
+          } catch (_) {}
         }
 
         // Alignment marks at tile cut edges (solid lines — no dash support needed)
@@ -3244,7 +3259,7 @@ document.addEventListener("DOMContentLoaded", function () {
           height: 3.5,
           color: C_BLACK,
         });
-        txt(page, "< 1 cm  (must measure exactly 1 cm at 100%)", 12, fY + 5, {
+        txt(page, "< 1 cm  (must measure exactly 1 cm at 100%)  \u00b7  Dashed line = cut line", 12, fY + 5, {
           size: 6.5,
           color: C_GRAY,
         });
