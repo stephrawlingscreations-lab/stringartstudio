@@ -1749,6 +1749,155 @@
         color: #fff;
         border-color: var(--navy);
       }
+
+      /* ─── WALKTHROUGH TOUR ─── */
+      /* Soft dim - pointer-events:none so controls stay fully interactive */
+      #wtDim {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 9996;
+        background: rgba(28,21,16,0.45);
+        pointer-events: none;
+      }
+      #wtDim.active { display: block; }
+
+      /* Gold ring that sits around the highlighted element */
+      #wtRing {
+        display: none;
+        position: fixed;
+        z-index: 9997;
+        border: 2px solid var(--gold);
+        border-radius: 10px;
+        pointer-events: none;
+        box-shadow: 0 0 0 4px rgba(184,137,46,0.18), 0 0 24px rgba(184,137,46,0.25);
+        transition: top 0.3s ease, left 0.3s ease, width 0.3s ease, height 0.3s ease;
+        animation: wtPulse 2.2s ease infinite;
+      }
+      #wtRing.active { display: block; }
+      @keyframes wtPulse {
+        0%, 100% { box-shadow: 0 0 0 4px rgba(184,137,46,0.18), 0 0 20px rgba(184,137,46,0.2); }
+        50%       { box-shadow: 0 0 0 8px rgba(184,137,46,0.08), 0 0 32px rgba(184,137,46,0.15); }
+      }
+
+      /* Tooltip bubble */
+      #wtTooltip {
+        display: none;
+        position: fixed;
+        z-index: 9998;
+        background: var(--navy);
+        color: #fff;
+        border-radius: 14px;
+        padding: 18px 20px 16px;
+        width: 280px;
+        box-shadow: 0 12px 40px rgba(28,21,16,0.28);
+        animation: wtFadeIn 0.2s ease;
+      }
+      #wtTooltip.active { display: block; }
+      @keyframes wtFadeIn {
+        from { opacity: 0; transform: scale(0.96); }
+        to   { opacity: 1; transform: scale(1); }
+      }
+      /* Arrow variants */
+      #wtTooltip::before {
+        content: '';
+        position: absolute;
+        width: 0; height: 0;
+        border: 9px solid transparent;
+      }
+      #wtTooltip[data-arrow="left"]::before {
+        left: -17px; top: 20px;
+        border-right-color: var(--navy);
+      }
+      #wtTooltip[data-arrow="right"]::before {
+        right: -17px; top: 20px;
+        border-left-color: var(--navy);
+      }
+      #wtTooltip[data-arrow="top"]::before {
+        top: -17px; left: 24px;
+        border-bottom-color: var(--navy);
+      }
+      #wtTooltip[data-arrow="bottom"]::before {
+        bottom: -17px; left: 24px;
+        border-top-color: var(--navy);
+      }
+      .wt-tt-step {
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(184,137,46,0.9);
+        margin-bottom: 7px;
+      }
+      .wt-tt-title {
+        font-family: "Playfair Display", Georgia, serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin-bottom: 7px;
+        line-height: 1.3;
+      }
+      .wt-tt-body {
+        font-size: 0.85rem;
+        line-height: 1.6;
+        color: rgba(255,255,255,0.82);
+        margin-bottom: 14px;
+      }
+      .wt-tt-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .wt-tt-skip {
+        background: none;
+        border: none;
+        font-size: 0.78rem;
+        color: rgba(255,255,255,0.45);
+        cursor: pointer;
+        padding: 0;
+        font-family: Inter, sans-serif;
+      }
+      .wt-tt-skip:hover { color: rgba(255,255,255,0.7); }
+      .wt-tt-btns { display: flex; gap: 8px; align-items: center; }
+      .wt-tt-back {
+        background: rgba(255,255,255,0.1);
+        border: none;
+        border-radius: 999px;
+        padding: 7px 14px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: rgba(255,255,255,0.75);
+        cursor: pointer;
+        font-family: Inter, sans-serif;
+        transition: background 0.15s;
+      }
+      .wt-tt-back:hover { background: rgba(255,255,255,0.18); }
+      .wt-tt-next {
+        background: var(--gold);
+        border: none;
+        border-radius: 999px;
+        padding: 7px 16px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #fff;
+        cursor: pointer;
+        font-family: Inter, sans-serif;
+        transition: background 0.15s, transform 0.15s;
+        white-space: nowrap;
+      }
+      .wt-tt-next:hover { background: #a07825; transform: translateY(-1px); }
+      .wt-tt-dots {
+        display: flex;
+        gap: 5px;
+        margin-bottom: 12px;
+      }
+      .wt-tt-dot {
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        transition: background 0.2s;
+      }
+      .wt-tt-dot.active { background: var(--gold); }
     </style>
     <!-- Start cookieyes banner -->
     <script id="cookieyes" type="text/javascript" src="https://cdn-cookieyes.com/client_data/771647e94dbf7af170e4e1dbcdc9dc79/script.js"></script>
@@ -1810,7 +1959,10 @@
           <span style="display:block; margin-top:6px; opacity:0.65; font-size:0.80rem;">Keyboard shortcuts: <kbd style="background:rgba(255,255,255,0.12);padding:1px 5px;border-radius:4px;">⌘/Ctrl+Z</kbd> undo &nbsp;·&nbsp; <kbd style="background:rgba(255,255,255,0.12);padding:1px 5px;border-radius:4px;">⌘/Ctrl+S</kbd> save &nbsp;·&nbsp; <kbd style="background:rgba(255,255,255,0.12);padding:1px 5px;border-radius:4px;">+</kbd> / <kbd style="background:rgba(255,255,255,0.12);padding:1px 5px;border-radius:4px;">−</kbd> zoom</span>
         </div>
 
-        <button onclick="dismissOnboarding()" aria-label="Dismiss tip" style="background:rgba(255,255,255,0.14);border:none;color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:0.82rem;white-space:nowrap;flex-shrink:0;">Got it ✕</button>
+        <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;">
+          <button onclick="startWalkthrough()" style="background:var(--gold);border:none;color:#fff;border-radius:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem;font-weight:600;white-space:nowrap;">Walk me through it →</button>
+          <button onclick="dismissOnboarding()" aria-label="Dismiss tip" style="background:rgba(255,255,255,0.14);border:none;color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:0.82rem;white-space:nowrap;">Got it ✕</button>
+        </div>
       </div>
     </div>
     <div class="designer-intro">
@@ -1820,8 +1972,11 @@
         Pick a pattern preset or tap nails on the board to draw your own design.
       </p>
     </div>
-    <div style="text-align:center; padding: 10px 20px 18px;">
+    <div style="text-align:center; padding: 10px 20px 4px;">
       <a href="patterns.html" style="display:inline-block; color:var(--gold); font-size:0.9rem; font-weight:600; text-decoration:underline; text-underline-offset:3px;">Need inspiration? Browse starter patterns →</a>
+    </div>
+    <div style="text-align:center; padding: 6px 20px 18px;">
+      <button onclick="startWalkthrough()" style="background:none;border:1.5px solid var(--gold);color:var(--gold);font-size:0.86rem;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;padding:8px 20px;border-radius:999px;transition:background 0.15s,color 0.15s;" onmouseover="this.style.background='var(--gold)';this.style.color='#fff';" onmouseout="this.style.background='none';this.style.color='var(--gold)';">Never used this before? Walk me through it →</button>
     </div>
     <div class="container" id="designer">
       <div class="wrap">
@@ -2462,6 +2617,244 @@
         </div>
       </div>
     </div>
+
+    <!-- Walkthrough tour: dim layer + highlight ring + tooltip -->
+    <div id="wtDim"></div>
+    <div id="wtRing" aria-hidden="true"></div>
+    <div id="wtTooltip" role="dialog" aria-label="Getting started tour">
+      <div class="wt-tt-dots" id="wtDots"></div>
+      <div class="wt-tt-step" id="wtTtStep"></div>
+      <div class="wt-tt-title" id="wtTtTitle"></div>
+      <div class="wt-tt-body" id="wtTtBody"></div>
+      <div class="wt-tt-nav">
+        <button class="wt-tt-skip" onclick="closeWalkthrough()">Skip tour</button>
+        <div class="wt-tt-btns">
+          <button class="wt-tt-back" id="wtTtBack" onclick="walkthroughBack()">← Back</button>
+          <button class="wt-tt-next" id="wtTtNext" onclick="walkthroughNext()">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    (function () {
+      /* ── Steps ─────────────────────────────────────────────────────────
+         selector  : CSS selector for the element to highlight
+         prefer    : preferred tooltip side ('right'|'left'|'bottom'|'top')
+         title/body: tooltip content
+      ─────────────────────────────────────────────────────────────────── */
+      var STEPS = [
+        {
+          selector: null,   // welcome card — centred, no highlight
+          title: "Let\u2019s build your first design",
+          body: "This tour takes about 2 minutes. We\u2019ll highlight each control as we go \u2014 just make your choices and hit <strong>Next</strong> when you\u2019re ready.",
+          prefer: null
+        },
+        {
+          selector: '#board',
+          title: "Pick your board shape",
+          body: "Choose the shape of your physical board \u2014 circle, square, or rectangle. Most beginners start with a circle.",
+          prefer: 'right'
+        },
+        {
+          selector: '#nails',
+          title: "Set your nail count",
+          body: "This is how many nails go around the edge. <strong>120</strong> is a great starting point \u2014 enough detail without being fiddly.",
+          prefer: 'right'
+        },
+        {
+          selector: '#cv',
+          title: "Tap nails to draw",
+          body: "Click any of the small dots around the board edge to start your design. Each tap draws a thread to the next nail \u2014 and each nail number is added to your sequence automatically as you go.",
+          prefer: 'left'
+        },
+        {
+          selector: '.panel-tab[data-tab="style"]',
+          title: "Change your thread colour",
+          body: "Click this tab whenever you want to change colour, adjust thread thickness, or add a new layer for a multi-colour design.",
+          prefer: 'right'
+        },
+        {
+          selector: '.panel-tab[data-tab="export"]',
+          title: "Export when you\u2019re ready",
+          body: "This tab lets you copy your nail sequence to follow on your real board, or download a full Pro build guide.",
+          prefer: 'right'
+        },
+        {
+          selector: null,   // final card — centred
+          title: "You\u2019re ready to go! \ud83c\udf89",
+          body: "Start tapping nails on the board to create your design. You can always undo with <kbd style=\"background:rgba(255,255,255,0.12);padding:1px 6px;border-radius:4px;font-family:monospace;\">Ctrl+Z</kbd> and restart any time.<br><br>Have fun!",
+          prefer: null
+        }
+      ];
+
+      var currentStep = 0;
+      var tourActive  = false;
+      var resizeTimer = null;
+
+      /* ── Helpers ─────────────────────────────────────────── */
+      function el(id) { return document.getElementById(id); }
+
+      function getTarget(step) {
+        if (!step.selector) return null;
+        var selectors = step.selector.split(',');
+        for (var i = 0; i < selectors.length; i++) {
+          var t = document.querySelector(selectors[i].trim());
+          if (t) return t;
+        }
+        return null;
+      }
+
+      /* ── Position tooltip next to the target rect ────────── */
+      function positionTooltip(target, prefer) {
+        var tip   = el('wtTooltip');
+        var TW    = tip.offsetWidth  || 280;
+        var TH    = tip.offsetHeight || 180;
+        var VW    = window.innerWidth;
+        var VH    = window.innerHeight;
+        var PAD   = 16;
+
+        if (!target) {
+          // centred
+          tip.style.left = Math.round((VW - TW) / 2) + 'px';
+          tip.style.top  = Math.round((VH - TH) / 2) + 'px';
+          tip.removeAttribute('data-arrow');
+          return;
+        }
+
+        var r = target.getBoundingClientRect();
+
+        // pick a side: try prefer first, fall back if not enough room
+        var sides = prefer
+          ? [prefer, 'right', 'left', 'bottom', 'top']
+          : ['right', 'left', 'bottom', 'top'];
+        // deduplicate
+        sides = sides.filter(function(s, i) { return sides.indexOf(s) === i; });
+
+        var left, top, arrow;
+        for (var i = 0; i < sides.length; i++) {
+          var s = sides[i];
+          if (s === 'right'  && r.right  + PAD + TW <= VW) { left = r.right  + PAD; top = Math.min(Math.max(r.top, PAD), VH - TH - PAD); arrow = 'left';   break; }
+          if (s === 'left'   && r.left   - PAD - TW >= 0)  { left = r.left   - PAD - TW; top = Math.min(Math.max(r.top, PAD), VH - TH - PAD); arrow = 'right';  break; }
+          if (s === 'bottom' && r.bottom + PAD + TH <= VH) { left = Math.min(Math.max(r.left, PAD), VW - TW - PAD); top = r.bottom + PAD; arrow = 'top';    break; }
+          if (s === 'top'    && r.top    - PAD - TH >= 0)  { left = Math.min(Math.max(r.left, PAD), VW - TW - PAD); top = r.top    - PAD - TH; arrow = 'bottom'; break; }
+        }
+        // last resort: centre over target
+        if (left === undefined) {
+          left  = Math.min(Math.max(r.left + r.width / 2 - TW / 2, PAD), VW - TW - PAD);
+          top   = Math.min(Math.max(r.top  + r.height / 2 - TH / 2, PAD), VH - TH - PAD);
+          arrow = null;
+        }
+
+        tip.style.left = Math.round(left) + 'px';
+        tip.style.top  = Math.round(top)  + 'px';
+        if (arrow) { tip.setAttribute('data-arrow', arrow); }
+        else       { tip.removeAttribute('data-arrow'); }
+      }
+
+      /* ── Position the gold ring over the target ──────────── */
+      function positionRing(target) {
+        var ring = el('wtRing');
+        if (!target) { ring.classList.remove('active'); return; }
+        var r   = target.getBoundingClientRect();
+        var PAD = 6;
+        ring.style.top    = Math.round(r.top    - PAD) + 'px';
+        ring.style.left   = Math.round(r.left   - PAD) + 'px';
+        ring.style.width  = Math.round(r.width  + PAD * 2) + 'px';
+        ring.style.height = Math.round(r.height + PAD * 2) + 'px';
+        ring.classList.add('active');
+      }
+
+      /* ── Render a step ───────────────────────────────────── */
+      function showStep(idx) {
+        var step   = STEPS[idx];
+        var total  = STEPS.length;
+        var target = getTarget(step);
+
+        // Scroll target into view with a bit of breathing room
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+        }
+
+        // Dots
+        var dotsEl = el('wtDots');
+        dotsEl.innerHTML = '';
+        for (var d = 0; d < total; d++) {
+          var dot = document.createElement('span');
+          dot.className = 'wt-tt-dot' + (d === idx ? ' active' : '');
+          dotsEl.appendChild(dot);
+        }
+
+        // Content
+        el('wtTtStep').textContent  = idx === 0 ? 'Getting started' : (idx === total - 1 ? 'All done' : 'Step ' + idx + ' of ' + (total - 2));
+        el('wtTtTitle').textContent = step.title;
+        el('wtTtBody').innerHTML    = step.body;
+
+        // Back button visibility
+        el('wtTtBack').style.display = idx === 0 ? 'none' : '';
+
+        // Next button label
+        el('wtTtNext').textContent = idx === total - 1 ? 'Start designing!' : 'Next \u2192';
+
+        // Re-trigger animation
+        var tip = el('wtTooltip');
+        tip.style.animation = 'none';
+        void tip.offsetHeight;
+        tip.style.animation = '';
+        tip.classList.add('active');
+
+        // Ring
+        positionRing(target);
+
+        // Position tooltip (run after a short delay so the tooltip has rendered dimensions)
+        setTimeout(function () { positionTooltip(target, step.prefer); }, 20);
+      }
+
+      /* ── Public API ──────────────────────────────────────── */
+      window.startWalkthrough = function () {
+        tourActive   = true;
+        currentStep  = 0;
+        el('wtDim').classList.add('active');
+        showStep(0);
+        if (window.dismissOnboarding) dismissOnboarding();
+      };
+
+      window.closeWalkthrough = function () {
+        tourActive = false;
+        el('wtDim').classList.remove('active');
+        el('wtRing').classList.remove('active');
+        el('wtTooltip').classList.remove('active');
+      };
+
+      window.walkthroughNext = function () {
+        if (currentStep >= STEPS.length - 1) { closeWalkthrough(); return; }
+        currentStep++;
+        showStep(currentStep);
+      };
+
+      window.walkthroughBack = function () {
+        if (currentStep <= 0) return;
+        currentStep--;
+        showStep(currentStep);
+      };
+
+      /* ── Reposition on resize ────────────────────────────── */
+      window.addEventListener('resize', function () {
+        if (!tourActive) return;
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function () {
+          var step   = STEPS[currentStep];
+          var target = getTarget(step);
+          positionRing(target);
+          positionTooltip(target, step.prefer);
+        }, 80);
+      });
+
+      /* ── Escape to close ─────────────────────────────────── */
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && tourActive) closeWalkthrough();
+      });
+    })();
+    </script>
 
     <script src="app.js"></script>
 
