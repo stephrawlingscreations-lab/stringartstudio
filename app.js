@@ -2782,35 +2782,9 @@ document.addEventListener("DOMContentLoaded", function () {
     let tileOffset_X_mm = (D_mm   - (TILE_W_MM + STRIDE_W_MM * (totalCols - 1))) / 2;
     let tileOffset_Y_mm = (D_mm_h - (TILE_H_MM + STRIDE_H_MM * (totalRows - 1))) / 2;
 
-    // Seam safety: the centring formula can land a seam within a few mm of x = D_mm/2
-    // (the top of the circle / centre-top of a square), which is exactly where nail 1
-    // sits. This causes nail numbers to wrap (90→1→2) right at a tile join — the worst
-    // possible position. Detect this and shift the tile grid so the seam lands at ~45°
-    // around the circle instead (well away from nail 1 and nail N).
-    if (boardPageCount > 1 &&
-        nailPlacementMode !== 'manual' && nailPlacementMode !== 'partial-edge') {
-      const SEAM_DANGER_MM = 30; // flag any seam within 30mm of board x-centre
-      const nailR_mm   = D_mm   / 2 - NAIL_INSET_MM;
-      const nailR_mm_y = D_mm_h / 2 - NAIL_INSET_MM;
-      // Target: place the seam at the 45° position on the nail circle (sin 45° ≈ 0.707),
-      // well away from the top (nail 1) and bottom (nail N/2).
-      const targetSeamX_mm = D_mm   / 2 - nailR_mm   * Math.SQRT1_2;
-      const targetSeamY_mm = D_mm_h / 2 - nailR_mm_y * Math.SQRT1_2;
-      for (let c = 0; c < totalCols - 1; c++) {
-        const seamX_mm = c * STRIDE_W_MM + tileOffset_X_mm + STRIDE_W_MM;
-        if (Math.abs(seamX_mm - D_mm / 2) < SEAM_DANGER_MM) {
-          tileOffset_X_mm += targetSeamX_mm - seamX_mm;
-          break;
-        }
-      }
-      for (let r = 0; r < totalRows - 1; r++) {
-        const seamY_mm = r * STRIDE_H_MM + tileOffset_Y_mm + STRIDE_H_MM;
-        if (Math.abs(seamY_mm - D_mm_h / 2) < SEAM_DANGER_MM) {
-          tileOffset_Y_mm += targetSeamY_mm - seamY_mm;
-          break;
-        }
-      }
-    }
+    // Pure centring keeps the board symmetrically distributed across tiles.
+    // The centred seam positions naturally avoid nail 1 (at board x-centre, y=top)
+    // because the seam runs vertically through mid-range nails, not the top arc.
 
     // SVG coordinates of the board's physical top-left corner
     const boardLeft_svg = CX - BRAD;
@@ -3236,28 +3210,54 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         // ── Overlap zone shading — drawn before nail dots so dots sit on top ──
+        // Grey  = TRIM zone (right/bottom of non-last tiles)  — user cuts here
+        // Blue-tint = TAB zone (left/top of non-first tiles) — slides under previous sheet
         const SVG_AREA_TOP_PT    = A4H - MG - TILE_HDR_MM * PT;
         const SVG_AREA_BOTTOM_PT = A4H - MG - (TILE_HDR_MM + TILE_H_MM) * PT;
         const trimX_pt = tpX(strideX_svg);
         const trimY_pt = tpY(strideY_svg);
+        const overlapW = OVERLAP_MM * PT;
+        const overlapH = OVERLAP_MM * PT;
+        // TRIM zone — grey — right side of non-last-column tiles
         if (col < totalCols - 1) {
-          const overlapW = OVERLAP_MM * PT;
           page.drawRectangle({
             x: trimX_pt,
             y: SVG_AREA_BOTTOM_PT,
             width: overlapW,
             height: SVG_AREA_TOP_PT - SVG_AREA_BOTTOM_PT,
-            color: rgb(0.93, 0.93, 0.93),
+            color: rgb(0.91, 0.91, 0.91),
           });
         }
+        // TRIM zone — grey — bottom of non-last-row tiles
         if (row < totalRows - 1) {
-          const overlapH = OVERLAP_MM * PT;
           page.drawRectangle({
             x: MG,
             y: trimY_pt - overlapH,
             width: CW,
             height: overlapH,
-            color: rgb(0.93, 0.93, 0.93),
+            color: rgb(0.91, 0.91, 0.91),
+          });
+        }
+        // TAB zone — blue tint — left side of non-first-column tiles
+        if (col > 0) {
+          const tabX = tpX(ox);
+          page.drawRectangle({
+            x: tabX,
+            y: SVG_AREA_BOTTOM_PT,
+            width: overlapW,
+            height: SVG_AREA_TOP_PT - SVG_AREA_BOTTOM_PT,
+            color: rgb(0.88, 0.92, 0.97),
+          });
+        }
+        // TAB zone — blue tint — top of non-first-row tiles
+        if (row > 0) {
+          const tabY = tpY(oy);
+          page.drawRectangle({
+            x: MG,
+            y: tabY,
+            width: CW,
+            height: overlapH,
+            color: rgb(0.88, 0.92, 0.97),
           });
         }
 
@@ -3339,26 +3339,29 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         }
 
-        // Left tab crosshairs + annotation on non-first-column tiles
+        // Left TAB edge: blue dashed line + crosshairs on non-first-column tiles
         if (col > 0) {
           const tabX = tpX(ox);
+          // Blue dashed line along left edge of TAB zone
+          const C_BLUE = rgb(0.18, 0.45, 0.80);
           for (const frac of [0.25, 0.75]) {
             const xhY = SVG_AREA_TOP_PT - areaH * frac;
-            page.drawLine({ start: { x: tabX - mkPt, y: xhY }, end: { x: tabX + mkPt, y: xhY }, thickness: 0.6, color: C_RED });
-            page.drawLine({ start: { x: tabX, y: xhY - mkPt }, end: { x: tabX, y: xhY + mkPt }, thickness: 0.6, color: C_RED });
+            page.drawLine({ start: { x: tabX - mkPt, y: xhY }, end: { x: tabX + mkPt, y: xhY }, thickness: 0.8, color: C_BLUE });
+            page.drawLine({ start: { x: tabX, y: xhY - mkPt }, end: { x: tabX, y: xhY + mkPt }, thickness: 0.8, color: C_BLUE });
           }
-          // Label: this left edge is the overlap tab — goes under the previous tile
-          txt(page, "\u2190 OVERLAP TAB — place under previous sheet", 0, TILE_HDR_MM + 4, { size: 4.5, color: C_GRAY });
+          txt(page, "\u2190 OVERLAP TAB  Slide this edge under the previous sheet, align crosshairs", 1, TILE_HDR_MM + 4, { size: 4.5, color: C_BLUE });
         }
 
-        // Top tab crosshairs: matching marks on non-first-row tiles
+        // Top TAB edge: blue crosshairs on non-first-row tiles
         if (row > 0) {
           const tabY = tpY(oy);
+          const C_BLUE = rgb(0.18, 0.45, 0.80);
           for (const frac of [0.25, 0.75]) {
             const xhX = MG + CW * frac;
-            page.drawLine({ start: { x: xhX - mkPt, y: tabY }, end: { x: xhX + mkPt, y: tabY }, thickness: 0.6, color: C_RED });
-            page.drawLine({ start: { x: xhX, y: tabY - mkPt }, end: { x: xhX, y: tabY + mkPt }, thickness: 0.6, color: C_RED });
+            page.drawLine({ start: { x: xhX - mkPt, y: tabY }, end: { x: xhX + mkPt, y: tabY }, thickness: 0.8, color: C_BLUE });
+            page.drawLine({ start: { x: xhX, y: tabY - mkPt }, end: { x: xhX, y: tabY + mkPt }, thickness: 0.8, color: C_BLUE });
           }
+          txt(page, "\u2191 OVERLAP TAB  Slide this edge under the sheet above, align crosshairs", 0, (A4H - MG - tabY) / PT + 4.5, { size: 4.5, color: C_BLUE });
         }
 
         // Footer: 1 cm scale-check bar + reference text
@@ -3374,7 +3377,7 @@ document.addEventListener("DOMContentLoaded", function () {
           height: 3.5,
           color: C_BLACK,
         });
-        txt(page, "< 1 cm \u00b7 Dotted line = board edge \u00b7 Nails 15mm inset \u00b7 ASSEMBLE: trim at red line \u21d2 slide tab under previous sheet \u21d2 align crosshairs \u21d2 tape \u21d2 drill", 12, fY + 5, {
+        txt(page, "< 1 cm \u00b7 Dotted line = board edge \u00b7 Nails 15mm inset \u00b7 ASSEMBLE: \u2702 cut at RED line \u2192 slide BLUE tab under \u2192 align crosshairs \u2192 tape \u2192 drill", 12, fY + 5, {
           size: 6,
           color: C_GRAY,
         });
