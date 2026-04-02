@@ -3114,33 +3114,35 @@ document.addEventListener("DOMContentLoaded", function () {
         const txMax = ox + tileW_svg;
         const tyMax = oy + tileH_svg;
 
-        // Cut line (dashed board outline — cut along this line to fit board)
+        // Cut line — 15 mm outside the nail circle (board edge, nails inset from edge)
+        const CUT_MARGIN_MM = 15;
+        const cutR_pt = BRAD * mmPerSVG * PT + CUT_MARGIN_MM * PT; // nail radius + 15mm
+        const cutRy_pt = svgRy * mmPerSVG * PT + CUT_MARGIN_MM * PT;
         const C_CUT = rgb(0.25, 0.25, 0.25);
-        const cutDash = 4 * PT; // 4 mm dash
-        const cutGap  = 2 * PT; // 2 mm gap
+        const cutDash = 4 * PT;
+        const cutGap  = 2 * PT;
         const cutThick = 0.75;
         if (board === "circle") {
           const cx_pt = tpX(CX);
           const cy_pt = tpY(CY);
-          const r_pt  = BRAD * mmPerSVG * PT;
-          const circ  = 2 * Math.PI * r_pt;
+          const circ  = 2 * Math.PI * cutR_pt;
           const period = cutDash + cutGap;
           let dist = 0;
           while (dist < circ) {
             const a1 = (dist / circ) * 2 * Math.PI;
             const a2 = (Math.min(dist + cutDash, circ) / circ) * 2 * Math.PI;
             page.drawLine({
-              start: { x: cx_pt + Math.cos(a1) * r_pt, y: cy_pt + Math.sin(a1) * r_pt },
-              end:   { x: cx_pt + Math.cos(a2) * r_pt, y: cy_pt + Math.sin(a2) * r_pt },
+              start: { x: cx_pt + Math.cos(a1) * cutR_pt, y: cy_pt + Math.sin(a1) * cutR_pt },
+              end:   { x: cx_pt + Math.cos(a2) * cutR_pt, y: cy_pt + Math.sin(a2) * cutR_pt },
               thickness: cutThick, color: C_CUT,
             });
             dist += period;
           }
         } else {
-          const rx_pt = tpX(CX - BRAD);
-          const ry_pt = tpY(CY + svgRy); // bottom-left in PDF coords
-          const rw_pt = BRAD * 2 * mmPerSVG * PT;
-          const rh_pt = svgRy * 2 * mmPerSVG * PT;
+          const rx_pt = tpX(CX) - cutR_pt;
+          const ry_pt = tpY(CY) - cutRy_pt; // bottom-left in PDF coords
+          const rw_pt = cutR_pt * 2;
+          const rh_pt = cutRy_pt * 2;
           const period = cutDash + cutGap;
           const sides = [
             [rx_pt,          ry_pt,          1,  0, rw_pt],
@@ -3259,7 +3261,7 @@ document.addEventListener("DOMContentLoaded", function () {
           height: 3.5,
           color: C_BLACK,
         });
-        txt(page, "< 1 cm  (must measure exactly 1 cm at 100%)  \u00b7  Dashed line = cut line", 12, fY + 5, {
+        txt(page, "< 1 cm  (must measure exactly 1 cm at 100%)  \u00b7  Dashed line = cut line (15 mm outside nails = board edge)", 12, fY + 5, {
           size: 6.5,
           color: C_GRAY,
         });
