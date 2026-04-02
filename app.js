@@ -2762,13 +2762,29 @@ document.addEventListener("DOMContentLoaded", function () {
     // Header (9mm) + footer (9mm) leaves 259mm for the SVG drill area per tile.
     const TILE_HDR_MM = 9;
     const TILE_FTR_MM = 9;
-    const TILE_W_MM = 190; // content width
-    const TILE_H_MM = 277 - TILE_HDR_MM - TILE_FTR_MM; // 259 mm SVG area
-    const tileW_svg = TILE_W_MM * svgPerMm;
-    const tileH_svg = TILE_H_MM * svgPerMm;
-    const totalCols = Math.ceil(boardSVG_W / tileW_svg);
-    const totalRows = Math.ceil(boardSVG_H / tileH_svg);
+    const TILE_W_MM = 190; // printed SVG area width per tile (mm)
+    const TILE_H_MM = 277 - TILE_HDR_MM - TILE_FTR_MM; // 259 mm SVG area height
+
+    // Overlap: each tile prints OVERLAP_MM of extra content shared with its neighbour.
+    // STRIDE is the unique (non-repeated) advance between tile origins.
+    const OVERLAP_MM  = 12;
+    const STRIDE_W_MM = TILE_W_MM - OVERLAP_MM; // 178 mm unique content per column step
+    const STRIDE_H_MM = TILE_H_MM - OVERLAP_MM; // 247 mm unique content per row step
+
+    // Number of tiles needed so the full board fits, keeping things centred so
+    // seams fall symmetrically rather than near nail 1 at the top of the circle.
+    const totalCols = Math.max(1, Math.ceil((D_mm   - OVERLAP_MM) / STRIDE_W_MM));
+    const totalRows = Math.max(1, Math.ceil((D_mm_h - OVERLAP_MM) / STRIDE_H_MM));
     const boardPageCount = totalCols * totalRows;
+
+    // Centre offset: how far the first tile's left/top edge is from the board's
+    // physical left/top edge (may be negative — tile starts before the board edge).
+    const tileOffset_X_mm = (D_mm   - (TILE_W_MM + STRIDE_W_MM * (totalCols - 1))) / 2;
+    const tileOffset_Y_mm = (D_mm_h - (TILE_H_MM + STRIDE_H_MM * (totalRows - 1))) / 2;
+
+    // SVG coordinates of the board's physical top-left corner
+    const boardLeft_svg = CX - BRAD;
+    const boardTop_svg  = CY - svgRy;
 
     const activeLayers = layers.filter((L) => L.edges?.length > 0);
     const totalLines = layers.reduce((s, L) => s + (L.edges?.length || 0), 0);
@@ -3094,8 +3110,17 @@ document.addEventListener("DOMContentLoaded", function () {
         pageIdx++;
         const page = pdfDoc.addPage([A4W, A4H]);
 
-        const ox = col * tileW_svg; // SVG x-origin of this tile
-        const oy = row * tileH_svg; // SVG y-origin of this tile
+        // Physical mm of this tile's left/top edge relative to board physical edge,
+        // then converted to SVG units so the true-size transform stays exact.
+        const physOX_mm = col * STRIDE_W_MM + tileOffset_X_mm;
+        const physOY_mm = row * STRIDE_H_MM + tileOffset_Y_mm;
+        const ox = boardLeft_svg + physOX_mm * svgPerMm; // SVG x-origin of this tile
+        const oy = boardTop_svg  + physOY_mm * svgPerMm; // SVG y-origin of this tile
+        const tileW_svg = TILE_W_MM * svgPerMm;
+        const tileH_svg = TILE_H_MM * svgPerMm;
+        // Stride boundary in SVG units — trim line falls here
+        const strideX_svg = ox + STRIDE_W_MM * svgPerMm;
+        const strideY_svg = oy + STRIDE_H_MM * svgPerMm;
         const tileLabel = `${String.fromCharCode(65 + row)}${col + 1}`;
         const tileNote =
           boardPageCount > 1
@@ -3180,6 +3205,32 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         }
 
+        // ── Overlap zone shading — drawn before nail dots so dots sit on top ──
+        const SVG_AREA_TOP_PT    = A4H - MG - TILE_HDR_MM * PT;
+        const SVG_AREA_BOTTOM_PT = A4H - MG - (TILE_HDR_MM + TILE_H_MM) * PT;
+        const trimX_pt = tpX(strideX_svg);
+        const trimY_pt = tpY(strideY_svg);
+        if (col < totalCols - 1) {
+          const overlapW = OVERLAP_MM * PT;
+          page.drawRectangle({
+            x: trimX_pt,
+            y: SVG_AREA_BOTTOM_PT,
+            width: overlapW,
+            height: SVG_AREA_TOP_PT - SVG_AREA_BOTTOM_PT,
+            color: rgb(0.93, 0.93, 0.93),
+          });
+        }
+        if (row < totalRows - 1) {
+          const overlapH = OVERLAP_MM * PT;
+          page.drawRectangle({
+            x: MG,
+            y: trimY_pt - overlapH,
+            width: CW,
+            height: overlapH,
+            color: rgb(0.93, 0.93, 0.93),
+          });
+        }
+
         // Nail dots — centred at exact physical position, for drilling
         const nailR_pt = Math.max(0.35 * PT, 0.8); // ~0.35 mm radius
         const lblSz = nailCount > 400 ? 4 : nailCount > 200 ? 4.5 : nailCount > 100 ? 5.5 : 6.5;
@@ -3195,73 +3246,84 @@ document.addEventListener("DOMContentLoaded", function () {
           // Drill-point dot (solid circle centred on nail position)
           page.drawCircle({ x: px, y: py, size: nailR_pt, color: C_BLACK });
 
-          // Number label — every nail, offset outward from board centre
-          const dx = sx - CX,
-            dy = sy - CY;
-          const len = Math.sqrt(dx * dx + dy * dy) || 1;
-          const offPt = offMm * PT;
-          const lx = px + (dx / len) * offPt;
-          const ly = py - (dy / len) * offPt; // dy is SVG-down, flip for PDF
-          const label = String(i + numStart);
-          const lw = fReg.widthOfTextAtSize(label, lblSz);
-          try {
-            page.drawText(label, {
-              x: lx - lw / 2,
-              y: ly - lblSz / 2,
-              size: lblSz,
-              font: fReg,
-              color: C_GRAY,
-            });
-          } catch (_) {}
+          // Number label — suppress in overlap zone (adjacent tile shows it cleanly)
+          const inColOverlap = col < totalCols - 1 && sx >= strideX_svg;
+          const inRowOverlap = row < totalRows - 1 && sy >= strideY_svg;
+          if (!inColOverlap && !inRowOverlap) {
+            const dx = sx - CX,
+              dy = sy - CY;
+            const len = Math.sqrt(dx * dx + dy * dy) || 1;
+            const offPt = offMm * PT;
+            const lx = px + (dx / len) * offPt;
+            const ly = py - (dy / len) * offPt;
+            const label = String(i + numStart);
+            const lw = fReg.widthOfTextAtSize(label, lblSz);
+            try {
+              page.drawText(label, {
+                x: lx - lw / 2,
+                y: ly - lblSz / 2,
+                size: lblSz,
+                font: fReg,
+                color: C_GRAY,
+              });
+            } catch (_) {}
+          }
         }
 
-        // Alignment marks at tile cut edges (solid lines — no dash support needed)
-        const mkPt = 6 * PT; // 6 mm arm
+        // ── Trim lines + registration crosshairs ──
+        const mkPt = 6 * PT; // 6 mm crosshair arm
+        const areaH = SVG_AREA_TOP_PT - SVG_AREA_BOTTOM_PT;
+
+        // Right trim line + crosshairs: shown on non-last-column tiles
         if (col < totalCols - 1) {
-          const ex = tpX(ox + tileW_svg);
-          const ey0 = tpY(oy);
-          const ey1 = tpY(Math.min(oy + tileH_svg, SZ));
+          // Full-height red trim line at stride boundary
           page.drawLine({
-            start: { x: ex, y: ey0 },
-            end: { x: ex, y: ey1 },
-            thickness: 0.5,
-            color: C_LGRAY,
+            start: { x: trimX_pt, y: SVG_AREA_TOP_PT },
+            end:   { x: trimX_pt, y: SVG_AREA_BOTTOM_PT },
+            thickness: 0.6, color: C_RED,
           });
-          page.drawLine({
-            start: { x: ex - mkPt, y: ey0 },
-            end: { x: ex, y: ey0 },
-            thickness: 1,
-            color: C_GRAY,
-          });
-          page.drawLine({
-            start: { x: ex, y: ey0 },
-            end: { x: ex, y: ey0 - mkPt },
-            thickness: 1,
-            color: C_GRAY,
-          });
+          // Two crosshairs at 25% and 75% of tile height
+          for (const frac of [0.25, 0.75]) {
+            const xhY = SVG_AREA_TOP_PT - areaH * frac;
+            page.drawLine({ start: { x: trimX_pt - mkPt, y: xhY }, end: { x: trimX_pt + mkPt, y: xhY }, thickness: 0.6, color: C_RED });
+            page.drawLine({ start: { x: trimX_pt, y: xhY - mkPt }, end: { x: trimX_pt, y: xhY + mkPt }, thickness: 0.6, color: C_RED });
+          }
+          // Label on the trim line
+          txt(page, "TRIM", (trimX_pt - MG) / PT + 1, TILE_HDR_MM + 3, { size: 5, color: C_RED });
         }
+
+        // Bottom trim line + crosshairs: shown on non-last-row tiles
         if (row < totalRows - 1) {
-          const ey = tpY(oy + tileH_svg);
-          const ex0 = tpX(ox);
-          const ex1 = tpX(Math.min(ox + tileW_svg, SZ));
           page.drawLine({
-            start: { x: ex0, y: ey },
-            end: { x: ex1, y: ey },
-            thickness: 0.5,
-            color: C_LGRAY,
+            start: { x: MG,      y: trimY_pt },
+            end:   { x: MG + CW, y: trimY_pt },
+            thickness: 0.6, color: C_RED,
           });
-          page.drawLine({
-            start: { x: ex0, y: ey + mkPt },
-            end: { x: ex0, y: ey },
-            thickness: 1,
-            color: C_GRAY,
-          });
-          page.drawLine({
-            start: { x: ex0, y: ey },
-            end: { x: ex0 + mkPt, y: ey },
-            thickness: 1,
-            color: C_GRAY,
-          });
+          for (const frac of [0.25, 0.75]) {
+            const xhX = MG + CW * frac;
+            page.drawLine({ start: { x: xhX - mkPt, y: trimY_pt }, end: { x: xhX + mkPt, y: trimY_pt }, thickness: 0.6, color: C_RED });
+            page.drawLine({ start: { x: xhX, y: trimY_pt - mkPt }, end: { x: xhX, y: trimY_pt + mkPt }, thickness: 0.6, color: C_RED });
+          }
+        }
+
+        // Left tab crosshairs: matching marks on the non-first-column tiles
+        if (col > 0) {
+          const tabX = tpX(ox);
+          for (const frac of [0.25, 0.75]) {
+            const xhY = SVG_AREA_TOP_PT - areaH * frac;
+            page.drawLine({ start: { x: tabX - mkPt, y: xhY }, end: { x: tabX + mkPt, y: xhY }, thickness: 0.6, color: C_RED });
+            page.drawLine({ start: { x: tabX, y: xhY - mkPt }, end: { x: tabX, y: xhY + mkPt }, thickness: 0.6, color: C_RED });
+          }
+        }
+
+        // Top tab crosshairs: matching marks on non-first-row tiles
+        if (row > 0) {
+          const tabY = tpY(oy);
+          for (const frac of [0.25, 0.75]) {
+            const xhX = MG + CW * frac;
+            page.drawLine({ start: { x: xhX - mkPt, y: tabY }, end: { x: xhX + mkPt, y: tabY }, thickness: 0.6, color: C_RED });
+            page.drawLine({ start: { x: xhX, y: tabY - mkPt }, end: { x: xhX, y: tabY + mkPt }, thickness: 0.6, color: C_RED });
+          }
         }
 
         // Footer: 1 cm scale-check bar + reference text
@@ -3277,8 +3339,8 @@ document.addEventListener("DOMContentLoaded", function () {
           height: 3.5,
           color: C_BLACK,
         });
-        txt(page, "< 1 cm  (must measure exactly 1 cm at 100%)  \u00b7  Outer dotted line = board edge  \u00b7  Nails are 15 mm inset", 12, fY + 5, {
-          size: 6.5,
+        txt(page, "< 1 cm \u00b7 Board edge = dotted line \u00b7 Nails 15mm inset \u00b7 Grey = overlap tab \u00b7 Trim at red line \u00b7 Match crosshairs \u00b7 Tape, then drill", 12, fY + 5, {
+          size: 6,
           color: C_GRAY,
         });
         txt(page, `${tileNote}  \u00b7  ${CONTACT}`, 190, fY + 5, {
