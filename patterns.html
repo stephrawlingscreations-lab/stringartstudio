@@ -262,7 +262,11 @@
             <!-- Flower -->
             <div class="pattern-card">
               <div class="pattern-preview">
-                <canvas id="preview-flower" width="280" height="280" aria-hidden="true"></canvas>
+                <video autoplay loop muted playsinline
+                  style="width:140px;height:140px;border-radius:50%;display:block;object-fit:cover"
+                  aria-hidden="true">
+                  <source src="Patterns/Flower Video.webm" type="video/webm">
+                </video>
               </div>
               <h3>Flower</h3>
               <div class="pattern-meta">
@@ -481,60 +485,6 @@
           drawEdges(ctx, pts, edges, edges.length, 0, p.color);
         });
 
-        // Animated flower preview
-        (function () {
-          var canvas = document.getElementById('preview-flower');
-          if (!canvas) return;
-          var size   = canvas.width;
-          var ctx    = canvas.getContext('2d');
-          var cx = size / 2, cy = size / 2, r = size * 0.44;
-          var nails  = 90;
-          var color  = '#c79a3b';
-          var pts    = nailsCircle(nails, cx, cy, r);
-          var edges  = edgesFlower(nails);
-          var MS_PER_EDGE = 80;   // ms to draw each thread line
-          var PAUSE_MS    = 1200; // pause when fully drawn before restarting
-
-          var edgeIdx  = 0;
-          var progress = 0;
-          var lastTime = null;
-          var pausing  = false;
-          var pauseEnd = 0;
-
-          function frame(ts) {
-            if (lastTime === null) lastTime = ts;
-            var dt = Math.min(ts - lastTime, 100);
-            lastTime = ts;
-
-            if (pausing) {
-              if (ts >= pauseEnd) {
-                pausing  = false;
-                edgeIdx  = 0;
-                progress = 0;
-              }
-              requestAnimationFrame(frame);
-              return;
-            }
-
-            progress += dt / MS_PER_EDGE;
-            if (progress >= 1) {
-              progress = 0;
-              edgeIdx++;
-              if (edgeIdx >= edges.length) {
-                edgeIdx  = edges.length; // show complete frame
-                pausing  = true;
-                pauseEnd = ts + PAUSE_MS;
-              }
-            }
-
-            ctx.clearRect(0, 0, size, size);
-            drawBoard(ctx, cx, cy, r);
-            drawEdges(ctx, pts, edges, edgeIdx, progress, color);
-            requestAnimationFrame(frame);
-          }
-
-          requestAnimationFrame(frame);
-        })();
       })();
     </script>
   </body>
