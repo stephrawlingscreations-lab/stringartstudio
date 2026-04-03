@@ -1748,8 +1748,9 @@ document.addEventListener("DOMContentLoaded", function () {
         throw new Error(msg);
       }
     }
-    // Spiral uses seq; verify it round-trips to the same edges
-    if (seq?.length > 1) {
+    // Spiral is seq-first: edges are derived from seq, so verify the round-trip.
+    // Other presets are edge-first; seq has gaps so the round-trip count won't match — skip.
+    if (name === 'spiral' && seq?.length > 1) {
       const rebuilt = buildEdgesFromSeq(seq);
       if (rebuilt.length !== edges.length) {
         const msg = `[StringArt] Preset "${name}": seq→edges mismatch (${rebuilt.length} vs ${edges.length})`;
