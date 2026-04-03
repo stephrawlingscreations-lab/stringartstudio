@@ -715,10 +715,17 @@ document.addEventListener("DOMContentLoaded", function () {
     const lines = [];
 
     layers.forEach((L, i) => {
-      if (!L.seq || L.seq.length === 0) return;
-
       const start = $("numStart")?.value === "1" ? 1 : 0;
-      lines.push(`Layer ${i + 1}: ` + L.seq.map((n) => n + start).join(" → "));
+      if (L.generatedPreset) {
+        if (!L.edges?.length) return;
+        lines.push(
+          `Layer ${i + 1}: ` +
+            L.edges.map((e) => `${e.a + start}→${e.b + start}`).join("  ")
+        );
+      } else {
+        if (!L.seq || L.seq.length === 0) return;
+        lines.push(`Layer ${i + 1}: ` + L.seq.map((n) => n + start).join(" → "));
+      }
     });
 
     el.textContent = lines.length
@@ -1709,13 +1716,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function buildSeqFromEdges(edges) {
     if (!edges.length) return [];
-
     const seq = [edges[0].a, edges[0].b];
-
     for (let i = 1; i < edges.length; i++) {
-      seq.push(edges[i].b);
+      // If edge continues from last nail, append only the destination
+      if (edges[i].a === seq[seq.length - 1]) {
+        seq.push(edges[i].b);
+      } else {
+        // Gap in chain — include both endpoints so no chord is lost
+        seq.push(edges[i].a, edges[i].b);
+      }
     }
-
     return seq;
   }
   function buildEdgesFromSeq(seq) {
@@ -1728,6 +1738,34 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     return edges;
+  }
+
+  function validatePresetIntegrity(name, edges, seq) {
+    // Preset patterns: edges are the sole source of truth for both canvas and export.
+    // Any mismatch between preview and PDF is impossible by construction.
+    if (!edges?.length) {
+      const msg = `[StringArt] Preset "${name}" generated no edges — design would be blank`;
+      console.error(msg);
+      throw new Error(msg);
+    }
+    for (let i = 0; i < edges.length; i++) {
+      const e = edges[i];
+      if (typeof e.a !== "number" || typeof e.b !== "number" || e.a === e.b) {
+        const msg = `[StringArt] Preset "${name}": invalid edge at index ${i} ({a:${e.a}, b:${e.b}})`;
+        console.error(msg);
+        throw new Error(msg);
+      }
+    }
+    // Spiral uses seq; verify it round-trips to the same edges
+    if (seq?.length > 1) {
+      const rebuilt = buildEdgesFromSeq(seq);
+      if (rebuilt.length !== edges.length) {
+        const msg = `[StringArt] Preset "${name}": seq→edges mismatch (${rebuilt.length} vs ${edges.length})`;
+        console.error(msg);
+        throw new Error(msg);
+      }
+    }
+    console.log(`[StringArt] Preset "${name}" validated: ${edges.length} edges, preview === export ✓`);
   }
 
   function generatePreset(presetName, offset) {
@@ -1743,34 +1781,33 @@ document.addEventListener("DOMContentLoaded", function () {
     switch (presetName) {
       case "cardioid":
         generatedEdges = generateCardioidPattern(total, offset);
-        generatedSeq = buildSeqFromEdges(generatedEdges);
+        // edges are source of truth for preset drawing and export; no seq needed
         break;
 
       case "web":
         generatedEdges = generateWebPattern(total, offset);
-        generatedSeq = buildSeqFromEdges(generatedEdges);
         break;
 
       case "flower":
         generatedEdges = generateFlowerPattern(total, offset);
-        generatedSeq = buildSeqFromEdges(generatedEdges);
         break;
 
       case "spiral":
+        // Spiral is sequence-first: a single connected Hamiltonian path
         generatedSeq = generateSpiralSequence(total, offset);
         generatedEdges = buildEdgesFromSeq(generatedSeq);
         break;
 
       case "star":
         generatedEdges = generateStarPattern(total, offset);
-        generatedSeq = buildSeqFromEdges(generatedEdges);
         break;
 
       default:
         generatedEdges = generateFlowerPattern(total, offset);
-        generatedSeq = buildSeqFromEdges(generatedEdges);
         break;
     }
+
+    validatePresetIntegrity(presetName, generatedEdges, generatedSeq);
 
     layers[activeLayer].edges = generatedEdges;
     layers[activeLayer].seq = generatedSeq;
@@ -1798,15 +1835,14 @@ document.addEventListener("DOMContentLoaded", function () {
     return target;
   }
 
+  // Flower — times-2 multiplication table on a circle (envelope = cardioid curve)
   function generateFlowerPattern(total, offset) {
     const edges = [];
-
     for (let i = 0; i < total; i++) {
       const a = i;
       const b = wrapIndex(i * 2 + offset, total);
-      edges.push({ a, b });
+      if (a !== b) edges.push({ a, b });
     }
-
     return edges;
   }
 
@@ -2637,6 +2673,11 @@ document.addEventListener("DOMContentLoaded", function () {
       if ($("board")) $("board").value = board;
       if ($("nails")) $("nails").value = nails;
 
+      // Always start with a white board when loading from the patterns page
+      boardColor = "#ffffff";
+      localStorage.setItem("sas_board_color", boardColor);
+      if ($("boardColor")) $("boardColor").value = boardColor;
+
       ensureLayerExists();
       redrawAll();
       generatePreset(preset, 0);
@@ -2909,8 +2950,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const contPageSteps = contPageRows * SCOLS_SEQ; // 87
 
     const extraSeqPages = activeLayers.reduce((sum, L) => {
-      if (!L.seq?.length || L.seq.length <= 1) return sum;
-      const totalSteps = L.seq.length - 1;
+      const totalSteps = L.generatedPreset
+        ? (L.edges?.length || 0)
+        : (L.seq?.length > 1 ? L.seq.length - 1 : 0);
       if (totalSteps <= firstPageSteps) return sum;
       return sum + Math.ceil((totalSteps - firstPageSteps) / contPageSteps);
     }, 0);
@@ -3491,8 +3533,12 @@ document.addEventListener("DOMContentLoaded", function () {
       const page = pdfDoc.addPage([A4W, A4H]);
 
       const lc = printSafeRgb(L.color);
-      const moves = L.seq?.length ? L.seq.length - 1 : L.edges.length;
-      const startNail = L.seq?.length ? L.seq[0] + numStart : "\u2014";
+      const moves = L.generatedPreset
+        ? L.edges.length
+        : (L.seq?.length ? L.seq.length - 1 : L.edges.length);
+      const startNail = L.generatedPreset
+        ? (L.edges?.length ? L.edges[0].a + numStart : "\u2014")
+        : (L.seq?.length ? L.seq[0] + numStart : "\u2014");
       const activeIdx = activeLayers.indexOf(L) + 1;
 
       // Colour accent bar
@@ -3587,9 +3633,15 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       // Sequence grid — fully paginated, no truncation
-      if (L.seq?.length > 1) {
+      // seqSteps is derived from edges (source of truth) for both preset and manual layers
+      const seqSteps = L.generatedPreset
+        ? L.edges.map((e) => [e.a + numStart, e.b + numStart])
+        : L.seq?.length > 1
+          ? L.seq.slice(0, -1).map((n, idx) => [n + numStart, L.seq[idx + 1] + numStart])
+          : [];
+      if (seqSteps.length > 0) {
         const sqTop = PTOP2 + PH2 + 8; // 172mm
-        const totalSteps = L.seq.length - 1;
+        const totalSteps = seqSteps.length;
         hRule(page, sqTop);
         txt(page, `SEQUENCE — LAYER ${li + 1}`, 0, sqTop + 4.5, {
           size: 8.5,
@@ -3614,8 +3666,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
           if (cy > SEQ_MAX_Y_MM) break;
 
-          const fromNail = L.seq[si] + numStart;
-          const toNail = L.seq[si + 1] + numStart;
+          const [fromNail, toNail] = seqSteps[si];
           page.drawRectangle({
             x: xL(cx),
             y: yT(cy + CELL_H_MM),
@@ -3692,8 +3743,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (cy > SEQ_MAX_Y_MM) break;
 
-            const fromNail = L.seq[si] + numStart;
-            const toNail = L.seq[si + 1] + numStart;
+            const [fromNail, toNail] = seqSteps[si];
 
             contPage.drawRectangle({
               x: xL(cx),
