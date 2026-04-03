@@ -1,5 +1,14 @@
 document.addEventListener("DOMContentLoaded", function () {
   /* -----------------------------
+     FEATURE FLAGS
+  ----------------------------- */
+
+  // Set to true to enable the Timelapse Play button for all users.
+  // While false, the panel is hidden unless the URL contains ?dev=true
+  // (e.g. designer.html?dev=true) — the same idea as ?sas_dev=sdr22uk for Pro.
+  const PLAY_BUTTON_ENABLED = false;
+
+  /* -----------------------------
      PRO UNLOCK (Gumroad redirect)
   ----------------------------- */
 
@@ -71,6 +80,20 @@ document.addEventListener("DOMContentLoaded", function () {
   let dragStartPos      = null;
   let uiMode       = 'beginner';
   let lastCx = 0, lastCy = 0, lastRx = 320, lastRy = 320;
+
+  // ---- Timelapse Animation State ----
+  const anim = {
+    active:    false,   // animation is running (or paused)
+    paused:    false,
+    layerIdx:  0,       // which layer we're currently drawing
+    edgeIdx:   0,       // which edge within that layer
+    progress:  0,       // 0..1 — how far along the current edge we've drawn
+    rafId:     null,
+    lastTime:  null,
+    recording: false,
+    recorder:  null,
+    recChunks: [],
+  };
 
   /* -----------------------------
      CANVAS SWITCHING
@@ -863,13 +886,20 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     for (let li = 0; li < layers.length; li++) {
+      // During animation, skip layers beyond the one currently being drawn
+      if (anim.active && li > anim.layerIdx) break;
+
       const layer = layers[li];
       if (layer.hidden) continue;
 
       ctx.lineWidth = layer.lw;
       ctx.strokeStyle = rgba(layer.color, layer.opacity);
 
-      for (const e of layer.edges) {
+      for (let ei = 0; ei < layer.edges.length; ei++) {
+        // During animation, stop at the edge currently being drawn
+        if (anim.active && li === anim.layerIdx && ei >= anim.edgeIdx) break;
+
+        const e = layer.edges[ei];
         if (!pts[e.a] || !pts[e.b]) continue;
 
         const [x1, y1] = pts[e.a];
@@ -877,6 +907,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
         drawWrappedThread(ctx, x1, y1, x2, y2, 6, 0.35);
         ctx.stroke();
+      }
+    }
+
+    // Draw the partially-animated thread (shoots from nail A toward nail B)
+    if (anim.active && anim.layerIdx < layers.length) {
+      const animLayer = layers[anim.layerIdx];
+      if (!animLayer.hidden && anim.edgeIdx < animLayer.edges.length) {
+        const e = animLayer.edges[anim.edgeIdx];
+        if (e && pts[e.a] && pts[e.b]) {
+          const [x1, y1] = pts[e.a];
+          const [x2, y2] = pts[e.b];
+          const t = anim.progress;
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t);
+          ctx.lineWidth = animLayer.lw;
+          ctx.strokeStyle = rgba(animLayer.color, animLayer.opacity);
+          ctx.stroke();
+        }
       }
     }
 
@@ -928,7 +977,7 @@ document.addEventListener("DOMContentLoaded", function () {
       ctx.fillText(label, x, y - 10);
     }
 
-    debouncedSave();
+    if (!anim.active) debouncedSave();
   }
 
   /* -----------------------------
@@ -1146,6 +1195,8 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     cv.onpointerdown = (ev) => {
+      if (anim.active) return; // block interaction during animation
+
       const { x, y } = canvasXYFromPointerEvent(ev);
 
       if (nailPlacementMode === 'manual') {
@@ -2429,6 +2480,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     syncHideButton();
+
+    // Timelapse playback
+    initPlayback();
 
     // Share design button
     $("shareDesignBtn")?.addEventListener("click", shareDesign);
@@ -3786,6 +3840,172 @@ document.addEventListener("DOMContentLoaded", function () {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  }
+
+  window.applyTemplateDesign = applyTemplateDesign;
+
+  /* -----------------------------
+     TIMELAPSE ANIMATION
+  ----------------------------- */
+
+  function animSpeedMs() {
+    const val = $("animSpeed")?.value || "medium";
+    return { slow: 500, medium: 120, fast: 25 }[val] ?? 120;
+  }
+
+  // Advance layerIdx/edgeIdx past any hidden or empty layers
+  function animSeekNextEdge() {
+    while (anim.layerIdx < layers.length) {
+      const L = layers[anim.layerIdx];
+      if (!L.hidden && anim.edgeIdx < L.edges.length) return true;
+      anim.layerIdx++;
+      anim.edgeIdx = 0;
+    }
+    return false; // nothing left
+  }
+
+  function animTick(timestamp) {
+    if (!anim.active || anim.paused) return;
+
+    if (anim.lastTime === null) anim.lastTime = timestamp;
+    const dt = Math.min(timestamp - anim.lastTime, 100); // cap to avoid jump after tab switch
+    anim.lastTime = timestamp;
+
+    anim.progress += dt / animSpeedMs();
+
+    if (anim.progress >= 1) {
+      anim.progress = 0;
+      anim.edgeIdx++;
+      if (!animSeekNextEdge()) {
+        // All edges drawn — finish
+        anim.active = false;
+        if ($("animPlayBtn")) $("animPlayBtn").textContent = "▶ Play";
+        redrawAll();
+        showToast("Animation complete!");
+        if (anim.recording) stopRecording();
+        return;
+      }
+    }
+
+    redrawAll();
+    anim.rafId = requestAnimationFrame(animTick);
+  }
+
+  function animPlay() {
+    if (anim.active && !anim.paused) return; // already running
+
+    if (!anim.active) {
+      const hasContent = layers.some((L) => L.edges && L.edges.length > 0);
+      if (!hasContent) {
+        showToast("Draw some threads first.", true);
+        return;
+      }
+      anim.layerIdx = 0;
+      anim.edgeIdx  = 0;
+      anim.progress = 0;
+      anim.active   = true;
+      if (!animSeekNextEdge()) {
+        anim.active = false;
+        showToast("No visible threads to animate.", true);
+        return;
+      }
+    }
+
+    anim.paused   = false;
+    anim.lastTime = null;
+    if ($("animPlayBtn")) $("animPlayBtn").textContent = "⏸ Pause";
+    anim.rafId = requestAnimationFrame(animTick);
+  }
+
+  function animPause() {
+    anim.paused = true;
+    if (anim.rafId) { cancelAnimationFrame(anim.rafId); anim.rafId = null; }
+    if ($("animPlayBtn")) $("animPlayBtn").textContent = "▶ Play";
+  }
+
+  function animTogglePlay() {
+    if (!anim.active || anim.paused) animPlay();
+    else animPause();
+  }
+
+  function animReset() {
+    anim.active   = false;
+    anim.paused   = false;
+    anim.layerIdx = 0;
+    anim.edgeIdx  = 0;
+    anim.progress = 0;
+    anim.lastTime = null;
+    if (anim.rafId) { cancelAnimationFrame(anim.rafId); anim.rafId = null; }
+    if ($("animPlayBtn")) $("animPlayBtn").textContent = "▶ Play";
+    redrawAll();
+  }
+
+  // ---- MediaRecorder (Record & Save Video) ----
+
+  function stopRecording() {
+    anim.recording = false;
+    try { anim.recorder?.stop(); } catch (_) {}
+    if ($("animRecordBtn")) $("animRecordBtn").textContent = "⏺ Record & Save Video";
+    if ($("animRecordBtn")) $("animRecordBtn").classList.remove("anim-recording");
+  }
+
+  function animRecord() {
+    if (anim.recording) {
+      stopRecording();
+      return;
+    }
+
+    if (typeof MediaRecorder === "undefined") {
+      showToast("Video recording isn't supported in this browser.", true);
+      return;
+    }
+
+    try {
+      const stream = cv.captureStream(30);
+      const mimeType = ["video/webm;codecs=vp9", "video/webm"].find(
+        (m) => MediaRecorder.isTypeSupported(m),
+      );
+      anim.recorder   = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+      anim.recChunks  = [];
+
+      anim.recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) anim.recChunks.push(e.data);
+      };
+
+      anim.recorder.onstop = () => {
+        const blob = new Blob(anim.recChunks, { type: "video/webm" });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement("a");
+        a.href     = url;
+        a.download = "string-art-timelapse-" + new Date().toISOString().slice(0, 10) + ".webm";
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast("Video saved!");
+      };
+
+      anim.recorder.start();
+      anim.recording = true;
+      if ($("animRecordBtn")) $("animRecordBtn").textContent = "⏹ Stop Recording";
+      if ($("animRecordBtn")) $("animRecordBtn").classList.add("anim-recording");
+      showToast("Recording started — press Play to begin.");
+    } catch (e) {
+      showToast("Could not start recording: " + e.message, true);
+    }
+  }
+
+  function initPlayback() {
+    // Show panel if the flag is on, or if ?dev=true is in the URL
+    const params  = new URLSearchParams(window.location.search);
+    const devMode = params.get("dev") === "true";
+    const show    = PLAY_BUTTON_ENABLED || devMode;
+
+    const panel = $("playbackPanel");
+    if (panel) panel.style.display = show ? "" : "none";
+    if (!show) return;
+
+    $("animPlayBtn")?.addEventListener("click", animTogglePlay);
+    $("animResetBtn")?.addEventListener("click", animReset);
+    $("animRecordBtn")?.addEventListener("click", animRecord);
   }
 
   window.applyTemplateDesign = applyTemplateDesign;

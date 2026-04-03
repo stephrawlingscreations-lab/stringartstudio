@@ -1947,6 +1947,16 @@
         transition: background 0.2s;
       }
       .wt-tt-dot.active { background: var(--gold); }
+
+      /* ── Timelapse playback panel ── */
+      #playbackPanel { display: none; }
+      #animPlayBtn { background: var(--navy); color: #fff; }
+      #animPlayBtn:hover { background: var(--navy-hover); }
+      #animRecordBtn.anim-recording {
+        background: #fce8e6;
+        color: #c0392b;
+        border-color: rgba(192,57,43,0.22);
+      }
     </style>
     <!-- Start cookieyes banner -->
     <script id="cookieyes" type="text/javascript" src="https://cdn-cookieyes.com/client_data/771647e94dbf7af170e4e1dbcdc9dc79/script.js"></script>
@@ -2395,6 +2405,27 @@
                 ✦ Download Printable Template
                 <span class="pro-label">Pro</span>
               </button>
+            </div>
+
+            <!-- TIMELAPSE ANIMATION (hidden until PLAY_BUTTON_ENABLED or ?dev=true) -->
+            <div id="playbackPanel" class="panel-section">
+              <span class="panel-section-label">Timelapse Animation</span>
+              <div class="export-row">
+                <button id="animPlayBtn">▶ Play</button>
+                <button id="animResetBtn" class="btn-ghost">↺ Reset</button>
+              </div>
+              <div class="export-row" style="margin-top:6px;align-items:center">
+                <label for="animSpeed" style="font-size:13px;color:var(--muted);white-space:nowrap;margin-right:4px">Speed</label>
+                <select id="animSpeed" style="flex:1;font-size:13px;padding:8px 10px;border-radius:10px;border:1px solid rgba(60,44,28,0.14);background:#fff;color:var(--text-dark);font-family:Inter,system-ui,sans-serif">
+                  <option value="slow">Slow</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="fast">Fast</option>
+                </select>
+              </div>
+              <div class="export-row" style="margin-top:6px">
+                <button id="animRecordBtn" class="btn-ghost" style="width:100%">⏺ Record &amp; Save Video</button>
+              </div>
+              <p class="layout-hint">Plays back your design thread by thread. Hit <strong>Record</strong> first, then <strong>Play</strong> — it saves as a <strong>.webm</strong> video when the animation finishes.</p>
             </div>
 
           </div><!-- end #tab-export -->
