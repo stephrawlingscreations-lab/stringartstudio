@@ -715,17 +715,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const lines = [];
 
     layers.forEach((L, i) => {
+      if (!L.seq || L.seq.length === 0) return;
       const start = $("numStart")?.value === "1" ? 1 : 0;
-      if (L.generatedPreset) {
-        if (!L.edges?.length) return;
-        lines.push(
-          `Layer ${i + 1}: ` +
-            L.edges.map((e) => `${e.a + start}→${e.b + start}`).join("  ")
-        );
-      } else {
-        if (!L.seq || L.seq.length === 0) return;
-        lines.push(`Layer ${i + 1}: ` + L.seq.map((n) => n + start).join(" → "));
-      }
+      lines.push(`Layer ${i + 1}: ` + L.seq.map((n) => n + start).join(" → "));
     });
 
     el.textContent = lines.length
@@ -1781,15 +1773,17 @@ document.addEventListener("DOMContentLoaded", function () {
     switch (presetName) {
       case "cardioid":
         generatedEdges = generateCardioidPattern(total, offset);
-        // edges are source of truth for preset drawing and export; no seq needed
+        generatedSeq = buildSeqFromEdges(generatedEdges);
         break;
 
       case "web":
         generatedEdges = generateWebPattern(total, offset);
+        generatedSeq = buildSeqFromEdges(generatedEdges);
         break;
 
       case "flower":
         generatedEdges = generateFlowerPattern(total, offset);
+        generatedSeq = buildSeqFromEdges(generatedEdges);
         break;
 
       case "spiral":
@@ -1800,10 +1794,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
       case "star":
         generatedEdges = generateStarPattern(total, offset);
+        generatedSeq = buildSeqFromEdges(generatedEdges);
         break;
 
       default:
         generatedEdges = generateFlowerPattern(total, offset);
+        generatedSeq = buildSeqFromEdges(generatedEdges);
         break;
     }
 
