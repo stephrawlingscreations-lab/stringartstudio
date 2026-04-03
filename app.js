@@ -2782,9 +2782,48 @@ document.addEventListener("DOMContentLoaded", function () {
     let tileOffset_X_mm = (D_mm   - (TILE_W_MM + STRIDE_W_MM * (totalCols - 1))) / 2;
     let tileOffset_Y_mm = (D_mm_h - (TILE_H_MM + STRIDE_H_MM * (totalRows - 1))) / 2;
 
-    // Pure centring keeps the board symmetrically distributed across tiles.
-    // The centred seam positions naturally avoid nail 1 (at board x-centre, y=top)
-    // because the seam runs vertically through mid-range nails, not the top arc.
+    // Seam safety for circle boards.
+    // For any 2-column layout the centred seam lands at D_mm/2 − 6 mm — always
+    // within half a nail spacing of nail 0 (top-start circles).  Detect that and
+    // shift the tile grid so the seam falls 3 nail spacings to the right of nail 0
+    // instead, landing between nails ~3 and ~87 — well away from the 89→90→1→2
+    // wrap area.  The shift is small (≤ 40 mm) so no tile becomes empty.
+    if (board === "circle" && boardPageCount > 1 &&
+        nailPlacementMode !== 'manual' && nailPlacementMode !== 'partial-edge') {
+      const R_nail_mm  = D_mm   / 2 - NAIL_INSET_MM;
+      const R_nail_mm_y = D_mm_h / 2 - NAIL_INSET_MM;
+      const spacingMm  = (2 * Math.PI * R_nail_mm) / nailCount;
+      const SAFE_NAILS = 3;   // keep seams at least this many spacings from nail 0
+      // Physical x/y of nail 0 (cos/sin of start angle)
+      const nail1Rad   = nail1AngleDeg() * Math.PI / 180;
+      const nail0_x_mm = D_mm   / 2 + R_nail_mm   * Math.cos(nail1Rad);
+      const nail0_y_mm = D_mm_h / 2 + R_nail_mm_y * Math.sin(nail1Rad);
+      // Valid tileOffset bounds — each tile must overlap board by ≥ 95 mm
+      const MIN_OV = 95;
+      const toX_min = -(TILE_W_MM - MIN_OV);
+      const toX_max =  D_mm   - MIN_OV - STRIDE_W_MM * (totalCols - 1);
+      const toY_min = -(TILE_H_MM - MIN_OV);
+      const toY_max =  D_mm_h - MIN_OV - STRIDE_H_MM * (totalRows - 1);
+
+      for (let c = 0; c < totalCols - 1; c++) {
+        const seamX = tileOffset_X_mm + (c + 1) * STRIDE_W_MM;
+        if (Math.abs(seamX - nail0_x_mm) < spacingMm * SAFE_NAILS) {
+          const target = nail0_x_mm + spacingMm * SAFE_NAILS; // shift seam right of danger
+          tileOffset_X_mm = Math.max(toX_min, Math.min(toX_max,
+            tileOffset_X_mm + (target - seamX)));
+          break;
+        }
+      }
+      for (let r = 0; r < totalRows - 1; r++) {
+        const seamY = tileOffset_Y_mm + (r + 1) * STRIDE_H_MM;
+        if (Math.abs(seamY - nail0_y_mm) < spacingMm * SAFE_NAILS) {
+          const target = nail0_y_mm + spacingMm * SAFE_NAILS;
+          tileOffset_Y_mm = Math.max(toY_min, Math.min(toY_max,
+            tileOffset_Y_mm + (target - seamY)));
+          break;
+        }
+      }
+    }
 
     // SVG coordinates of the board's physical top-left corner
     const boardLeft_svg = CX - BRAD;
@@ -3320,9 +3359,11 @@ document.addEventListener("DOMContentLoaded", function () {
             page.drawLine({ start: { x: trimX_pt - mkPt, y: xhY }, end: { x: trimX_pt + mkPt, y: xhY }, thickness: 0.6, color: C_RED });
             page.drawLine({ start: { x: trimX_pt, y: xhY - mkPt }, end: { x: trimX_pt, y: xhY + mkPt }, thickness: 0.6, color: C_RED });
           }
-          // "TRIM THIS EDGE" label at top of the trim line, "TAB — GOES UNDER" in grey zone
-          txt(page, "\u2702 TRIM THIS EDGE", (trimX_pt - MG) / PT + 1.5, TILE_HDR_MM + 4, { size: 5, font: fBold, color: C_RED });
-          txt(page, "TAB \u2192 GOES UNDER", (trimX_pt - MG) / PT + 1.5, TILE_HDR_MM + 9, { size: 4.5, color: C_GRAY });
+          // Trim line labels inside the grey zone
+          const trimLblX = (trimX_pt - MG) / PT + 1.5;
+          txt(page, "\u2702 CUT HERE", trimLblX, TILE_HDR_MM + 4,   { size: 5.5, font: fBold, color: C_RED });
+          txt(page, "right edge \u2192 trim", trimLblX, TILE_HDR_MM + 9,   { size: 4,   color: C_GRAY });
+          txt(page, "left edge \u2192 keep", trimLblX, TILE_HDR_MM + 13.5, { size: 4,   color: C_GRAY });
         }
 
         // Bottom trim line + crosshairs: shown on non-last-row tiles
@@ -3349,7 +3390,7 @@ document.addEventListener("DOMContentLoaded", function () {
             page.drawLine({ start: { x: tabX - mkPt, y: xhY }, end: { x: tabX + mkPt, y: xhY }, thickness: 0.8, color: C_BLUE });
             page.drawLine({ start: { x: tabX, y: xhY - mkPt }, end: { x: tabX, y: xhY + mkPt }, thickness: 0.8, color: C_BLUE });
           }
-          txt(page, "\u2190 OVERLAP TAB  Slide this edge under the previous sheet, align crosshairs", 1, TILE_HDR_MM + 4, { size: 4.5, color: C_BLUE });
+          txt(page, "\u2190 KEEP this edge — slide blue tab under previous sheet, then align \u271b marks before taping", 1, TILE_HDR_MM + 4, { size: 4.5, color: C_BLUE });
         }
 
         // Top TAB edge: blue crosshairs on non-first-row tiles
@@ -3361,7 +3402,7 @@ document.addEventListener("DOMContentLoaded", function () {
             page.drawLine({ start: { x: xhX - mkPt, y: tabY }, end: { x: xhX + mkPt, y: tabY }, thickness: 0.8, color: C_BLUE });
             page.drawLine({ start: { x: xhX, y: tabY - mkPt }, end: { x: xhX, y: tabY + mkPt }, thickness: 0.8, color: C_BLUE });
           }
-          txt(page, "\u2191 OVERLAP TAB  Slide this edge under the sheet above, align crosshairs", 0, (A4H - MG - tabY) / PT + 4.5, { size: 4.5, color: C_BLUE });
+          txt(page, "\u2191 KEEP this edge — slide blue tab under the sheet above, align \u271b marks before taping", 0, (A4H - MG - tabY) / PT + 4.5, { size: 4.5, color: C_BLUE });
         }
 
         // Footer: 1 cm scale-check bar + reference text
@@ -3377,8 +3418,8 @@ document.addEventListener("DOMContentLoaded", function () {
           height: 3.5,
           color: C_BLACK,
         });
-        txt(page, "< 1 cm \u00b7 Dotted line = board edge \u00b7 Nails 15mm inset \u00b7 ASSEMBLE: \u2702 cut at RED line \u2192 slide BLUE tab under \u2192 align crosshairs \u2192 tape \u2192 drill", 12, fY + 5, {
-          size: 6,
+        txt(page, "< 1 cm \u00b7 Dotted line = board edge \u00b7 Nails 15 mm inset \u00b7 ASSEMBLE: \u2702 cut right/bottom at RED line \u2192 keep left/top blue edge \u2192 slide tab under \u2192 align \u271b marks \u2192 tape \u2192 drill", 12, fY + 5, {
+          size: 5.8,
           color: C_GRAY,
         });
         txt(page, `${tileNote}  \u00b7  ${CONTACT}`, 190, fY + 5, {
