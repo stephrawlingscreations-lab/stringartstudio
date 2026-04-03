@@ -2901,13 +2901,15 @@
           target.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
         }
 
-        // Dots
+        // Dots — only shown for the 6 middle steps (not intro/outro)
         var dotsEl = el('wtDots');
         dotsEl.innerHTML = '';
-        for (var d = 0; d < total; d++) {
-          var dot = document.createElement('span');
-          dot.className = 'wt-tt-dot' + (d === idx ? ' active' : '');
-          dotsEl.appendChild(dot);
+        if (idx > 0 && idx < total - 1) {
+          for (var d = 1; d < total - 1; d++) {
+            var dot = document.createElement('span');
+            dot.className = 'wt-tt-dot' + (d === idx ? ' active' : '');
+            dotsEl.appendChild(dot);
+          }
         }
 
         // Content
