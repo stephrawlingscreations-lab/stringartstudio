@@ -665,34 +665,7 @@
         flex-shrink: 0;
       }
 
-      .drawmode-presets {
-        background: var(--panel-bg);
-        border-bottom: 1px solid rgba(60,44,28,0.07);
-        padding: 10px 16px;
-        flex-shrink: 0;
-      }
 
-      .drawmode-presets-label {
-        font-size: 10px;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--gold);
-        font-weight: 600;
-        font-family: Inter, sans-serif;
-        margin-bottom: 8px;
-      }
-
-      .drawmode-preset-row {
-        display: flex;
-        gap: 8px;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-      }
-
-      .drawmode-preset-row::-webkit-scrollbar {
-        display: none;
-      }
       button {
         touch-action: manipulation;
       }
@@ -2675,17 +2648,8 @@
         <button id="closeDrawMode" class="draw-mode-exit">✓ Done</button>
       </div>
 
-      <div class="drawmode-presets" aria-label="Draw mode quick patterns">
-        <div class="drawmode-presets-label">Quick start</div>
-        <div class="drawmode-preset-row">
-          <button class="preset-chip" data-preset="flower">Flower</button>
-          <button class="preset-chip" data-preset="cardioid">Cardioid</button>
-          <button class="preset-chip" data-preset="web">Web</button>
-        </div>
-      </div>
-
       <div id="drawModeSeqMini" class="draw-mode-seq-mini">
-        Tap a nail to begin — or pick a pattern above.
+        Tap a nail to begin.
       </div>
 
       <div class="draw-mode-canvas-wrap">
