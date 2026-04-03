@@ -3389,11 +3389,28 @@ document.addEventListener("DOMContentLoaded", function () {
         txt(
           page,
           `Page ${pageIdx} of ${totalPages}  \u00b7  PRINT AT 100% -- no scaling, no fit-to-page`,
-          190,
+          boardPageCount > 1 ? 175 : 190,
           5.5,
           { size: 6.5, font: fBold, color: C_RED, align: "right" },
         );
         hRule(page, 8, 0.4);
+
+        // Prominent tile identity badge (multi-tile only)
+        if (boardPageCount > 1) {
+          const bdW = 12 * PT, bdH = 7 * PT;
+          const bdX = MG + CW - bdW;
+          const bdY = A4H - MG - 7.5 * PT;
+          page.drawRectangle({ x: bdX, y: bdY, width: bdW, height: bdH, color: rgb(0.12, 0.17, 0.28) });
+          const lblSzBadge = 12;
+          const lblWBadge = fBold.widthOfTextAtSize(tileLabel, lblSzBadge);
+          try {
+            page.drawText(tileLabel, {
+              x: bdX + (bdW - lblWBadge) / 2,
+              y: bdY + (bdH - lblSzBadge) / 2 + 0.5,
+              size: lblSzBadge, font: fBold, color: rgb(1, 1, 1),
+            });
+          } catch (_) {}
+        }
 
         // ── True-size coordinate transform ──
         // The SVG area starts at TILE_HDR_MM below the content top.
@@ -3520,18 +3537,24 @@ document.addEventListener("DOMContentLoaded", function () {
           // Drill-point dot (solid circle centred on nail position)
           page.drawCircle({ x: px, y: py, size: nailR_pt, color: C_BLACK });
 
-          // Number label — suppress near trim line (8mm safe margin) so no label
-          // gets awkwardly cut or crowded at the join. The adjacent tile shows it cleanly.
+          // Number label strategy for seam nails:
+          //   TAB side (blue, non-first tile): suppress — label goes under the top sheet anyway.
+          //   TRIM side (grey, non-last tile): show, but flip offset inward so the label stays
+          //   on the safe side of the cut line and is readable before trimming.
           const LABEL_SAFE_SVG = 8 * svgPerMm;
-          const inColOverlap = col < totalCols - 1 && sx >= strideX_svg - LABEL_SAFE_SVG;
-          const inRowOverlap = row < totalRows - 1 && sy >= strideY_svg - LABEL_SAFE_SVG;
-          if (!inColOverlap && !inRowOverlap) {
+          const inTrimCol = col < totalCols - 1 && sx >= strideX_svg - LABEL_SAFE_SVG;
+          const inTrimRow = row < totalRows - 1 && sy >= strideY_svg - LABEL_SAFE_SVG;
+          const inTabCol  = col > 0 && sx < ox + LABEL_SAFE_SVG;
+          const inTabRow  = row > 0 && sy < oy + LABEL_SAFE_SVG;
+          if (!inTabCol && !inTabRow) {
             const dx = sx - CX,
               dy = sy - CY;
             const len = Math.sqrt(dx * dx + dy * dy) || 1;
             const offPt = offMm * PT;
-            const lx = px + (dx / len) * offPt;
-            const ly = py - (dy / len) * offPt;
+            // Near trim edge: push label toward board interior so it clears the cut line
+            const flipDir = (inTrimCol || inTrimRow) ? -1 : 1;
+            const lx = px + flipDir * (dx / len) * offPt;
+            const ly = py - flipDir * (dy / len) * offPt;
             const label = String(i + numStart);
             const lw = fReg.widthOfTextAtSize(label, lblSz);
             try {
