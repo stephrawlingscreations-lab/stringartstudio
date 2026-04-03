@@ -3088,18 +3088,28 @@ document.addEventListener("DOMContentLoaded", function () {
     {
       const page = pdfDoc.addPage([A4W, A4H]);
 
-      txt(page, "STRING ART STUDIO", 0, 7, {
-        size: 7,
+      // Premium top accent rule
+      hRule(page, 0.8, 2.5, C_BLACK);
+
+      txt(page, "STEPH RAWLINGS CREATIONS", 95, 6.5, {
+        size: 8,
         font: fBold,
-        color: C_LGRAY,
+        color: C_GRAY,
+        align: "center",
       });
-      txt(page, "Build Pack", 0, 18, { size: 26, font: fBold });
+      hRule(page, 9, 0.3, C_LGRAY);
+
+      txt(page, "Pro Build Guide", 95, 21, {
+        size: 34,
+        font: fBold,
+        align: "center",
+      });
       txt(
         page,
         `Generated ${date}  \u00b7  ${boardDimLabel} board  \u00b7  ${nailCount} nails  \u00b7  ${activeLayers.length} layer${activeLayers.length !== 1 ? "s" : ""}`,
-        0,
-        25,
-        { size: 8, color: C_GRAY },
+        95,
+        26,
+        { size: 7.5, color: C_GRAY, align: "center" },
       );
       hRule(page, 28);
 
@@ -3930,7 +3940,7 @@ document.addEventListener("DOMContentLoaded", function () {
     {
       const page = pdfDoc.addPage([A4W, A4H]);
 
-      txt(page, "STRING ART STUDIO", 0, 7, {
+      txt(page, "STEPH RAWLINGS CREATIONS", 0, 7, {
         size: 7,
         font: fBold,
         color: C_LGRAY,
@@ -4011,7 +4021,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "string-art-template.pdf";
+    a.download = "steph-rawlings-creations-pro-build-guide.pdf";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
