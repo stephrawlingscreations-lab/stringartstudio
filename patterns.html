@@ -205,6 +205,34 @@
           grid-template-columns: 1fr;
         }
       }
+      .filter-tabs {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 0;
+      }
+      .filter-tab {
+        padding: 7px 18px;
+        border-radius: 20px;
+        border: 1.5px solid var(--line);
+        background: var(--panel);
+        color: var(--muted);
+        font-size: 0.83rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+        font-family: Inter, sans-serif;
+      }
+      .filter-tab:hover {
+        border-color: var(--gold);
+        color: var(--gold-deep);
+      }
+      .filter-tab.active {
+        background: var(--gold);
+        color: #fff;
+        border-color: var(--gold);
+      }
     </style>
   </head>
   <body>
@@ -239,10 +267,16 @@
             <p>Pick a pattern below and it'll open straight in the designer, ready to adjust and build. All patterns work on a circular board and are completely free to use.</p>
           </div>
 
-          <div class="pattern-grid">
+          <div class="filter-tabs" id="filterTabs">
+            <button class="filter-tab active" data-filter="all">All</button>
+            <button class="filter-tab" data-filter="beginner">Beginner</button>
+            <button class="filter-tab" data-filter="intermediate">Intermediate</button>
+          </div>
+
+          <div class="pattern-grid" id="patternGrid">
 
             <!-- Rainbow Arch -->
-            <div class="pattern-card">
+            <div class="pattern-card" data-difficulty="beginner">
               <div class="pattern-preview">
                 <picture>
                   <source srcset="gallery/rainbow-arch-finished.webp" type="image/webp">
@@ -260,7 +294,7 @@
             </div>
 
             <!-- Flower -->
-            <div class="pattern-card">
+            <div class="pattern-card" data-difficulty="beginner">
               <div class="pattern-preview">
                 <video autoplay loop muted playsinline
                   style="width:140px;height:140px;border-radius:50%;display:block;object-fit:cover"
@@ -279,7 +313,7 @@
             </div>
 
             <!-- Web -->
-            <div class="pattern-card">
+            <div class="pattern-card" data-difficulty="beginner">
               <div class="pattern-preview">
                 <canvas id="preview-web" width="280" height="280" aria-hidden="true"></canvas>
               </div>
@@ -294,7 +328,7 @@
             </div>
 
             <!-- Cardioid -->
-            <div class="pattern-card">
+            <div class="pattern-card" data-difficulty="intermediate">
               <div class="pattern-preview">
                 <canvas id="preview-cardioid" width="280" height="280" aria-hidden="true"></canvas>
               </div>
@@ -309,7 +343,7 @@
             </div>
 
             <!-- Star -->
-            <div class="pattern-card">
+            <div class="pattern-card" data-difficulty="intermediate">
               <div class="pattern-preview">
                 <canvas id="preview-star" width="280" height="280" aria-hidden="true"></canvas>
               </div>
@@ -324,7 +358,7 @@
             </div>
 
             <!-- Spiral -->
-            <div class="pattern-card">
+            <div class="pattern-card" data-difficulty="intermediate">
               <div class="pattern-preview">
                 <canvas id="preview-spiral" width="280" height="280" aria-hidden="true"></canvas>
               </div>
@@ -485,6 +519,23 @@
           drawEdges(ctx, pts, edges, edges.length, 0, p.color);
         });
 
+      })();
+
+      // Difficulty filter
+      (function () {
+        var tabs = document.querySelectorAll('#filterTabs .filter-tab');
+        var cards = document.querySelectorAll('#patternGrid .pattern-card');
+        tabs.forEach(function (tab) {
+          tab.addEventListener('click', function () {
+            tabs.forEach(function (t) { t.classList.remove('active'); });
+            tab.classList.add('active');
+            var filter = tab.dataset.filter;
+            cards.forEach(function (card) {
+              var show = filter === 'all' || card.dataset.difficulty === filter;
+              card.style.display = show ? '' : 'none';
+            });
+          });
+        });
       })();
     </script>
   </body>
