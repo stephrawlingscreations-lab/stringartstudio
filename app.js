@@ -754,6 +754,15 @@ document.addEventListener("DOMContentLoaded", function () {
     _saveTimer = setTimeout(saveDesign, 500);
   }
 
+  function updateMobileBoardInfo() {
+    const el = $("mobileBoardInfo");
+    if (!el) return;
+    const shape = $("board")?.value || "circle";
+    const nails = $("nails")?.value || "120";
+    const label = shape.charAt(0).toUpperCase() + shape.slice(1);
+    el.textContent = label + " · " + nails + " nails";
+  }
+
   function redrawAll() {
     const { cssW, cssH } = resizeCanvas();
 
@@ -761,6 +770,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const board = $("board")?.value || "circle";
     const nails = clampInt($("nails")?.value, 10, 8000, 150);
+    updateMobileBoardInfo();
 
     const cx = cssW / 2;
     const cy = cssH / 2;
@@ -1022,8 +1032,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function getUndoCount() {
-    const inDrawMode = document.body.classList.contains('draw-mode-open');
-    const val = (inDrawMode ? $('drawUndoCount') : $('undoCount'))?.value || '1';
+    const val = $('undoCount')?.value || '1';
     return val === 'all' ? Infinity : parseInt(val, 10);
   }
 
@@ -2382,22 +2391,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     $("openDrawMode")?.addEventListener("click", openDrawMode);
     $("closeDrawMode")?.addEventListener("click", closeDrawMode);
+    $("drawModeSettings")?.addEventListener("click", closeDrawMode);
     $("drawUndo")?.addEventListener("click", undo);
     $("drawRedo")?.addEventListener("click", redo);
     $("redo")?.addEventListener("click", redo);
-
-    // Keep both undo count selects in sync
-    $("undoCount")?.addEventListener("change", (e) => {
-      const drawSel = $("drawUndoCount");
-      if (drawSel) drawSel.value = e.target.value;
-    });
-    $("drawUndoCount")?.addEventListener("change", (e) => {
-      const sel = $("undoCount");
-      if (sel) sel.value = e.target.value;
-    });
-
-    $("drawNewLayer")?.addEventListener("click", addLayer);
-    $("drawContinue")?.addEventListener("click", continuePattern);
     $("drawZoomIn")?.addEventListener("click", () => nudgeZoom(1));
     $("drawZoomOut")?.addEventListener("click", () => nudgeZoom(-1));
 
@@ -4167,4 +4164,9 @@ document.addEventListener("DOMContentLoaded", function () {
   window.applyTemplateDesign = applyTemplateDesign;
 
   init();
+
+  // Auto-open Draw Mode on mobile so users see the canvas immediately
+  if (window.innerWidth < 900 && $("drawModeOverlay")) {
+    openDrawMode();
+  }
 });

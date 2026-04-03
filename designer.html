@@ -570,7 +570,7 @@
 
       #drawZoomOut,
       #drawZoomIn {
-        flex: 0 0 52px;
+        flex: 1;
       }
 
       /* ================= RESPONSIVE ================= */
@@ -1956,6 +1956,38 @@
         color: #c0392b;
         border-color: rgba(192,57,43,0.22);
       }
+
+      /* ── Draw mode settings button ── */
+      .draw-mode-settings-btn {
+        background: transparent;
+        color: var(--text-dark);
+        border: 1px solid rgba(60,44,28,0.2);
+        border-radius: 20px;
+        padding: 9px 16px;
+        font-family: Inter, sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.15s;
+        white-space: nowrap;
+      }
+      .draw-mode-settings-btn:hover { background: #f0ebe3; }
+
+      /* ── Mobile board info badge ── */
+      .mobile-board-info {
+        text-align: center;
+        margin-bottom: 10px;
+      }
+      #mobileBoardInfo {
+        display: inline-block;
+        font-family: Inter, sans-serif;
+        font-size: 13px;
+        color: var(--muted);
+        background: rgba(60,44,28,0.06);
+        border-radius: 20px;
+        padding: 5px 14px;
+        letter-spacing: 0.01em;
+      }
     </style>
     <!-- Start cookieyes banner -->
     <script id="cookieyes" type="text/javascript" src="https://cdn-cookieyes.com/client_data/771647e94dbf7af170e4e1dbcdc9dc79/script.js"></script>
@@ -2436,8 +2468,11 @@
       </div>
 
       <div class="mobile-draw-launch">
+        <div class="mobile-board-info">
+          <span id="mobileBoardInfo">Circle · 120 nails</span>
+        </div>
         <button id="openDrawMode" class="open-draw-btn">
-          ✏ Open Draw Mode
+          ✏ Start Drawing
         </button>
       </div>
     </div>
@@ -2675,6 +2710,7 @@
 
     <div id="drawModeOverlay" class="draw-mode-overlay" aria-hidden="true">
       <div class="draw-mode-topbar">
+        <button id="drawModeSettings" class="draw-mode-settings-btn">⚙ Settings</button>
         <div class="draw-mode-brand">Steph Rawlings <em>Creations</em></div>
         <button id="closeDrawMode" class="draw-mode-exit">✓ Done</button>
       </div>
@@ -2691,21 +2727,12 @@
         <div class="dm-thread-row">
           <input type="color" id="drawColor" />
           <select id="drawLayerSel"></select>
-          <button id="drawNewLayer" class="dm-new-layer">+ Layer</button>
         </div>
         <div class="dm-action-row">
-          <select id="drawUndoCount" class="dm-undo-count" title="How many steps to undo">
-            <option value="1">1</option>
-            <option value="5">5</option>
-            <option value="10">10</option>
-            <option value="25">25</option>
-            <option value="all">All</option>
-          </select>
           <button id="drawUndo">↶ Undo</button>
           <button id="drawRedo">↷ Redo</button>
           <button id="drawZoomOut">−</button>
           <button id="drawZoomIn">+</button>
-          <button id="drawContinue">Continue</button>
         </div>
       </div>
     </div>
