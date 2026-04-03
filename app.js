@@ -4000,7 +4000,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const show    = PLAY_BUTTON_ENABLED || devMode;
 
     const panel = $("playbackPanel");
-    if (panel) panel.style.display = show ? "" : "none";
+    if (panel) panel.style.display = show ? "block" : "none";
     if (!show) return;
 
     $("animPlayBtn")?.addEventListener("click", animTogglePlay);
