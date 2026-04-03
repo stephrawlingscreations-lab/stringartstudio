@@ -3274,8 +3274,8 @@ document.addEventListener("DOMContentLoaded", function () {
         ...(boardPageCount > 1 ? [["Assembly Instructions", 3]] : []),
         ["Nail Placement Template" + (boardPageCount > 1 ? ` (${boardPageCount} pages)` : ""), tocNailStartPage],
         ["How To Build", tocBuildGuidePage],
-        ...activeLayers.map((L, i) => [
-          `Layer ${i + 1}${L.color ? " \u2014 " + L.color : ""}`,
+        ...activeLayers.map((_L, i) => [
+          `Layer ${i + 1}`,
           layerTocPages[i],
         ]),
       ];
@@ -3839,7 +3839,8 @@ document.addEventListener("DOMContentLoaded", function () {
         color: C_LGRAY,
       });
       txt(page, `Layer ${li + 1}`, 7, 18, { size: 20, font: fBold });
-      txt(page, L.color || "", 7, 23.5, { size: 9, color: lc });
+      // Colour swatch instead of hex code
+      page.drawRectangle({ x: xL(7), y: yT(25.5), width: 22 * PT, height: 4.5 * PT, color: lc });
       hRule(page, 27);
 
       // KPI strip
@@ -3965,18 +3966,18 @@ document.addEventListener("DOMContentLoaded", function () {
             color: C_GRAY,
           });
 
-          // Move text INSIDE the card
-          txt(
-            page,
-            String(fromNail) + " -> " + String(toNail),
-            cx + COL_W_MM / 2,
-            cy + 5.5,
-            {
-              size: 10,
-              font: fBold,
-              align: "center",
-            },
-          );
+          // From nail · drawn arrow · To nail
+          txt(page, String(fromNail), cx + COL_W_MM * 0.23, cy + 5.5, { size: 10, font: fBold, align: "center" });
+          txt(page, String(toNail),   cx + COL_W_MM * 0.77, cy + 5.5, { size: 10, font: fBold, align: "center" });
+          {
+            const aY  = yT(cy + 4.3);
+            const aX1 = xL(cx + COL_W_MM * 0.38);
+            const aX2 = xL(cx + COL_W_MM * 0.62);
+            const AH  = 3.2;
+            page.drawLine({ start: { x: aX1, y: aY }, end: { x: aX2, y: aY }, thickness: 0.75, color: C_GRAY });
+            page.drawLine({ start: { x: aX2, y: aY }, end: { x: aX2 - AH, y: aY + AH * 0.55 }, thickness: 0.75, color: C_GRAY });
+            page.drawLine({ start: { x: aX2, y: aY }, end: { x: aX2 - AH, y: aY - AH * 0.55 }, thickness: 0.75, color: C_GRAY });
+          }
           si++;
         }
 
@@ -4012,7 +4013,8 @@ document.addEventListener("DOMContentLoaded", function () {
             size: 16,
             font: fBold,
           });
-          txt(contPage, L.color || "", 7, 22, { size: 9, color: lc });
+          // Colour swatch instead of hex code
+          contPage.drawRectangle({ x: xL(7), y: yT(22), width: 22 * PT, height: 4 * PT, color: lc });
           hRule(contPage, CONT_HDR_MM);
 
           // Fill this page with steps
@@ -4043,17 +4045,18 @@ document.addEventListener("DOMContentLoaded", function () {
               color: C_GRAY,
             });
 
-            txt(
-              contPage,
-              String(fromNail) + " -> " + String(toNail),
-              cx + COL_W_MM / 2,
-              cy + 5.5,
-              {
-                size: 9.5,
-                font: fBold,
-                align: "center",
-              },
-            );
+            // From nail · drawn arrow · To nail
+            txt(contPage, String(fromNail), cx + COL_W_MM * 0.23, cy + 5.5, { size: 9.5, font: fBold, align: "center" });
+            txt(contPage, String(toNail),   cx + COL_W_MM * 0.77, cy + 5.5, { size: 9.5, font: fBold, align: "center" });
+            {
+              const aY  = yT(cy + 4.3);
+              const aX1 = xL(cx + COL_W_MM * 0.38);
+              const aX2 = xL(cx + COL_W_MM * 0.62);
+              const AH  = 3.2;
+              contPage.drawLine({ start: { x: aX1, y: aY }, end: { x: aX2, y: aY }, thickness: 0.75, color: C_GRAY });
+              contPage.drawLine({ start: { x: aX2, y: aY }, end: { x: aX2 - AH, y: aY + AH * 0.55 }, thickness: 0.75, color: C_GRAY });
+              contPage.drawLine({ start: { x: aX2, y: aY }, end: { x: aX2 - AH, y: aY - AH * 0.55 }, thickness: 0.75, color: C_GRAY });
+            }
 
             si++;
           }
