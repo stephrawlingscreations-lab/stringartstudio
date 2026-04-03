@@ -2946,9 +2946,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const contPageSteps = contPageRows * SCOLS_SEQ; // 87
 
     const extraSeqPages = activeLayers.reduce((sum, L) => {
-      const totalSteps = L.generatedPreset
-        ? (L.edges?.length || 0)
-        : (L.seq?.length > 1 ? L.seq.length - 1 : 0);
+      const totalSteps = L.seq?.length > 1 ? L.seq.length - 1 : 0;
       if (totalSteps <= firstPageSteps) return sum;
       return sum + Math.ceil((totalSteps - firstPageSteps) / contPageSteps);
     }, 0);
@@ -3529,12 +3527,8 @@ document.addEventListener("DOMContentLoaded", function () {
       const page = pdfDoc.addPage([A4W, A4H]);
 
       const lc = printSafeRgb(L.color);
-      const moves = L.generatedPreset
-        ? L.edges.length
-        : (L.seq?.length ? L.seq.length - 1 : L.edges.length);
-      const startNail = L.generatedPreset
-        ? (L.edges?.length ? L.edges[0].a + numStart : "\u2014")
-        : (L.seq?.length ? L.seq[0] + numStart : "\u2014");
+      const moves = L.seq?.length > 1 ? L.seq.length - 1 : L.edges.length;
+      const startNail = L.seq?.length ? L.seq[0] + numStart : "\u2014";
       const activeIdx = activeLayers.indexOf(L) + 1;
 
       // Colour accent bar
@@ -3629,12 +3623,10 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       // Sequence grid — fully paginated, no truncation
-      // seqSteps is derived from edges (source of truth) for both preset and manual layers
-      const seqSteps = L.generatedPreset
-        ? L.edges.map((e) => [e.a + numStart, e.b + numStart])
-        : L.seq?.length > 1
-          ? L.seq.slice(0, -1).map((n, idx) => [n + numStart, L.seq[idx + 1] + numStart])
-          : [];
+      // seqSteps: full nail-by-nail traversal path (continuous build order)
+      const seqSteps = L.seq?.length > 1
+        ? L.seq.slice(0, -1).map((n, idx) => [n + numStart, L.seq[idx + 1] + numStart])
+        : [];
       if (seqSteps.length > 0) {
         const sqTop = PTOP2 + PH2 + 8; // 172mm
         const totalSteps = seqSteps.length;
