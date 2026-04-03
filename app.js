@@ -2951,7 +2951,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const assemblyPageCount = boardPageCount > 1 ? 1 : 0;
     const totalPages =
-      1 + assemblyPageCount + boardPageCount + activeLayers.length + 1 + extraSeqPages;
+      1 + 1 + assemblyPageCount + boardPageCount + 1 + activeLayers.length + extraSeqPages;
 
     // Thread length estimates
     const physRadMm = D_mm / 2;
@@ -3243,8 +3243,74 @@ document.addEventListener("DOMContentLoaded", function () {
       stdFooter(page, CONTACT, `Page 1 of ${totalPages} — Design Overview`);
     }
 
+    // ── PAGE 2: TABLE OF CONTENTS ──
+    {
+      const tocPage = pdfDoc.addPage([A4W, A4H]);
+
+      hRule(tocPage, 0.8, 2.5, C_BLACK);
+      txt(tocPage, "STEPH RAWLINGS CREATIONS", 95, 6.5, { size: 8, font: fBold, color: C_GRAY, align: "center" });
+      hRule(tocPage, 9, 0.3, C_LGRAY);
+      txt(tocPage, "Contents", 95, 21, { size: 34, font: fBold, align: "center" });
+      hRule(tocPage, 26);
+
+      // Pre-calculate section page numbers
+      const tocNailStartPage  = 3 + assemblyPageCount;
+      const tocBuildGuidePage = tocNailStartPage + boardPageCount;
+      const tocLayerStartPage = tocBuildGuidePage + 1;
+
+      // Compute first-page number for each layer (accounting for continuation pages)
+      const layerTocPages = [];
+      let lp = tocLayerStartPage;
+      activeLayers.forEach((L) => {
+        layerTocPages.push(lp);
+        const totalSteps = L.seq?.length > 1 ? L.seq.length - 1 : 0;
+        lp += totalSteps <= firstPageSteps
+          ? 1
+          : 1 + Math.ceil((totalSteps - firstPageSteps) / contPageSteps);
+      });
+
+      const tocEntries = [
+        ["Design Overview", 1],
+        ...(boardPageCount > 1 ? [["Assembly Instructions", 3]] : []),
+        ["Nail Placement Template" + (boardPageCount > 1 ? ` (${boardPageCount} pages)` : ""), tocNailStartPage],
+        ["How To Build", tocBuildGuidePage],
+        ...activeLayers.map((L, i) => [
+          `Layer ${i + 1}${L.color ? " \u2014 " + L.color : ""}`,
+          layerTocPages[i],
+        ]),
+      ];
+
+      let ty = 32;
+      for (const [label, pg] of tocEntries) {
+        const isLayer = label.startsWith("Layer ");
+        const labelFont = isLayer ? fReg : fBold;
+        const labelSize = isLayer ? 9.5 : 10;
+        txt(tocPage, label, 0, ty, { size: labelSize, font: labelFont });
+        const pgStr = String(pg);
+        txt(tocPage, pgStr, 190, ty, { size: 10, font: fBold, align: "right" });
+
+        // Dot leader
+        const labelPt = labelFont.widthOfTextAtSize(label, labelSize);
+        const pgPt    = fBold.widthOfTextAtSize(pgStr, 10);
+        const dotPt   = fReg.widthOfTextAtSize(".", 8);
+        const gapMm   = 3;
+        const startX  = MG + labelPt + gapMm * PT;
+        const endX    = MG + CW - pgPt - gapMm * PT;
+        let dx = startX;
+        while (dx + dotPt < endX) {
+          try { tocPage.drawText(".", { x: dx, y: yT(ty), size: 8, font: fReg, color: C_LGRAY }); } catch (_) {}
+          dx += dotPt + 1.8;
+        }
+
+        hRule(tocPage, ty + 4.5, 0.3, rgb(0.93, 0.93, 0.93));
+        ty += isLayer ? 8 : 10;
+      }
+
+      stdFooter(tocPage, CONTACT, `Page 2 of ${totalPages} \u2014 Contents`);
+    }
+
     // ── ASSEMBLY INSTRUCTIONS PAGE (multi-tile only) ──
-    let pageIdx = 1;
+    let pageIdx = 2;
     if (boardPageCount > 1) {
       pageIdx++;
       const ap = pdfDoc.addPage([A4W, A4H]);
@@ -3668,6 +3734,86 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
+    // ── BUILD GUIDE PAGE ──
+    pageIdx++;
+    {
+      const page = pdfDoc.addPage([A4W, A4H]);
+
+      txt(page, "STEPH RAWLINGS CREATIONS", 0, 7, {
+        size: 7,
+        font: fBold,
+        color: C_LGRAY,
+      });
+      txt(page, "How To Build", 0, 19, { size: 22, font: fBold });
+      hRule(page, 23);
+
+      const steps = [
+        [
+          "1",
+          "Start at the listed nail",
+          "Each layer page shows the start nail — tie a knot here before you begin.",
+        ],
+        [
+          "2",
+          "Follow the sequence in order",
+          "Each step shows one nail move. Work through the list exactly as shown, nail by nail.",
+        ],
+        [
+          "3",
+          "Keep even tension on the thread",
+          "Thread should be snug but not so tight it bows the board.",
+        ],
+        [
+          "4",
+          "Complete one full layer before stopping",
+          "Finish the entire sequence for a layer before moving to the next colour.",
+        ],
+      ];
+
+      let sy = 28;
+      for (const [num, title, desc] of steps) {
+        const cx2 = xL(4.5),
+          cy2 = yT(sy + 3);
+        page.drawCircle({ x: cx2, y: cy2, size: 4.5 * PT, color: C_BLACK });
+        const nw = fBold.widthOfTextAtSize(num, 11);
+        try {
+          page.drawText(num, {
+            x: cx2 - nw / 2,
+            y: cy2 - 4.5,
+            size: 11,
+            font: fBold,
+            color: C_WHITE,
+          });
+        } catch (_) {}
+        txt(page, title, 12, sy + 1.5, { size: 10, font: fBold });
+        txt(page, desc, 12, sy + 7, { size: 8, color: C_GRAY });
+        hRule(page, sy + 12, 0.3, rgb(0.92, 0.92, 0.92));
+        sy += 15;
+      }
+
+      sy += 3;
+      txt(page, "TIPS", 0, sy, { size: 8.5, font: fBold, color: C_GRAY });
+      hRule(page, sy + 2.5, 0.3);
+      sy += 7;
+
+      const tips = [
+        "Do not pull the thread too tight — this can warp the board",
+        "Use contrasting colours to make each layer visually distinct",
+        "Mark your start nail with a small piece of tape while you work",
+      ];
+      for (const tip of tips) {
+        txt(page, ". " + tip, 0, sy, { size: 8.5, color: C_GRAY });
+        hRule(page, sy + 4.5, 0.3, rgb(0.92, 0.92, 0.92));
+        sy += 7.5;
+      }
+
+      stdFooter(
+        page,
+        CONTACT,
+        `Page ${pageIdx} of ${totalPages} — How To Build`,
+      );
+    }
+
     // ── LAYER PAGES: one per active layer ──
     layers.forEach((L, li) => {
       if (!L.edges?.length) return;
@@ -3934,86 +4080,6 @@ document.addEventListener("DOMContentLoaded", function () {
         );
       }
     });
-
-    // ── BUILD GUIDE PAGE ──
-    pageIdx++;
-    {
-      const page = pdfDoc.addPage([A4W, A4H]);
-
-      txt(page, "STEPH RAWLINGS CREATIONS", 0, 7, {
-        size: 7,
-        font: fBold,
-        color: C_LGRAY,
-      });
-      txt(page, "How To Build", 0, 19, { size: 22, font: fBold });
-      hRule(page, 23);
-
-      const steps = [
-        [
-          "1",
-          "Start at the listed nail",
-          "Each layer page shows the start nail — tie a knot here before you begin.",
-        ],
-        [
-          "2",
-          "Follow the sequence in order",
-          "Each step shows one nail move. Work through the list exactly as shown, nail by nail.",
-        ],
-        [
-          "3",
-          "Keep even tension on the thread",
-          "Thread should be snug but not so tight it bows the board.",
-        ],
-        [
-          "4",
-          "Complete one full layer before stopping",
-          "Finish the entire sequence for a layer before moving to the next colour.",
-        ],
-      ];
-
-      let sy = 28;
-      for (const [num, title, desc] of steps) {
-        const cx2 = xL(4.5),
-          cy2 = yT(sy + 3);
-        page.drawCircle({ x: cx2, y: cy2, size: 4.5 * PT, color: C_BLACK });
-        const nw = fBold.widthOfTextAtSize(num, 11);
-        try {
-          page.drawText(num, {
-            x: cx2 - nw / 2,
-            y: cy2 - 4.5,
-            size: 11,
-            font: fBold,
-            color: C_WHITE,
-          });
-        } catch (_) {}
-        txt(page, title, 12, sy + 1.5, { size: 10, font: fBold });
-        txt(page, desc, 12, sy + 7, { size: 8, color: C_GRAY });
-        hRule(page, sy + 12, 0.3, rgb(0.92, 0.92, 0.92));
-        sy += 15;
-      }
-
-      sy += 3;
-      txt(page, "TIPS", 0, sy, { size: 8.5, font: fBold, color: C_GRAY });
-      hRule(page, sy + 2.5, 0.3);
-      sy += 7;
-
-      const tips = [
-        "Do not pull the thread too tight — this can warp the board",
-        "Use contrasting colours to make each layer visually distinct",
-        "Mark your start nail with a small piece of tape while you work",
-      ];
-      for (const tip of tips) {
-        txt(page, ". " + tip, 0, sy, { size: 8.5, color: C_GRAY });
-        hRule(page, sy + 4.5, 0.3, rgb(0.92, 0.92, 0.92));
-        sy += 7.5;
-      }
-
-      stdFooter(
-        page,
-        CONTACT,
-        `Page ${pageIdx} of ${totalPages} — Build Guide`,
-      );
-    }
 
     // ── SAVE & DOWNLOAD ──
     const pdfBytes = await pdfDoc.save();
