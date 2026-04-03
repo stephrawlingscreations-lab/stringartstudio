@@ -1949,7 +1949,6 @@
       .wt-tt-dot.active { background: var(--gold); }
 
       /* ── Timelapse playback panel ── */
-      #playbackPanel { display: none; }
       #animPlayBtn { background: var(--navy); color: #fff; }
       #animPlayBtn:hover { background: var(--navy-hover); }
       #animRecordBtn.anim-recording {
@@ -2407,32 +2406,33 @@
               </button>
             </div>
 
-            <!-- TIMELAPSE ANIMATION (hidden until PLAY_BUTTON_ENABLED or ?dev=true) -->
-            <div id="playbackPanel" class="panel-section">
-              <span class="panel-section-label">Timelapse Animation</span>
-              <div class="export-row">
-                <button id="animPlayBtn">▶ Play</button>
-                <button id="animResetBtn" class="btn-ghost">↺ Reset</button>
-              </div>
-              <div class="export-row" style="margin-top:6px;align-items:center">
-                <label for="animSpeed" style="font-size:13px;color:var(--muted);white-space:nowrap;margin-right:4px">Speed</label>
-                <select id="animSpeed" style="flex:1;font-size:13px;padding:8px 10px;border-radius:10px;border:1px solid rgba(60,44,28,0.14);background:#fff;color:var(--text-dark);font-family:Inter,system-ui,sans-serif">
-                  <option value="slow">Slow</option>
-                  <option value="medium" selected>Medium</option>
-                  <option value="fast">Fast</option>
-                </select>
-              </div>
-              <div class="export-row" style="margin-top:6px">
-                <button id="animRecordBtn" class="btn-ghost" style="width:100%">⏺ Record &amp; Save Video</button>
-              </div>
-              <p class="layout-hint">Plays back your design thread by thread. Hit <strong>Record</strong> first, then <strong>Play</strong> — it saves as a <strong>.webm</strong> video when the animation finishes.</p>
-            </div>
-
           </div><!-- end #tab-export -->
         </div>
         </div><!-- end .panel-wrap -->
 
         <canvas id="cv" aria-label="String art design canvas"></canvas>
+
+        <!-- TIMELAPSE ANIMATION — hidden until PLAY_BUTTON_ENABLED=true or ?dev=true -->
+        <div id="playbackPanel" style="display:none;margin-top:16px;background:var(--panel-bg);border-radius:18px;border:1px solid var(--border-soft);box-shadow:var(--shadow-sm);padding:18px 20px">
+          <div style="font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:12px">Timelapse Animation</div>
+          <div class="export-row">
+            <button id="animPlayBtn">▶ Play</button>
+            <button id="animResetBtn" class="btn-ghost">↺ Reset</button>
+          </div>
+          <div class="export-row" style="margin-top:8px;align-items:center">
+            <label for="animSpeed" style="font-size:13px;color:var(--muted);white-space:nowrap;margin-right:6px">Speed</label>
+            <select id="animSpeed" style="flex:1;font-size:13px;padding:8px 10px;border-radius:10px;border:1px solid rgba(60,44,28,0.14);background:#fff;color:var(--text-dark);font-family:Inter,system-ui,sans-serif">
+              <option value="slow">Slow</option>
+              <option value="medium" selected>Medium</option>
+              <option value="fast">Fast</option>
+            </select>
+          </div>
+          <div class="export-row" style="margin-top:8px">
+            <button id="animRecordBtn" class="btn-ghost" style="width:100%">⏺ Record &amp; Save Video</button>
+          </div>
+          <p style="font-size:12px;color:var(--muted);margin:10px 0 0">Hit <strong>Record</strong> first, then <strong>Play</strong> — downloads as a .webm when animation finishes.</p>
+        </div>
+
       </div>
 
       <div class="mobile-draw-launch">
