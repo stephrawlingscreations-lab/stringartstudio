@@ -2952,8 +2952,9 @@ document.addEventListener("DOMContentLoaded", function () {
       return sum + Math.ceil((totalSteps - firstPageSteps) / contPageSteps);
     }, 0);
 
+    const assemblyPageCount = boardPageCount > 1 ? 1 : 0;
     const totalPages =
-      1 + boardPageCount + activeLayers.length + 1 + extraSeqPages;
+      1 + assemblyPageCount + boardPageCount + activeLayers.length + 1 + extraSeqPages;
 
     // Thread length estimates
     const physRadMm = D_mm / 2;
@@ -3235,10 +3236,126 @@ document.addEventListener("DOMContentLoaded", function () {
       stdFooter(page, CONTACT, `Page 1 of ${totalPages} — Design Overview`);
     }
 
+    // ── ASSEMBLY INSTRUCTIONS PAGE (multi-tile only) ──
+    let pageIdx = 1;
+    if (boardPageCount > 1) {
+      pageIdx++;
+      const ap = pdfDoc.addPage([A4W, A4H]);
+      const C_BLUE_A = rgb(0.18, 0.45, 0.80);
+      const C_TRIM_A = rgb(0.88, 0.88, 0.88);
+      const C_TAB_A  = rgb(0.82, 0.89, 0.97);
+
+      // Header
+      txt(ap, "HOW TO ASSEMBLE YOUR TEMPLATE", 0, 7, { size: 13, font: fBold });
+      txt(ap, `Page ${pageIdx} of ${totalPages}`, 190, 7, { size: 7, color: C_GRAY, align: "right" });
+      hRule(ap, 10, 0.5);
+      txt(ap, `Your template is printed across ${boardPageCount} pages (tiles ${Array.from({length: totalRows}, (_,r) => Array.from({length: totalCols}, (_,c) => String.fromCharCode(65+r)+(c+1)).join(", ")).join(", ")}). Follow these steps to join them.`, 0, 14.5, { size: 8, color: C_GRAY });
+      hRule(ap, 17.5, 0.3, C_LGRAY);
+
+      // Left column — numbered steps (x = 0–102 mm)
+      const stepData = [
+        ["STEP 1 — PRINT ALL PAGES AT 100%",
+         ["When your printer asks about page size,",
+          "choose \"Actual size\" or \"100%\". Never choose",
+          "\"Fit to page\" — this shrinks the template and",
+          "your nail positions will be in the wrong place."]],
+        ["STEP 2 — CHECK THE SCALE BAR",
+         ["Each page footer has a small black rectangle.",
+          "Measure it with a ruler — it must be exactly 1 cm.",
+          "If it is not 1 cm, reprint at 100% (no scaling)."]],
+        ["STEP 3 — KNOW YOUR PAGE LABELS",
+         ["Pages are labelled A1, A2, B1, B2 etc.",
+          "   A, B … = rows  (A is the top row)",
+          "   1, 2 … = columns  (1 is the left column)",
+          "Always start with A1 — the top-left page."]],
+        ["STEP 4 — CUT ONLY THE MARKED EDGES",
+         ["Find the RED line near the right or bottom edge",
+          "of each page (inside the grey shaded strip).",
+          "Cut along the red line with scissors.",
+          "Do NOT cut the left or top edges — ever."]],
+        ["STEP 5 — JOIN PAGES LEFT TO RIGHT",
+         ["Lay A1 flat on the table.",
+          "Pick up A2. Slide its LEFT (blue) edge UNDER",
+          "the right side of A1 until the + marks line up.",
+          "When the + marks match exactly, tape from behind."]],
+        ["STEP 6 — ADD ROWS TOP TO BOTTOM",
+         ["Once row A is done, pick up B1.",
+          "Slide its TOP (blue) edge UNDER the bottom of A1.",
+          "Match the + marks and tape from behind.",
+          "Add B2 next to B1 the same way. Repeat for all rows."]],
+      ];
+
+      let sy = 21;
+      stepData.forEach(([title, lines]) => {
+        txt(ap, title, 0, sy, { size: 8.5, font: fBold });
+        sy += 5;
+        lines.forEach(line => {
+          txt(ap, line, 2, sy, { size: 7.5, color: C_GRAY });
+          sy += 4.4;
+        });
+        sy += 3.5;
+      });
+
+      hRule(ap, Math.min(sy + 1, 269), 0.5);
+      txt(ap, "\u2714  BLUE shaded edge = DO NOT CUT — slides under previous page     \u2702  GREY zone with RED line = CUT HERE     \u271b  + marks = align these before taping",
+        0, Math.min(sy + 6, 274), { size: 7.5, font: fBold });
+
+      // Right column — tile join diagram (x = 108–190 mm)
+      const DX = 108, DY = 21;
+      const tW = 37, tH = 43, tG = 3, oZ = 7; // tile dims + overlap zone in mm
+
+      // Draw one tile box with optional shaded zones
+      const diagTile = (x, y, label, trimR, trimB, tabL, tabT) => {
+        // white fill
+        ap.drawRectangle({ x: xL(x), y: yT(y+tH), width: tW*PT, height: tH*PT, color: rgb(1,1,1) });
+        if (trimR) ap.drawRectangle({ x: xL(x+tW-oZ), y: yT(y+tH), width: oZ*PT, height: tH*PT, color: C_TRIM_A });
+        if (trimB) ap.drawRectangle({ x: xL(x), y: yT(y+tH), width: tW*PT, height: oZ*PT, color: C_TRIM_A });
+        if (tabL)  ap.drawRectangle({ x: xL(x), y: yT(y+tH), width: oZ*PT, height: tH*PT, color: C_TAB_A });
+        if (tabT)  ap.drawRectangle({ x: xL(x), y: yT(y), width: tW*PT, height: oZ*PT, color: C_TAB_A });
+        // outline
+        ap.drawRectangle({ x: xL(x), y: yT(y+tH), width: tW*PT, height: tH*PT, color: undefined, borderColor: rgb(0.55,0.55,0.55), borderWidth: 0.6 });
+        // label
+        const lw = fBold.widthOfTextAtSize(label, 9);
+        try { ap.drawText(label, { x: xL(x) + (tW*PT-lw)/2, y: yT(y+tH/2+1.5), size: 9, font: fBold, color: C_BLACK }); } catch(_) {}
+      };
+
+      // Row 1: A1 (with right trim zone) + A2 (with left tab zone)
+      diagTile(DX,       DY, "A1", true,  true,  false, false);
+      diagTile(DX+tW+tG, DY, "A2", false, true,  true,  false);
+      // Row 2: B1 (with top tab + right trim) + B2 (with top tab + left tab)
+      const r2Y = DY + tH + tG;
+      diagTile(DX,       r2Y, "B1", true,  false, false, true);
+      diagTile(DX+tW+tG, r2Y, "B2", false, false, true,  true);
+
+      // Red trim lines
+      const txL_pt = xL(DX+tW-oZ);
+      ap.drawLine({ start:{x:txL_pt, y:yT(DY)}, end:{x:txL_pt, y:yT(DY+tH*2+tG)}, thickness:0.8, color:C_RED });
+      const tyT_pt = yT(DY+tH-oZ);
+      ap.drawLine({ start:{x:xL(DX), y:tyT_pt}, end:{x:xL(DX+tW*2+tG), y:tyT_pt}, thickness:0.8, color:C_RED });
+
+      // Crosshairs at trim-line junctions
+      const mkD = 5*PT;
+      for (const [cx,cy] of [[txL_pt, yT(DY+tH/2)], [txL_pt, yT(r2Y+tH/2)], [xL(DX+tW/2), tyT_pt], [xL(DX+tW+tG+tW/2), tyT_pt]]) {
+        ap.drawLine({ start:{x:cx-mkD,y:cy}, end:{x:cx+mkD,y:cy}, thickness:0.6, color:C_RED });
+        ap.drawLine({ start:{x:cx,y:cy-mkD}, end:{x:cx,y:cy+mkD}, thickness:0.6, color:C_RED });
+      }
+
+      // Diagram annotation labels
+      const annY = DY + tH*2 + tG + 4;
+      txt(ap, "\u2702 Red line = CUT (step 4)", DX, annY,   { size: 6.5, color: C_RED });
+      txt(ap, "\u25a0 Grey zone = trim off",     DX, annY+5, { size: 6.5, color: rgb(0.5,0.5,0.5) });
+      txt(ap, "\u25a0 Blue zone = slides under", DX, annY+10, { size: 6.5, color: C_BLUE_A });
+      txt(ap, "+ marks = align here (step 5)",   DX, annY+15, { size: 6.5, color: C_GRAY });
+
+      // "Start here" arrow on A1
+      txt(ap, "\u2190 Start: A1", DX + tW + 2, DY + 3, { size: 6, color: C_BLACK, font: fBold });
+
+      stdFooter(ap, CONTACT, `Page ${pageIdx} of ${totalPages} \u2014 Assembly Instructions`);
+    }
+
     // ── TILE PAGES: true-size nail placement template ──
     // Each SVG unit = mmPerSVG physical mm = mmPerSVG * PT PDF points.
     // This guarantees every nail dot lands at its exact physical position on A4.
-    let pageIdx = 1;
     for (let row = 0; row < totalRows; row++) {
       for (let col = 0; col < totalCols; col++) {
         pageIdx++;
