@@ -29,6 +29,24 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="site.css" />
+    <style>
+      .contact-field {
+        width: 100%;
+        padding: 11px 14px;
+        border: 1.5px solid var(--line);
+        border-radius: 10px;
+        font-size: 0.95rem;
+        font-family: Inter, sans-serif;
+        outline: none;
+        background: #fff;
+        box-sizing: border-box;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+      .contact-field:focus {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 3px rgba(199, 154, 59, 0.12);
+      }
+    </style>
     <!-- Start cookieyes banner -->
     <script id="cookieyes" type="text/javascript" src="https://cdn-cookieyes.com/client_data/771647e94dbf7af170e4e1dbcdc9dc79/script.js"></script>
     <!-- End cookieyes banner -->
@@ -87,9 +105,7 @@
                       name="name"
                       required
                       placeholder="e.g. Sarah"
-                      style="width:100%; padding:11px 14px; border:1.5px solid var(--line); border-radius:10px; font-size:0.95rem; font-family:Inter,sans-serif; outline:none; background:#fff; box-sizing:border-box; transition:border-color 0.15s;"
-                      onfocus="this.style.borderColor='var(--gold)'"
-                      onblur="this.style.borderColor='var(--line)'"
+                      class="contact-field"
                     />
                   </div>
                   <div>
@@ -99,9 +115,7 @@
                       name="email"
                       required
                       placeholder="you@example.com"
-                      style="width:100%; padding:11px 14px; border:1.5px solid var(--line); border-radius:10px; font-size:0.95rem; font-family:Inter,sans-serif; outline:none; background:#fff; box-sizing:border-box; transition:border-color 0.15s;"
-                      onfocus="this.style.borderColor='var(--gold)'"
-                      onblur="this.style.borderColor='var(--line)'"
+                      class="contact-field"
                     />
                   </div>
                 </div>
@@ -110,9 +124,8 @@
                   <label style="display:block; font-size:0.83rem; font-weight:600; margin-bottom:5px; color:var(--muted);">Subject</label>
                   <select
                     name="subject"
-                    style="width:100%; padding:11px 14px; border:1.5px solid var(--line); border-radius:10px; font-size:0.95rem; font-family:Inter,sans-serif; outline:none; background:#fff; box-sizing:border-box; transition:border-color 0.15s; appearance:none; cursor:pointer;"
-                    onfocus="this.style.borderColor='var(--gold)'"
-                    onblur="this.style.borderColor='var(--line)'"
+                    class="contact-field"
+                    style="appearance:none; cursor:pointer;"
                   >
                     <option value="General question">General question</option>
                     <option value="Designer feedback">Designer feedback</option>
@@ -130,9 +143,8 @@
                     rows="5"
                     required
                     placeholder="What's on your mind?"
-                    style="width:100%; padding:11px 14px; border:1.5px solid var(--line); border-radius:10px; font-size:0.95rem; font-family:Inter,sans-serif; outline:none; background:#fff; box-sizing:border-box; resize:vertical; transition:border-color 0.15s;"
-                    onfocus="this.style.borderColor='var(--gold)'"
-                    onblur="this.style.borderColor='var(--line)'"
+                    class="contact-field"
+                    style="resize:vertical;"
                   ></textarea>
                 </div>
 

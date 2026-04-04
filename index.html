@@ -85,8 +85,8 @@
         --muted:     #6b5c4e;
         --faint:     #9e8d7e;
         --navy:      #1b2c42;
-        --gold:      #b8892e;
-        --gold-lt:   rgba(184,137,46,0.13);
+        --gold:      #c9982f;
+        --gold-lt:   rgba(201,152,47,0.13);
         --teal:      #2a6e6c;
         --teal-lt:   rgba(42,110,108,0.11);
         --rust:      #a84e3a;
@@ -154,10 +154,10 @@
         font-weight: 600;
         letter-spacing: 0.01em;
         cursor: pointer;
-        transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+        transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), background 0.3s ease;
         white-space: nowrap;
       }
-      .btn:hover { transform: translateY(-2px); }
+      .btn:hover { transform: translateY(-3px); }
       .btn-primary {
         background: var(--navy);
         color: #fff;
@@ -170,10 +170,10 @@
       .btn-gold {
         background: linear-gradient(135deg, #c9982f, #a8771e);
         color: #fff;
-        box-shadow: 0 10px 28px rgba(184,137,46,0.32);
+        box-shadow: 0 10px 28px rgba(201,152,47,0.32);
       }
       .btn-gold:hover {
-        box-shadow: 0 14px 36px rgba(184,137,46,0.40);
+        box-shadow: 0 14px 36px rgba(201,152,47,0.40);
       }
       .btn-outline {
         background: transparent;
@@ -300,7 +300,7 @@
         position: absolute;
         inset: 0;
         background-image:
-          radial-gradient(circle at 15% 50%, rgba(184,137,46,0.10) 0%, transparent 40%),
+          radial-gradient(circle at 15% 50%, rgba(201,152,47,0.10) 0%, transparent 40%),
           radial-gradient(circle at 85% 20%, rgba(42,110,108,0.09) 0%, transparent 38%),
           radial-gradient(circle at 60% 90%, rgba(27,44,66,0.06) 0%, transparent 35%);
         pointer-events: none;
@@ -358,17 +358,22 @@
       .trust-item {
         display: flex;
         align-items: center;
-        gap: 7px;
+        gap: 8px;
         font-size: 0.83rem;
-        color: var(--faint);
+        color: var(--muted);
         font-weight: 500;
       }
-      .trust-dot {
-        width: 5px;
-        height: 5px;
+      .trust-check {
+        width: 18px;
+        height: 18px;
         border-radius: 50%;
-        background: var(--gold);
-        opacity: 0.7;
+        background: rgba(201,152,47,0.14);
+        display: grid;
+        place-items: center;
+        flex-shrink: 0;
+        font-size: 0.65rem;
+        color: var(--gold);
+        font-weight: 700;
       }
 
       /* Hero visual card */
@@ -417,7 +422,7 @@
         display: block;
         margin: 0 auto;
         border-radius: 50%;
-        box-shadow: 0 0 0 12px rgba(184,137,46,0.06), 0 0 0 24px rgba(184,137,46,0.03);
+        box-shadow: 0 0 0 12px rgba(201,152,47,0.06), 0 0 0 24px rgba(201,152,47,0.03);
       }
       .canvas-pills {
         display: flex;
@@ -439,16 +444,17 @@
       /* Floating badge */
       .hero-badge {
         position: absolute;
-        bottom: -12px;
-        left: -20px;
+        bottom: 20px;
+        left: -16px;
         background: var(--navy);
         color: #fff;
         border-radius: var(--r-sm);
         padding: 14px 18px;
-        box-shadow: var(--shadow);
+        box-shadow: var(--shadow-lg);
         font-size: 0.82rem;
         line-height: 1.5;
-        max-width: 170px;
+        max-width: 180px;
+        z-index: 2;
       }
       .hero-badge strong {
         display: block;
@@ -510,7 +516,7 @@
         right: calc(16.66% + 28px);
         height: 1px;
         background: linear-gradient(90deg, var(--gold), var(--teal));
-        opacity: 0.30;
+        opacity: 0.55;
       }
 
       .step-card {
@@ -573,15 +579,15 @@
         gap: 18px;
       }
       .feature-card {
-        padding: 30px 26px;
+        padding: 32px;
         border-radius: var(--r-md);
         background: var(--panel);
         border: 1px solid var(--line);
         box-shadow: var(--shadow-sm);
-        transition: transform 0.2s, box-shadow 0.2s;
+        transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
       }
       .feature-card:hover {
-        transform: translateY(-3px);
+        transform: translateY(-6px);
         box-shadow: var(--shadow);
       }
       .feature-icon {
@@ -600,10 +606,10 @@
       .feature-card:nth-child(5) .feature-icon { background: var(--gold-lt); }
       .feature-card:nth-child(6) .feature-icon { background: var(--teal-lt); }
       .feature-card h3 {
-        font-size: 1.05rem;
+        font-size: 1.2rem;
         font-weight: 600;
         margin-bottom: 9px;
-        letter-spacing: -0.01em;
+        letter-spacing: -0.02em;
       }
       .feature-card p {
         font-size: 0.92rem;
@@ -638,7 +644,7 @@
         top: -60px; right: -60px;
         width: 240px; height: 240px;
         border-radius: 50%;
-        background: radial-gradient(circle, rgba(184,137,46,0.12), transparent 65%);
+        background: radial-gradient(circle, rgba(201,152,47,0.12), transparent 65%);
         pointer-events: none;
       }
       .showcase-canvas-wrap {
@@ -650,8 +656,8 @@
         display: block;
         margin: 0 auto;
         border-radius: 50%;
-        box-shadow: 0 0 0 10px rgba(184,137,46,0.07),
-                    0 0 0 22px rgba(184,137,46,0.03),
+        box-shadow: 0 0 0 10px rgba(201,152,47,0.07),
+                    0 0 0 22px rgba(201,152,47,0.03),
                     0 24px 48px rgba(28,21,16,0.10);
       }
       .sequence-bar {
@@ -690,7 +696,7 @@
         background: var(--gold);
         opacity: 1;
         transform: scale(1.15);
-        box-shadow: 0 4px 12px rgba(184,137,46,0.35);
+        box-shadow: 0 4px 12px rgba(201,152,47,0.35);
       }
       .seq-num.faint {
         background: rgba(60,44,28,0.08);
@@ -768,10 +774,10 @@
         overflow: hidden;
         border: 1px solid var(--line);
         box-shadow: var(--shadow-sm);
-        transition: transform 0.22s, box-shadow 0.22s;
+        transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
       }
       .audience-card:hover {
-        transform: translateY(-4px);
+        transform: translateY(-6px);
         box-shadow: var(--shadow);
       }
       .audience-card:nth-child(1) {
@@ -949,7 +955,7 @@
         position: absolute;
         inset: 0;
         background:
-          radial-gradient(circle at 30% 50%, rgba(184,137,46,0.12), transparent 45%),
+          radial-gradient(circle at 30% 50%, rgba(201,152,47,0.12), transparent 45%),
           radial-gradient(circle at 75% 30%, rgba(42,110,108,0.10), transparent 40%);
         pointer-events: none;
       }
@@ -1104,6 +1110,21 @@
         font-weight: 700;
       }
 
+      /* ─── ENTRANCE ANIMATIONS ───────────────────── */
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(24px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      .will-fade {
+        opacity: 0;
+      }
+      .will-fade.visible {
+        animation: fadeInUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .will-fade, .will-fade.visible { animation: none; opacity: 1; }
+      }
+
       /* ─── FOCUS STYLES (accessibility) ──────────── */
       :focus-visible {
         outline: 2.5px solid var(--gold);
@@ -1216,9 +1237,9 @@
               <a class="btn btn-outline" href="patterns.html">Browse patterns</a>
             </div>
             <div class="trust-strip">
-              <span class="trust-item"><span class="trust-dot"></span>No signup needed</span>
-              <span class="trust-item"><span class="trust-dot"></span>Works in your browser</span>
-              <span class="trust-item"><span class="trust-dot"></span>Printable patterns</span>
+              <span class="trust-item"><span class="trust-check">✓</span>No signup needed</span>
+              <span class="trust-item"><span class="trust-check">✓</span>Works in your browser</span>
+              <span class="trust-item"><span class="trust-check">✓</span>Printable patterns</span>
             </div>
           </div>
 
@@ -1251,7 +1272,7 @@
       <section class="section section--tight">
         <div class="container">
           <p style="text-align:center; font-size:0.82rem; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:16px;">Made for everyone — beginner or experienced</p>
-          <div class="audience-strip">
+          <div class="audience-strip will-fade">
             <div class="audience-strip-item">
               <span class="audience-strip-icon">🧶</span>
               <div>
@@ -1289,7 +1310,7 @@
           <p class="section-sub">Three steps from idea to a pattern you can follow for real. No experience needed.</p>
 
           <div class="steps-grid">
-            <div class="step-card">
+            <div class="step-card will-fade">
               <div class="step-number">1</div>
               <h3>Design your pattern</h3>
               <p>Choose your board shape, set your nail count, and start placing your design. Watch your string art take shape in real time as you build.</p>
@@ -1299,7 +1320,7 @@
                 <li>Flexible nail counts and spacing</li>
               </ul>
             </div>
-            <div class="step-card">
+            <div class="step-card will-fade" style="animation-delay:0.1s">
               <div class="step-number">2</div>
               <h3>Generate your sequence</h3>
               <p>The designer calculates the exact thread path and gives you a numbered nail sequence — the precise order to follow so your pattern comes out exactly as planned.</p>
@@ -1309,7 +1330,7 @@
                 <li>No guesswork, no manual counting</li>
               </ul>
             </div>
-            <div class="step-card">
+            <div class="step-card will-fade" style="animation-delay:0.2s">
               <div class="step-number">3</div>
               <h3>Build your artwork</h3>
               <p>Print your pattern guide and take it to your board. Follow the numbered sequence nail by nail and watch your design appear — exactly as you designed it on screen.</p>
@@ -1332,7 +1353,7 @@
               <h2>A tool that actually <em>understands</em> string art</h2>
               <p>This isn't a generic drawing app adapted for string art. It was built from scratch by someone who does string art — with every feature designed around the real challenges of planning and making a physical piece.</p>
 
-              <div class="trust-facts">
+              <div class="trust-facts will-fade">
                 <div class="trust-fact">
                   <div class="trust-fact-icon">✓</div>
                   <div class="trust-fact-text">
@@ -1571,7 +1592,7 @@
         let pts = [], step = 0, phase = 0;
 
         const palettes = [
-          { line: "rgba(184,137,46,0.80)", nail: "#1c1510", bg: "rgba(184,137,46,0.07)" },
+          { line: "rgba(201,152,47,0.80)", nail: "#1c1510", bg: "rgba(201,152,47,0.07)" },
           { line: "rgba(42,110,108,0.80)", nail: "#1c1510", bg: "rgba(42,110,108,0.07)" },
           { line: "rgba(27,44,66,0.75)",   nail: "#1c1510", bg: "rgba(27,44,66,0.06)"  },
         ];
@@ -1647,7 +1668,7 @@
         // Background ring
         ctx.beginPath();
         ctx.arc(cx, cy, r + 8, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(184,137,46,0.06)";
+        ctx.fillStyle = "rgba(201,152,47,0.06)";
         ctx.fill();
 
         // Threads
@@ -1657,7 +1678,7 @@
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(b.x, b.y);
           ctx.strokeStyle = i % 3 === 0
-            ? "rgba(184,137,46,0.55)"
+            ? "rgba(201,152,47,0.55)"
             : i % 3 === 1
             ? "rgba(42,110,108,0.45)"
             : "rgba(27,44,66,0.35)";
@@ -1669,7 +1690,7 @@
         pts.forEach((p, i) => {
           ctx.beginPath();
           ctx.arc(p.x, p.y, 2.8, 0, Math.PI * 2);
-          ctx.fillStyle = i % 4 === 0 ? "#b8892e" : "#1c1510";
+          ctx.fillStyle = i % 4 === 0 ? "#c9982f" : "#1c1510";
           ctx.fill();
         });
       })();
@@ -1740,5 +1761,27 @@
       })();
     </script>
   <script src="nav.js"></script>
+  <script>
+    /* ── Entrance animations via IntersectionObserver ── */
+    (function () {
+      if (!('IntersectionObserver' in window)) {
+        document.querySelectorAll('.will-fade').forEach(function (el) {
+          el.classList.add('visible');
+        });
+        return;
+      }
+      var obs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            obs.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12 });
+      document.querySelectorAll('.will-fade').forEach(function (el) {
+        obs.observe(el);
+      });
+    })();
+  </script>
   </body>
 </html>
