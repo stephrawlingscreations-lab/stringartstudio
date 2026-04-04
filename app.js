@@ -167,7 +167,6 @@ document.addEventListener("DOMContentLoaded", function () {
     x2,
     y2,
     nailRadius = 6,
-    wrapSize = 0.35,
   ) {
     const dx = x2 - x1;
     const dy = y2 - y1;
@@ -177,24 +176,21 @@ document.addEventListener("DOMContentLoaded", function () {
     const ux = dx / dist;
     const uy = dy / dist;
 
-    // Perpendicular direction for a slight bend
+    // Perpendicular direction (right-hand side of the nail-to-nail axis)
     const px = -uy;
     const py = ux;
 
-    // Pull line ends back from the nail centres
-    const sx = x1 + ux * nailRadius;
-    const sy = y1 + uy * nailRadius;
-    const ex = x2 - ux * nailRadius;
-    const ey = y2 - uy * nailRadius;
-
-    // Midpoint with a tiny sideways bend to fake wrapping
-    const mx = (sx + ex) / 2;
-    const my = (sy + ey) / 2;
-    const bend = nailRadius * wrapSize;
+    // External tangent: offset both endpoints perpendicularly by the nail radius,
+    // same side, so the line skims past the nail surface rather than pointing to its centre.
+    // This matches real string art where the thread wraps around the nail cylinder.
+    const sx = x1 + px * nailRadius;
+    const sy = y1 + py * nailRadius;
+    const ex = x2 + px * nailRadius;
+    const ey = y2 + py * nailRadius;
 
     ctx.beginPath();
     ctx.moveTo(sx, sy);
-    ctx.quadraticCurveTo(mx + px * bend, my + py * bend, ex, ey);
+    ctx.lineTo(ex, ey);
   }
   /* -----------------------------
      MOBILE CONTROL PANEL TOGGLE
@@ -914,7 +910,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const [x1, y1] = pts[e.a];
         const [x2, y2] = pts[e.b];
 
-        drawWrappedThread(ctx, x1, y1, x2, y2, 6, 0.35);
+        drawWrappedThread(ctx, x1, y1, x2, y2, 2);
         ctx.stroke();
       }
     }
@@ -949,7 +945,7 @@ document.addEventListener("DOMContentLoaded", function () {
       ctx.shadowBlur = 6;
       ctx.setLineDash([6, 4]);
 
-      drawWrappedThread(ctx, x1, y1, x2, y2, 6, 0.35);
+      drawWrappedThread(ctx, x1, y1, x2, y2, 2);
       ctx.stroke();
 
       ctx.setLineDash([]);
