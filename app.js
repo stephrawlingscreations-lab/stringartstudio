@@ -3471,8 +3471,8 @@ document.addEventListener("DOMContentLoaded", function () {
         );
         hRule(page, 8, 0.4);
 
-        // Prominent tile identity badge (multi-tile only)
-        if (boardPageCount > 1) {
+        // Prominent tile identity badge — always shown on every nail guide page
+        {
           const bdW = 12 * PT, bdH = 7 * PT;
           const bdX = MG + CW - bdW;
           const bdY = A4H - MG - 7.5 * PT;
