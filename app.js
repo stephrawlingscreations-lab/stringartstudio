@@ -1715,6 +1715,17 @@ document.addEventListener("DOMContentLoaded", function () {
     return ((index % total) + total) % total;
   }
 
+  // Remove reverse-direction duplicates: if both a→b and b→a exist, keep only one.
+  function deduplicateEdges(edges) {
+    const seen = new Set();
+    return edges.filter(({ a, b }) => {
+      const key = a < b ? `${a},${b}` : `${b},${a}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
   function buildSeqFromEdges(edges) {
     if (!edges.length) return [];
     const seq = [edges[0].a, edges[0].b];
@@ -1757,8 +1768,9 @@ document.addEventListener("DOMContentLoaded", function () {
         throw new Error(msg);
       }
     }
-    // Spiral is seq-first: edges are derived from seq, so verify the round-trip.
-    // Other presets are edge-first; seq has gaps so the round-trip count won't match — skip.
+    // Spiral is seq-first: verify the round-trip (generatedEdges === buildEdgesFromSeq(seq)).
+    // Other presets generate isolated chords; generatedEdges won't match the seq-derived
+    // edges, but they're only used for validation of the generator — stored edges come from seq.
     if (name === 'spiral' && seq?.length > 1) {
       const rebuilt = buildEdgesFromSeq(seq);
       if (rebuilt.length !== edges.length) {
@@ -1782,17 +1794,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
     switch (presetName) {
       case "cardioid":
-        generatedEdges = generateCardioidPattern(total, offset);
+        generatedEdges = deduplicateEdges(generateCardioidPattern(total, offset));
         generatedSeq = buildSeqFromEdges(generatedEdges);
         break;
 
       case "web":
-        generatedEdges = generateWebPattern(total, offset);
+        generatedEdges = deduplicateEdges(generateWebPattern(total, offset));
         generatedSeq = buildSeqFromEdges(generatedEdges);
         break;
 
       case "flower":
-        generatedEdges = generateFlowerPattern(total, offset);
+        generatedEdges = deduplicateEdges(generateFlowerPattern(total, offset));
         generatedSeq = buildSeqFromEdges(generatedEdges);
         break;
 
@@ -1803,19 +1815,29 @@ document.addEventListener("DOMContentLoaded", function () {
         break;
 
       case "star":
-        generatedEdges = generateStarPattern(total, offset);
-        generatedSeq = buildSeqFromEdges(generatedEdges);
+        // Sequence-first like spiral: the coprime skip visits every nail in one
+        // continuous chain, so we follow it directly rather than sorting unordered edges.
+        generatedSeq = generateStarSequence(total, offset);
+        generatedEdges = buildEdgesFromSeq(generatedSeq);
         break;
 
       default:
-        generatedEdges = generateFlowerPattern(total, offset);
+        generatedEdges = deduplicateEdges(generateFlowerPattern(total, offset));
         generatedSeq = buildSeqFromEdges(generatedEdges);
         break;
     }
 
     validatePresetIntegrity(presetName, generatedEdges, generatedSeq);
 
-    layers[activeLayer].edges = generatedEdges;
+    // For web/star/spiral the traversal lines between chords are visually distinct
+    // (short near-edge chords vs long diameters), so drawing the continuous path
+    // looks natural. For flower/cardioid the traversal chords are nearly the same
+    // length as the pattern chords, making the drawing look like a double pattern —
+    // so keep isolated chords for those.
+    const useContinuousPath = presetName !== 'flower' && presetName !== 'cardioid';
+    layers[activeLayer].edges = useContinuousPath
+      ? buildEdgesFromSeq(generatedSeq)
+      : generatedEdges;
     layers[activeLayer].seq = generatedSeq;
     layers[activeLayer].generatedPreset = true;
 
@@ -1890,17 +1912,21 @@ document.addEventListener("DOMContentLoaded", function () {
     return seq;
   }
 
-  // Star — coprime skip creates a single connected star polygon
-  function generateStarPattern(total, offset) {
+  // Star — coprime skip creates a single connected star polygon.
+  // Returns the sequence (chain order) rather than unordered edges so the
+  // path is continuous with no extra traversal lines.
+  function generateStarSequence(total, offset) {
     const quarter = Math.round(total / 4);
     const spread = Math.round((offset / 60) * Math.floor(total / 4));
     const targetSkip = Math.max(2, quarter + spread);
     const skip = findCoprime(targetSkip, total);
-    const edges = [];
-    for (let i = 0; i < total; i++) {
-      edges.push({ a: i, b: wrapIndex(i + skip, total) });
+    const seq = [0];
+    let current = 0;
+    for (let i = 0; i < total - 1; i++) {
+      current = wrapIndex(current + skip, total);
+      seq.push(current);
     }
-    return edges;
+    return seq;
   }
   /* -----------------------------
      CUSTOM NAIL LAYOUT
