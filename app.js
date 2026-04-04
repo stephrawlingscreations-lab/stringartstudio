@@ -2674,7 +2674,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
       ensureLayerExists();
       redrawAll();
-      generatePreset(preset, 0);
+      const presetDefaults = { flower: 10, cardioid: 3, web: 0, spiral: 15, star: 12 };
+      generatePreset(preset, presetDefaults[preset] ?? 0);
       syncLayerSelect();
       switchLayer(activeLayer);
       updateSeqOutput();
