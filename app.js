@@ -1749,8 +1749,8 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function validatePresetIntegrity(name, edges, seq) {
-    // Preset patterns: edges are the sole source of truth for both canvas and export.
-    // Any mismatch between preview and PDF is impossible by construction.
+    // seq is the single source of truth; stored layer.edges = buildEdgesFromSeq(seq).
+    // Validate the generator output (edges) here before it is used to build seq.
     if (!edges?.length) {
       const msg = `[StringArt] Preset "${name}" generated no edges — design would be blank`;
       console.error(msg);
@@ -1764,18 +1764,7 @@ document.addEventListener("DOMContentLoaded", function () {
         throw new Error(msg);
       }
     }
-    // Spiral is seq-first: verify the round-trip (generatedEdges === buildEdgesFromSeq(seq)).
-    // Other presets generate isolated chords; generatedEdges won't match the seq-derived
-    // edges, but they're only used for validation of the generator — stored edges come from seq.
-    if (name === 'spiral' && seq?.length > 1) {
-      const rebuilt = buildEdgesFromSeq(seq);
-      if (rebuilt.length !== edges.length) {
-        const msg = `[StringArt] Preset "${name}": seq→edges mismatch (${rebuilt.length} vs ${edges.length})`;
-        console.error(msg);
-        throw new Error(msg);
-      }
-    }
-    console.log(`[StringArt] Preset "${name}" validated: ${edges.length} edges, preview === export ✓`);
+    console.log(`[StringArt] Preset "${name}" validated: ${edges.length} chord edges, seq length ${seq?.length ?? 0} ✓`);
   }
 
   function generatePreset(presetName, offset) {
@@ -1825,15 +1814,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     validatePresetIntegrity(presetName, generatedEdges, generatedSeq);
 
-    // For web/star/spiral the traversal lines between chords are visually distinct
-    // (short near-edge chords vs long diameters), so drawing the continuous path
-    // looks natural. For flower/cardioid the traversal chords are nearly the same
-    // length as the pattern chords, making the drawing look like a double pattern —
-    // so keep isolated chords for those.
-    const useContinuousPath = presetName !== 'flower' && presetName !== 'cardioid';
-    layers[activeLayer].edges = useContinuousPath
-      ? buildEdgesFromSeq(generatedSeq)
-      : generatedEdges;
+    // All presets render the full physical thread path: every nail-to-nail segment
+    // a builder would see on the front of the board when using one continuous thread.
+    // edges is always derived from seq so that canvas, animation, exports and the
+    // displayed sequence are all the same single source of truth.
+    layers[activeLayer].edges = buildEdgesFromSeq(generatedSeq);
     layers[activeLayer].seq = generatedSeq;
     layers[activeLayer].generatedPreset = true;
 
