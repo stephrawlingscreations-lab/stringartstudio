@@ -3778,13 +3778,14 @@ document.addEventListener("DOMContentLoaded", function () {
         ],
         [
           "5",
-          "Wrap each nail in the same direction",
-          "Always wrap nails the same way throughout — clockwise or anti-clockwise, never mixed.",
+          "Wrap the string the SAME WAY every time",
+          "+ Clockwise (or anticlockwise)",
+          "x Don't switch directions",
         ],
       ];
 
       let sy = 28;
-      for (const [num, title, desc] of steps) {
+      for (const [num, title, desc, desc2] of steps) {
         const cx2 = xL(4.5),
           cy2 = yT(sy + 3);
         page.drawCircle({ x: cx2, y: cy2, size: 4.5 * PT, color: C_BLACK });
@@ -3800,8 +3801,14 @@ document.addEventListener("DOMContentLoaded", function () {
         } catch (_) {}
         txt(page, title, 12, sy + 1.5, { size: 10, font: fBold });
         txt(page, desc, 12, sy + 7, { size: 8, color: C_GRAY });
-        hRule(page, sy + 12, 0.3, rgb(0.92, 0.92, 0.92));
-        sy += 15;
+        if (desc2) {
+          txt(page, desc2, 12, sy + 11.5, { size: 8, color: C_GRAY });
+          hRule(page, sy + 16, 0.3, rgb(0.92, 0.92, 0.92));
+          sy += 19;
+        } else {
+          hRule(page, sy + 12, 0.3, rgb(0.92, 0.92, 0.92));
+          sy += 15;
+        }
       }
 
       sy += 3;
