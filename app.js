@@ -3779,7 +3779,7 @@ document.addEventListener("DOMContentLoaded", function () {
         [
           "5",
           "Wrap each nail in the same direction",
-          "Always take the string around nails the same way — either always clockwise or always anti-clockwise throughout the entire piece. Mixing directions creates an uneven, puckered finish.",
+          "Always wrap nails the same way throughout — clockwise or anti-clockwise, never mixed.",
         ],
       ];
 
@@ -3818,52 +3818,6 @@ document.addEventListener("DOMContentLoaded", function () {
         txt(page, ". " + tip, 0, sy, { size: 8.5, color: C_GRAY });
         hRule(page, sy + 4.5, 0.3, rgb(0.92, 0.92, 0.92));
         sy += 7.5;
-      }
-
-      // ── WRAPPING DIRECTION diagram ──
-      sy += 10;
-      txt(page, "WRAPPING DIRECTION", 0, sy, { size: 8.5, font: fBold, color: C_GRAY });
-      hRule(page, sy + 2.5, 0.3);
-      sy += 9;
-
-      {
-        const diagNailR = 2.5 * PT;
-        const diagNailXs = [15, 40, 65];
-        const diagNailY = sy + 12;
-        const diagDip = 5;
-        const diagThreadC = rgb(0.15, 0.15, 0.15);
-        const panelW_d = 85, panelH_d = 28;
-
-        const drawDirPanel = (ox, isConsistent) => {
-          const col = isConsistent ? rgb(0.1, 0.5, 0.15) : rgb(0.72, 0.1, 0.1);
-          page.drawRectangle({
-            x: xL(ox), y: yT(sy + panelH_d),
-            width: panelW_d * PT, height: panelH_d * PT,
-            color: isConsistent ? rgb(0.96, 1, 0.96) : rgb(1, 0.96, 0.96),
-            borderColor: col, borderWidth: 0.6,
-          });
-          txt(page, isConsistent ? "CONSISTENT" : "AVOID", ox + panelW_d / 2, sy + 3.5, { size: 7.5, font: fBold, color: col, align: "center" });
-          const peaks = isConsistent ? [diagDip, diagDip, diagDip] : [diagDip, -diagDip, diagDip];
-          const segs = [[ox + 2, diagNailY, ox + diagNailXs[0] - 3, diagNailY]];
-          for (let i = 0; i < 3; i++) {
-            const nx = ox + diagNailXs[i];
-            const py = diagNailY + peaks[i];
-            segs.push([nx - 3, diagNailY, nx, py]);
-            segs.push([nx, py, nx + 3, diagNailY]);
-            if (i < 2) segs.push([nx + 3, diagNailY, ox + diagNailXs[i + 1] - 3, diagNailY]);
-          }
-          segs.push([ox + diagNailXs[2] + 3, diagNailY, ox + panelW_d - 2, diagNailY]);
-          for (const [x1, y1, x2, y2] of segs) {
-            page.drawLine({ start: { x: xL(x1), y: yT(y1) }, end: { x: xL(x2), y: yT(y2) }, thickness: 1.2, color: diagThreadC });
-          }
-          for (const nx of diagNailXs) {
-            page.drawCircle({ x: xL(ox + nx), y: yT(diagNailY), size: diagNailR, color: rgb(0.25, 0.25, 0.25) });
-          }
-          txt(page, isConsistent ? "Thread always dips the same way" : "Thread alternates above and below", ox + panelW_d / 2, sy + panelH_d - 3.5, { size: 6.5, color: col, align: "center" });
-        };
-
-        drawDirPanel(0, true);
-        drawDirPanel(105, false);
       }
 
       stdFooter(
