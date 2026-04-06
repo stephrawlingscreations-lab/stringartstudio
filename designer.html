@@ -163,6 +163,42 @@
         opacity: 1;
       }
 
+      .wave-scheme-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 7px 10px;
+        border: 1.5px solid rgba(60,44,28,0.12);
+        border-radius: 10px;
+        background: #fff;
+        cursor: pointer;
+        font-family: Inter, system-ui, sans-serif;
+        font-size: 13px;
+        color: var(--text-dark);
+        transition: border-color 0.15s;
+        text-align: left;
+      }
+      .wave-scheme-btn:hover {
+        border-color: var(--gold);
+        color: var(--gold);
+      }
+      .wave-scheme-btn.active {
+        border-color: var(--navy);
+        background: rgba(27,44,66,0.04);
+      }
+      .wave-scheme-strip {
+        display: flex;
+        width: 70px;
+        height: 14px;
+        border-radius: 4px;
+        overflow: hidden;
+        flex-shrink: 0;
+      }
+      .wave-scheme-name {
+        font-weight: 600;
+      }
+
       .pro-btn {
         background: linear-gradient(135deg, #c9982f, #a8771e);
         color: #fff;
@@ -2358,6 +2394,13 @@
               </div>
             </div>
 
+            <!-- WAVE COLOUR SCHEMES — shown only when wave is loaded + pro unlocked -->
+            <div class="panel-section" id="waveColorSchemes" style="display:none;">
+              <span class="panel-section-label">Wave Colour Schemes</span>
+              <p style="font-size:0.78rem;color:var(--muted);margin:0 0 10px;line-height:1.5;">Apply a preset colour set across all 7 layers at once.</p>
+              <div id="waveSchemeGrid" style="display:flex;flex-direction:column;gap:6px;"></div>
+            </div>
+
             <!-- BOARD COLOUR -->
             <div class="panel-section">
               <span class="panel-section-label">Board Colour</span>
@@ -2644,6 +2687,7 @@
         }
         localStorage.setItem("_sask", key);
         openProModal(); // re-render to show unlocked view
+        if (typeof syncWaveColorSchemes === "function") syncWaveColorSchemes();
       }
     </script>
     <div id="helpPanel" class="help-panel">

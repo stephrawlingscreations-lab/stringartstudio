@@ -1913,6 +1913,33 @@ document.addEventListener("DOMContentLoaded", function () {
      WAVE PRESET — overlapping spiral bands
   ----------------------------- */
 
+  let wavePresetActive = false;
+
+  const WAVE_SCHEMES = [
+    { name: "Rainbow",  colors: ["#6A00FF","#0047FF","#00AEEF","#00C853","#FFD600","#FF6D00","#D50000"] },
+    { name: "Ocean",    colors: ["#B2EBF2","#80DEEA","#4DD0E1","#00BCD4","#00ACC1","#00838F","#006064"] },
+    { name: "Sunset",   colors: ["#FFF176","#FFD740","#FFAB00","#FF8F00","#FF6D00","#F4511E","#BF360C"] },
+    { name: "Forest",   colors: ["#DCEDC8","#AED581","#8BC34A","#7CB342","#558B2F","#33691E","#1B5E20"] },
+    { name: "Twilight", colors: ["#EDE7F6","#CE93D8","#AB47BC","#8E24AA","#6A1B9A","#4A148C","#311B92"] },
+  ];
+
+  function syncWaveColorSchemes() {
+    const panel = $("waveColorSchemes");
+    if (!panel) return;
+    const unlocked = typeof _isProKey === "function" && _isProKey(localStorage.getItem("_sask"));
+    panel.style.display = (wavePresetActive && unlocked) ? "block" : "none";
+  }
+
+  function applyWaveColorScheme(colors) {
+    colors.forEach(function(c, i) {
+      if (layers[i]) layers[i].color = c;
+    });
+    syncLayerSelect();
+    switchLayer(activeLayer);
+    redrawAll();
+    debouncedSave();
+  }
+
   // Build a single wave layer sequence (0-based nail indices, 320-nail circle).
   // offset is in nails (0-based). Layer 1 = offset 0, Layer 2 = offset 20, etc.
   function makeWaveLayer(offsetNails) {
@@ -1962,9 +1989,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     activeLayer = 0;
     lastNail = layers[0].seq[layers[0].seq.length - 1];
+    wavePresetActive = true;
 
     syncLayerSelect();
     syncHideButton();
+    syncWaveColorSchemes();
 
     redrawAll();
     updateSeqOutput();
@@ -1975,6 +2004,29 @@ document.addEventListener("DOMContentLoaded", function () {
   function initWavePreset() {
     const genBtn = $("generateWaveBtn");
     if (genBtn) genBtn.addEventListener("click", generateWavePreset);
+
+    // Build colour scheme buttons
+    const grid = $("waveSchemeGrid");
+    if (grid) {
+      WAVE_SCHEMES.forEach(function(scheme) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "wave-scheme-btn";
+        // Swatch strip
+        const strip = scheme.colors.map(function(c) {
+          return '<span style="background:' + c + ';flex:1;"></span>';
+        }).join("");
+        btn.innerHTML = '<span class="wave-scheme-strip">' + strip + '</span>'
+                      + '<span class="wave-scheme-name">' + scheme.name + '</span>';
+        btn.addEventListener("click", function() {
+          applyWaveColorScheme(scheme.colors);
+          grid.querySelectorAll(".wave-scheme-btn").forEach(function(b) {
+            b.classList.toggle("active", b === btn);
+          });
+        });
+        grid.appendChild(btn);
+      });
+    }
   }
 
   /* -----------------------------
