@@ -361,10 +361,10 @@
             <!-- Flower -->
             <div class="pattern-card" data-difficulty="beginner">
               <div class="pattern-preview">
-                <video autoplay loop muted playsinline
+                <video autoplay loop muted playsinline preload="none"
                   style="width:140px;height:140px;border-radius:50%;display:block;object-fit:cover"
                   aria-hidden="true">
-                  <source src="Patterns/Flower Final Video.webm" type="video/webm">
+                  <source data-src="Patterns/Flower Final Video.webm" type="video/webm">
                 </video>
               </div>
               <h3>Flower</h3>
@@ -380,10 +380,10 @@
             <!-- Web -->
             <div class="pattern-card" data-difficulty="beginner">
               <div class="pattern-preview">
-                <video autoplay loop muted playsinline
+                <video autoplay loop muted playsinline preload="none"
                   style="width:140px;height:140px;border-radius:50%;display:block;object-fit:cover"
                   aria-hidden="true">
-                  <source src="Patterns/Web Final Video.webm" type="video/webm">
+                  <source data-src="Patterns/Web Final Video.webm" type="video/webm">
                 </video>
               </div>
               <h3>Web</h3>
@@ -399,10 +399,10 @@
             <!-- Cardioid -->
             <div class="pattern-card" data-difficulty="intermediate">
               <div class="pattern-preview">
-                <video autoplay loop muted playsinline
+                <video autoplay loop muted playsinline preload="none"
                   style="width:140px;height:140px;border-radius:50%;display:block;object-fit:cover"
                   aria-hidden="true">
-                  <source src="Patterns/Cardioid Final Video.webm" type="video/webm">
+                  <source data-src="Patterns/Cardioid Final Video.webm" type="video/webm">
                 </video>
               </div>
               <h3>Cardioid</h3>
@@ -418,10 +418,10 @@
             <!-- Star -->
             <div class="pattern-card" data-difficulty="intermediate">
               <div class="pattern-preview">
-                <video autoplay loop muted playsinline
+                <video autoplay loop muted playsinline preload="none"
                   style="width:140px;height:140px;border-radius:50%;display:block;object-fit:cover"
                   aria-hidden="true">
-                  <source src="Patterns/Star Final Video.webm" type="video/webm">
+                  <source data-src="Patterns/Star Final Video.webm" type="video/webm">
                 </video>
               </div>
               <h3>Star</h3>
@@ -437,10 +437,10 @@
             <!-- Spiral -->
             <div class="pattern-card" data-difficulty="intermediate">
               <div class="pattern-preview">
-                <video autoplay loop muted playsinline
+                <video autoplay loop muted playsinline preload="none"
                   style="width:140px;height:140px;border-radius:50%;display:block;object-fit:cover"
                   aria-hidden="true">
-                  <source src="Patterns/Spiral Final Video.webm" type="video/webm">
+                  <source data-src="Patterns/Spiral Final Video.webm" type="video/webm">
                 </video>
               </div>
               <h3>Spiral</h3>
@@ -456,10 +456,10 @@
             <!-- Wave -->
             <div class="pattern-card" data-difficulty="advanced">
               <div class="pattern-preview">
-                <video autoplay loop muted playsinline
+                <video autoplay loop muted playsinline preload="none"
                   style="width:140px;height:140px;border-radius:50%;display:block;object-fit:cover"
                   aria-hidden="true">
-                  <source src="Patterns/Wave Video.webm" type="video/webm">
+                  <source data-src="Patterns/Wave Video.webm" type="video/webm">
                 </video>
               </div>
               <h3>Wave</h3>
@@ -509,6 +509,34 @@
         </div>
       </footer>
     </div>
+    <!-- Lazy-load pattern preview videos -->
+    <script>
+      (function () {
+        var previews = document.querySelectorAll('.pattern-preview video');
+
+        function loadVideo(vid) {
+          var source = vid.querySelector('[data-src]');
+          if (!source || source.getAttribute('src')) return; // already loaded
+          source.setAttribute('src', source.dataset.src);
+          vid.load();
+          vid.play().catch(function () {});
+        }
+
+        if ('IntersectionObserver' in window) {
+          var io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+              if (!entry.isIntersecting) return;
+              loadVideo(entry.target);
+              io.unobserve(entry.target);
+            });
+          }, { rootMargin: '200px' });
+          previews.forEach(function (vid) { io.observe(vid); });
+        } else {
+          // Fallback for browsers without IntersectionObserver
+          previews.forEach(loadVideo);
+        }
+      })();
+    </script>
     <!-- Video lightbox -->
     <script>
       (function () {
@@ -518,7 +546,9 @@
 
         document.querySelectorAll('.pattern-preview video').forEach(function (vid) {
           vid.addEventListener('click', function () {
-            var src = vid.querySelector('source').src;
+            var source = vid.querySelector('source');
+            // Use resolved src if already loaded, otherwise fall back to data-src
+            var src = source.getAttribute('src') || source.dataset.src;
             lightboxVideo.innerHTML = '<source src="' + src + '" type="video/webm">';
             lightboxVideo.load();
             lightboxVideo.play();

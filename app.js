@@ -56,6 +56,14 @@ document.addEventListener("DOMContentLoaded", function () {
   let ctx = cv.getContext("2d");
   const $ = (id) => document.getElementById(id);
 
+  // Cache canvas CSS size to avoid layout reflow inside every redrawAll() call.
+  // Updated by a ResizeObserver so we always have the latest value without querying the DOM.
+  let _cachedCanvasCssSize = cv.clientWidth || 800;
+  new ResizeObserver(entries => {
+    const w = Math.round(entries[0].contentRect.width);
+    if (w > 0) _cachedCanvasCssSize = w;
+  }).observe(cv);
+
   let pts = [];
   let layers = [];
   let activeLayer = 0;
@@ -188,7 +196,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const ex = x2 + px * nailRadius;
     const ey = y2 + py * nailRadius;
 
-    ctx.beginPath();
+    // Note: caller is responsible for ctx.beginPath() — this function only adds
+    // a subpath so multiple edges can be batched into a single ctx.stroke() call.
     ctx.moveTo(sx, sy);
     ctx.lineTo(ex, ey);
   }
@@ -260,11 +269,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function resizeCanvas() {
     const dpr = window.devicePixelRatio || 1;
-    const cssW = cv.clientWidth || 800;
-    const size = cssW;
+    const size = _cachedCanvasCssSize;
 
-    cv.width = Math.floor(size * dpr);
-    cv.height = Math.floor(size * dpr);
+    const targetW = Math.floor(size * dpr);
+    const targetH = Math.floor(size * dpr);
+    // Only resize the backing buffer when dimensions actually change — resizing
+    // always clears the canvas and is expensive even when the size is the same.
+    if (cv.width !== targetW || cv.height !== targetH) {
+      cv.width  = targetW;
+      cv.height = targetH;
+    }
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
@@ -809,27 +823,26 @@ document.addEventListener("DOMContentLoaded", function () {
       ctx.clip();
       ctx.strokeStyle = 'rgba(0,0,0,0.10)';
       ctx.lineWidth = 0.7;
-      // Vertical lines
+      // Batch all grid lines into a single stroke call
+      ctx.beginPath();
       for (let i = -div; i <= div; i++) {
         const x = cx + (i / div) * rx;
-        ctx.beginPath();
         ctx.moveTo(x, cy - ry);
         ctx.lineTo(x, cy + ry);
-        ctx.stroke();
       }
-      // Horizontal lines
       for (let i = -div; i <= div; i++) {
         const y = cy + (i / div) * ry;
-        ctx.beginPath();
         ctx.moveTo(cx - rx, y);
         ctx.lineTo(cx + rx, y);
-        ctx.stroke();
       }
+      ctx.stroke();
       // Centre crosshair slightly stronger
       ctx.strokeStyle = 'rgba(0,0,0,0.18)';
       ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(cx, cy - ry); ctx.lineTo(cx, cy + ry); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(cx - rx, cy); ctx.lineTo(cx + rx, cy); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - ry); ctx.lineTo(cx, cy + ry);
+      ctx.moveTo(cx - rx, cy); ctx.lineTo(cx + rx, cy);
+      ctx.stroke();
       ctx.restore();
     }
 
@@ -842,14 +855,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
     ctx.stroke();
 
+    // Batch all nail dots into a single fill call
+    ctx.fillStyle = (nailPlacementMode === 'manual')
+      ? "rgba(184,137,46,0.85)" : "rgba(0,0,0,0.6)";
+    ctx.beginPath();
     for (let i = 0; i < pts.length; i++) {
       const [x, y] = pts[i];
-      ctx.beginPath();
+      ctx.moveTo(x + 1.8, y);
       ctx.arc(x, y, 1.8, 0, Math.PI * 2);
-      ctx.fillStyle = (nailPlacementMode === 'manual')
-        ? "rgba(184,137,46,0.85)" : "rgba(0,0,0,0.6)";
-      ctx.fill();
     }
+    ctx.fill();
 
     if (nailPlacementMode === 'manual' && pts.length === 0) {
       ctx.save();
@@ -900,6 +915,8 @@ document.addEventListener("DOMContentLoaded", function () {
       ctx.lineWidth = layer.lw;
       ctx.strokeStyle = rgba(layer.color, layer.opacity);
 
+      // Batch all edges for this layer into a single beginPath/stroke call
+      ctx.beginPath();
       for (let ei = 0; ei < layer.edges.length; ei++) {
         // During animation, stop at the edge currently being drawn
         if (anim.active && li === anim.layerIdx && ei >= anim.edgeIdx) break;
@@ -911,8 +928,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const [x2, y2] = pts[e.b];
 
         drawWrappedThread(ctx, x1, y1, x2, y2, 2);
-        ctx.stroke();
       }
+      ctx.stroke();
     }
 
     // Draw the partially-animated thread (shoots from nail A toward nail B)
@@ -945,6 +962,7 @@ document.addEventListener("DOMContentLoaded", function () {
       ctx.shadowBlur = 6;
       ctx.setLineDash([6, 4]);
 
+      ctx.beginPath();
       drawWrappedThread(ctx, x1, y1, x2, y2, 2);
       ctx.stroke();
 
@@ -1171,10 +1189,11 @@ document.addEventListener("DOMContentLoaded", function () {
     cv.onpointerdown = null;
     cv.onpointerup   = null;
 
+    let _hoverRafId = null;
     cv.onpointermove = (ev) => {
       const { x, y } = canvasXYFromPointerEvent(ev);
 
-      // Handle custom nail drag (works for all pointer types)
+      // Handle custom nail drag (works for all pointer types) — needs immediate feedback
       if (isDraggingCustom && dragCustomIdx !== null) {
         if (isInsideBoard(x, y)) {
           customNails[dragCustomIdx] = {
@@ -1187,8 +1206,16 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       if (ev.pointerType === "touch") return;
-      hoverNail = nearestNail(x, y);
-      redrawAll();
+      const newHover = nearestNail(x, y);
+      if (newHover === hoverNail) return; // nail unchanged — no redraw needed
+      hoverNail = newHover;
+      // Gate hover redraws to one per animation frame
+      if (_hoverRafId === null) {
+        _hoverRafId = requestAnimationFrame(() => {
+          _hoverRafId = null;
+          redrawAll();
+        });
+      }
     };
 
     cv.onpointerleave = () => {
