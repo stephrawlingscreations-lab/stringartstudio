@@ -1174,10 +1174,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function canvasXYFromPointerEvent(ev) {
     const rect = cv.getBoundingClientRect();
+    const scale = rect.width > 0 ? _cachedCanvasCssSize / rect.width : 1;
 
     return {
-      x: ev.clientX - rect.left,
-      y: ev.clientY - rect.top,
+      x: (ev.clientX - rect.left) * scale,
+      y: (ev.clientY - rect.top) * scale,
     };
   }
 
