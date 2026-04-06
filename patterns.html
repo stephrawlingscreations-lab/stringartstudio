@@ -205,6 +205,33 @@
           grid-template-columns: 1fr;
         }
       }
+      .pattern-card .btn-guide {
+        display: block;
+        text-align: center;
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #c9982f, #a8771e);
+        color: #fff;
+        font-weight: 600;
+        font-size: 0.85rem;
+        border-radius: 10px;
+        text-decoration: none;
+        transition: opacity 0.15s;
+        box-shadow: 0 4px 14px rgba(184,137,46,0.22);
+      }
+      .pattern-card .btn-guide:hover {
+        opacity: 0.88;
+      }
+      .badge-advanced {
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 3px 9px;
+        border-radius: 20px;
+        background: rgba(130, 60, 160, 0.10);
+        color: #7a3a9a;
+        border: 1px solid rgba(130, 60, 160, 0.22);
+      }
       .pattern-preview video {
         cursor: zoom-in;
       }
@@ -308,6 +335,7 @@
             <button class="filter-tab active" data-filter="all">All</button>
             <button class="filter-tab" data-filter="beginner">Beginner</button>
             <button class="filter-tab" data-filter="intermediate">Intermediate</button>
+            <button class="filter-tab" data-filter="advanced">Advanced</button>
           </div>
 
           <div class="pattern-grid" id="patternGrid">
@@ -423,6 +451,26 @@
               <p class="pattern-desc">A smooth outward spiral that fills the board evenly. The thread wraps around in a continuous path — mesmerising to build and to look at.</p>
               <p class="pattern-detail">72 nails · single layer</p>
               <a class="btn-try" href="designer.html?preset=spiral&board=circle&nails=72">Try this pattern →</a>
+            </div>
+
+            <!-- Wave -->
+            <div class="pattern-card" data-difficulty="advanced">
+              <div class="pattern-preview">
+                <video autoplay loop muted playsinline
+                  style="width:140px;height:140px;border-radius:50%;display:block;object-fit:cover"
+                  aria-hidden="true">
+                  <source src="Patterns/Wave Video.webm" type="video/webm">
+                </video>
+              </div>
+              <h3>Wave</h3>
+              <div class="pattern-meta">
+                <span class="badge-board">Circle</span>
+                <span class="badge-advanced">Advanced</span>
+              </div>
+              <p class="pattern-desc">Seven overlapping spiral bands create a flowing, wave-like interference pattern across the board. Each layer visits 290 nails in a continuous path — intricate to look at, satisfying to build.</p>
+              <p class="pattern-detail">320 nails · 7 colour layers</p>
+              <a class="btn-try" href="designer.html?preset=wave">Try in designer →</a>
+              <a class="btn-guide" href="designer.html?preset=wave&guide=1">✦ Get the completed build guide</a>
             </div>
 
           </div>
@@ -608,6 +656,7 @@
           var edges = p.fn(p.nails);
           drawEdges(ctx, pts, edges, edges.length, 0, p.color);
         });
+
 
       })();
 

@@ -1910,6 +1910,74 @@ document.addEventListener("DOMContentLoaded", function () {
     return seq;
   }
   /* -----------------------------
+     WAVE PRESET — overlapping spiral bands
+  ----------------------------- */
+
+  // Build a single wave layer sequence (0-based nail indices, 320-nail circle).
+  // offset is in nails (0-based). Layer 1 = offset 0, Layer 2 = offset 20, etc.
+  function makeWaveLayer(offsetNails) {
+    const n = 320;
+    // Base sequence in 1-based nail numbers (user-specified formula)
+    const seq1 = [1, 160];
+    for (let r = 159; r >= 16; r--) {
+      seq1.push(2 * r + 1);
+      seq1.push(r);
+    }
+    // Convert to 0-based and rotate by offset
+    return seq1.map(nail => ((nail - 1 + offsetNails) % n));
+  }
+
+  function generateWavePreset() {
+    pushUndoSnapshot();
+
+    // Force circle board + 320 nails
+    if ($("nails")) $("nails").value = "320";
+    if ($("board")) $("board").value = "circle";
+
+    // 7 layers, each starting 20 nails apart (nails 1, 21, 41 … 121 in 1-based display)
+    const waveOffsets = [0, 20, 40, 60, 80, 100, 120];
+    const waveColors  = [
+      "#6A00FF", // violet
+      "#0047FF", // blue
+      "#00AEEF", // sky
+      "#00C853", // green
+      "#FFD600", // yellow
+      "#FF6D00", // orange
+      "#D50000", // red
+    ];
+
+    layers = waveOffsets.map(function(offset, i) {
+      const seq = makeWaveLayer(offset);
+      return {
+        color: waveColors[i],
+        opacity: 0.35,
+        lw: 0.7,
+        edges: buildEdgesFromSeq(seq),
+        seq: seq,
+        step: null,
+        hidden: false,
+        generatedPreset: true,
+      };
+    });
+
+    activeLayer = 0;
+    lastNail = layers[0].seq[layers[0].seq.length - 1];
+
+    syncLayerSelect();
+    syncHideButton();
+
+    redrawAll();
+    updateSeqOutput();
+    updateDrawModeSeqMini();
+    debouncedSave();
+  }
+
+  function initWavePreset() {
+    const genBtn = $("generateWaveBtn");
+    if (genBtn) genBtn.addEventListener("click", generateWavePreset);
+  }
+
+  /* -----------------------------
      CUSTOM NAIL LAYOUT
   ----------------------------- */
 
@@ -2319,6 +2387,7 @@ document.addEventListener("DOMContentLoaded", function () {
     syncLayerSelect();
     initActiveCanvasPointerControls();
     initQuickPatterns();
+    initWavePreset();
     initPanelTabs();
     initModeToggles();
     initNailPlacement();
@@ -2668,6 +2737,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const board = params.get("board") || "circle";
       const nails = parseInt(params.get("nails"), 10) || 120;
+      const openGuide = params.get("guide") === "1";
 
       history.replaceState({}, "", window.location.pathname);
 
@@ -2678,6 +2748,21 @@ document.addEventListener("DOMContentLoaded", function () {
       boardColor = "#ffffff";
       localStorage.setItem("sas_board_color", boardColor);
       if ($("boardColor")) $("boardColor").value = boardColor;
+
+      // Wave is a multi-layer preset — handled separately
+      if (preset === "wave") {
+        ensureLayerExists();
+        generateWavePreset();
+        syncLayerSelect();
+        switchLayer(0);
+        if (openGuide) {
+          // Small delay so the canvas renders before the modal appears
+          setTimeout(function () { openProModal(); }, 300);
+        } else {
+          showToast("Wave pattern loaded — adjust colours in the Style tab.");
+        }
+        return true;
+      }
 
       ensureLayerExists();
       redrawAll();
