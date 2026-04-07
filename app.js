@@ -73,8 +73,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // ---- Custom Nail Layout State ----
   let nailPlacementMode = 'perimeter'; // 'perimeter' | 'partial-edge' | 'manual' | 'template'
-  let nailTemplateShape = 'circle';    // 'circle'|'square'|'diamond'|'hexagon'|'heart'|'star'
-  let rectAspect = { w: 3, h: 2 };    // for rectangle board
+  let nailTemplateShape = 'circle';    // 'circle'|'square'|'diamond'|'hexagon'|'heart'|'star'|'z'
+  let rectAspect = { w: 30, h: 20 };  // for rectangle board (cm — only the ratio matters)
   let manualGrid = { show: false, divisions: 8 }; // grid overlay for manual placement
   let customNails    = [];       // [{nx, ny}] normalised by radius
   let edgesEnabled   = { top: true, right: true, bottom: true, left: true };
@@ -519,6 +519,34 @@ document.addEventListener("DOMContentLoaded", function () {
         const hx = heartPts[lo][0] + (heartPts[hi][0] - heartPts[lo][0]) * t2;
         const hy = heartPts[lo][1] + (heartPts[hi][1] - heartPts[lo][1]) * t2;
         pts.push([cx + hx * (rx / maxHx), cy + hy * (ry / maxHy)]);
+      }
+    } else if (shape === 'z') {
+      // Z shape: top bar → diagonal → bottom bar
+      const corners = [
+        [cx - rx, cy - ry], // top-left
+        [cx + rx, cy - ry], // top-right
+        [cx - rx, cy + ry], // bottom-left
+        [cx + rx, cy + ry], // bottom-right
+      ];
+      const segments = [
+        [corners[0], corners[1]], // top bar
+        [corners[1], corners[2]], // diagonal
+        [corners[2], corners[3]], // bottom bar
+      ];
+      const segLens = segments.map(([a, b]) =>
+        Math.sqrt((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2)
+      );
+      const perim = segLens.reduce((a, b) => a + b, 0);
+      const step = perim / nails;
+      const cumLen = [0];
+      segLens.forEach((l, i) => cumLen.push(cumLen[i] + l));
+      for (let i = 0; i < nails; i++) {
+        const d = i * step;
+        let si = 0;
+        while (si < segments.length - 1 && cumLen[si + 1] <= d) si++;
+        const t = (d - cumLen[si]) / (segLens[si] || 1);
+        const [a, b] = segments[si];
+        pts.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]);
       }
     } else if (shape === 'star') {
       const corners = [];
@@ -1423,7 +1451,8 @@ document.addEventListener("DOMContentLoaded", function () {
       if (s.nailTemplateShape != null) nailTemplateShape = s.nailTemplateShape;
       if (s.rectAspect != null) {
         rectAspect = s.rectAspect;
-        if ($('rectAspectSelect')) $('rectAspectSelect').value = s.rectAspect.w + ':' + s.rectAspect.h;
+        if ($('rectWidthCm')) $('rectWidthCm').value = s.rectAspect.w;
+        if ($('rectHeightCm')) $('rectHeightCm').value = s.rectAspect.h;
       }
       if (Array.isArray(s.customNails)) customNails = s.customNails;
 
@@ -1525,7 +1554,8 @@ document.addEventListener("DOMContentLoaded", function () {
         if (s.nailTemplateShape != null) nailTemplateShape = s.nailTemplateShape;
         if (s.rectAspect != null) {
           rectAspect = s.rectAspect;
-          if ($('rectAspectSelect')) $('rectAspectSelect').value = s.rectAspect.w + ':' + s.rectAspect.h;
+          if ($('rectWidthCm')) $('rectWidthCm').value = s.rectAspect.w;
+          if ($('rectHeightCm')) $('rectHeightCm').value = s.rectAspect.h;
         }
         if (Array.isArray(s.customNails)) customNails = s.customNails;
 
@@ -1579,7 +1609,8 @@ document.addEventListener("DOMContentLoaded", function () {
     if (s.nailTemplateShape != null) nailTemplateShape = s.nailTemplateShape;
     if (s.rectAspect != null) {
       rectAspect = s.rectAspect;
-      if ($('rectAspectSelect')) $('rectAspectSelect').value = s.rectAspect.w + ':' + s.rectAspect.h;
+      if ($('rectWidthCm')) $('rectWidthCm').value = s.rectAspect.w;
+      if ($('rectHeightCm')) $('rectHeightCm').value = s.rectAspect.h;
     }
     if (Array.isArray(s.customNails)) customNails = s.customNails;
     syncLayerSelect();
@@ -2445,12 +2476,14 @@ document.addEventListener("DOMContentLoaded", function () {
       if (manualGrid.show) redrawAll();
     });
 
-    // Rectangle aspect ratio
-    $('rectAspectSelect')?.addEventListener('change', e => {
-      const [w, h] = e.target.value.split(':').map(Number);
-      rectAspect = { w, h };
-      redrawAll();
-    });
+    // Rectangle board size (cm inputs — ratio is what matters)
+    function updateRectAspectFromInputs() {
+      const w = parseFloat($('rectWidthCm')?.value) || 30;
+      const h = parseFloat($('rectHeightCm')?.value) || 20;
+      if (w > 0 && h > 0) { rectAspect = { w, h }; redrawAll(); }
+    }
+    $('rectWidthCm')?.addEventListener('input', updateRectAspectFromInputs);
+    $('rectHeightCm')?.addEventListener('input', updateRectAspectFromInputs);
 
 
     updateNailPlacementUI();
@@ -2883,7 +2916,8 @@ document.addEventListener("DOMContentLoaded", function () {
       if (state.nts) nailTemplateShape = state.nts;
       if (state.ra) {
         rectAspect = state.ra;
-        if ($('rectAspectSelect')) $('rectAspectSelect').value = state.ra.w + ':' + state.ra.h;
+        if ($('rectWidthCm')) $('rectWidthCm').value = state.ra.w;
+        if ($('rectHeightCm')) $('rectHeightCm').value = state.ra.h;
       }
       if (Array.isArray(state.cn)) customNails = state.cn;
 

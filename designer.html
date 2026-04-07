@@ -2174,14 +2174,15 @@
             </div>
             <input id="radius" type="hidden" value="320" />
             <div id="rectAspectRow" style="display:none; margin-top:8px;">
-              <label>Aspect ratio</label>
-              <select id="rectAspectSelect">
-                <option value="3:2" selected>3 : 2 (landscape)</option>
-                <option value="2:3">2 : 3 (portrait)</option>
-                <option value="4:3">4 : 3</option>
-                <option value="16:9">16 : 9</option>
-                <option value="1:1">1 : 1 (square)</option>
-              </select>
+              <label>Board size (cm)</label>
+              <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+                <input id="rectWidthCm" type="number" min="1" max="500" value="30"
+                  style="width:58px;padding:6px 8px;border-radius:8px;border:1.5px solid #ddd;font-size:13px;text-align:center;" />
+                <span style="color:var(--muted);font-size:14px;">×</span>
+                <input id="rectHeightCm" type="number" min="1" max="500" value="20"
+                  style="width:58px;padding:6px 8px;border-radius:8px;border:1.5px solid #ddd;font-size:13px;text-align:center;" />
+                <span style="color:var(--muted);font-size:13px;">cm</span>
+              </div>
             </div>
           </div>
 
@@ -2294,6 +2295,7 @@
                 <button class="template-shape-btn" data-template-shape="hexagon">⬡ Hexagon</button>
                 <button class="template-shape-btn" data-template-shape="heart">♥ Heart</button>
                 <button class="template-shape-btn" data-template-shape="star">★ Star</button>
+                <button class="template-shape-btn" data-template-shape="z">Z Shape</button>
               </div>
             </div>
           </div>
