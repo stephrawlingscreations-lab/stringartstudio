@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>🌸 PPB Designs</title>
 <link rel="apple-touch-icon" href="ppb-icon.png">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
@@ -23,6 +26,19 @@ input,select,textarea,button{font-family:'Lato',sans-serif}
 </head>
 <body>
 <div id="root"></div>
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyAW1120dlE8E_y2Fv4Sj0NESJFc-vo7teY",
+  authDomain:"ppb-designs.firebaseapp.com",
+  databaseURL:"https://ppb-designs-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"ppb-designs",
+  storageBucket:"ppb-designs.firebasestorage.app",
+  messagingSenderId:"258135515958",
+  appId:"1:258135515958:web:9a5a18d9e2969564cf0997"
+});
+const fbAuth=firebase.auth();
+const fbDb=firebase.database();
+</script>
 <script type="text/babel">
 const {useState,useRef,useCallback,useEffect,useMemo}=React;
 const C={deep:"#880e4f",rose:"#c2185b",mid:"#e91e8c",light:"#fce4ec",pale:"#fff0f5",blush:"#f8bbd0",green:"#2e7d32",glight:"#e8f5e9",gold:"#f57f17",gld:"#fff8e1",amber:"#ff8f00",blue:"#1565c0",blight:"#e3f2fd",teal:"#00695c",tlight:"#e0f2f1",grey:"#616161",lgrey:"#f5f5f5",muted:"#9e9e9e",text:"#37474f"};
@@ -70,6 +86,8 @@ const SEED={
 
 const load=(k,fb)=>{try{const v=localStorage.getItem("ppb_"+k);return v?JSON.parse(v):fb}catch{return fb}};
 const saveLS=(k,v)=>{try{localStorage.setItem("ppb_"+k,JSON.stringify(v))}catch{}};
+const saveFB=(uid,k,v)=>{if(!uid)return;fbDb.ref(`users/${uid}/${k}`).set(v).catch(()=>{})};
+const loadFB=(uid)=>fbDb.ref(`users/${uid}`).once("value").then(s=>s.val()||{});
 const genId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 const daysUntil=ds=>{const d=new Date(ds),n=new Date();n.setHours(0,0,0,0);d.setHours(0,0,0,0);return Math.round((d-n)/86400000)};
 
@@ -99,7 +117,8 @@ function Card({children,style:s={}}){return<div style={{background:"#fff",border
 // ════════════════════════════════════════════════════════════════════════════
 // APP ROOT
 // ════════════════════════════════════════════════════════════════════════════
-function App(){
+function App({user}){
+  const[fbLoading,setFbLoading]=useState(true);
   const[customers,  setCR]=useState(()=>load("customers",  SEED.customers));
   const[inProgress, setIPR]=useState(()=>load("inProgress",SEED.inProgress));
   const[completed,  setCOR]=useState(()=>load("completed", SEED.completed));
@@ -109,16 +128,38 @@ function App(){
   const[tab,setTab]=useState("dashboard");
   const[toast,setToast]=useState({msg:"",color:C.green});
   const[modals,setModals]=useState({newOrder:false,newCustomer:false,complete:null,viewCard:null,viewCustomer:null,newExpense:false,newSupply:false,backup:false});
+
+  useEffect(()=>{
+    const defs={customers:SEED.customers,inProgress:SEED.inProgress,completed:SEED.completed,supplies:SEED.supplies,shopStock:SEED.shopStock,expenses:SEED.expenses};
+    const setters={customers:setCR,inProgress:setIPR,completed:setCOR,supplies:setSR,shopStock:setSSR,expenses:setER};
+    loadFB(user.uid).then(data=>{
+      const hasCloud=Object.keys(data).length>0;
+      Object.keys(defs).forEach(k=>{
+        const val=hasCloud?(data[k]??defs[k]):load(k,defs[k]);
+        setters[k](val);saveLS(k,val);
+      });
+      // First sign-in on a new device: push any existing localStorage data up to Firebase
+      if(!hasCloud){
+        const migrate={};
+        Object.keys(defs).forEach(k=>migrate[k]=load(k,defs[k]));
+        fbDb.ref(`users/${user.uid}`).set(migrate).catch(()=>{});
+      }
+      setFbLoading(false);
+    }).catch(()=>setFbLoading(false));
+  },[user.uid]);
+
   const openM=(k,v=true)=>setModals(m=>({...m,[k]:v}));
   const closeM=k=>setModals(m=>({...m,[k]:false}));
   const showT=(msg,color=C.green)=>{setToast({msg,color});setTimeout(()=>setToast({msg:"",color:C.green}),2200)};
-  const mk=(set,key)=>fn=>set(prev=>{const next=typeof fn==="function"?fn(prev):fn;saveLS(key,next);return next});
+  const mk=(set,key)=>fn=>set(prev=>{const next=typeof fn==="function"?fn(prev):fn;saveLS(key,next);saveFB(user.uid,key,next);return next});
   const setCustomers=useCallback(mk(setCR,"customers"),[]);
   const setInProgress=useCallback(mk(setIPR,"inProgress"),[]);
   const setCompleted=useCallback(mk(setCOR,"completed"),[]);
   const setSupplies=useCallback(mk(setSR,"supplies"),[]);
   const setShopStock=useCallback(mk(setSSR,"shopStock"),[]);
   const setExpenses=useCallback(mk(setER,"expenses"),[]);
+
+  if(fbLoading)return<LoadingScreen/>;
   const finishOrder=useCallback((orderId,{photo,qty,total,payment,notes})=>{
     const order=inProgress.find(o=>o.id===orderId);if(!order)return;
     setCompleted(c=>[{id:order.id,customerId:order.customerId,customerName:order.customerName,cardType:order.cardType,qty:parseInt(qty)||1,total:parseFloat(total)||0,payment:payment||"Cash",completedDate:new Date().toISOString().slice(0,10),notes:notes||"",photo:photo||null,channel:"Direct"},...c]);
@@ -137,10 +178,13 @@ function App(){
             <h1 style={{color:"#fff",fontSize:24,fontFamily:"'Playfair Display',serif",fontWeight:700,margin:0}}>🌸 PPB Designs</h1>
             <p style={{color:"#f8bbd0",fontSize:11,margin:"3px 0 0",letterSpacing:.4}}>Handmade Cards · Annacarty Tea Rooms & Direct · Saves automatically</p>
           </div>
-          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}}>
             <Btn onClick={()=>openM("newOrder")} small>+ New Order</Btn>
             <Btn onClick={()=>openM("newCustomer")} variant="secondary" small>+ Customer</Btn>
             <Btn onClick={()=>openM("backup")} variant="ghost" small style={{color:"#fff",border:"1.5px solid rgba(255,255,255,.6)"}}>💾 Backup</Btn>
+            {user.photoURL
+              ?<img src={user.photoURL} alt="" onClick={()=>fbAuth.signOut()} title="Sign out" style={{width:32,height:32,borderRadius:"50%",cursor:"pointer",border:"2px solid rgba(255,255,255,.5)",flexShrink:0}}/>
+              :<div onClick={()=>fbAuth.signOut()} title="Sign out" style={{width:32,height:32,borderRadius:"50%",background:"rgba(255,255,255,.2)",border:"2px solid rgba(255,255,255,.5)",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:700,fontSize:13,flexShrink:0}}>{(user.displayName||"?").charAt(0)}</div>}
           </div>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",background:"rgba(255,255,255,.11)",borderRadius:"10px 10px 0 0",overflow:"hidden"}}>
@@ -721,76 +765,56 @@ function BackupModal({customers,inProgress,completed,supplies,shopStock,expenses
       {imported&&<div style={{marginTop:8,padding:"8px 12px",background:C.glight,borderRadius:8,fontSize:12,color:C.green,fontWeight:700}}>✅ Data restored successfully!</div>}
     </div>
 
-    <div style={{marginTop:16,padding:"10px 14px",background:"#ffebee",borderRadius:10,fontSize:12,color:"#c62828",border:"1.5px solid #ffcdd2"}}>
-      ⚠️ <strong>Important:</strong> All data is stored in this browser only. Clearing Safari data, using a different browser, or switching phones will erase everything. Regular backups are your only safety net.
+    <div style={{marginTop:16,padding:"10px 14px",background:C.glight,borderRadius:10,fontSize:12,color:C.green,border:`1.5px solid #a5d6a7`}}>
+      ☁️ <strong>Auto-sync is on.</strong> Your data saves to the cloud automatically. Sign in on any device or browser to access it.
     </div>
     <div style={{marginTop:10,padding:"10px 14px",background:C.gld,borderRadius:10,fontSize:12,color:C.gold}}>
-      💡 <strong>Tip:</strong> Back up once a week by tapping 💾 Backup → Download Backup File → save to iCloud Drive. If you ever lose your data, just restore from that file.
+      💡 <strong>Tip:</strong> The Download Backup button is still useful as an extra safety net — save one to iCloud Drive every now and then.
     </div>
   </div>;
 }
 
-// ── PIN Lock ─────────────────────────────────────────────────────────────────
-const CORRECT_PIN = "2206";
+// ── Loading & Sign-In screens ─────────────────────────────────────────────────
+function LoadingScreen(){
+  return<div style={{minHeight:"100vh",background:`linear-gradient(135deg,${C.deep} 0%,${C.rose} 60%,${C.mid} 100%)`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:16}}>
+    <div style={{fontSize:52}}>🌸</div>
+    <div style={{color:"#fff",fontWeight:700,fontSize:16,fontFamily:"'Playfair Display',serif"}}>Loading PPB Designs…</div>
+  </div>;
+}
 
-function PinLock({onUnlock}){
-  const[pin,setPin]=useState("");
-  const[error,setError]=useState(false);
-  const[shake,setShake]=useState(false);
-
-  const handleDigit=(d)=>{
-    if(pin.length>=4)return;
-    const newPin=pin+d;
-    setPin(newPin);
-    setError(false);
-    if(newPin.length===4){
-      if(newPin===CORRECT_PIN){
-        // Save unlock to session so she doesn't have to re-enter on refresh
-        sessionStorage.setItem("ppb_unlocked","1");
-        onUnlock();
-      } else {
-        setShake(true);
-        setError(true);
-        setTimeout(()=>{setPin("");setShake(false);},700);
-      }
-    }
+function SignInScreen({error}){
+  const signIn=()=>{
+    const p=new firebase.auth.GoogleAuthProvider();
+    fbAuth.signInWithRedirect(p);
   };
-
-  const handleDelete=()=>setPin(p=>p.slice(0,-1));
-
-  const digits=["1","2","3","4","5","6","7","8","9","","0","⌫"];
-
   return<div style={{minHeight:"100vh",background:`linear-gradient(135deg,${C.deep} 0%,${C.rose} 60%,${C.mid} 100%)`,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
     <div style={{background:"rgba(255,255,255,.12)",borderRadius:28,padding:"40px 32px",maxWidth:320,width:"100%",textAlign:"center",backdropFilter:"blur(10px)"}}>
       <div style={{fontSize:48,marginBottom:8}}>🌸</div>
-      <h1 style={{color:"#fff",fontFamily:"'Playfair Display',serif",fontSize:24,fontWeight:700,margin:"0 0 4px"}}>PPB Designs</h1>
-      <p style={{color:"#f8bbd0",fontSize:13,margin:"0 0 32px"}}>Enter your PIN to continue</p>
-
-      {/* PIN dots */}
-      <div style={{display:"flex",justifyContent:"center",gap:16,marginBottom:32,animation:shake?"shake .5s ease":""}} >
-        {[0,1,2,3].map(i=><div key={i} style={{width:16,height:16,borderRadius:"50%",background:pin.length>i?"#fff":"rgba(255,255,255,.3)",transition:"background .15s",border:"2px solid rgba(255,255,255,.5)"}}/>)}
-      </div>
-
-      {error&&<div style={{color:"#ffcdd2",fontSize:13,fontWeight:700,marginBottom:16,marginTop:-20}}>Incorrect PIN — try again</div>}
-
-      {/* Keypad */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
-        {digits.map((d,i)=><button key={i} onClick={()=>d==="⌫"?handleDelete():d!==""?handleDigit(d):null}
-          style={{height:64,borderRadius:16,border:"2px solid rgba(255,255,255,.2)",background:d===""?"transparent":"rgba(255,255,255,.15)",color:"#fff",fontSize:d==="⌫"?20:22,fontWeight:700,cursor:d===""?"default":"pointer",fontFamily:"'Lato',sans-serif",transition:"background .15s",backdropFilter:"blur(4px)"}}
-          onMouseEnter={e=>{if(d!=="")e.currentTarget.style.background="rgba(255,255,255,.28)"}}
-          onMouseLeave={e=>{if(d!=="")e.currentTarget.style.background="rgba(255,255,255,.15)"}}>
-          {d}
-        </button>)}
-      </div>
+      <h1 style={{color:"#fff",fontFamily:"'Playfair Display',serif",fontSize:24,fontWeight:700,margin:"0 0 8px"}}>PPB Designs</h1>
+      <p style={{color:"#f8bbd0",fontSize:13,margin:"0 0 32px",lineHeight:1.5}}>Sign in with your Google account to access your business tracker</p>
+      <button onClick={signIn} style={{width:"100%",padding:"14px",borderRadius:14,border:"2px solid rgba(255,255,255,.3)",background:"rgba(255,255,255,.15)",color:"#fff",fontSize:15,fontWeight:700,cursor:"pointer",fontFamily:"'Lato',sans-serif",backdropFilter:"blur(4px)",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
+        <svg width="18" height="18" viewBox="0 0 24 24" style={{flexShrink:0}}><path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Sign in with Google
+      </button>
+      {error&&<p style={{color:"#ffcdd2",fontSize:13,marginTop:14,fontWeight:700}}>{error}</p>}
     </div>
     <style>{`@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-8px)}80%{transform:translateX(4px)}}`}</style>
   </div>;
 }
 
 function Root(){
-  const[unlocked,setUnlocked]=useState(()=>sessionStorage.getItem("ppb_unlocked")==="1");
-  if(!unlocked)return<PinLock onUnlock={()=>setUnlocked(true)}/>;
-  return<App/>;
+  const[user,setUser]=useState(null);
+  const[checking,setChecking]=useState(true);
+  const[signInError,setSignInError]=useState("");
+  useEffect(()=>{
+    // Handle redirect result (needed for mobile Safari sign-in flow)
+    fbAuth.getRedirectResult().catch(()=>setSignInError("Sign-in failed — please try again."));
+    const unsub=fbAuth.onAuthStateChanged(u=>{setUser(u);setChecking(false)});
+    return()=>unsub();
+  },[]);
+  if(checking)return<LoadingScreen/>;
+  if(!user)return<SignInScreen error={signInError}/>;
+  return<App user={user}/>;
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(<Root/>);
