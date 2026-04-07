@@ -521,32 +521,34 @@ document.addEventListener("DOMContentLoaded", function () {
         pts.push([cx + hx * (rx / maxHx), cy + hy * (ry / maxHy)]);
       }
     } else if (shape === 'z') {
-      // Z shape: top bar → diagonal → bottom bar
-      const corners = [
-        [cx - rx, cy - ry], // top-left
-        [cx + rx, cy - ry], // top-right
-        [cx - rx, cy + ry], // bottom-left
-        [cx + rx, cy + ry], // bottom-right
-      ];
-      const segments = [
-        [corners[0], corners[1]], // top bar
-        [corners[1], corners[2]], // diagonal
-        [corners[2], corners[3]], // bottom bar
-      ];
-      const segLens = segments.map(([a, b]) =>
-        Math.sqrt((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2)
-      );
-      const perim = segLens.reduce((a, b) => a + b, 0);
-      const step = perim / nails;
-      const cumLen = [0];
-      segLens.forEach((l, i) => cumLen.push(cumLen[i] + l));
-      for (let i = 0; i < nails; i++) {
-        const d = i * step;
-        let si = 0;
-        while (si < segments.length - 1 && cumLen[si + 1] <= d) si++;
-        const t = (d - cumLen[si]) / (segLens[si] || 1);
-        const [a, b] = segments[si];
-        pts.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]);
+      // Z shape: top bar (left→right) → diagonal (top-right→bottom-left) → bottom bar (left→right)
+      // Four named corners of the bounding box
+      const zTL = [cx - rx, cy - ry]; // top-left
+      const zTR = [cx + rx, cy - ry]; // top-right
+      const zBL = [cx - rx, cy + ry]; // bottom-left
+      const zBR = [cx + rx, cy + ry]; // bottom-right
+      // Three segments: [start, end]
+      const zSegs = [[zTL, zTR], [zTR, zBL], [zBL, zBR]];
+      // Length of each segment
+      const zLens = zSegs.map(function(seg) {
+        var dx = seg[1][0] - seg[0][0];
+        var dy = seg[1][1] - seg[0][1];
+        return Math.sqrt(dx * dx + dy * dy);
+      });
+      const zPerim = zLens[0] + zLens[1] + zLens[2];
+      const zStep = zPerim / nails;
+      // Cumulative lengths: [0, len0, len0+len1, len0+len1+len2]
+      const zCum = [0, zLens[0], zLens[0] + zLens[1], zPerim];
+      for (var zi = 0; zi < nails; zi++) {
+        var zd = zi * zStep;
+        // Find which segment this distance falls in
+        var seg = 0;
+        if (zd >= zCum[2]) seg = 2;
+        else if (zd >= zCum[1]) seg = 1;
+        var zt = (zd - zCum[seg]) / (zLens[seg] || 1);
+        var zP0 = zSegs[seg][0];
+        var zP1 = zSegs[seg][1];
+        pts.push([zP0[0] + (zP1[0] - zP0[0]) * zt, zP0[1] + (zP1[1] - zP0[1]) * zt]);
       }
     } else if (shape === 'star') {
       const corners = [];
@@ -2480,10 +2482,29 @@ document.addEventListener("DOMContentLoaded", function () {
     function updateRectAspectFromInputs() {
       const w = parseFloat($('rectWidthCm')?.value) || 30;
       const h = parseFloat($('rectHeightCm')?.value) || 20;
-      if (w > 0 && h > 0) { rectAspect = { w, h }; redrawAll(); }
+      if (w > 0 && h > 0) {
+        rectAspect = { w, h };
+        redrawAll();
+        // Nail count suggestion: ~1 nail per 1.5cm of perimeter, rounded to nearest 5
+        const perimCm = 2 * (w + h);
+        const suggested = Math.max(10, Math.round(perimCm / 1.5 / 5) * 5);
+        const row = $('nailSuggestRow');
+        const btn = $('nailSuggestBtn');
+        if (row) row.style.display = 'block';
+        if (btn) btn.textContent = suggested;
+      }
     }
     $('rectWidthCm')?.addEventListener('input', updateRectAspectFromInputs);
     $('rectHeightCm')?.addEventListener('input', updateRectAspectFromInputs);
+    $('nailSuggestBtn')?.addEventListener('click', () => {
+      const btn = $('nailSuggestBtn');
+      const nailsEl = $('nails');
+      if (btn && nailsEl) {
+        nailsEl.value = btn.textContent;
+        redrawAll();
+        updateSeqOutput();
+      }
+    });
 
 
     updateNailPlacementUI();
