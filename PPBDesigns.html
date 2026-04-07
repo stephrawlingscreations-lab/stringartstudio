@@ -90,6 +90,31 @@ const saveFB=(uid,k,v)=>{if(!uid)return;fbDb.ref(`users/${uid}/${k}`).set(v).cat
 const loadFB=(uid)=>fbDb.ref(`users/${uid}`).once("value").then(s=>s.val()||{});
 const genId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 const daysUntil=ds=>{const d=new Date(ds),n=new Date();n.setHours(0,0,0,0);d.setHours(0,0,0,0);return Math.round((d-n)/86400000)};
+const fmt=d=>new Date(d).toLocaleDateString("en-IE");
+const printWindow=(title,bodyHtml)=>{
+  const w=window.open("","_blank");
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title><style>
+    body{font-family:Arial,sans-serif;padding:24px;color:#333;font-size:13px}
+    h1{font-size:20px;margin:0 0 4px;color:#880e4f}
+    .meta{font-size:11px;color:#999;margin-bottom:20px}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    th{background:#fce4ec;color:#880e4f;text-align:left;padding:8px 10px;font-size:11px;letter-spacing:.5px;text-transform:uppercase;border-bottom:2px solid #f8bbd0}
+    td{padding:8px 10px;border-bottom:1px solid #f0f0f0;vertical-align:top}
+    tr:nth-child(even) td{background:#fffafa}
+    .summary{display:flex;gap:24px;margin-bottom:20px;flex-wrap:wrap}
+    .stat{background:#fce4ec;border-radius:8px;padding:10px 16px}
+    .stat-val{font-size:20px;font-weight:bold;color:#880e4f}
+    .stat-lbl{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.5px}
+    .tag{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:bold}
+    .done{background:#e8f5e9;color:#2e7d32}.pending{background:#fce4ec;color:#c2185b}
+    .low{color:#c62828;font-weight:bold}
+    .printbtn{margin-bottom:16px;padding:8px 18px;background:#c2185b;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:bold}
+    @media print{.printbtn{display:none}}
+  </style></head><body>
+  <button class="printbtn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+  ${bodyHtml}</body></html>`);
+  w.document.close();
+};
 
 // ── UI Atoms ─────────────────────────────────────────────────────────────────
 function Badge({children,color="pink",style:s={}}){
@@ -301,9 +326,13 @@ function InProgressTab({inProgress,setInProgress,onMarkComplete,showToast}){
   const setPhoto=(id,photo)=>{setInProgress(p=>p.map(o=>o.id===id?{...o,photo}:o));showToast("Photo saved!")};
   const deleteOrder=(id)=>{setInProgress(p=>p.filter(o=>o.id!==id));showToast("Order deleted");};
   const saveOrder=(id,changes)=>{setInProgress(p=>p.map(o=>o.id===id?{...o,...changes}:o));setEditOrder(null);showToast("Order updated!");};
+  const printOrders=()=>{
+    const rows=inProgress.map(o=>`<tr><td><strong>${o.customerName}</strong></td><td>${o.cardType}</td><td>${o.dueDate?fmt(o.dueDate):"—"}</td><td>${o.personalised}</td><td><span class="tag ${o.designDone?"done":"pending"}">${o.designDone?"✓ Done":"Pending"}</span></td><td><span class="tag ${o.made?"done":"pending"}">${o.made?"✓ Done":"Pending"}</span></td><td>${o.notes||""}</td></tr>`).join("");
+    printWindow("PPB Designs — Orders in Progress",`<h1>📋 Orders in Progress</h1><p class="meta">PPB Designs · Printed ${fmt(new Date())} · ${inProgress.length} order${inProgress.length!==1?"s":""}</p><table><thead><tr><th>Customer</th><th>Card Type</th><th>Due Date</th><th>Personalised</th><th>Design</th><th>Made</th><th>Notes</th></tr></thead><tbody>${rows}</tbody></table>`);
+  };
   const Sec=({title,items,tc})=>items.length===0?null:<><div style={{fontSize:11,fontWeight:700,color:tc,letterSpacing:.6,textTransform:"uppercase",marginBottom:8,marginTop:16}}>{title}</div>{items.map(o=><IPCard key={o.id} order={o} onToggleDesign={()=>toggle(o.id,"designDone")} onToggleMade={()=>toggle(o.id,"made")} onUpdatePhoto={p=>setPhoto(o.id,p)} onMarkComplete={()=>onMarkComplete(o)} onEdit={()=>setEditOrder(o)} onDelete={()=>deleteOrder(o.id)}/>)}</>;
   return<div className="fade-in">
-    <SecTitle>In Progress</SecTitle>
+    <SecTitle right={<Btn onClick={printOrders} variant="ghost" small>🖨️ Print Orders</Btn>}>In Progress</SecTitle>
     {inProgress.length===0?<Empty icon="🎉" title="All caught up!" sub="No orders in progress right now."/>:<><Sec title="⚠️ Overdue" items={overdue} tc="#c62828"/><Sec title="📅 Due This Week" items={soon} tc={C.amber}/><Sec title="🔧 Other Orders" items={rest} tc={C.rose}/></>}
     <Modal open={!!editOrder} onClose={()=>setEditOrder(null)}>
       {editOrder&&<EditIPOrderForm order={editOrder} onSave={(changes)=>saveOrder(editOrder.id,changes)} onCancel={()=>setEditOrder(null)}/>}
@@ -478,7 +507,11 @@ function AddDesignForm({onSubmit,onCancel}){
 function CustomersTab({customers,completed,openModal}){
   const[search,setSearch]=useState("");
   const filtered=customers.filter(c=>c.name.toLowerCase().includes(search.toLowerCase())||c.town.toLowerCase().includes(search.toLowerCase()));
-  return<div className="fade-in"><SecTitle>Customer Directory</SecTitle>
+  const printCustomers=()=>{
+    const rows=customers.map(c=>{const orders=completed.filter(o=>o.customerId===c.id);const total=orders.reduce((s,o)=>s+o.total,0);return`<tr><td><strong>${c.name}</strong></td><td>${c.phone||"—"}</td><td>${c.town||"—"}</td><td>${c.bday||"—"}</td><td>${orders.length}</td><td>€${total.toFixed(2)}</td><td>${c.prefs||""}</td></tr>`}).join("");
+    printWindow("PPB Designs — Customer Directory",`<h1>👥 Customer Directory</h1><p class="meta">PPB Designs · Printed ${fmt(new Date())} · ${customers.length} customers</p><table><thead><tr><th>Name</th><th>Phone</th><th>Town</th><th>Birthday</th><th>Orders</th><th>Spent</th><th>Preferences</th></tr></thead><tbody>${rows}</tbody></table>`);
+  };
+  return<div className="fade-in"><SecTitle right={<Btn onClick={printCustomers} variant="ghost" small>🖨️ Print List</Btn>}>Customer Directory</SecTitle>
     <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍  Search by name or town…" style={{...iSt,marginBottom:16,fontSize:14}} onFocus={e=>e.target.style.borderColor=C.rose} onBlur={e=>e.target.style.borderColor=C.blush}/>
     {filtered.length===0?<Empty icon="👥" title="No customers found"/>:<div style={{display:"flex",flexDirection:"column",gap:10}}>
       {filtered.map(c=>{const orders=completed.filter(o=>o.customerId===c.id);const total=orders.reduce((s,o)=>s+o.total,0);return<div key={c.id} onClick={()=>openModal("viewCustomer",c)} style={{background:"#fff",borderRadius:14,border:`1.5px solid ${C.light}`,padding:"14px 18px",display:"flex",alignItems:"center",gap:14,cursor:"pointer",transition:"box-shadow .2s,border-color .2s"}} onMouseEnter={e=>{e.currentTarget.style.boxShadow=`0 6px 20px rgba(194,24,91,.12)`;e.currentTarget.style.borderColor=C.blush}} onMouseLeave={e=>{e.currentTarget.style.boxShadow="none";e.currentTarget.style.borderColor=C.light}}>
@@ -589,7 +622,13 @@ function EditCompletedOrderForm({order,onSave,onCancel}){
 function SuppliesTab({supplies,setSupplies,openModal,showToast}){
   const cats=[...new Set(supplies.map(s=>s.cat))];
   const upd=(id,field,val)=>setSupplies(ss=>ss.map(s=>s.id===id?{...s,[field]:val}:s));
-  return<div className="fade-in"><SecTitle right={<Btn onClick={()=>openModal("newSupply")} small>+ Add Supply</Btn>}>📦 Supplies & Stock</SecTitle>
+  const printSupplies=(lowOnly)=>{
+    const list=lowOnly?supplies.filter(s=>s.qty<=s.reorderAt):supplies;
+    const rows=list.map(s=>`<tr><td><strong class="${s.qty<=s.reorderAt?"low":""}">${s.name}</strong></td><td>${s.cat}</td><td class="${s.qty<=s.reorderAt?"low":""}">${s.qty}</td><td>${s.reorderAt}</td><td>${s.qty<=s.reorderAt?'<span class="tag pending">⚠️ Reorder</span>':'<span class="tag done">OK</span>'}</td><td>${s.supplier||"—"}</td><td>${s.cost>0?"€"+s.cost.toFixed(2):"—"}</td></tr>`).join("");
+    const title=lowOnly?"📦 Reorder List":"📦 Full Stock List";
+    printWindow(`PPB Designs — ${title}`,`<h1>${title}</h1><p class="meta">PPB Designs · Printed ${fmt(new Date())} · ${list.length} item${list.length!==1?"s":""}</p><table><thead><tr><th>Item</th><th>Category</th><th>In Stock</th><th>Reorder At</th><th>Status</th><th>Supplier</th><th>Cost Each</th></tr></thead><tbody>${rows}</tbody></table>`);
+  };
+  return<div className="fade-in"><SecTitle right={<div style={{display:"flex",gap:6}}><Btn onClick={()=>printSupplies(true)} variant="ghost" small>🖨️ Reorder List</Btn><Btn onClick={()=>printSupplies(false)} variant="ghost" small>🖨️ Full Stock</Btn><Btn onClick={()=>openModal("newSupply")} small>+ Add Supply</Btn></div>}>📦 Supplies & Stock</SecTitle>
     {cats.map(cat=>{const items=supplies.filter(s=>s.cat===cat);return<div key={cat} style={{marginBottom:20}}>
       <div style={{fontSize:11,fontWeight:700,color:C.muted,letterSpacing:.7,textTransform:"uppercase",marginBottom:8,paddingBottom:6,borderBottom:`1px solid ${C.light}`}}>{cat}</div>
       <div style={{display:"flex",flexDirection:"column",gap:8}}>
@@ -618,7 +657,15 @@ function MoneyTab({completed,expenses,setExpenses,openModal}){
   const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],yr=new Date().getFullYear();
   const mRev=useMemo(()=>months.map((_,i)=>completed.filter(o=>{const d=new Date(o.completedDate);return d.getMonth()===i&&d.getFullYear()===yr}).reduce((s,o)=>s+o.total,0)),[completed,yr]);
   const maxR=Math.max(...mRev,1);
-  return<div className="fade-in"><SecTitle right={<Btn onClick={()=>openModal("newExpense")} small>+ Add Expense</Btn>}>💰 Money</SecTitle>
+  const printSales=()=>{
+    const rows=completed.map(o=>`<tr><td>${fmt(o.completedDate)}</td><td>${o.customerName}</td><td>${o.cardType}</td><td>${o.qty}</td><td>€${o.total.toFixed(2)}</td><td>${o.payment}</td><td>${o.channel}</td></tr>`).join("");
+    printWindow("PPB Designs — Sales Report",`<h1>💰 Sales Report</h1><p class="meta">PPB Designs · Printed ${fmt(new Date())} · ${completed.length} sales</p><div class="summary"><div class="stat"><div class="stat-val">€${rev.toFixed(2)}</div><div class="stat-lbl">Revenue</div></div><div class="stat"><div class="stat-val">€${exp.toFixed(2)}</div><div class="stat-lbl">Expenses</div></div><div class="stat"><div class="stat-val">€${profit.toFixed(2)}</div><div class="stat-lbl">Profit</div></div></div><table><thead><tr><th>Date</th><th>Customer</th><th>Card Type</th><th>Qty</th><th>Total</th><th>Payment</th><th>Channel</th></tr></thead><tbody>${rows}</tbody></table>`);
+  };
+  const printExpenses=()=>{
+    const rows=expenses.map(e=>`<tr><td>${fmt(e.date)}</td><td>${e.item}</td><td>${e.cat}</td><td>€${e.amount.toFixed(2)}</td><td>${e.receipt?"✓":"⚠️ Missing"}</td><td>${e.notes||""}</td></tr>`).join("");
+    printWindow("PPB Designs — Expenses",`<h1>🧾 Expenses</h1><p class="meta">PPB Designs · Printed ${fmt(new Date())} · Total: €${exp.toFixed(2)}</p><table><thead><tr><th>Date</th><th>Item</th><th>Category</th><th>Amount</th><th>Receipt</th><th>Notes</th></tr></thead><tbody>${rows}</tbody></table>`);
+  };
+  return<div className="fade-in"><SecTitle right={<div style={{display:"flex",gap:6}}><Btn onClick={printSales} variant="ghost" small>🖨️ Sales</Btn><Btn onClick={printExpenses} variant="ghost" small>🖨️ Expenses</Btn><Btn onClick={()=>openModal("newExpense")} small>+ Add Expense</Btn></div>}>💰 Money</SecTitle>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:20}}>
       {[{label:"Revenue",val:"€"+rev.toFixed(2),color:C.rose,bg:C.light},{label:"Expenses",val:"€"+exp.toFixed(2),color:C.amber,bg:"#fff3e0"},{label:"Profit",val:"€"+profit.toFixed(2),color:profit>=0?C.green:"#c62828",bg:profit>=0?C.glight:"#ffebee"}].map(k=><div key={k.label} style={{background:k.bg,borderRadius:12,padding:"14px",textAlign:"center"}}><div style={{fontWeight:900,fontSize:18,color:k.color,fontFamily:"'Playfair Display',serif"}}>{k.val}</div><div style={{fontSize:11,color:C.muted,marginTop:2,fontWeight:700,letterSpacing:.4,textTransform:"uppercase"}}>{k.label}</div></div>)}
     </div>
