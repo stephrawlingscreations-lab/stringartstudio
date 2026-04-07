@@ -85,7 +85,7 @@ function Btn({children,onClick,variant="primary",small,disabled,fullWidth,style:
 }
 const iSt={width:"100%",padding:"10px 14px",border:`1.5px solid ${C.blush}`,borderRadius:10,fontSize:14,color:C.text,background:"#fffafe",outline:"none",transition:"border-color .2s"};
 function Lbl({text,req}){return<label style={{display:"block",fontSize:11,fontWeight:700,color:C.deep,marginBottom:5,letterSpacing:.6,textTransform:"uppercase"}}>{text}{req&&" *"}</label>}
-function Inp({label,req,...p}){return<div style={{marginBottom:13}}>{label&&<Lbl text={label} req={req}/>}<input style={iSt} {...p} onFocus={e=>e.target.style.borderColor=C.rose} onBlur={e=>e.target.style.borderColor=C.blush}/></div>}
+function Inp({label,req,...p}){const extra=p.type==="number"?{inputMode:"decimal"}:{};return<div style={{marginBottom:13}}>{label&&<Lbl text={label} req={req}/>}<input style={iSt} {...extra} {...p} onFocus={e=>e.target.style.borderColor=C.rose} onBlur={e=>e.target.style.borderColor=C.blush}/></div>}
 function Sel({label,req,options,labels,...p}){return<div style={{marginBottom:13}}>{label&&<Lbl text={label} req={req}/>}<select style={{...iSt,appearance:"none"}} {...p}><option value="">— select —</option>{options.map((o,i)=><option key={o} value={o}>{labels?labels[i]:o}</option>)}</select></div>}
 function Txt({label,...p}){return<div style={{marginBottom:13}}>{label&&<Lbl text={label}/>}<textarea style={{...iSt,resize:"vertical",minHeight:58}} {...p} onFocus={e=>e.target.style.borderColor=C.rose} onBlur={e=>e.target.style.borderColor=C.blush}/></div>}
 function Modal({open,onClose,children,wide}){if(!open)return null;return<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16,overflowY:"auto"}} onClick={onClose}><div className="fade-in" onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:20,padding:28,maxWidth:wide?700:500,width:"100%",boxShadow:`0 24px 64px rgba(136,14,79,.22)`,maxHeight:"92vh",overflowY:"auto"}}>{children}</div></div>}
@@ -170,7 +170,7 @@ function App(){
     <Modal open={!!modals.complete} onClose={()=>closeM("complete")}>{modals.complete&&<CompleteOrderForm order={modals.complete} onSubmit={finishOrder} onCancel={()=>closeM("complete")}/>}</Modal>
     <Modal open={modals.newOrder} onClose={()=>closeM("newOrder")}><NewOrderForm customers={customers} onSubmit={o=>{setInProgress(p=>[...p,o]);closeM("newOrder");showT("Order added!")}} onCancel={()=>closeM("newOrder")}/></Modal>
     <Modal open={modals.newCustomer} onClose={()=>closeM("newCustomer")}><NewCustomerForm onSubmit={c=>{setCustomers(cs=>[...cs,c]);closeM("newCustomer");showT("Customer added!")}} onCancel={()=>closeM("newCustomer")}/></Modal>
-    <Modal open={!!modals.viewCustomer} onClose={()=>closeM("viewCustomer")} wide>{modals.viewCustomer&&<CustomerDetail customer={modals.viewCustomer} completed={completed} setCustomers={setCustomers} onClose={()=>closeM("viewCustomer")} showToast={showT}/>}</Modal>
+    <Modal open={!!modals.viewCustomer} onClose={()=>closeM("viewCustomer")} wide>{modals.viewCustomer&&<CustomerDetail customer={modals.viewCustomer} completed={completed} setCustomers={setCustomers} setCompleted={setCompleted} onClose={()=>closeM("viewCustomer")} showToast={showT}/>}</Modal>
     <Modal open={modals.newExpense} onClose={()=>closeM("newExpense")}><NewExpenseForm onSubmit={e=>{setExpenses(ex=>[e,...ex]);closeM("newExpense");showT("Expense saved!")}} onCancel={()=>closeM("newExpense")}/></Modal>
     <Modal open={modals.newSupply} onClose={()=>closeM("newSupply")}><NewSupplyForm onSubmit={s=>{setSupplies(sp=>[...sp,s]);closeM("newSupply");showT("Supply added!")}} onCancel={()=>closeM("newSupply")}/></Modal>
     <Modal open={modals.backup} onClose={()=>closeM("backup")}>
@@ -249,18 +249,61 @@ function Dashboard({inProgress,completed,customers,shopStock,lowSupplies,overdue
 
 // ── In Progress Tab ───────────────────────────────────────────────────────────
 function InProgressTab({inProgress,setInProgress,onMarkComplete,showToast}){
+  const[editOrder,setEditOrder]=useState(null);
   const overdue=inProgress.filter(o=>o.dueDate&&daysUntil(o.dueDate)<0);
   const soon=inProgress.filter(o=>{if(!o.dueDate)return false;const d=daysUntil(o.dueDate);return d>=0&&d<=7});
   const rest=inProgress.filter(o=>!o.dueDate||(daysUntil(o.dueDate)>7));
   const toggle=(id,field)=>setInProgress(p=>p.map(o=>o.id===id?{...o,[field]:!o[field]}:o));
   const setPhoto=(id,photo)=>{setInProgress(p=>p.map(o=>o.id===id?{...o,photo}:o));showToast("Photo saved!")};
-  const Sec=({title,items,tc})=>items.length===0?null:<><div style={{fontSize:11,fontWeight:700,color:tc,letterSpacing:.6,textTransform:"uppercase",marginBottom:8,marginTop:16}}>{title}</div>{items.map(o=><IPCard key={o.id} order={o} onToggleDesign={()=>toggle(o.id,"designDone")} onToggleMade={()=>toggle(o.id,"made")} onUpdatePhoto={p=>setPhoto(o.id,p)} onMarkComplete={()=>onMarkComplete(o)}/>)}</>;
-  return<div className="fade-in"><SecTitle>In Progress</SecTitle>{inProgress.length===0?<Empty icon="🎉" title="All caught up!" sub="No orders in progress right now."/>:<><Sec title="⚠️ Overdue" items={overdue} tc="#c62828"/><Sec title="📅 Due This Week" items={soon} tc={C.amber}/><Sec title="🔧 Other Orders" items={rest} tc={C.rose}/></>}</div>;
+  const deleteOrder=(id)=>{setInProgress(p=>p.filter(o=>o.id!==id));showToast("Order deleted");};
+  const saveOrder=(id,changes)=>{setInProgress(p=>p.map(o=>o.id===id?{...o,...changes}:o));setEditOrder(null);showToast("Order updated!");};
+  const Sec=({title,items,tc})=>items.length===0?null:<><div style={{fontSize:11,fontWeight:700,color:tc,letterSpacing:.6,textTransform:"uppercase",marginBottom:8,marginTop:16}}>{title}</div>{items.map(o=><IPCard key={o.id} order={o} onToggleDesign={()=>toggle(o.id,"designDone")} onToggleMade={()=>toggle(o.id,"made")} onUpdatePhoto={p=>setPhoto(o.id,p)} onMarkComplete={()=>onMarkComplete(o)} onEdit={()=>setEditOrder(o)} onDelete={()=>deleteOrder(o.id)}/>)}</>;
+  return<div className="fade-in">
+    <SecTitle>In Progress</SecTitle>
+    {inProgress.length===0?<Empty icon="🎉" title="All caught up!" sub="No orders in progress right now."/>:<><Sec title="⚠️ Overdue" items={overdue} tc="#c62828"/><Sec title="📅 Due This Week" items={soon} tc={C.amber}/><Sec title="🔧 Other Orders" items={rest} tc={C.rose}/></>}
+    <Modal open={!!editOrder} onClose={()=>setEditOrder(null)}>
+      {editOrder&&<EditIPOrderForm order={editOrder} onSave={(changes)=>saveOrder(editOrder.id,changes)} onCancel={()=>setEditOrder(null)}/>}
+    </Modal>
+  </div>;
 }
-function IPCard({order,onToggleDesign,onToggleMade,onUpdatePhoto,onMarkComplete}){
+function IPCard({order,onToggleDesign,onToggleMade,onUpdatePhoto,onMarkComplete,onEdit,onDelete}){
   const days=order.dueDate?daysUntil(order.dueDate):null;
   const overdue=days!==null&&days<0,soon=days!==null&&days>=0&&days<=3,both=order.designDone&&order.made;
-  return<div className="fade-in" style={{background:"#fff",borderRadius:16,border:`2px solid ${overdue?C.blush:soon?"#ffe0b2":C.light}`,padding:16,display:"flex",gap:14,alignItems:"flex-start",boxShadow:"0 2px 12px rgba(194,24,91,.06)",marginBottom:12}}><PhotoUpload value={order.photo} onChange={onUpdatePhoto} size={72}/><div style={{flex:1,minWidth:0}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:6}}><div><div style={{fontWeight:700,fontSize:15,color:C.deep,fontFamily:"'Playfair Display',serif"}}>{order.customerName}</div><div style={{fontSize:12,color:C.muted,marginTop:1}}>{order.cardType}{order.personalised==="Yes"?" · Personalised":""}</div></div><div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>{overdue&&<Badge color="pink">⚠️ Overdue {Math.abs(days)}d</Badge>}{soon&&!overdue&&<Badge color="amber">Due soon</Badge>}{order.dueDate&&!overdue&&!soon&&<span style={{fontSize:11,color:C.muted}}>Due {new Date(order.dueDate).toLocaleDateString("en-IE")}</span>}</div></div>{order.notes&&<div style={{marginTop:7,fontSize:13,color:C.grey,fontStyle:"italic"}}>📝 {order.notes}</div>}<div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}><CheckPill checked={order.designDone} onClick={onToggleDesign} label="Design done"/><CheckPill checked={order.made} onClick={onToggleMade} label="Card made"/></div><div style={{marginTop:12}}><Btn onClick={onMarkComplete} variant={both?"green":"ghost"} small>{both?"✅ Mark Complete & Deliver":"Mark Complete"}</Btn></div></div></div>;
+  return<div className="fade-in" style={{background:"#fff",borderRadius:16,border:`2px solid ${overdue?C.blush:soon?"#ffe0b2":C.light}`,padding:16,display:"flex",gap:14,alignItems:"flex-start",boxShadow:"0 2px 12px rgba(194,24,91,.06)",marginBottom:12}}>
+    <PhotoUpload value={order.photo} onChange={onUpdatePhoto} size={72}/>
+    <div style={{flex:1,minWidth:0}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:6}}>
+        <div><div style={{fontWeight:700,fontSize:15,color:C.deep,fontFamily:"'Playfair Display',serif"}}>{order.customerName}</div><div style={{fontSize:12,color:C.muted,marginTop:1}}>{order.cardType}{order.personalised==="Yes"?" · Personalised":""}</div></div>
+        <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
+          {overdue&&<Badge color="pink">⚠️ Overdue {Math.abs(days)}d</Badge>}
+          {soon&&!overdue&&<Badge color="amber">Due soon</Badge>}
+          {order.dueDate&&!overdue&&!soon&&<span style={{fontSize:11,color:C.muted}}>Due {new Date(order.dueDate).toLocaleDateString("en-IE")}</span>}
+        </div>
+      </div>
+      {order.notes&&<div style={{marginTop:7,fontSize:13,color:C.grey,fontStyle:"italic"}}>📝 {order.notes}</div>}
+      <div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}><CheckPill checked={order.designDone} onClick={onToggleDesign} label="Design done"/><CheckPill checked={order.made} onClick={onToggleMade} label="Card made"/></div>
+      <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap",alignItems:"center"}}>
+        <Btn onClick={onMarkComplete} variant={both?"green":"ghost"} small>{both?"✅ Mark Complete & Deliver":"Mark Complete"}</Btn>
+        <button onClick={onEdit} style={{fontSize:11,padding:"5px 12px",borderRadius:8,border:`1px solid ${C.blush}`,background:"#fff",color:C.rose,cursor:"pointer",fontFamily:"Lato,sans-serif"}}>Edit</button>
+        <button onClick={onDelete} style={{fontSize:11,padding:"5px 12px",borderRadius:8,border:"1px solid #ffcdd2",background:"#ffebee",color:"#c62828",cursor:"pointer",fontFamily:"Lato,sans-serif"}}>Delete</button>
+      </div>
+    </div>
+  </div>;
+}
+function EditIPOrderForm({order,onSave,onCancel}){
+  const[f,setF]=useState({cardType:order.cardType,dueDate:order.dueDate||"",personalised:order.personalised||"No",notes:order.notes||""});
+  const sf=(k,v)=>setF(x=>({...x,[k]:v}));
+  return<div>
+    <MTitle sub={order.customerName}>Edit Order</MTitle>
+    <Sel label="Card Type" req options={CARD_TYPES} value={f.cardType} onChange={e=>sf("cardType",e.target.value)}/>
+    <Inp label="Due Date" type="date" value={f.dueDate} onChange={e=>sf("dueDate",e.target.value)}/>
+    <Sel label="Personalised?" options={["Yes","No"]} value={f.personalised} onChange={e=>sf("personalised",e.target.value)}/>
+    <Txt label="Notes" value={f.notes} onChange={e=>sf("notes",e.target.value)} placeholder="Any special requests…"/>
+    <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+      <Btn onClick={onCancel} variant="ghost" small>Cancel</Btn>
+      <Btn onClick={()=>f.cardType&&onSave(f)} variant="primary" small disabled={!f.cardType}>Save</Btn>
+    </div>
+  </div>;
 }
 
 // ── Shop Tab ────────────────────────────────────────────────────────────────────
@@ -271,12 +314,18 @@ function ShopTab({shopStock,setShopStock,completed,setCompleted,showToast}){
   const[filter,setFilter]=useState("All");
 
   const toggleSold=(id)=>{
-    setShopStock(s=>s.map(i=>i.id===id?{...i,sold:!i.sold,soldDate:!i.sold?new Date().toISOString().slice(0,10):null}:i));
     const item=shopStock.find(i=>i.id===id);
-    if(!item.sold){
-      // record sale in completed when ticked as sold
-      setCompleted(c=>[{id:"SHOP"+genId(),customerId:"",customerName:"Annacarty Tea Rooms",cardType:item.cardType,qty:1,total:item.price||0,payment:"Cash",completedDate:new Date().toISOString().slice(0,10),notes:item.notes||"",photo:item.photo||null,channel:"Shop"},...c]);
+    if(!item)return;
+    const nowSold=!item.sold;
+    if(nowSold){
+      const saleId="SHOP"+genId();
+      setShopStock(s=>s.map(i=>i.id===id?{...i,sold:true,soldDate:new Date().toISOString().slice(0,10),saleId}:i));
+      setCompleted(c=>[{id:saleId,customerId:"",customerName:"Annacarty Tea Rooms",cardType:item.cardType,qty:1,total:item.price||0,payment:"Cash",completedDate:new Date().toISOString().slice(0,10),notes:item.notes||"",photo:item.photo||null,channel:"Shop"},...c]);
       showToast("✅ Marked as sold & revenue recorded!");
+    }else{
+      setCompleted(c=>c.filter(o=>o.id!==item.saleId));
+      setShopStock(s=>s.map(i=>i.id===id?{...i,sold:false,soldDate:null,saleId:null}:i));
+      showToast("↩️ Marked as unsold — revenue reversed");
     }
   };
 
@@ -396,13 +445,54 @@ function CustomersTab({customers,completed,openModal}){
     </div>}
   </div>;
 }
-function CustomerDetail({customer,completed,setCustomers,onClose,showToast}){
-  const[editing,setEditing]=useState(false);const[prefs,setPrefs]=useState(customer.prefs||"");const[bday,setBday]=useState(customer.bday||"");
+function CustomerDetail({customer,completed,setCustomers,setCompleted,onClose,showToast}){
+  const[mode,setMode]=useState("view"); // "view" | "edit" | "confirmDelete"
+  const[f,setF]=useState({name:customer.name,phone:customer.phone||"",email:customer.email||"",town:customer.town||"",source:customer.source||"",prefs:customer.prefs||"",bday:customer.bday||""});
+  const[editOrder,setEditOrder]=useState(null);
+  const sf=(k,v)=>setF(x=>({...x,[k]:v}));
   const orders=completed.filter(o=>o.customerId===customer.id);const total=orders.reduce((s,o)=>s+o.total,0);
-  const savePrefs=()=>{setCustomers(cs=>cs.map(c=>c.id===customer.id?{...c,prefs,bday}:c));setEditing(false);showToast("Saved!")};
   const types=[...new Set(orders.map(o=>o.cardType))];
+  const saveEdit=()=>{
+    if(!f.name.trim())return;
+    setCustomers(cs=>cs.map(c=>c.id===customer.id?{...c,...f,name:f.name.trim()}:c));
+    setMode("view");showToast("Customer updated!");
+  };
+  const deleteCustomer=()=>{
+    setCustomers(cs=>cs.filter(c=>c.id!==customer.id));
+    showToast("Customer deleted");onClose();
+  };
+  const deleteOrder=(id)=>{setCompleted(c=>c.filter(o=>o.id!==id));showToast("Order deleted");};
+  const saveOrder=(id,changes)=>{setCompleted(c=>c.map(o=>o.id===id?{...o,...changes}:o));setEditOrder(null);showToast("Order updated!");};
+
+  if(mode==="edit")return<div>
+    <MTitle onClose={()=>setMode("view")}>Edit Customer</MTitle>
+    <Inp label="Full Name" req value={f.name} onChange={e=>sf("name",e.target.value)}/>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+      <Inp label="Phone" value={f.phone} onChange={e=>sf("phone",e.target.value)} placeholder="08x xxx xxxx"/>
+      <Inp label="Town" value={f.town} onChange={e=>sf("town",e.target.value)}/>
+    </div>
+    <Inp label="Email" type="email" value={f.email} onChange={e=>sf("email",e.target.value)}/>
+    <Sel label="How did they find PPB?" options={SOURCES} value={f.source} onChange={e=>sf("source",e.target.value)}/>
+    <Txt label="Preferences" value={f.prefs} onChange={e=>sf("prefs",e.target.value)} placeholder="e.g. Loves florals, prefers pink…"/>
+    <Inp label="Birthday month" value={f.bday} onChange={e=>sf("bday",e.target.value)} placeholder="e.g. July"/>
+    <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+      <Btn onClick={()=>setMode("view")} variant="ghost" small>Cancel</Btn>
+      <Btn onClick={saveEdit} variant="primary" small disabled={!f.name.trim()}>Save</Btn>
+    </div>
+  </div>;
+
   return<div>
-    <MTitle onClose={onClose} sub={`${customer.town} · ${customer.source}`}>{customer.name}</MTitle>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
+      <div><h3 style={{margin:0,color:C.deep,fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:20}}>{customer.name}</h3><p style={{margin:"4px 0 0",color:C.muted,fontSize:13}}>{customer.town}{customer.source?` · ${customer.source}`:""}</p></div>
+      <div style={{display:"flex",gap:6,alignItems:"center"}}>
+        <Btn onClick={()=>setMode("edit")} variant="secondary" small>Edit</Btn>
+        {mode==="confirmDelete"
+          ?<><Btn onClick={deleteCustomer} variant="danger" small>Confirm Delete</Btn><Btn onClick={()=>setMode("view")} variant="ghost" small>Cancel</Btn></>
+          :<Btn onClick={()=>setMode("confirmDelete")} variant="danger" small>Delete</Btn>}
+        <button onClick={onClose} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:C.muted,padding:4}}>✕</button>
+      </div>
+    </div>
+    {mode==="confirmDelete"&&<div style={{background:"#ffebee",border:"1.5px solid #ffcdd2",borderRadius:10,padding:"10px 14px",fontSize:13,color:"#c62828",marginBottom:16}}>⚠️ This will delete the customer record only — completed orders will remain in your history.</div>}
     <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:16}}>
       {[["💰","Spent","€"+total.toFixed(2)],["🛍️","Orders",orders.length],["💕","Repeat",orders.length>1?"Yes ✨":"First order"]].map(([icon,label,val])=><div key={label} style={{flex:1,minWidth:80,background:C.light,borderRadius:12,padding:"12px",textAlign:"center"}}><div style={{fontSize:22}}>{icon}</div><div style={{fontWeight:900,color:C.rose,fontSize:16,marginTop:3}}>{val}</div><div style={{fontSize:10,color:C.muted,fontWeight:700,letterSpacing:.4,textTransform:"uppercase"}}>{label}</div></div>)}
     </div>
@@ -411,12 +501,43 @@ function CustomerDetail({customer,completed,setCustomers,onClose,showToast}){
       {customer.email&&<span style={{fontSize:13,color:C.grey}}>✉️ {customer.email}</span>}
     </div>
     <div style={{background:C.pale,borderRadius:12,padding:14,marginBottom:16}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><span style={{fontWeight:700,fontSize:12,color:C.deep,letterSpacing:.5,textTransform:"uppercase"}}>💕 Preferences</span>{!editing&&<Btn onClick={()=>setEditing(true)} variant="secondary" small>Edit</Btn>}</div>
-      {editing?<><Txt label="What does she like?" value={prefs} onChange={e=>setPrefs(e.target.value)} placeholder="e.g. Loves florals, prefers pink, always personalised…"/><Inp label="Birthday month" value={bday} onChange={e=>setBday(e.target.value)} placeholder="e.g. July"/><div style={{display:"flex",gap:8}}><Btn onClick={savePrefs} variant="primary" small>Save</Btn><Btn onClick={()=>setEditing(false)} variant="ghost" small>Cancel</Btn></div></>:<><p style={{fontSize:13,color:prefs?C.text:C.muted,fontStyle:prefs?"normal":"italic"}}>{prefs||"No preferences noted yet."}</p>{bday&&<p style={{fontSize:12,color:C.rose,marginTop:6}}>🎂 Birthday: {bday}</p>}</>}
+      <div style={{fontWeight:700,fontSize:12,color:C.deep,letterSpacing:.5,textTransform:"uppercase",marginBottom:8}}>💕 Preferences</div>
+      <p style={{fontSize:13,color:f.prefs?C.text:C.muted,fontStyle:f.prefs?"normal":"italic"}}>{f.prefs||"No preferences noted yet."}</p>
+      {f.bday&&<p style={{fontSize:12,color:C.rose,marginTop:6}}>🎂 Birthday: {f.bday}</p>}
     </div>
     {types.length>0&&<div style={{marginBottom:14}}><div style={{fontSize:12,fontWeight:700,color:C.deep,letterSpacing:.5,textTransform:"uppercase",marginBottom:8}}>Favourite Types</div><div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{types.map(t=><Badge key={t} color="pink">{t}</Badge>)}</div></div>}
     <div style={{fontSize:12,fontWeight:700,color:C.deep,letterSpacing:.5,textTransform:"uppercase",marginBottom:10}}>Card History ({orders.length})</div>
-    {orders.length===0?<p style={{color:C.muted,fontSize:13}}>No completed orders yet.</p>:<div style={{display:"flex",flexDirection:"column",gap:10}}>{orders.map(o=><div key={o.id} style={{display:"flex",gap:12,alignItems:"center",background:C.light,borderRadius:12,padding:"10px 14px"}}><div style={{width:48,height:48,borderRadius:10,background:C.blush,overflow:"hidden",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{o.photo?<img src={o.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:"🌸"}</div><div style={{flex:1,minWidth:0}}><div style={{fontWeight:700,color:C.deep,fontSize:13}}>{o.cardType}</div><div style={{fontSize:11,color:C.muted,marginTop:2}}>{new Date(o.completedDate).toLocaleDateString("en-IE")} · {o.qty} card{o.qty>1?"s":""} · {o.payment}</div>{o.notes&&<div style={{fontSize:11,color:"#bdbdbd",marginTop:1}}>{o.notes}</div>}</div><div style={{fontWeight:700,color:C.rose,fontSize:14,flexShrink:0}}>€{o.total.toFixed(2)}</div></div>)}</div>}
+    {orders.length===0?<p style={{color:C.muted,fontSize:13}}>No completed orders yet.</p>:<div style={{display:"flex",flexDirection:"column",gap:10}}>
+      {orders.map(o=><div key={o.id} style={{display:"flex",gap:12,alignItems:"center",background:C.light,borderRadius:12,padding:"10px 14px"}}>
+        <div style={{width:48,height:48,borderRadius:10,background:C.blush,overflow:"hidden",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{o.photo?<img src={o.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:"🌸"}</div>
+        <div style={{flex:1,minWidth:0}}><div style={{fontWeight:700,color:C.deep,fontSize:13}}>{o.cardType}</div><div style={{fontSize:11,color:C.muted,marginTop:2}}>{new Date(o.completedDate).toLocaleDateString("en-IE")} · {o.qty} card{o.qty>1?"s":""} · {o.payment}</div>{o.notes&&<div style={{fontSize:11,color:"#bdbdbd",marginTop:1}}>{o.notes}</div>}</div>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4,flexShrink:0}}>
+          <div style={{fontWeight:700,color:C.rose,fontSize:14}}>€{o.total.toFixed(2)}</div>
+          <div style={{display:"flex",gap:4}}>
+            <button onClick={()=>setEditOrder(o)} style={{fontSize:10,padding:"2px 8px",borderRadius:6,border:`1px solid ${C.blush}`,background:"#fff",color:C.rose,cursor:"pointer",fontFamily:"Lato,sans-serif"}}>Edit</button>
+            <button onClick={()=>deleteOrder(o.id)} style={{fontSize:10,padding:"2px 8px",borderRadius:6,border:"1px solid #ffcdd2",background:"#ffebee",color:"#c62828",cursor:"pointer",fontFamily:"Lato,sans-serif"}}>Delete</button>
+          </div>
+        </div>
+      </div>)}
+    </div>}
+    <Modal open={!!editOrder} onClose={()=>setEditOrder(null)}>
+      {editOrder&&<EditCompletedOrderForm order={editOrder} onSave={(changes)=>saveOrder(editOrder.id,changes)} onCancel={()=>setEditOrder(null)}/>}
+    </Modal>
+  </div>;
+}
+function EditCompletedOrderForm({order,onSave,onCancel}){
+  const[f,setF]=useState({qty:order.qty,total:order.total,payment:order.payment,notes:order.notes||""});
+  const sf=(k,v)=>setF(x=>({...x,[k]:v}));
+  return<div>
+    <MTitle sub={`${order.customerName} · ${order.cardType}`}>Edit Completed Order</MTitle>
+    <Inp label="Qty" type="number" min={1} value={f.qty} onChange={e=>sf("qty",parseInt(e.target.value)||1)}/>
+    <Inp label="Total charged (€)" req type="number" step="0.01" value={f.total} onChange={e=>sf("total",e.target.value)}/>
+    <Sel label="Payment" options={PAYMENT} value={f.payment} onChange={e=>sf("payment",e.target.value)}/>
+    <Txt label="Notes" value={f.notes} onChange={e=>sf("notes",e.target.value)}/>
+    <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+      <Btn onClick={onCancel} variant="ghost" small>Cancel</Btn>
+      <Btn onClick={()=>onSave({...f,qty:parseInt(f.qty)||1,total:parseFloat(f.total)||0})} variant="primary" small>Save</Btn>
+    </div>
   </div>;
 }
 
@@ -431,9 +552,9 @@ function SuppliesTab({supplies,setSupplies,openModal,showToast}){
         {items.map(s=>{const low=s.qty<=s.reorderAt;return<div key={s.id} style={{background:"#fff",borderRadius:12,border:`1.5px solid ${low?"#ffcdd2":C.light}`,padding:"12px 16px",display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
           <div style={{flex:1,minWidth:120}}><div style={{fontWeight:700,fontSize:13,color:low?"#c62828":C.text}}>{s.name}</div><div style={{fontSize:11,color:C.muted,marginTop:2}}>{s.supplier}{s.cost>0?` · €${s.cost.toFixed(2)} each`:""}</div></div>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
-            <button onClick={()=>upd(s.id,"qty",Math.max(0,s.qty-1))} style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.blush}`,background:C.light,cursor:"pointer",fontSize:16,fontWeight:700,color:C.rose,lineHeight:1}}>−</button>
-            <span style={{fontWeight:700,fontSize:15,color:low?C.rose:C.green,minWidth:28,textAlign:"center"}}>{s.qty}</span>
-            <button onClick={()=>upd(s.id,"qty",s.qty+1)} style={{width:28,height:28,borderRadius:8,border:`1px solid ${C.blush}`,background:C.light,cursor:"pointer",fontSize:16,fontWeight:700,color:C.rose,lineHeight:1}}>+</button>
+            <button onClick={()=>upd(s.id,"qty",Math.max(0,s.qty-1))} style={{width:44,height:44,borderRadius:10,border:`1px solid ${C.blush}`,background:C.light,cursor:"pointer",fontSize:20,fontWeight:700,color:C.rose,lineHeight:1}}>−</button>
+            <span style={{fontWeight:700,fontSize:15,color:low?C.rose:C.green,minWidth:32,textAlign:"center"}}>{s.qty}</span>
+            <button onClick={()=>upd(s.id,"qty",s.qty+1)} style={{width:44,height:44,borderRadius:10,border:`1px solid ${C.blush}`,background:C.light,cursor:"pointer",fontSize:20,fontWeight:700,color:C.rose,lineHeight:1}}>+</button>
             {low&&<Badge color="amber">Reorder</Badge>}
           </div>
         </div>})}
@@ -451,7 +572,7 @@ function NewSupplyForm({onSubmit,onCancel}){
 function MoneyTab({completed,expenses,setExpenses,openModal}){
   const rev=completed.reduce((s,o)=>s+o.total,0),exp=expenses.reduce((s,e)=>s+e.amount,0),profit=rev-exp;
   const months=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],yr=new Date().getFullYear();
-  const mRev=months.map((_,i)=>completed.filter(o=>{const d=new Date(o.completedDate);return d.getMonth()===i&&d.getFullYear()===yr}).reduce((s,o)=>s+o.total,0));
+  const mRev=useMemo(()=>months.map((_,i)=>completed.filter(o=>{const d=new Date(o.completedDate);return d.getMonth()===i&&d.getFullYear()===yr}).reduce((s,o)=>s+o.total,0)),[completed,yr]);
   const maxR=Math.max(...mRev,1);
   return<div className="fade-in"><SecTitle right={<Btn onClick={()=>openModal("newExpense")} small>+ Add Expense</Btn>}>💰 Money</SecTitle>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:20}}>
@@ -600,7 +721,10 @@ function BackupModal({customers,inProgress,completed,supplies,shopStock,expenses
       {imported&&<div style={{marginTop:8,padding:"8px 12px",background:C.glight,borderRadius:8,fontSize:12,color:C.green,fontWeight:700}}>✅ Data restored successfully!</div>}
     </div>
 
-    <div style={{marginTop:20,padding:"10px 14px",background:C.gld,borderRadius:10,fontSize:12,color:C.gold}}>
+    <div style={{marginTop:16,padding:"10px 14px",background:"#ffebee",borderRadius:10,fontSize:12,color:"#c62828",border:"1.5px solid #ffcdd2"}}>
+      ⚠️ <strong>Important:</strong> All data is stored in this browser only. Clearing Safari data, using a different browser, or switching phones will erase everything. Regular backups are your only safety net.
+    </div>
+    <div style={{marginTop:10,padding:"10px 14px",background:C.gld,borderRadius:10,fontSize:12,color:C.gold}}>
       💡 <strong>Tip:</strong> Back up once a week by tapping 💾 Backup → Download Backup File → save to iCloud Drive. If you ever lose your data, just restore from that file.
     </div>
   </div>;
