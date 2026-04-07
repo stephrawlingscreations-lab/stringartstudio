@@ -140,7 +140,7 @@ function App(){
           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
             <Btn onClick={()=>openM("newOrder")} small>+ New Order</Btn>
             <Btn onClick={()=>openM("newCustomer")} variant="secondary" small>+ Customer</Btn>
-            <Btn onClick={()=>openM("backup")} variant="ghost" small>💾 Backup</Btn>
+            <Btn onClick={()=>openM("backup")} variant="ghost" small style={{color:"#fff",border:"1.5px solid rgba(255,255,255,.6)"}}>💾 Backup</Btn>
           </div>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",background:"rgba(255,255,255,.11)",borderRadius:"10px 10px 0 0",overflow:"hidden"}}>
