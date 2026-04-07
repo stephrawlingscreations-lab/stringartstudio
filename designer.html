@@ -2026,6 +2026,494 @@
         padding: 5px 14px;
         letter-spacing: 0.01em;
       }
+
+      /* ================= 3-STEP FLOW ================= */
+      .designer-steps-bar {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 16px 20px 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      .steps-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0;
+      }
+      .step-node {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        cursor: default;
+      }
+      .step-circle {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: rgba(60,44,28,0.10);
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s, color 0.2s;
+        font-family: Inter, sans-serif;
+      }
+      .step-node.active .step-circle { background: var(--navy); color: white; }
+      .step-node.done .step-circle { background: #2d8a4e; color: white; }
+      .step-label {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.09em;
+        white-space: nowrap;
+        font-family: Inter, sans-serif;
+      }
+      .step-node.active .step-label { color: var(--navy); }
+      .step-node.done .step-label { color: #2d8a4e; }
+      .step-line {
+        width: 36px;
+        height: 2px;
+        transition: background 0.35s ease;
+        background: rgba(60,44,28,0.12);
+        margin: 0 3px 14px;
+        flex-shrink: 0;
+      }
+      .step-line.done { background: #2d8a4e; }
+      .browse-patterns-link {
+        font-size: 0.84rem;
+        color: var(--gold);
+        font-weight: 600;
+        text-decoration: underline;
+        text-decoration-color: rgba(184,137,46,0.4);
+        text-underline-offset: 2px;
+        white-space: nowrap;
+      }
+      .browse-patterns-link:hover { text-decoration-color: var(--gold); }
+
+      /* Mobile patterns bar */
+      .mobile-patterns-bar {
+        display: none;
+        background: rgba(184,137,46,0.07);
+        border-bottom: 1px solid rgba(184,137,46,0.14);
+        padding: 10px 16px;
+        text-align: center;
+      }
+      .mobile-patterns-bar a {
+        color: var(--gold);
+        font-size: 0.87rem;
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      /* Board summary row */
+      .board-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(184,137,46,0.07);
+        border: 1px solid rgba(184,137,46,0.20);
+        border-radius: 12px;
+        padding: 9px 14px;
+        margin-bottom: 14px;
+      }
+      .board-summary-text {
+        font-size: 13.5px;
+        font-weight: 600;
+        color: var(--text-dark);
+      }
+      .board-edit-link {
+        background: none;
+        border: none;
+        color: var(--gold);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 2px 4px;
+        font-family: Inter, sans-serif;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+
+      /* Step panels */
+      .step-panel { display: none; }
+      .step-panel.active { display: block; }
+
+      /* Confirm board button */
+      .confirm-board-btn {
+        width: 100%;
+        background: var(--navy);
+        color: white;
+        border: none;
+        border-radius: 14px;
+        padding: 12px 20px;
+        font-size: 14.5px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-family: Inter, sans-serif;
+        transition: background 0.15s, transform 0.15s;
+      }
+      .confirm-board-btn:hover { background: var(--navy-hover); transform: translateY(-1px); }
+
+      /* Layers section label */
+      .layers-section-label {
+        font-size: 0.68rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--gold);
+        font-weight: 600;
+        font-family: Inter, sans-serif;
+        margin-bottom: 10px;
+        display: block;
+      }
+
+      /* Advanced toggle bar */
+      .advanced-toggle-bar {
+        margin-top: 10px;
+        border-top: 1px solid rgba(60,44,28,0.07);
+        padding-top: 10px;
+      }
+      .advanced-toggle-btn {
+        background: rgba(60,44,28,0.05);
+        border: 1px solid rgba(60,44,28,0.18);
+        border-radius: 10px;
+        padding: 9px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-dark);
+        cursor: pointer;
+        font-family: Inter, sans-serif;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        width: 100%;
+        justify-content: space-between;
+        transition: background 0.15s;
+      }
+      .advanced-toggle-btn:hover { background: rgba(60,44,28,0.09); opacity: 1; }
+      .advanced-chevron {
+        font-size: 12px;
+        transition: transform 0.2s;
+        color: var(--muted);
+        flex-shrink: 0;
+        display: inline-block;
+      }
+
+      /* Go to Export button */
+      .go-export-btn {
+        width: 100%;
+        background: var(--navy);
+        color: #fff;
+        border: none;
+        border-radius: 14px;
+        padding: 12px 20px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 12px;
+        font-family: Inter, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: background 0.15s, transform 0.15s;
+        box-shadow: 0 4px 16px rgba(27,44,66,0.22);
+      }
+      .go-export-btn:hover { background: var(--navy-hover); transform: translateY(-1px); }
+
+      /* Back to design */
+      .back-to-design-btn {
+        width: 100%;
+        background: rgba(60,44,28,0.05);
+        color: var(--text-dark);
+        border: 1px solid rgba(60,44,28,0.20);
+        border-radius: 12px;
+        padding: 10px 16px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: Inter, sans-serif;
+        margin-bottom: 14px;
+        transition: background 0.15s;
+      }
+      .back-to-design-btn:hover { background: #ede8e1; opacity: 1; }
+
+      /* Pro export card */
+      .pro-export-card {
+        background: linear-gradient(135deg, #fdf6ec 0%, #fff9f2 100%);
+        border: 2px solid rgba(196,148,50,0.40);
+        border-radius: 18px;
+        padding: 18px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .pro-export-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .pro-export-card-title {
+        font-family: "Playfair Display", serif;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-dark);
+      }
+      .pro-export-price-badge {
+        background: var(--gold);
+        color: white;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 999px;
+        letter-spacing: 0.04em;
+        white-space: nowrap;
+      }
+      .pro-export-checklist {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .pro-export-checklist li {
+        font-size: 0.82rem;
+        color: var(--text-dark);
+        display: flex;
+        align-items: flex-start;
+        gap: 7px;
+        line-height: 1.45;
+      }
+      .pro-export-checklist li::before {
+        content: '✓';
+        color: #2d8a4e;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+      .pro-export-cta {
+        width: 100%;
+        background: var(--navy);
+        color: #fff;
+        border: none;
+        border-radius: 14px;
+        padding: 13px 18px;
+        font-size: 14.5px;
+        font-weight: 700;
+        cursor: pointer;
+        font-family: Inter, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+        box-shadow: 0 6px 20px rgba(27,44,66,0.28);
+        transition: background 0.15s, transform 0.18s, box-shadow 0.18s;
+        margin-top: 2px;
+      }
+      .pro-export-cta:hover { background: var(--navy-hover); transform: translateY(-2px); box-shadow: 0 10px 28px rgba(27,44,66,0.36); }
+
+      /* Free options */
+      .free-options-section {
+        padding-top: 14px;
+        margin-top: 6px;
+        border-top: 1px solid rgba(60,44,28,0.07);
+      }
+      .free-options-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.10em;
+        color: var(--muted);
+        margin-bottom: 10px;
+        display: block;
+      }
+      .free-options-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+      .free-btn {
+        background: #fff;
+        color: var(--text-dark);
+        border: 1px solid rgba(60,44,28,0.22);
+        border-radius: 10px;
+        padding: 10px 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: Inter, sans-serif;
+        transition: background 0.15s, border-color 0.15s;
+        text-align: center;
+        white-space: nowrap;
+      }
+      .free-btn:hover { background: #f5f0e8; border-color: rgba(60,44,28,0.35); opacity: 1; }
+
+      /* Seq section in export */
+      .seq-export-section {
+        background: rgba(60,44,28,0.03);
+        border: 1px solid rgba(60,44,28,0.07);
+        border-radius: 14px;
+        padding: 12px 14px;
+        margin-bottom: 10px;
+      }
+      .seq-export-label {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      /* Canvas read-only badge in step 3 */
+      .canvas-outer { position: relative; }
+      .canvas-step-overlay {
+        display: none;
+        width: 100%;
+        text-align: center;
+        background: rgba(255,253,249,0.95);
+        border: 1px solid rgba(60,44,28,0.10);
+        border-radius: 0 0 12px 12px;
+        padding: 6px 12px;
+        font-size: 11px;
+        color: var(--muted);
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        pointer-events: none;
+        box-sizing: border-box;
+      }
+      body.step3-active #cv { pointer-events: none; cursor: default; }
+      body.step3-active .canvas-step-overlay { display: block; }
+
+      /* Mobile step 2 tabs */
+      .mobile-step2-tabs { display: none; }
+
+      /* ── Override .panel button navy rule for new step-flow buttons ── */
+      /* .panel button has specificity 0,1,1 — these use 0,2,0 to win */
+      .panel .advanced-toggle-btn {
+        background: rgba(60,44,28,0.06);
+        color: var(--text-dark);
+        border: 1px solid rgba(60,44,28,0.20);
+      }
+      .panel .advanced-toggle-btn:hover {
+        background: rgba(60,44,28,0.11);
+        color: var(--text-dark);
+        opacity: 1;
+      }
+      .panel .back-to-design-btn {
+        background: rgba(60,44,28,0.06);
+        color: var(--text-dark);
+        border: 1px solid rgba(60,44,28,0.22);
+      }
+      .panel .back-to-design-btn:hover {
+        background: #ede8e1;
+        color: var(--text-dark);
+        opacity: 1;
+      }
+      .panel .free-btn {
+        background: #fff;
+        color: var(--text-dark);
+        border: 1px solid rgba(60,44,28,0.22);
+      }
+      .panel .free-btn:hover {
+        background: #f5f0e8;
+        color: var(--text-dark);
+        border-color: rgba(60,44,28,0.36);
+        opacity: 1;
+      }
+      .panel .board-edit-link {
+        background: none;
+        color: var(--gold);
+        border: none;
+      }
+      .panel .board-edit-link:hover {
+        background: none;
+        opacity: 1;
+      }
+      /* Advanced section: edge buttons (Top/Left/Right/Bottom) */
+      .panel .edge-btn {
+        background: rgba(60,44,28,0.07);
+        color: var(--text-dark);
+        border: 1.5px solid rgba(60,44,28,0.12);
+      }
+      .panel .edge-btn:hover:not(.active) {
+        background: rgba(60,44,28,0.07);
+        border-color: var(--gold);
+        color: var(--gold);
+        opacity: 1;
+      }
+      .panel .edge-btn.active {
+        background: linear-gradient(135deg,var(--gold),#a8781e);
+        color: #fff;
+        border-color: var(--gold);
+      }
+      /* Advanced section: template shape buttons (Circle/Square/Diamond…) */
+      .panel .template-shape-btn {
+        background: rgba(255,255,255,0.9);
+        color: var(--text-dark);
+        border: 1.5px solid rgba(60,44,28,0.13);
+      }
+      .panel .template-shape-btn:hover {
+        background: rgba(255,255,255,0.9);
+        border-color: var(--gold);
+        color: var(--gold);
+        opacity: 1;
+      }
+      .panel .template-shape-btn.active {
+        background: var(--navy);
+        color: #fff;
+        border-color: var(--navy);
+      }
+
+      /* ================= RESPONSIVE STEP BAR ================= */
+      @media (max-width: 720px) {
+        .mobile-patterns-bar { display: block; }
+        .designer-steps-bar .browse-patterns-link { display: none; }
+        .designer-steps-bar { padding: 12px 16px 6px; }
+      }
+      @media (max-width: 900px) {
+        .mobile-step2-tabs {
+          display: flex;
+          background: rgba(60,44,28,0.06);
+          border-radius: 12px;
+          padding: 3px;
+          gap: 3px;
+          margin-bottom: 14px;
+        }
+        .mobile-step2-tab {
+          flex: 1;
+          background: transparent;
+          border: none;
+          border-radius: 10px;
+          padding: 9px 8px;
+          font-size: 13px;
+          font-weight: 600;
+          color: var(--muted);
+          cursor: pointer;
+          font-family: Inter, sans-serif;
+          transition: background 0.15s, color 0.15s;
+        }
+        .mobile-step2-tab.active {
+          background: white;
+          color: var(--text-dark);
+          box-shadow: 0 1px 6px rgba(28,21,16,0.09);
+        }
+        .advanced-toggle-bar { display: none; }
+      }
     </style>
     <!-- Start cookieyes banner -->
     <script id="cookieyes" type="text/javascript" src="https://cdn-cookieyes.com/client_data/771647e94dbf7af170e4e1dbcdc9dc79/script.js"></script>
@@ -2093,48 +2581,60 @@
         </div>
       </div>
     </div>
-    <div class="designer-intro">
-      <span class="designer-intro-label">Try it now</span>
-      <h2>Your string art designer</h2>
-      <p>
-        Pick a pattern preset or tap nails on the board to draw your own design.
-      </p>
+    <!-- Mobile patterns hint bar (shown just below nav on mobile) -->
+    <div class="mobile-patterns-bar">
+      <a href="patterns.html">Not sure where to start? Browse patterns →</a>
     </div>
-    <div style="text-align:center; padding: 10px 20px 4px;">
-      <a href="patterns.html" style="display:inline-block; color:var(--gold); font-size:0.9rem; font-weight:600; text-decoration:underline; text-underline-offset:3px;">Need inspiration? Browse starter patterns →</a>
+
+    <!-- 3-step progress indicator -->
+    <div class="designer-steps-bar">
+      <div class="steps-indicator">
+        <div class="step-node active" id="stepNode1">
+          <div class="step-circle">1</div>
+          <span class="step-label">Board</span>
+        </div>
+        <div class="step-line" id="stepLine1"></div>
+        <div class="step-node" id="stepNode2">
+          <div class="step-circle">2</div>
+          <span class="step-label">Design</span>
+        </div>
+        <div class="step-line" id="stepLine2"></div>
+        <div class="step-node" id="stepNode3">
+          <div class="step-circle">3</div>
+          <span class="step-label">Export</span>
+        </div>
+      </div>
+      <a href="patterns.html" class="browse-patterns-link">Not sure where to start? Browse patterns →</a>
     </div>
-    <div class="wt-entry-btn" style="text-align:center; padding: 6px 20px 18px;">
+
+    <!-- Walkthrough entry (desktop only) -->
+    <div class="wt-entry-btn" style="text-align:center; padding: 4px 20px 10px;">
       <button onclick="startWalkthrough()" style="background:none;border:1.5px solid var(--gold);color:var(--gold);font-size:0.86rem;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;padding:8px 20px;border-radius:999px;transition:background 0.15s,color 0.15s;" onmouseover="this.style.background='var(--gold)';this.style.color='#fff';" onmouseout="this.style.background='none';this.style.color='var(--gold)';">Never used this before? Walk me through it →</button>
     </div>
-    <div class="wt-desktop-note" style="text-align:center; padding: 0 20px 18px; font-size:0.82rem; color:var(--muted);">
+    <div class="wt-desktop-note" style="text-align:center; padding: 0 20px 10px; font-size:0.82rem; color:var(--muted);">
       💻 New here? Visit on desktop for a step-by-step guided tour.
     </div>
     <div class="container" id="designer">
       <div class="wrap">
         <div class="panel-wrap">
         <div class="panel">
-          <!-- MODE TOGGLE -->
-          <div class="mode-toggle-row">
-            <span class="mode-toggle-label">Experience</span>
-            <div class="mode-toggle" role="group" aria-label="Experience level">
-              <button class="mode-btn active" id="modeBeginner">Beginner</button>
-              <button class="mode-btn" id="modeAdvanced">Advanced</button>
+
+          <!-- Hidden mode-toggle kept for app.js compatibility -->
+          <div style="display:none;" aria-hidden="true">
+            <div class="mode-toggle-row">
+              <span class="mode-toggle-label">Experience</span>
+              <div class="mode-toggle" role="group" aria-label="Experience level">
+                <button class="mode-btn" id="modeBeginner">Beginner</button>
+                <button class="mode-btn active" id="modeAdvanced">Advanced</button>
+              </div>
             </div>
           </div>
 
-          <!-- PANEL TABS -->
-          <div class="panel-tabs" role="tablist">
-            <button class="panel-tab active" data-tab="design">✏ Design</button>
-            <button class="panel-tab" data-tab="style">🎨 Style</button>
-            <button class="panel-tab" data-tab="export">↗ Import / Export</button>
-          </div>
-
-          <!-- DESIGN TAB -->
-          <div class="tab-content active" id="tab-design">
-
-          <!-- BOARD -->
-          <div class="panel-section">
-            <span class="panel-section-label">Board</span>
+          <!-- ══════════════════════════════════
+               STEP 1 — Board Setup
+          ══════════════════════════════════ -->
+          <div class="step-panel active" id="step1Panel">
+            <span class="panel-section-label" style="margin-bottom:14px;display:block;">Step 1 — Board Setup</span>
             <div class="row">
               <div>
                 <label>Shape</label>
@@ -2145,32 +2645,19 @@
                 </select>
               </div>
               <div>
-                <label
-                  >Nails
-                  <span class="help-tip"
-                    >?<span class="tip-text"
-                      >Number of nails around the board edge. Most designs use
-                      between 60 and 150.</span
-                    ></span
-                  ></label
-                >
+                <label>Nails
+                  <span class="help-tip">?<span class="tip-text">Number of nails around the board edge. Most designs use between 60 and 150.</span></span>
+                </label>
                 <input id="nails" type="number" min="10" step="1" value="120" />
               </div>
             </div>
-            <label
-              >Zoom
-              <span class="help-tip"
-                >?<span class="tip-text"
-                  >Controls the size of the board preview.</span
-                ></span
-              ></label
-            >
-            <div class="zoom-controls" style="margin-bottom: 8px">
+            <label>Zoom
+              <span class="help-tip">?<span class="tip-text">Controls the size of the board preview.</span></span>
+            </label>
+            <div class="zoom-controls" style="margin-bottom:8px">
               <button type="button" id="zoomOut" class="btn-ghost">−</button>
               <button type="button" id="zoomIn" class="btn-ghost">+</button>
-              <button id="fit" class="btn-ghost" style="flex: 2">
-                Fit to screen
-              </button>
+              <button id="fit" class="btn-ghost" style="flex:2">Fit to screen</button>
             </div>
             <input id="radius" type="hidden" value="320" />
             <div id="rectAspectRow" style="display:none; margin-top:8px;">
@@ -2189,14 +2676,92 @@
                 <span style="font-size:0.75rem;color:var(--muted);"> nails — click to apply</span>
               </div>
             </div>
-          </div>
+            <button class="confirm-board-btn" onclick="confirmBoard()">Confirm board →</button>
+          </div><!-- end #step1Panel -->
 
-          <!-- NAIL PLACEMENT — advanced only -->
-          <div class="custom-layout-section advanced-only" id="customLayoutSect">
-            <span class="panel-section-label" style="margin-bottom:10px;display:block;">Nail Placement</span>
+          <!-- ══════════════════════════════════
+               STEP 2 — Design
+          ══════════════════════════════════ -->
+          <div class="step-panel" id="step2Panel">
 
-            <!-- 4-tab bar -->
-            <div class="layout-mode-bar" role="group" aria-label="Nail placement mode">
+            <!-- Board summary (shown after step 1 confirm) -->
+            <div class="board-summary">
+              <span class="board-summary-text" id="boardSummaryText">Circle · 120 nails</span>
+              <button class="board-edit-link" onclick="goToStep(1)">edit</button>
+            </div>
+
+            <!-- Mobile tabs: Layers | Advanced -->
+            <div class="mobile-step2-tabs">
+              <button class="mobile-step2-tab active" id="mobileTabLayers">Layers</button>
+              <button class="mobile-step2-tab" id="mobileTabAdvanced">Advanced</button>
+            </div>
+
+            <!-- ── Layers section (always visible on desktop; tab-controlled on mobile) ── -->
+            <div id="step2LayersSection">
+              <span class="layers-section-label">Layers</span>
+              <div class="color-layer-row">
+                <input id="color" type="color" value="#000000" />
+                <select id="layerSel"></select>
+                <button id="newLayer" class="btn-ghost" style="padding:9px 12px;font-size:13px;white-space:nowrap;">+ Layer</button>
+              </div>
+              <div class="action-row" style="margin-top:6px;">
+                <button id="toggleLayerVis" class="btn-ghost">👁 Hide layer</button>
+                <button id="deleteLayer" class="btn-ghost btn-danger">✕ Delete layer</button>
+              </div>
+              <div class="action-row">
+                <button id="clearLayer" class="btn-ghost">Clear layer</button>
+                <button id="clearAll" class="btn-danger">Clear all</button>
+              </div>
+
+              <!-- Wave colour schemes — shown only when wave is loaded + pro unlocked -->
+              <div id="waveColorSchemes" style="display:none;">
+                <span class="layers-section-label" style="margin-top:14px;">Wave Colour Schemes</span>
+                <p style="font-size:0.78rem;color:var(--muted);margin:0 0 10px;line-height:1.5;">Apply a preset colour set across all 7 layers at once.</p>
+                <div id="waveSchemeGrid" style="display:flex;flex-direction:column;gap:6px;"></div>
+              </div>
+
+              <!-- Undo / Redo — always visible -->
+              <div class="undo-row">
+                <div class="undo-controls">
+                  <select id="undoCount" title="How many steps to undo">
+                    <option value="1">1</option>
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="all">All</option>
+                  </select>
+                  <button id="undo">↶ Undo</button>
+                  <button id="redo">↷ Redo</button>
+                </div>
+              </div>
+
+              <!-- Continue pattern -->
+              <div class="continue-row" style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(60,44,28,0.07);">
+                <input id="continueSteps" type="number" min="1" max="500" value="20" />
+                <label>steps
+                  <span class="help-tip">?<span class="tip-text" style="left:auto;right:0;transform:none;">Detects your drawing's interval pattern and extends it by this many steps. Draw at least 2 lines first.</span></span>
+                </label>
+                <button id="continuePattern" class="btn-ghost">Continue pattern</button>
+              </div>
+            </div><!-- end #step2LayersSection -->
+
+            <!-- Advanced toggle bar (desktop only; hidden on mobile where tabs take over) -->
+            <div class="advanced-toggle-bar" id="advancedToggleBar">
+              <button class="advanced-toggle-btn" id="advancedToggleBtn" onclick="toggleAdvanced()">
+                <span>Advanced</span>
+                <span class="advanced-chevron" id="advancedChevron">▸</span>
+              </button>
+            </div>
+
+            <!-- ── Advanced section (collapsed by default) ── -->
+            <div id="step2AdvancedSection" style="display:none;">
+
+              <!-- Nail Placement -->
+              <div class="custom-layout-section" id="customLayoutSect" style="margin-top:10px;">
+                <span class="panel-section-label" style="margin-bottom:10px;display:block;">Nail Placement</span>
+
+                <!-- 4-tab bar -->
+                <div class="layout-mode-bar" role="group" aria-label="Nail placement mode">
               <button class="layout-mode-btn active" id="npmBtn_perimeter">⊙ Full</button>
               <button class="layout-mode-btn" id="npmBtn_partial-edge">◑ Edge</button>
               <button class="layout-mode-btn" id="npmBtn_manual">✦ Manual</button>
@@ -2303,208 +2868,147 @@
                 <button class="template-shape-btn" data-template-shape="z">Z Shape</button>
               </div>
             </div>
-          </div>
+              </div><!-- end #customLayoutSect -->
 
-          <!-- UNDO / REDO -->
-          <div class="undo-row">
-            <div class="undo-controls">
-              <select id="undoCount" title="How many steps to undo">
-                <option value="1">1</option>
-                <option value="5">5</option>
-                <option value="10">10</option>
-                <option value="25">25</option>
-                <option value="all">All</option>
-              </select>
-              <button id="undo">↶ Undo</button>
-              <button id="redo">↷ Redo</button>
-            </div>
-          </div>
-
-          <!-- SEQUENCE -->
-          <div class="panel-section">
-            <span class="panel-section-label">Sequence
-              <span class="help-tip" style="margin-left:6px;">?<span class="tip-text">The numbered order to visit nails with your thread. Copy or print this to follow at your board.</span></span>
-            </span>
-            <div class="seq-out-wrap">
-              <div id="seqOut" class="mono">
-                Tap a nail to start your thread. Then tap another nail to draw a
-                line.
-              </div>
-            </div>
-            <p style="margin:6px 0 0; font-size:0.76rem; color:var(--muted); line-height:1.55;">At your board: tie thread to the <strong>first nail</strong>, then wind to each nail in order — nail by nail down the list. Finish a layer before moving to the next colour.</p>
-            <div class="continue-row advanced-only" style="margin-top: 8px;">
-              <input
-                id="continueSteps"
-                type="number"
-                min="1"
-                max="500"
-                value="20"
-              />
-              <label>steps
-                <span class="help-tip">?<span class="tip-text" style="left:auto;right:0;transform:none;">Detects your drawing's interval pattern and extends it by this many steps. Draw at least 2 lines first.</span></span>
-              </label>
-              <button id="continuePattern" class="btn-ghost">
-                Continue pattern
-              </button>
-            </div>
-          </div>
-
-          <!-- PRO UPSELL -->
-          <div class="panel-section" style="padding-bottom:16px;">
-            <div style="background:linear-gradient(135deg,#fdf6ec 0%,#fff9f2 100%); border:1.5px solid rgba(196,148,50,0.35); border-radius:14px; padding:14px 16px; display:flex; flex-direction:column; gap:8px;">
-              <div style="font-size:0.68rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:#b8880a;">✦ Pro Build Guide — €5</div>
-              <p style="margin:0; font-size:0.81rem; line-height:1.55; color:var(--text-dark);">Turn your design into a <strong>printable step-by-step guide</strong> — nail placement template, full sequence, thread estimates &amp; colour breakdown.</p>
-              <button class="pro-btn btn-pro-full" onclick="openProModal()" style="margin:2px 0 0; font-size:0.81rem; padding:8px 12px;">✦ Get my build guide <span class="pro-label">Pro</span></button>
-            </div>
-          </div>
-
-          </div><!-- end #tab-design -->
-
-          <!-- STYLE TAB -->
-          <div class="tab-content" id="tab-style">
-
-            <!-- THREAD -->
-            <div class="panel-section" style="border-top:none;padding-top:0;">
-              <span class="panel-section-label">Thread &amp; Layers</span>
-              <div class="color-layer-row">
-                <input id="color" type="color" value="#000000" />
-                <select id="layerSel"></select>
-                <button
-                  id="newLayer"
-                  class="btn-ghost"
-                  style="
-                    padding: 9px 12px;
-                    font-size: 13px;
-                    white-space: nowrap;
-                  "
-                >
-                  + Layer
-                </button>
-              </div>
-              <div class="slider-row advanced-only">
+              <!-- Opacity slider -->
+              <div class="slider-row" style="margin-top:12px;">
                 <label>Opacity <span id="opacityVal">35%</span>
                   <span class="help-tip">?<span class="tip-text">Lower opacity creates the see-through layering effect that makes string art look its best. 20–40% works for most patterns.</span></span>
                 </label>
                 <input id="opacity" type="range" min="0.05" max="1" step="0.05" value="0.35" />
               </div>
-              <div class="slider-row advanced-only">
+
+              <!-- Thread weight slider -->
+              <div class="slider-row">
                 <label>Thread weight <span id="lwVal">0.7</span>
                   <span class="help-tip">?<span class="tip-text">Thickness of the drawn lines. Lower = delicate and intricate. Higher = bold and visible from a distance.</span></span>
                 </label>
                 <input id="lw" type="range" min="0.1" max="5" step="0.1" value="0.7" />
               </div>
-              <div class="action-row" style="margin-top: 6px;">
-                <button id="toggleLayerVis" class="btn-ghost">👁 Hide layer</button>
-                <button id="deleteLayer" class="btn-ghost btn-danger">✕ Delete layer</button>
-              </div>
-              <div class="action-row">
-                <button id="clearLayer" class="btn-ghost">Clear layer</button>
-                <button id="clearAll" class="btn-danger">Clear all</button>
-              </div>
-            </div>
 
-            <!-- WAVE COLOUR SCHEMES — shown only when wave is loaded + pro unlocked -->
-            <div class="panel-section" id="waveColorSchemes" style="display:none;">
-              <span class="panel-section-label">Wave Colour Schemes</span>
-              <p style="font-size:0.78rem;color:var(--muted);margin:0 0 10px;line-height:1.5;">Apply a preset colour set across all 7 layers at once.</p>
-              <div id="waveSchemeGrid" style="display:flex;flex-direction:column;gap:6px;"></div>
-            </div>
-
-            <!-- BOARD COLOUR -->
-            <div class="panel-section">
-              <span class="panel-section-label">Board Colour</span>
-              <label>Board Colour</label>
-              <input id="boardColor" type="color" value="#ffffff" />
-              <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center;">
-                <button type="button" class="color-preset btn-ghost" data-color="#ffffff" style="background:#ffffff;border:1px solid rgba(60,44,28,0.2);width:32px;height:32px;padding:0;border-radius:8px;flex-shrink:0;" title="White"></button>
-                <button type="button" class="color-preset btn-ghost" data-color="#000000" style="background:#000000;width:32px;height:32px;padding:0;border-radius:8px;flex-shrink:0;" title="Black"></button>
-                <button type="button" class="color-preset btn-ghost" data-color="#d2a679" style="background:#d2a679;width:32px;height:32px;padding:0;border-radius:8px;flex-shrink:0;" title="Wood tone"></button>
-                <button type="button" class="color-preset btn-ghost" data-color="#888888" style="background:#888888;width:32px;height:32px;padding:0;border-radius:8px;flex-shrink:0;" title="Grey"></button>
+              <!-- Tap sensitivity -->
+              <div style="margin-top:4px;">
+                <label>Tap sensitivity
+                  <span class="help-tip">?<span class="tip-text">How close your tap must be to a nail to select it. Increase if you miss nails on mobile.</span></span>
+                </label>
+                <input id="snap" type="number" min="6" step="1" value="22" />
               </div>
-              <p style="font-size:11px;color:var(--muted);margin:8px 0 0;line-height:1.5;">
-                🖨️ <strong>Note:</strong> When printing, the board always prints on a white background regardless of the colour shown here.
-              </p>
-            </div>
 
-            <!-- NUMBERS -->
-            <div class="panel-section">
-              <span class="panel-section-label">Nail Numbers</span>
-              <label style="margin-top: 0">
-                <input id="showNums" type="checkbox" checked />
-                Show nail numbers
-              </label>
-              <div class="row" style="margin-top: 10px">
-                <div>
-                  <label>Label every</label>
-                  <input id="numEvery" type="number" min="1" step="1" value="10" />
+              <!-- Board colour -->
+              <div style="margin-top:14px;">
+                <span class="panel-section-label">Board Colour</span>
+                <input id="boardColor" type="color" value="#ffffff" />
+                <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;align-items:center;">
+                  <button type="button" class="color-preset btn-ghost" data-color="#ffffff" style="background:#ffffff;border:1px solid rgba(60,44,28,0.2);width:32px;height:32px;padding:0;border-radius:8px;flex-shrink:0;" title="White"></button>
+                  <button type="button" class="color-preset btn-ghost" data-color="#000000" style="background:#000000;width:32px;height:32px;padding:0;border-radius:8px;flex-shrink:0;" title="Black"></button>
+                  <button type="button" class="color-preset btn-ghost" data-color="#d2a679" style="background:#d2a679;width:32px;height:32px;padding:0;border-radius:8px;flex-shrink:0;" title="Wood tone"></button>
+                  <button type="button" class="color-preset btn-ghost" data-color="#888888" style="background:#888888;width:32px;height:32px;padding:0;border-radius:8px;flex-shrink:0;" title="Grey"></button>
                 </div>
-                <div>
-                  <label>Nail #1 position</label>
-                  <select id="nail1pos">
-                    <option value="top" selected>Top</option>
-                    <option value="right">Right</option>
-                    <option value="bottom">Bottom</option>
-                    <option value="left">Left</option>
-                  </select>
+                <p style="font-size:11px;color:var(--muted);margin:8px 0 0;line-height:1.5;">
+                  🖨️ <strong>Note:</strong> When printing, the board always prints on a white background regardless of the colour shown here.
+                </p>
+              </div>
+
+              <!-- Nail numbers -->
+              <div style="margin-top:14px;">
+                <span class="panel-section-label">Nail Numbers</span>
+                <label style="margin-top:0">
+                  <input id="showNums" type="checkbox" checked />
+                  Show nail numbers
+                </label>
+                <div class="row" style="margin-top:10px">
+                  <div>
+                    <label>Label every</label>
+                    <input id="numEvery" type="number" min="1" step="1" value="10" />
+                  </div>
+                  <div>
+                    <label>Nail #1 position</label>
+                    <select id="nail1pos">
+                      <option value="top" selected>Top</option>
+                      <option value="right">Right</option>
+                      <option value="bottom">Bottom</option>
+                      <option value="left">Left</option>
+                    </select>
+                  </div>
                 </div>
+                <!-- preserved defaults for legacy JS -->
+                <input id="numStart" type="hidden" value="1" />
+                <input id="numSize" type="hidden" value="12" />
+                <input id="numOffset" type="hidden" value="22" />
               </div>
-              <!-- preserved defaults for legacy JS -->
-              <input id="numStart" type="hidden" value="1" />
-              <input id="numSize" type="hidden" value="12" />
-              <input id="numOffset" type="hidden" value="22" />
+
+            </div><!-- end #step2AdvancedSection -->
+
+            <!-- Go to Export -->
+            <button class="go-export-btn" id="goExportBtn" onclick="goToStep(3)">↗ Export</button>
+
+          </div><!-- end #step2Panel -->
+
+          <!-- ══════════════════════════════════
+               STEP 3 — Export
+          ══════════════════════════════════ -->
+          <div class="step-panel" id="step3Panel">
+
+            <button class="back-to-design-btn" onclick="goToStep(2)">← Back to design</button>
+
+            <!-- Pro build guide card — prominent -->
+            <div class="pro-export-card">
+              <div class="pro-export-card-header">
+                <span class="pro-export-card-title">Pro build guide</span>
+                <span class="pro-export-price-badge">€5</span>
+              </div>
+              <ul class="pro-export-checklist">
+                <li>Nail placement template</li>
+                <li>Full numbered sequence</li>
+                <li>Colour &amp; layer guide</li>
+                <li>Thread estimate per layer</li>
+                <li>Print-ready PDF</li>
+              </ul>
+              <button class="pro-export-cta" onclick="openProModal()">Get the full build guide — €5 →</button>
             </div>
 
-            <!-- TAP SENSITIVITY -->
-            <div class="panel-section advanced-only">
-              <span class="panel-section-label">Advanced</span>
-              <label
-                >Tap sensitivity
-                <span class="help-tip"
-                  >?<span class="tip-text"
-                    >How close your tap must be to a nail to select it. Increase
-                    if you miss nails on mobile.</span
-                  ></span
-                ></label
-              >
-              <input id="snap" type="number" min="6" step="1" value="22" />
-            </div>
+            <!-- Free options — muted, below Pro card -->
+            <div class="free-options-section">
+              <span class="free-options-label">Free options</span>
 
-          </div><!-- end #tab-style -->
-
-          <!-- IMPORT / EXPORT TAB -->
-          <div class="tab-content" id="tab-export">
-
-            <!-- IMPORT / EXPORT -->
-            <div class="panel-section">
-              <span class="panel-section-label">Import / Export</span>
-              <div class="export-row">
-                <button id="saveDesignBtn" class="btn-ghost">Save</button>
-                <button id="loadDesignBtn" class="btn-ghost">Load saved</button>
+              <!-- Sequence -->
+              <div class="seq-export-section">
+                <span class="seq-export-label">Your sequence
+                  <span class="help-tip" style="margin-left:4px;">?<span class="tip-text">The numbered order to visit nails with your thread. Copy or print this to follow at your board.</span></span>
+                </span>
+                <div class="seq-out-wrap">
+                  <div id="seqOut" class="mono">Tap a nail to start your thread. Then tap another nail to draw a line.</div>
+                </div>
+                <p style="margin:6px 0 0;font-size:0.76rem;color:var(--muted);line-height:1.55;">At your board: tie thread to the <strong>first nail</strong>, then wind to each nail in order. Finish a layer before moving to the next colour.</p>
               </div>
-              <div class="export-row" style="margin-top: 6px">
-                <button id="exportDesignBtn" class="btn-ghost">Export file</button>
-                <button id="importDesignBtn" class="btn-ghost">Load from file</button>
+
+              <!-- Free action buttons -->
+              <div class="free-options-grid">
+                <button id="downloadPng" class="free-btn">↓ PNG</button>
+                <button id="exportSeq" class="free-btn">⎘ Copy sequence</button>
+                <button id="saveDesignBtn" class="free-btn">💾 Save</button>
+                <button id="shareDesignBtn" class="free-btn">🔗 Share</button>
               </div>
-              <p class="layout-hint">Export saves your design as a <strong>.sas</strong> file to your device — so you can close the tab and pick up where you left off, or keep multiple designs.</p>
+
+              <!-- File save / load -->
+              <div style="display:flex;gap:6px;margin-top:8px;">
+                <button id="loadDesignBtn" class="free-btn" style="flex:1;">Load saved</button>
+                <button id="exportDesignBtn" class="free-btn" style="flex:1;">Export file</button>
+                <button id="importDesignBtn" class="free-btn" style="flex:1;">Load file</button>
+              </div>
               <input type="file" id="importDesignInput" accept=".sas,.json" style="display:none">
-              <div class="export-row" style="margin-top: 6px">
-                <button id="exportSeq" class="btn-ghost">Copy sequence</button>
-                <button id="downloadPng">Download PNG</button>
-              </div>
-              <div class="export-row" style="margin-top: 6px">
-                <button id="shareDesignBtn" class="btn-ghost" style="width:100%;">🔗 Share this design</button>
-              </div>
-              <button class="pro-btn btn-pro-full" onclick="openProModal()">
-                ✦ Download Printable Template
-                <span class="pro-label">Pro</span>
-              </button>
+              <p class="layout-hint" style="margin-top:6px;">Export saves your design as a <strong>.sas</strong> file — so you can close the tab and pick up where you left off.</p>
             </div>
 
-          </div><!-- end #tab-export -->
-        </div>
+          </div><!-- end #step3Panel -->
+
+        </div><!-- end .panel -->
         </div><!-- end .panel-wrap -->
 
-        <canvas id="cv" aria-label="String art design canvas"></canvas>
+        <div class="canvas-outer">
+          <canvas id="cv" aria-label="String art design canvas"></canvas>
+          <div class="canvas-step-overlay">Preview mode</div>
+        </div>
 
         <!-- TIMELAPSE ANIMATION — hidden until PLAY_BUTTON_ENABLED=true or ?dev=true -->
         <div id="playbackPanel" style="display:none;margin-top:16px;background:var(--panel-bg);border-radius:18px;border:1px solid var(--border-soft);box-shadow:var(--shadow-sm);padding:18px 20px">
@@ -2880,15 +3384,15 @@
           prefer: 'right'
         },
         {
-          selector: '.panel-tab[data-tab="style"]',
+          selector: '#step2LayersSection',
           title: "Change your thread colour",
-          body: "Click this tab whenever you want to change colour, adjust thread thickness, or add a new layer for a multi-colour design.",
+          body: "Use the colour swatch and layer selector to change colour or add a new layer for a multi-colour design. The Advanced toggle below reveals opacity, thread weight, and nail placement options.",
           prefer: 'right'
         },
         {
-          selector: '.panel-tab[data-tab="export"]',
-          title: "Import / Export when you\u2019re ready",
-          body: "Save or load your design file, copy your nail sequence, share a link, or download a full Pro build guide.",
+          selector: '#goExportBtn',
+          title: "Export when you\u2019re ready",
+          body: "Click Export to access your nail sequence, download a PNG, save your file, or get the full printable Pro build guide.",
           prefer: 'right'
         },
         {
@@ -3072,6 +3576,127 @@
     </script>
 
     <script src="app.js"></script>
+
+    <script>
+    /* ── 3-Step flow management ─────────────────────────────── */
+    (function () {
+      var currentStep = 1;
+
+      function updateStepNodes() {
+        for (var i = 1; i <= 3; i++) {
+          var node = document.getElementById('stepNode' + i);
+          var line = document.getElementById('stepLine' + i);
+          if (!node) continue;
+          node.classList.remove('active', 'done');
+          if (i < currentStep)       node.classList.add('done');
+          else if (i === currentStep) node.classList.add('active');
+          if (line) line.classList.toggle('done', i < currentStep);
+        }
+      }
+
+      function updatePanels() {
+        for (var i = 1; i <= 3; i++) {
+          var p = document.getElementById('step' + i + 'Panel');
+          if (p) p.classList.toggle('active', i === currentStep);
+        }
+        document.body.classList.toggle('step3-active', currentStep === 3);
+      }
+
+      window.goToStep = function (n) {
+        currentStep = n;
+        updateStepNodes();
+        updatePanels();
+        // Scroll panel to top when switching steps
+        var panel = document.querySelector('.panel');
+        if (panel) panel.scrollTop = 0;
+      };
+
+      function buildBoardSummary() {
+        var shape = document.getElementById('board');
+        var nails = document.getElementById('nails');
+        var rectW = document.getElementById('rectWidthCm');
+        var rectH = document.getElementById('rectHeightCm');
+        var shapeName = shape ? shape.options[shape.selectedIndex].text : 'Circle';
+        var nailCount = nails ? nails.value : '120';
+        var summary = shapeName + ' \u00b7 ' + nailCount + ' nails';
+        if (shape && shape.value === 'rectangle' && rectW && rectH) {
+          summary += ' \u00b7 ' + rectW.value + '\u00d7' + rectH.value + 'cm';
+        }
+        return summary;
+      }
+
+      function applyBoardSummary(summary) {
+        var el = document.getElementById('boardSummaryText');
+        if (el) el.textContent = summary;
+        var mbi = document.getElementById('mobileBoardInfo');
+        if (mbi) mbi.textContent = summary;
+      }
+
+      window.confirmBoard = function () {
+        var summary = buildBoardSummary();
+        applyBoardSummary(summary);
+        // Trigger redraws: dispatch change events on board + nails, which app.js listens to
+        var boardEl = document.getElementById('board');
+        var nailsEl = document.getElementById('nails');
+        if (boardEl) boardEl.dispatchEvent(new Event('change'));
+        if (nailsEl) nailsEl.dispatchEvent(new Event('change'));
+        goToStep(2);
+      };
+
+      // Pre-populate summary with current default values on load
+      applyBoardSummary(buildBoardSummary());
+
+      window.toggleAdvanced = function () {
+        var section = document.getElementById('step2AdvancedSection');
+        var chevron = document.getElementById('advancedChevron');
+        if (!section) return;
+        var open = section.style.display !== 'none';
+        section.style.display = open ? 'none' : 'block';
+        if (chevron) chevron.style.transform = open ? '' : 'rotate(90deg)';
+      };
+
+      /* ── Mobile step 2 tabs ── */
+      var tabLayers   = document.getElementById('mobileTabLayers');
+      var tabAdvanced = document.getElementById('mobileTabAdvanced');
+      var layersSect  = document.getElementById('step2LayersSection');
+      var advSect     = document.getElementById('step2AdvancedSection');
+      var advBar      = document.getElementById('advancedToggleBar');
+
+      function setMobileTab(tab) {
+        if (!tabLayers || !tabAdvanced) return;
+        var isLayers = tab === 'layers';
+        tabLayers.classList.toggle('active', isLayers);
+        tabAdvanced.classList.toggle('active', !isLayers);
+        if (layersSect) layersSect.style.display = isLayers ? '' : 'none';
+        if (advSect)    advSect.style.display    = isLayers ? 'none' : 'block';
+        // Keep the desktop advanced toggle chevron in sync
+        var chevron = document.getElementById('advancedChevron');
+        if (chevron) chevron.style.transform = isLayers ? '' : 'rotate(90deg)';
+      }
+
+      if (tabLayers)   tabLayers.addEventListener('click',   function () { setMobileTab('layers'); });
+      if (tabAdvanced) tabAdvanced.addEventListener('click', function () { setMobileTab('advanced'); });
+
+      // Initialise
+      updateStepNodes();
+      updatePanels();
+
+      // Auto-advance to Step 2 when app.js loads a saved/shared/preset design.
+      // We defer with setTimeout(0) so app.js DOMContentLoaded handlers run first
+      // and populate the board/nails fields before we read them.
+      setTimeout(function () {
+        var params = new URLSearchParams(window.location.search);
+        var hasExternalDesign = params.get('d') || params.get('template') || params.get('preset');
+        var hasSaved = false;
+        try { hasSaved = !!localStorage.getItem('sas_design_v1'); } catch (_) {}
+        if ((hasExternalDesign || hasSaved) && currentStep === 1) {
+          // Re-read board summary from fields app.js may have updated
+          applyBoardSummary(buildBoardSummary());
+          goToStep(2);
+        }
+      }, 0);
+    })();
+    </script>
 
     <footer style="padding: 0 0 30px; color: #6f6257;">
       <div style="max-width: 1220px; margin: 0 auto; padding: 22px 16px 0; border-top: 1px solid rgba(70,52,36,0.08); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 0.95rem; align-items: center;">
