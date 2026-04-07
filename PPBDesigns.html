@@ -159,7 +159,6 @@ function App({user}){
   const setShopStock=useCallback(mk(setSSR,"shopStock"),[]);
   const setExpenses=useCallback(mk(setER,"expenses"),[]);
 
-  if(fbLoading)return<LoadingScreen/>;
   const finishOrder=useCallback((orderId,{photo,qty,total,payment,notes})=>{
     const order=inProgress.find(o=>o.id===orderId);if(!order)return;
     setCompleted(c=>[{id:order.id,customerId:order.customerId,customerName:order.customerName,cardType:order.cardType,qty:parseInt(qty)||1,total:parseFloat(total)||0,payment:payment||"Cash",completedDate:new Date().toISOString().slice(0,10),notes:notes||"",photo:photo||null,channel:"Direct"},...c]);
@@ -169,6 +168,7 @@ function App({user}){
   const lowSupplies=supplies.filter(s=>s.qty<=s.reorderAt);
   const overdueOrders=inProgress.filter(o=>o.dueDate&&daysUntil(o.dueDate)<0);
   const TABS=[{key:"dashboard",label:"🏠 Home"},{key:"inprogress",label:"🔧 In Progress",badge:inProgress.length,bc:"rose"},{key:"shop",label:"🏪 Shop"},{key:"customers",label:"👥 Customers"},{key:"supplies",label:"📦 Supplies",badge:lowSupplies.length,bc:"amber"},{key:"money",label:"💰 Money"},{key:"seasons",label:"📅 Seasons"}];
+  if(fbLoading)return<LoadingScreen/>;
   return<div style={{minHeight:"100vh",background:`linear-gradient(150deg,${C.light} 0%,${C.pale} 60%,${C.light} 100%)`}}>
     {/* HEADER */}
     <div style={{background:`linear-gradient(135deg,${C.deep} 0%,${C.rose} 55%,${C.mid} 100%)`,boxShadow:"0 4px 24px rgba(136,14,79,.3)"}}>
