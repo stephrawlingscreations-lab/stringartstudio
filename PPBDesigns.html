@@ -272,13 +272,7 @@ function Dashboard({inProgress,completed,customers,shopStock,lowSupplies,overdue
     <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12,marginBottom:20}}>
       {[{label:"This Month",val:"€"+monthRev.toFixed(2),icon:"💰",color:C.rose,bg:C.light,t:"money"},{label:"Due This Week",val:dueWeek.length+" orders",icon:"📋",color:C.blue,bg:C.blight,t:"inprogress"},{label:"Shop Cards Left",val:shopStock.reduce((s,i)=>s+i.qty,0)+" cards",icon:"🏪",color:C.teal,bg:C.tlight,t:"shop"},{label:"Repeat Customers",val:customers.filter(c=>completed.filter(o=>o.customerId===c.id).length>1).length,icon:"💕",color:C.green,bg:C.glight,t:"customers"}].map(k=><div key={k.label} onClick={()=>setTab(k.t)} style={{background:k.bg,borderRadius:14,padding:"16px",cursor:"pointer",transition:"transform .15s,box-shadow .15s"}} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 6px 20px rgba(0,0,0,.1)"}} onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none"}}><div style={{fontSize:24,marginBottom:6}}>{k.icon}</div><div style={{fontWeight:900,fontSize:20,color:k.color,fontFamily:"'Playfair Display',serif"}}>{k.val}</div><div style={{fontSize:11,color:C.muted,marginTop:2,fontWeight:700,letterSpacing:.4,textTransform:"uppercase"}}>{k.label}</div></div>)}
     </div>
-    <Card style={{marginBottom:20}}>
-      <div style={{fontWeight:700,color:C.deep,fontSize:13,letterSpacing:.5,textTransform:"uppercase",marginBottom:14}}>📅 Coming Up — Plan Ahead</div>
-      <div style={{display:"flex",flexDirection:"column",gap:10}}>
-        {upcoming.map(s=>{const urgent=s.days<=s.leadWeeks*7;return<div key={s.name} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",borderRadius:12,background:urgent?C.light:C.lgrey,border:`1.5px solid ${urgent?C.blush:"#e0e0e0"}`}}><span style={{fontSize:26,flexShrink:0}}>{s.emoji}</span><div style={{flex:1}}><div style={{fontWeight:700,color:urgent?C.rose:C.text,fontSize:14}}>{s.name}</div><div style={{fontSize:12,color:C.muted,marginTop:2}}>{s.tip}</div></div><div style={{textAlign:"right",flexShrink:0}}><div style={{fontWeight:700,color:urgent?C.rose:C.grey,fontSize:13}}>{s.days}d</div>{urgent&&<div className="pulse" style={{fontSize:10,color:C.rose,fontWeight:700}}>START NOW</div>}</div></div>})}
-      </div>
-    </Card>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
       <Card>
         <div style={{fontWeight:700,color:C.blue,fontSize:12,letterSpacing:.5,textTransform:"uppercase",marginBottom:12}}>🔧 In Progress</div>
         {inProgress.length===0
@@ -313,6 +307,12 @@ function Dashboard({inProgress,completed,customers,shopStock,lowSupplies,overdue
           </div>)}
       </Card>
     </div>
+    <Card style={{marginTop:20}}>
+      <div style={{fontWeight:700,color:C.deep,fontSize:13,letterSpacing:.5,textTransform:"uppercase",marginBottom:14}}>📅 Coming Up — Plan Ahead</div>
+      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+        {upcoming.map(s=>{const urgent=s.days<=s.leadWeeks*7;return<div key={s.name} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",borderRadius:12,background:urgent?C.light:C.lgrey,border:`1.5px solid ${urgent?C.blush:"#e0e0e0"}`}}><span style={{fontSize:26,flexShrink:0}}>{s.emoji}</span><div style={{flex:1}}><div style={{fontWeight:700,color:urgent?C.rose:C.text,fontSize:14}}>{s.name}</div><div style={{fontSize:12,color:C.muted,marginTop:2}}>{s.tip}</div></div><div style={{textAlign:"right",flexShrink:0}}><div style={{fontWeight:700,color:urgent?C.rose:C.grey,fontSize:13}}>{s.days}d</div>{urgent&&<div className="pulse" style={{fontSize:10,color:C.rose,fontWeight:700}}>START NOW</div>}</div></div>})}
+      </div>
+    </Card>
   </div>;
 }
 
