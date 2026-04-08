@@ -602,7 +602,7 @@
         <div class="settings-card-title" style="margin-bottom:0;">Annual Summary</div>
         <select id="report-year" onchange="renderReports()" style="width:auto;min-width:100px;"></select>
       </div>
-      <div class="stat-grid" id="report-stats" style="margin-bottom:1rem;"></div>
+      <div class="stat-grid" id="report-stats" style="margin-bottom:1rem;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));"></div>
       <div id="report-monthly-table"></div>
     </div>
   </div>
@@ -945,6 +945,7 @@ function handlePhotoChange(e){
 }
 
 function saveWork(){
+  const isEditing = !!editingId;
   const status=document.getElementById('f-status').value;
   const sp=parseFloat(document.getElementById('f-sold-price').value)||0;
   const commRaw=document.getElementById('f-commission-paid').value;
@@ -965,14 +966,17 @@ function saveWork(){
   else if(editingId){ const ex=works.find(x=>x.id===editingId); if(ex?.photoData) w.photoData=ex.photoData; }
   if(editingId){ const idx=works.findIndex(x=>x.id===editingId); if(idx>-1){w.id=editingId;w.createdAt=works[idx].createdAt;works[idx]=w;} }
   else{ w.id=uid(); w.createdAt=Date.now(); works.unshift(w); }
-  saveWorks(works); closeAddModal(); refreshAll();
-  showToast(editingId?'Artwork updated!':'Artwork added!');
+  saveWorks(works);
+  closeAddModal();
+  try { refreshAll(); } catch(e) { console.error('Render error:', e); works=loadWorks(); renderDashboard(); }
+  showToast(isEditing?'Artwork updated!':'Artwork added!');
 }
 
 function deleteCurrentWork(){
   if(!editingId) return;
   if(!confirm('Delete this artwork? This cannot be undone.')) return;
-  works=works.filter(w=>w.id!==editingId); saveWorks(works); closeAddModal(); refreshAll();
+  works=works.filter(w=>w.id!==editingId); saveWorks(works); closeAddModal();
+  try { refreshAll(); } catch(e) { console.error('Render error:', e); works=loadWorks(); renderDashboard(); }
   showToast('Artwork deleted.');
 }
 
