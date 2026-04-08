@@ -193,7 +193,7 @@ function App({user}){
   const revenue=completed.reduce((s,o)=>s+o.total,0);
   const lowSupplies=supplies.filter(s=>s.qty<=s.reorderAt);
   const overdueOrders=inProgress.filter(o=>o.dueDate&&daysUntil(o.dueDate)<0);
-  const TABS=[{key:"dashboard",label:"🏠 Home"},{key:"inprogress",label:"🔧 In Progress",badge:inProgress.length,bc:"rose"},{key:"shop",label:"🏪 Shop"},{key:"customers",label:"👥 Customers"},{key:"supplies",label:"📦 Supplies",badge:lowSupplies.length,bc:"amber"},{key:"money",label:"💰 Money"},{key:"seasons",label:"📅 Seasons"}];
+  const TABS=[{key:"dashboard",label:"🏠 Home"},{key:"inprogress",label:"🔧 In Progress",badge:inProgress.length,bc:"rose"},{key:"shop",label:"🏪 Shop"},{key:"customers",label:"👥 Customers"},{key:"expenses",label:"🧾 Expenses"},{key:"money",label:"💰 Money"},{key:"seasons",label:"📅 Seasons"}];
   if(fbLoading)return<LoadingScreen/>;
   return<div style={{minHeight:"100vh",background:`linear-gradient(150deg,${C.light} 0%,${C.pale} 60%,${C.light} 100%)`}}>
     {/* HEADER */}
@@ -214,7 +214,7 @@ function App({user}){
           </div>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",background:"rgba(255,255,255,.11)",borderRadius:"10px 10px 0 0",overflow:"hidden"}}>
-          {[{icon:"🔧",val:inProgress.length,label:"In Progress",warn:overdueOrders.length>0,t:"inprogress"},{icon:"💰",val:"€"+revenue.toFixed(0),label:"Revenue",t:"money"},{icon:"🏪",val:"€"+completed.filter(o=>o.channel==="Shop").reduce((s,o)=>s+o.total,0).toFixed(0),label:"Shop Sales",t:"shop"},{icon:"👥",val:customers.length,label:"Customers",t:"customers"},{icon:"📦",val:lowSupplies.length,label:"Need Reorder",warn:lowSupplies.length>0,t:"supplies"}].map(s=><div key={s.label} onClick={()=>setTab(s.t)} style={{textAlign:"center",padding:"11px 6px",borderRight:"1px solid rgba(255,255,255,.12)",cursor:"pointer",transition:"background .2s"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.09)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}><div style={{fontSize:18}}>{s.icon}</div><div style={{color:s.warn?"#ffcc02":"#fff",fontWeight:700,fontSize:14,marginTop:1}}>{s.val}</div><div style={{color:"#f8bbd0",fontSize:10,letterSpacing:.4}}>{s.label}</div></div>)}
+          {[{icon:"🔧",val:inProgress.length,label:"In Progress",warn:overdueOrders.length>0,t:"inprogress"},{icon:"💰",val:"€"+revenue.toFixed(0),label:"Revenue",t:"money"},{icon:"🏪",val:"€"+completed.filter(o=>o.channel==="Shop").reduce((s,o)=>s+o.total,0).toFixed(0),label:"Shop Sales",t:"shop"},{icon:"👥",val:customers.length,label:"Customers",t:"customers"},{icon:"🧾",val:"€"+expenses.reduce((s,e)=>s+e.amount,0).toFixed(0),label:"Expenses",t:"expenses"}].map(s=><div key={s.label} onClick={()=>setTab(s.t)} style={{textAlign:"center",padding:"11px 6px",borderRight:"1px solid rgba(255,255,255,.12)",cursor:"pointer",transition:"background .2s"}} onMouseEnter={e=>e.currentTarget.style.background="rgba(255,255,255,.09)"} onMouseLeave={e=>e.currentTarget.style.background="transparent"}><div style={{fontSize:18}}>{s.icon}</div><div style={{color:s.warn?"#ffcc02":"#fff",fontWeight:700,fontSize:14,marginTop:1}}>{s.val}</div><div style={{color:"#f8bbd0",fontSize:10,letterSpacing:.4}}>{s.label}</div></div>)}
         </div>
       </div>
     </div>
@@ -232,6 +232,8 @@ function App({user}){
       {tab==="inprogress"&&<InProgressTab inProgress={inProgress} setInProgress={setInProgress} onMarkComplete={o=>openM("complete",o)} showToast={showT}/>}
       {tab==="shop"&&<ShopTab shopStock={shopStock} setShopStock={setShopStock} completed={completed} setCompleted={setCompleted} showToast={showT}/>}
       {tab==="customers"&&<CustomersTab customers={customers} completed={completed} openModal={openM}/>}
+      {tab==="expenses"&&<ExpensesTab expenses={expenses} setExpenses={setExpenses} showToast={showT}/>}
+      {/* Supplies tab hidden — code kept for future use */}
       {tab==="supplies"&&<SuppliesTab supplies={supplies} setSupplies={setSupplies} openModal={openM} showToast={showT}/>}
       {tab==="money"&&<MoneyTab completed={completed} expenses={expenses} setExpenses={setExpenses} openModal={openM}/>}
       {tab==="seasons"&&<SeasonsTab/>}
@@ -751,6 +753,42 @@ function NewSupplyForm({onSubmit,onCancel}){
   const[f,setF]=useState({name:"",cat:"",qty:0,reorderAt:10,supplier:"",cost:0,notes:""});
   const s=(k,v)=>setF(x=>({...x,[k]:v}));
   return<div><MTitle>New Supply</MTitle><Inp label="Item name" req value={f.name} onChange={e=>s("name",e.target.value)}/><Sel label="Category" req options={SUPPLY_CATS} value={f.cat} onChange={e=>s("cat",e.target.value)}/><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><Inp label="Qty in stock" type="number" value={f.qty} onChange={e=>s("qty",parseInt(e.target.value)||0)}/><Inp label="Reorder below" type="number" value={f.reorderAt} onChange={e=>s("reorderAt",parseInt(e.target.value)||0)}/></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><Inp label="Supplier" value={f.supplier} onChange={e=>s("supplier",e.target.value)}/><Inp label="Cost each (€)" type="number" step="0.01" value={f.cost} onChange={e=>s("cost",parseFloat(e.target.value)||0)}/></div><Inp label="Notes" value={f.notes} onChange={e=>s("notes",e.target.value)}/><div style={{display:"flex",gap:10,justifyContent:"flex-end"}}><Btn onClick={onCancel} variant="ghost" small>Cancel</Btn><Btn onClick={()=>f.name&&f.cat&&onSubmit({id:"SUP"+genId(),...f})} variant="primary" small disabled={!f.name||!f.cat}>Add</Btn></div></div>;
+}
+
+// ── Expenses Tab ──────────────────────────────────────────────────────────────
+function ExpensesTab({expenses,setExpenses,showToast}){
+  const[addModal,setAddModal]=useState(false);
+  const total=expenses.reduce((s,e)=>s+e.amount,0);
+  const deleteExpense=(id)=>{setExpenses(e=>e.filter(x=>x.id!==id));showToast("Expense deleted");};
+  const printExpenses=()=>{
+    const rows=expenses.map(e=>`<tr><td>${fmt(e.date)}</td><td>${e.item}</td><td>${e.cat}</td><td>€${e.amount.toFixed(2)}</td><td>${e.receipt?"✓":"⚠️ Missing"}</td><td>${e.notes||""}</td></tr>`).join("");
+    printWindow("PPB Designs — Expenses",`<h1>🧾 Expenses</h1><p class="meta">PPB Designs · Printed ${fmt(new Date())} · Total: €${total.toFixed(2)}</p><table><thead><tr><th>Date</th><th>Item</th><th>Category</th><th>Amount</th><th>Receipt</th><th>Notes</th></tr></thead><tbody>${rows}</tbody></table>`);
+  };
+  return<div className="fade-in">
+    <SecTitle right={<div style={{display:"flex",gap:6}}><Btn onClick={printExpenses} variant="ghost" small>🖨️ Print</Btn><Btn onClick={()=>setAddModal(true)} variant="amber" small>+ Add Expense</Btn></div>}>🧾 Expenses</SecTitle>
+    {expenses.length>0&&<div style={{background:"#fff3e0",borderRadius:12,padding:"14px 18px",marginBottom:20,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+      <span style={{fontSize:13,color:C.amber,fontWeight:700}}>Total expenses logged</span>
+      <span style={{fontSize:22,fontWeight:900,color:C.amber,fontFamily:"'Playfair Display',serif"}}>€{total.toFixed(2)}</span>
+    </div>}
+    {expenses.length===0
+      ?<Empty icon="🧾" title="No expenses yet" sub="Tap '+ Add Expense' to log materials, postage, tools and more"/>
+      :<div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {expenses.map(e=><div key={e.id} style={{background:"#fff",borderRadius:12,border:`1.5px solid ${C.light}`,padding:"12px 16px",display:"flex",alignItems:"center",gap:12}}>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontWeight:700,fontSize:13,color:C.text}}>{e.item}</div>
+            <div style={{fontSize:11,color:C.muted,marginTop:2}}>{new Date(e.date).toLocaleDateString("en-IE")} · {e.cat}{!e.receipt?" · ⚠️ No receipt":""}</div>
+            {e.notes&&<div style={{fontSize:11,color:"#bdbdbd",marginTop:1}}>{e.notes}</div>}
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+            <span style={{fontWeight:700,color:C.amber,fontSize:14}}>€{e.amount.toFixed(2)}</span>
+            <button onClick={()=>deleteExpense(e.id)} style={{fontSize:10,padding:"3px 8px",borderRadius:6,border:"1px solid #ffcdd2",background:"#ffebee",color:"#c62828",cursor:"pointer",fontFamily:"Lato,sans-serif"}}>Delete</button>
+          </div>
+        </div>)}
+      </div>}
+    <Modal open={addModal} onClose={()=>setAddModal(false)}>
+      <NewExpenseForm onSubmit={e=>{setExpenses(prev=>[e,...prev]);setAddModal(false);showToast("Expense saved!");}} onCancel={()=>setAddModal(false)}/>
+    </Modal>
+  </div>;
 }
 
 // ── Money Tab ─────────────────────────────────────────────────────────────────
