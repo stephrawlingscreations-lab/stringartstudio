@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Wendy's Whims & Wonders — Sales Tracker</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+
+<style>
+  :root {
+    --rose:     #e8a0b0;
+    --rose-lt:  #f7dde4;
+    --rose-dk:  #c4647c;
+    --cream:    #fdf6f0;
+    --cream2:   #f9ede6;
+    --gold:     #d4a843;
+    --gold-lt:  #faf0d7;
+    --ink:      #3a2832;
+    --ink-mid:  #7a5868;
+    --ink-lt:   #b8929e;
+    --shadow:   rgba(196,100,124,0.12);
+    --radius:   14px;
+    --radius-sm:8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Lato', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  .topbar {
+    background: white;
+    border-bottom: 1px solid var(--rose-lt);
+    padding: 0.7rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px var(--shadow);
+  }
+
+  .topbar-brand {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 1.4rem;
+    color: var(--rose-dk);
+  }
+
+  .topbar-brand span {
+    font-size: 0.65rem;
+    font-style: normal;
+    font-family: 'Lato', sans-serif;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-lt);
+    display: block;
+    margin-top: -2px;
+  }
+
+  .nav-tabs {
+    background: white;
+    border-bottom: 1px solid var(--rose-lt);
+    display: flex;
+    padding: 0 1.5rem;
+    overflow-x: auto;
+  }
+
+  .nav-tab {
+    padding: 0.75rem 1.2rem;
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-lt);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+    white-space: nowrap;
+    font-weight: 700;
+  }
+
+  .nav-tab:hover { color: var(--rose-dk); }
+  .nav-tab.active { color: var(--rose-dk); border-bottom-color: var(--rose-dk); }
+
+  .main { padding: 1.5rem; max-width: 1100px; width: 100%; margin: 0 auto; }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-card {
+    background: white;
+    border-radius: var(--radius);
+    padding: 1.2rem 1rem;
+    text-align: center;
+    box-shadow: 0 2px 10px var(--shadow);
+    border-top: 3px solid var(--rose);
+  }
+
+  .stat-card.gold-top { border-top-color: var(--gold); }
+
+  .stat-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.9rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .stat-lbl {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-lt);
+    margin-top: 4px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    color: var(--ink);
+  }
+
+  .btn {
+    padding: 0.6rem 1.2rem;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-family: 'Lato', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    font-weight: 700;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--rose-dk); color: white; }
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-outline { background: white; border: 1.5px solid var(--rose); color: var(--rose-dk); }
+  .btn-outline:hover { background: var(--rose-lt); }
+  .btn-sm { padding: 0.4rem 0.85rem; font-size: 0.78rem; }
+  .btn-danger { background: #c0392b; color: white; }
+  .btn-danger:hover { opacity: 0.88; }
+
+  .artwork-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 1.2rem;
+  }
+
+  .artwork-card {
+    background: white;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 2px 12px var(--shadow);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+  }
+
+  .artwork-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px var(--shadow); }
+
+  .artwork-img {
+    width: 100%;
+    height: 175px;
+    background: var(--cream2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .artwork-img img { width: 100%; height: 100%; object-fit: cover; }
+
+  .artwork-body { padding: 0.9rem; }
+
+  .artwork-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    color: var(--ink);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .artwork-price { font-size: 1.1rem; font-weight: 700; color: var(--rose-dk); margin-bottom: 6px; }
+  .artwork-meta  { font-size: 0.75rem; color: var(--ink-lt); line-height: 1.6; }
+
+  .status-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  .badge-shop    { background: var(--gold-lt); color: #7a5000; }
+  .badge-sold    { background: #e8f7e8;         color: #2a6e2a; }
+  .badge-home    { background: var(--rose-lt);  color: var(--rose-dk); }
+  .badge-consign { background: #ede8f7;         color: #5030a0; }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(58,40,50,0.45);
+    z-index: 500;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 1.5rem;
+    overflow-y: auto;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: white;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 560px;
+    padding: 2rem;
+    margin: auto;
+    box-shadow: 0 12px 50px rgba(196,100,124,0.2);
+  }
+
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    color: var(--ink);
+    margin-bottom: 1.4rem;
+  }
+
+  .form-group { margin-bottom: 1rem; }
+
+  label {
+    display: block;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-mid);
+    margin-bottom: 5px;
+    font-weight: 700;
+  }
+
+  input[type=text], input[type=number], input[type=date], select, textarea {
+    width: 100%;
+    padding: 0.65rem 0.9rem;
+    border: 1.5px solid var(--rose-lt);
+    border-radius: var(--radius-sm);
+    font-family: 'Lato', sans-serif;
+    font-size: 0.9rem;
+    color: var(--ink);
+    background: var(--cream);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  input:focus, select:focus, textarea:focus { border-color: var(--rose); }
+  textarea { resize: vertical; min-height: 80px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+  .img-upload-area {
+    border: 2px dashed var(--rose);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    background: var(--rose-lt);
+    transition: background 0.2s;
+    position: relative;
+  }
+
+  .img-upload-area:hover { background: #f0cdd6; }
+
+  .img-upload-area input[type=file] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    border: none;
+    padding: 0;
+  }
+
+  .img-preview { width: 100%; max-height: 200px; object-fit: contain; border-radius: var(--radius-sm); margin-top: 0.5rem; display: none; }
+
+  .table-wrap { background: white; border-radius: var(--radius); overflow: hidden; box-shadow: 0 2px 12px var(--shadow); overflow-x: auto; }
+
+  .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+
+  .data-table th {
+    background: var(--rose-lt);
+    padding: 0.7rem 0.9rem;
+    text-align: left;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--rose-dk);
+    font-weight: 700;
+    border-bottom: 2px solid var(--rose);
+    white-space: nowrap;
+  }
+
+  .data-table td { padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--rose-lt); color: var(--ink); vertical-align: middle; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: var(--cream2); }
+
+  .filter-bar { display: flex; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; }
+  .filter-bar input, .filter-bar select { width: auto; flex: 1; min-width: 120px; max-width: 220px; font-size: 0.82rem; padding: 0.5rem 0.8rem; }
+
+  .info-box { background: var(--gold-lt); border: 1px solid var(--gold); border-radius: var(--radius-sm); padding: 0.8rem 1rem; font-size: 0.82rem; color: #7a5000; margin-bottom: 1rem; }
+
+  .chart-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .chart-bar-label { font-size: 0.75rem; color: var(--ink-mid); width: 56px; text-align: right; flex-shrink: 0; }
+  .chart-bar-track { flex: 1; background: var(--rose-lt); border-radius: 4px; height: 22px; overflow: hidden; }
+  .chart-bar-fill { height: 100%; background: linear-gradient(90deg, var(--rose-dk), var(--rose)); border-radius: 4px; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; min-width: 2px; }
+  .chart-bar-fill span { font-size: 0.7rem; color: white; font-weight: 700; white-space: nowrap; }
+
+  .detail-img { width: 100%; max-height: 280px; object-fit: contain; border-radius: var(--radius); background: var(--cream2); margin-bottom: 1rem; }
+
+  .detail-row { display: flex; justify-content: space-between; align-items: baseline; padding: 0.55rem 0; border-bottom: 1px solid var(--rose-lt); font-size: 0.88rem; gap: 1rem; }
+  .detail-row:last-child { border-bottom: none; }
+  .detail-row .lbl { color: var(--ink-lt); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; flex-shrink: 0; }
+  .detail-row .val { font-weight: 700; color: var(--ink); text-align: right; }
+
+  .empty-state { text-align: center; padding: 3rem 1rem; color: var(--ink-lt); grid-column: 1 / -1; }
+  .empty-state .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+  @media print {
+    .topbar, .nav-tabs, .btn, .filter-bar, .modal-overlay, .no-print { display: none !important; }
+    .main { padding: 0; max-width: 100%; }
+    .page { display: block !important; }
+    .page:not(.active) { display: none !important; }
+    body { background: white; }
+    .artwork-grid { grid-template-columns: repeat(3,1fr); }
+    .artwork-card { break-inside: avoid; }
+  }
+
+  @media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+    .nav-tab { padding: 0.7rem 0.6rem; font-size: 0.7rem; }
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+    .topbar-brand { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    Wendy's Whims &amp; Wonders
+    <span>Sales Tracker</span>
+  </div>
+  <button class="btn btn-primary btn-sm no-print" onclick="openAddModal()">+ Add Artwork</button>
+</div>
+
+<div class="nav-tabs">
+  <div class="nav-tab active" data-page="dashboard">Dashboard</div>
+  <div class="nav-tab" data-page="inventory">In Shop</div>
+  <div class="nav-tab" data-page="all-works">All Works</div>
+  <div class="nav-tab" data-page="sales">Sales</div>
+  <div class="nav-tab" data-page="reports">Reports</div>
+</div>
+
+<div class="main">
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-val" id="stat-in-shop">0</div><div class="stat-lbl">In Shop Now</div></div>
+      <div class="stat-card gold-top"><div class="stat-val" id="stat-gross">€0</div><div class="stat-lbl">Gross Sales (All Time)</div></div>
+      <div class="stat-card gold-top"><div class="stat-val" id="stat-net">€0</div><div class="stat-lbl">Net After Commission</div></div>
+      <div class="stat-card"><div class="stat-val" id="stat-this-month">€0</div><div class="stat-lbl">Net This Month</div></div>
+      <div class="stat-card"><div class="stat-val" id="stat-total-works">0</div><div class="stat-lbl">Total Works Tracked</div></div>
+      <div class="stat-card"><div class="stat-val" id="stat-sold-count">0</div><div class="stat-lbl">Total Sold</div></div>
+    </div>
+    <div class="section-header"><div class="section-title">Monthly Earnings (Net)</div></div>
+    <div style="background:white;border-radius:var(--radius);padding:1.2rem;box-shadow:0 2px 12px var(--shadow);margin-bottom:1.5rem;">
+      <div id="monthly-chart"></div>
+    </div>
+    <div class="section-header"><div class="section-title">Recently Added</div></div>
+    <div class="artwork-grid" id="recent-grid"></div>
+  </div>
+
+  <!-- IN SHOP -->
+  <div class="page" id="page-inventory">
+    <div class="section-header">
+      <div class="section-title">Currently In Shop</div>
+      <button class="btn btn-outline btn-sm no-print" onclick="window.print()">🖨 Print</button>
+    </div>
+    <div class="info-box" id="shop-commission-info">✦ Commission rate: 30% — update in Reports &amp; Settings.</div>
+    <div class="filter-bar no-print">
+      <input type="text" id="inv-search" placeholder="Search by title…" oninput="renderInventory()"/>
+    </div>
+    <div class="artwork-grid" id="inventory-grid"></div>
+  </div>
+
+  <!-- ALL WORKS -->
+  <div class="page" id="page-all-works">
+    <div class="section-header">
+      <div class="section-title">All Works</div>
+      <button class="btn btn-outline btn-sm no-print" onclick="window.print()">🖨 Print</button>
+    </div>
+    <div class="filter-bar no-print">
+      <input type="text" id="all-search" placeholder="Search…" oninput="renderAllWorks()"/>
+      <select id="all-status" onchange="renderAllWorks()">
+        <option value="">All Statuses</option>
+        <option value="in_shop">In Shop</option>
+        <option value="sold">Sold</option>
+        <option value="at_home">At Home</option>
+        <option value="consignment">Consignment</option>
+      </select>
+      <select id="all-sort" onchange="renderAllWorks()">
+        <option value="date_added_desc">Newest First</option>
+        <option value="date_added_asc">Oldest First</option>
+        <option value="price_desc">Price High–Low</option>
+        <option value="price_asc">Price Low–High</option>
+      </select>
+    </div>
+    <div class="artwork-grid" id="all-works-grid"></div>
+  </div>
+
+  <!-- SALES -->
+  <div class="page" id="page-sales">
+    <div class="section-header">
+      <div class="section-title">Sales History</div>
+      <button class="btn btn-outline btn-sm no-print" onclick="window.print()">🖨 Print</button>
+    </div>
+    <div class="filter-bar no-print">
+      <select id="sales-month" onchange="renderSales()"><option value="">All Months</option></select>
+      <select id="sales-year"  onchange="renderSales()"><option value="">All Years</option></select>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Artwork</th><th>Date Placed</th><th>Date Sold</th>
+            <th>Asking Price</th><th>Sold For</th><th>Commission</th>
+            <th>Net to Wendy</th><th>Notes</th>
+          </tr>
+        </thead>
+        <tbody id="sales-tbody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:1rem;font-size:0.85rem;color:var(--ink-mid);" id="sales-totals"></div>
+  </div>
+
+  <!-- REPORTS -->
+  <div class="page" id="page-reports">
+    <div class="section-header">
+      <div class="section-title">Reports &amp; Settings</div>
+      <button class="btn btn-outline btn-sm no-print" onclick="window.print()">🖨 Print Report</button>
+    </div>
+
+    <div style="background:white;border-radius:var(--radius);padding:1.5rem;box-shadow:0 2px 12px var(--shadow);margin-bottom:1.5rem;">
+      <div class="section-title" style="font-size:1rem;margin-bottom:1rem;">Shop Commission Rate</div>
+      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" id="commission-rate" style="width:90px;" min="0" max="100" step="0.5" value="30"/>
+          <span style="font-size:0.9rem;color:var(--ink-mid);">%</span>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="saveCommission()">Save Rate</button>
+        <span id="commission-saved" style="font-size:0.8rem;color:green;display:none;">✓ Saved</span>
+      </div>
+      <p style="font-size:0.78rem;color:var(--ink-lt);margin-top:0.6rem;">This rate is deducted from all sale prices to calculate your net earnings. Update anytime.</p>
+    </div>
+
+    <div style="background:white;border-radius:var(--radius);padding:1.5rem;box-shadow:0 2px 12px var(--shadow);margin-bottom:1.5rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
+        <div class="section-title" style="font-size:1rem;">Annual Summary</div>
+        <select id="report-year" onchange="renderReports()" style="width:auto;min-width:100px;padding:0.4rem 0.7rem;font-size:0.82rem;"></select>
+      </div>
+      <div class="stat-grid" id="report-stats"></div>
+      <div id="report-monthly-table"></div>
+    </div>
+
+    <div style="background:var(--gold-lt);border:1px solid var(--gold);border-radius:var(--radius);padding:1.2rem 1.5rem;margin-bottom:1.5rem;">
+      <strong style="font-size:0.9rem;color:#7a5000;">📋 For Tax Records</strong>
+      <p style="font-size:0.82rem;color:#7a5000;margin-top:0.4rem;line-height:1.6;">
+        Use <strong>🖨 Print Report</strong> above for a full annual summary. The Sales page gives a date-filtered breakdown you can print per month. Keep records of gross sales, commission paid, and net income for your accountant.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div class="modal-overlay" id="modal-add">
+  <div class="modal">
+    <div class="modal-title" id="modal-add-title">Add New Artwork</div>
+
+    <div class="form-group">
+      <label>Photo of Artwork</label>
+      <div class="img-upload-area">
+        <input type="file" id="photo-input" accept="image/*" onchange="handlePhotoChange(event)"/>
+        <div id="upload-placeholder">
+          <div style="font-size:2rem;margin-bottom:0.3rem;">🎨</div>
+          <div style="font-size:0.85rem;color:var(--ink-mid);">Tap or click to upload photo</div>
+          <div style="font-size:0.75rem;color:var(--ink-lt);margin-top:0.2rem;">JPEG, PNG, HEIC supported</div>
+        </div>
+        <img id="photo-preview" class="img-preview"/>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Title / Name</label>
+      <input type="text" id="f-title" placeholder="e.g. Pink Fluid Rose, Abstract No. 7…"/>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Medium / Type</label>
+        <input type="text" id="f-medium" placeholder="e.g. Mixed Media, Acrylic…"/>
+      </div>
+      <div class="form-group">
+        <label>Size</label>
+        <input type="text" id="f-size" placeholder="e.g. 40×50cm"/>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Asking Price (€)</label>
+        <input type="number" id="f-price" min="0" step="0.01" placeholder="0.00"/>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="f-status" onchange="handleStatusChange()">
+          <option value="in_shop">In Shop</option>
+          <option value="at_home">At Home</option>
+          <option value="consignment">Consignment</option>
+          <option value="sold">Sold</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Date Placed in Shop</label>
+        <input type="date" id="f-date-placed"/>
+      </div>
+      <div class="form-group" id="sold-date-group">
+        <label>Date Sold</label>
+        <input type="date" id="f-date-sold"/>
+      </div>
+    </div>
+
+    <div class="form-row" id="sold-price-group">
+      <div class="form-group">
+        <label>Sold For (€)</label>
+        <input type="number" id="f-sold-price" min="0" step="0.01" placeholder="0.00" oninput="autoCommission()"/>
+      </div>
+      <div class="form-group">
+        <label>Commission Paid (€) <span style="font-size:0.7rem;font-weight:400;color:var(--ink-lt);">auto-calculated</span></label>
+        <input type="number" id="f-commission-paid" min="0" step="0.01" placeholder="auto"/>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Notes</label>
+      <textarea id="f-notes" placeholder="Buyer info, exhibition, inspiration…"></textarea>
+    </div>
+
+    <div style="display:flex;gap:0.7rem;justify-content:flex-end;margin-top:1.2rem;flex-wrap:wrap;align-items:center;">
+      <button class="btn btn-danger btn-sm" id="btn-delete" style="display:none;margin-right:auto;" onclick="deleteCurrentWork()">Delete</button>
+      <button class="btn btn-outline" onclick="closeAddModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveWork()">Save Artwork</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal">
+    <div id="detail-content"></div>
+    <div style="display:flex;gap:0.7rem;justify-content:flex-end;margin-top:1rem;flex-wrap:wrap;">
+      <button class="btn btn-outline" onclick="closeDetailModal()">Close</button>
+      <button class="btn btn-primary btn-sm" onclick="editFromDetail()">Edit</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORE_KEY = 'wwwWorks';
+const SETT_KEY  = 'wwwSettings';
+
+function loadWorks()    { try { return JSON.parse(localStorage.getItem(STORE_KEY))||[]; } catch(e){ return []; } }
+function saveWorks(a)   { localStorage.setItem(STORE_KEY, JSON.stringify(a)); }
+function loadSettings() { try { return JSON.parse(localStorage.getItem(SETT_KEY))||{}; } catch(e){ return {}; } }
+function saveSettings(s){ localStorage.setItem(SETT_KEY, JSON.stringify(s)); }
+
+let works = loadWorks();
+let commissionRate = loadSettings().commissionRate || 30;
+document.getElementById('commission-rate').value = commissionRate;
+
+let editingId = null, pendingPhotoData = null, detailId = null;
+
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+// Navigation
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('page-' + tab.dataset.page).classList.add('active');
+  });
+});
+
+// Helpers
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+function fmt(n) {
+  if (n==null||isNaN(n)) return '—';
+  return '€' + Number(n).toLocaleString('en-IE',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+function statusBadge(s) {
+  const map={in_shop:['badge-shop','In Shop'],sold:['badge-sold','Sold'],at_home:['badge-home','At Home'],consignment:['badge-consign','Consignment']};
+  const [cls,lbl]=map[s]||['badge-home',s];
+  return `<span class="status-badge ${cls}">${lbl}</span>`;
+}
+
+function commAmt(sp){ return sp*(commissionRate/100); }
+function netAmt(sp) { return sp*(1-commissionRate/100); }
+
+function imgEl(w) {
+  return w.photoData
+    ? `<img src="${w.photoData}" style="width:100%;height:100%;object-fit:cover;"/>`
+    : `<span style="font-size:3rem;">🎨</span>`;
+}
+
+function artworkCard(w) {
+  return `<div class="artwork-card" onclick="openDetail('${w.id}')">
+    <div class="artwork-img">${imgEl(w)}</div>
+    <div class="artwork-body">
+      <div class="artwork-title">${w.title||'Untitled'}</div>
+      <div class="artwork-price">${fmt(w.price)}</div>
+      <div class="artwork-meta">
+        ${w.medium?w.medium+'<br/>':''}
+        ${w.size?w.size+'<br/>':''}
+        ${w.datePlaced?'Placed: '+w.datePlaced+'<br/>':''}
+        ${w.dateSold?'Sold: '+w.dateSold:''}
+      </div>
+      ${statusBadge(w.status)}
+    </div>
+  </div>`;
+}
+
+function emptyState(msg) {
+  return `<div class="empty-state"><div class="empty-icon">🎨</div><p>${msg}</p></div>`;
+}
+
+function refreshAll() {
+  works = loadWorks();
+  renderDashboard(); renderInventory(); renderAllWorks(); renderSales(); renderReports();
+}
+
+// Dashboard
+function renderDashboard() {
+  const inShop = works.filter(w=>w.status==='in_shop');
+  const sold   = works.filter(w=>w.status==='sold');
+  const gross  = sold.reduce((a,w)=>a+(w.soldPrice||0),0);
+  const net    = sold.reduce((a,w)=>a+netAmt(w.soldPrice||0),0);
+  const now=new Date(), tm=now.getMonth(), ty=now.getFullYear();
+  const netTM  = sold.filter(w=>{ if(!w.dateSold)return false; const d=new Date(w.dateSold); return d.getMonth()===tm&&d.getFullYear()===ty; })
+                     .reduce((a,w)=>a+netAmt(w.soldPrice||0),0);
+
+  document.getElementById('stat-in-shop').textContent    = inShop.length;
+  document.getElementById('stat-gross').textContent      = fmt(gross);
+  document.getElementById('stat-net').textContent        = fmt(net);
+  document.getElementById('stat-this-month').textContent = fmt(netTM);
+  document.getElementById('stat-total-works').textContent= works.length;
+  document.getElementById('stat-sold-count').textContent = sold.length;
+
+  const months=[];
+  for(let i=5;i>=0;i--){ const d=new Date(ty,tm-i,1); months.push({label:MONTHS[d.getMonth()]+"'"+String(d.getFullYear()).slice(2),m:d.getMonth(),y:d.getFullYear()}); }
+  const vals=months.map(mo=>sold.filter(w=>{if(!w.dateSold)return false;const d=new Date(w.dateSold);return d.getMonth()===mo.m&&d.getFullYear()===mo.y;}).reduce((a,w)=>a+netAmt(w.soldPrice||0),0));
+  const maxV=Math.max(...vals,1);
+  document.getElementById('monthly-chart').innerHTML=months.map((mo,i)=>{
+    const pct=Math.round((vals[i]/maxV)*100);
+    return `<div class="chart-bar-row"><div class="chart-bar-label">${mo.label}</div><div class="chart-bar-track"><div class="chart-bar-fill" style="width:${pct}%"><span>${vals[i]>0?fmt(vals[i]):''}</span></div></div></div>`;
+  }).join('');
+
+  const recent=[...works].sort((a,b)=>b.createdAt-a.createdAt).slice(0,4);
+  document.getElementById('recent-grid').innerHTML=recent.length?recent.map(artworkCard).join(''):emptyState('No works yet — add your first!');
+}
+
+// Inventory
+function renderInventory() {
+  const q=(document.getElementById('inv-search')?.value||'').toLowerCase();
+  let items=works.filter(w=>w.status==='in_shop');
+  if(q) items=items.filter(w=>(w.title||'').toLowerCase().includes(q));
+  document.getElementById('inventory-grid').innerHTML=items.length?items.map(artworkCard).join(''):emptyState('No items currently in the shop.');
+  document.getElementById('shop-commission-info').textContent=`✦ Shop commission rate: ${commissionRate}%. Net to Wendy per sale is calculated automatically.`;
+}
+
+// All works
+function renderAllWorks() {
+  const q=(document.getElementById('all-search')?.value||'').toLowerCase();
+  const status=document.getElementById('all-status')?.value||'';
+  const sort=document.getElementById('all-sort')?.value||'date_added_desc';
+  let items=[...works];
+  if(q) items=items.filter(w=>(w.title||'').toLowerCase().includes(q)||(w.medium||'').toLowerCase().includes(q)||(w.notes||'').toLowerCase().includes(q));
+  if(status) items=items.filter(w=>w.status===status);
+  items.sort((a,b)=>{
+    if(sort==='price_desc') return (b.price||0)-(a.price||0);
+    if(sort==='price_asc')  return (a.price||0)-(b.price||0);
+    if(sort==='date_added_asc') return a.createdAt-b.createdAt;
+    return b.createdAt-a.createdAt;
+  });
+  document.getElementById('all-works-grid').innerHTML=items.length?items.map(artworkCard).join(''):emptyState('No works found.');
+}
+
+// Sales
+function renderSales() {
+  const sold=works.filter(w=>w.status==='sold'&&w.dateSold);
+  const years=[...new Set(sold.map(w=>w.dateSold?.slice(0,4)))].filter(Boolean).sort().reverse();
+  const selY=document.getElementById('sales-year'), selM=document.getElementById('sales-month');
+  const curY=selY.value, curM=selM.value;
+  selY.innerHTML='<option value="">All Years</option>'+years.map(y=>`<option value="${y}"${y===curY?' selected':''}>${y}</option>`).join('');
+  if(!curY&&years.length) selY.value=years[0];
+  selM.innerHTML='<option value="">All Months</option>'+MONTHS.map((m,i)=>{ const v=String(i+1).padStart(2,'0'); return `<option value="${v}"${v===curM?' selected':''}>${m}</option>`; }).join('');
+  let f=sold;
+  if(selY.value) f=f.filter(w=>w.dateSold?.startsWith(selY.value));
+  if(selM.value) f=f.filter(w=>w.dateSold?.slice(5,7)===selM.value);
+  f.sort((a,b)=>(b.dateSold||'').localeCompare(a.dateSold||''));
+  const tbody=document.getElementById('sales-tbody');
+  tbody.innerHTML=f.length
+    ?f.map(w=>{ const sp=w.soldPrice||0, comm=w.commissionPaid!=null?w.commissionPaid:commAmt(sp), net=sp-comm;
+      return `<tr><td><strong>${w.title||'Untitled'}</strong>${w.medium?`<br/><span style="font-size:0.75rem;color:var(--ink-lt);">${w.medium}</span>`:''}</td><td>${w.datePlaced||'—'}</td><td>${w.dateSold||'—'}</td><td>${fmt(w.price)}</td><td>${fmt(sp)}</td><td style="color:var(--rose-dk);">${fmt(comm)}</td><td style="font-weight:700;color:#2a6e2a;">${fmt(net)}</td><td style="font-size:0.78rem;color:var(--ink-lt);max-width:160px;">${w.notes||'—'}</td></tr>`;
+    }).join('')
+    :'<tr><td colspan="8" style="text-align:center;color:var(--ink-lt);padding:2rem;">No sales for this period.</td></tr>';
+  const tg=f.reduce((a,w)=>a+(w.soldPrice||0),0);
+  const tc=f.reduce((a,w)=>{ const sp=w.soldPrice||0; return a+(w.commissionPaid!=null?w.commissionPaid:commAmt(sp)); },0);
+  document.getElementById('sales-totals').innerHTML=f.length?`<strong>${f.length} sale${f.length!==1?'s':''}</strong> · Gross: <strong>${fmt(tg)}</strong> · Commission: <strong style="color:var(--rose-dk);">${fmt(tc)}</strong> · <strong style="color:#2a6e2a;">Net to Wendy: ${fmt(tg-tc)}</strong>`:'';
+}
+
+// Reports
+function renderReports() {
+  const sold=works.filter(w=>w.status==='sold'&&w.dateSold);
+  const years=[...new Set(sold.map(w=>w.dateSold?.slice(0,4)))].filter(Boolean).sort().reverse();
+  const sel=document.getElementById('report-year'), prev=sel.value;
+  sel.innerHTML=years.length?years.map(y=>`<option value="${y}"${y===prev?' selected':''}>${y}</option>`).join(''):`<option value="${new Date().getFullYear()}">${new Date().getFullYear()}</option>`;
+  if(!prev&&years.length) sel.value=years[0];
+  const year=sel.value||String(new Date().getFullYear());
+  const forY=sold.filter(w=>w.dateSold?.startsWith(year));
+  const gross=forY.reduce((a,w)=>a+(w.soldPrice||0),0);
+  const comm=forY.reduce((a,w)=>{ const sp=w.soldPrice||0; return a+(w.commissionPaid!=null?w.commissionPaid:commAmt(sp)); },0);
+  const net=gross-comm;
+  document.getElementById('report-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-val">${forY.length}</div><div class="stat-lbl">Works Sold</div></div>
+    <div class="stat-card gold-top"><div class="stat-val">${fmt(gross)}</div><div class="stat-lbl">Gross Sales</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--rose-dk);">${fmt(comm)}</div><div class="stat-lbl">Commission Paid</div></div>
+    <div class="stat-card gold-top"><div class="stat-val" style="color:#2a6e2a;">${fmt(net)}</div><div class="stat-lbl">Net Income</div></div>`;
+  const rows=MONTHS.map((m,i)=>{
+    const mn=String(i+1).padStart(2,'0'), ms=forY.filter(w=>w.dateSold?.slice(5,7)===mn);
+    const mg=ms.reduce((a,w)=>a+(w.soldPrice||0),0), mc=ms.reduce((a,w)=>{ const sp=w.soldPrice||0; return a+(w.commissionPaid!=null?w.commissionPaid:commAmt(sp)); },0);
+    return {m,count:ms.length,gross:mg,comm:mc,net:mg-mc};
+  });
+  document.getElementById('report-monthly-table').innerHTML=`<table class="data-table" style="margin-top:1rem;"><thead><tr><th>Month</th><th>Sales</th><th>Gross</th><th>Commission</th><th>Net</th></tr></thead><tbody>
+    ${rows.map(r=>`<tr><td>${r.m}</td><td>${r.count||'—'}</td><td>${r.gross>0?fmt(r.gross):'—'}</td><td style="color:var(--rose-dk);">${r.comm>0?fmt(r.comm):'—'}</td><td style="font-weight:700;color:${r.net>0?'#2a6e2a':'var(--ink-lt)'};">${r.net>0?fmt(r.net):'—'}</td></tr>`).join('')}
+    <tr style="background:var(--cream2);font-weight:700;"><td>Total</td><td>${forY.length}</td><td>${fmt(gross)}</td><td style="color:var(--rose-dk);">${fmt(comm)}</td><td style="color:#2a6e2a;">${fmt(net)}</td></tr>
+  </tbody></table>`;
+}
+
+// Commission save
+function saveCommission() {
+  commissionRate=parseFloat(document.getElementById('commission-rate').value)||30;
+  const s=loadSettings(); s.commissionRate=commissionRate; saveSettings(s);
+  const msg=document.getElementById('commission-saved');
+  msg.style.display='inline'; setTimeout(()=>msg.style.display='none',2500);
+  refreshAll();
+}
+
+// Add/Edit modal
+function openAddModal(id=null) {
+  editingId=id; pendingPhotoData=null;
+  document.getElementById('modal-add-title').textContent=id?'Edit Artwork':'Add New Artwork';
+  document.getElementById('btn-delete').style.display=id?'inline-block':'none';
+  document.getElementById('photo-preview').style.display='none';
+  document.getElementById('upload-placeholder').style.display='block';
+  document.getElementById('photo-input').value='';
+  if(id) {
+    const w=works.find(x=>x.id===id); if(!w) return;
+    document.getElementById('f-title').value=w.title||'';
+    document.getElementById('f-medium').value=w.medium||'';
+    document.getElementById('f-size').value=w.size||'';
+    document.getElementById('f-price').value=w.price||'';
+    document.getElementById('f-status').value=w.status||'in_shop';
+    document.getElementById('f-date-placed').value=w.datePlaced||'';
+    document.getElementById('f-date-sold').value=w.dateSold||'';
+    document.getElementById('f-sold-price').value=w.soldPrice||'';
+    document.getElementById('f-commission-paid').value=w.commissionPaid!=null?w.commissionPaid:'';
+    document.getElementById('f-notes').value=w.notes||'';
+    if(w.photoData){ const p=document.getElementById('photo-preview'); p.src=w.photoData; p.style.display='block'; document.getElementById('upload-placeholder').style.display='none'; }
+  } else {
+    ['f-title','f-medium','f-size','f-price','f-date-sold','f-sold-price','f-commission-paid','f-notes'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('f-status').value='in_shop';
+    document.getElementById('f-date-placed').value=new Date().toISOString().slice(0,10);
+  }
+  handleStatusChange();
+  document.getElementById('modal-add').classList.add('open');
+}
+
+function closeAddModal(){ document.getElementById('modal-add').classList.remove('open'); editingId=null; pendingPhotoData=null; }
+
+function handleStatusChange(){
+  const isSold=document.getElementById('f-status').value==='sold';
+  document.getElementById('sold-date-group').style.display=isSold?'':'none';
+  document.getElementById('sold-price-group').style.display=isSold?'':'none';
+}
+
+function autoCommission(){
+  const sp=parseFloat(document.getElementById('f-sold-price').value)||0;
+  if(sp>0) document.getElementById('f-commission-paid').value=commAmt(sp).toFixed(2);
+}
+
+function handlePhotoChange(e){
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>{ pendingPhotoData=ev.target.result; const p=document.getElementById('photo-preview'); p.src=pendingPhotoData; p.style.display='block'; document.getElementById('upload-placeholder').style.display='none'; };
+  reader.readAsDataURL(file);
+}
+
+function saveWork(){
+  const status=document.getElementById('f-status').value;
+  const sp=parseFloat(document.getElementById('f-sold-price').value)||0;
+  const commRaw=document.getElementById('f-commission-paid').value;
+  const commPaid=commRaw!==''?parseFloat(commRaw):(status==='sold'?commAmt(sp):null);
+  const w={
+    title:document.getElementById('f-title').value.trim(),
+    medium:document.getElementById('f-medium').value.trim(),
+    size:document.getElementById('f-size').value.trim(),
+    price:parseFloat(document.getElementById('f-price').value)||0,
+    status,
+    datePlaced:document.getElementById('f-date-placed').value,
+    dateSold:status==='sold'?document.getElementById('f-date-sold').value:null,
+    soldPrice:status==='sold'?sp:null,
+    commissionPaid:status==='sold'?commPaid:null,
+    notes:document.getElementById('f-notes').value.trim(),
+  };
+  if(pendingPhotoData){ w.photoData=pendingPhotoData; }
+  else if(editingId){ const ex=works.find(x=>x.id===editingId); if(ex?.photoData) w.photoData=ex.photoData; }
+  if(editingId){ const idx=works.findIndex(x=>x.id===editingId); if(idx>-1){w.id=editingId;w.createdAt=works[idx].createdAt;works[idx]=w;} }
+  else{ w.id=uid(); w.createdAt=Date.now(); works.unshift(w); }
+  saveWorks(works); closeAddModal(); refreshAll();
+}
+
+function deleteCurrentWork(){
+  if(!editingId) return;
+  if(!confirm('Delete this artwork? This cannot be undone.')) return;
+  works=works.filter(w=>w.id!==editingId); saveWorks(works); closeAddModal(); refreshAll();
+}
+
+// Detail modal
+function openDetail(id){
+  detailId=id; const w=works.find(x=>x.id===id); if(!w) return;
+  const sp=w.soldPrice||0, comm=w.commissionPaid!=null?w.commissionPaid:(w.status==='sold'?commAmt(sp):null), net=comm!=null?sp-comm:null;
+  document.getElementById('detail-content').innerHTML=`
+    ${w.photoData?`<img src="${w.photoData}" class="detail-img"/>`:` <div class="detail-img" style="display:flex;align-items:center;justify-content:center;font-size:4rem;">🎨</div>`}
+    <div style="font-family:'Playfair Display',serif;font-size:1.3rem;margin-bottom:0.3rem;">${w.title||'Untitled'}</div>
+    ${statusBadge(w.status)}
+    <div style="margin-top:1rem;">
+      ${drow('Medium',w.medium)}${drow('Size',w.size)}${drow('Asking Price',fmt(w.price))}${drow('Date Placed',w.datePlaced)}
+      ${w.status==='sold'?drow('Date Sold',w.dateSold):''}
+      ${w.status==='sold'?drow('Sold For',fmt(sp)):''}
+      ${w.status==='sold'?drow('Commission Paid',fmt(comm),'color:var(--rose-dk)'):''}
+      ${w.status==='sold'?drow('Net to Wendy',fmt(net),'color:#2a6e2a;font-weight:700;'):''}
+      ${drow('Notes',w.notes)}
+    </div>`;
+  document.getElementById('modal-detail').classList.add('open');
+}
+
+function drow(lbl,val,style=''){
+  if(!val) return '';
+  return `<div class="detail-row"><span class="lbl">${lbl}</span><span class="val" style="${style}">${val}</span></div>`;
+}
+
+function closeDetailModal(){ document.getElementById('modal-detail').classList.remove('open'); detailId=null; }
+function editFromDetail(){ closeDetailModal(); openAddModal(detailId); }
+
+document.getElementById('modal-add').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeAddModal(); });
+document.getElementById('modal-detail').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeDetailModal(); });
+
+refreshAll();
+</script>
+</body>
+</html>
