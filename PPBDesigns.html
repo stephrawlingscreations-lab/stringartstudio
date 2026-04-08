@@ -281,7 +281,7 @@ function Dashboard({inProgress,completed,customers,shopStock,lowSupplies,overdue
         <div style={{fontWeight:700,color:C.blue,fontSize:12,letterSpacing:.5,textTransform:"uppercase",marginBottom:12}}>🔧 In Progress</div>
         {inProgress.length===0
           ?<div style={{textAlign:"center",padding:"20px 0",color:C.muted,fontSize:12}}>No active orders</div>
-          :inProgress.slice(0,5).map(o=><div key={o.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10,paddingBottom:10,borderBottom:`1px solid ${C.light}`}}>
+          :[...inProgress].sort((a,b)=>{if(!a.dueDate&&!b.dueDate)return 0;if(!a.dueDate)return 1;if(!b.dueDate)return -1;return new Date(a.dueDate)-new Date(b.dueDate)}).slice(0,5).map(o=><div key={o.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10,paddingBottom:10,borderBottom:`1px solid ${C.light}`}}>
             <div style={{width:34,height:34,borderRadius:8,background:C.blight,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>🔧</div>
             <div style={{flex:1,minWidth:0}}>
               <div style={{fontWeight:700,fontSize:12,color:C.deep,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{o.customerName}</div>
