@@ -610,7 +610,7 @@ function EditShopStockForm({category,currentAdded,onSave,onCancel}){
 // ── Customers Tab ─────────────────────────────────────────────────────────────
 function CustomersTab({customers,completed,openModal}){
   const[search,setSearch]=useState("");
-  const filtered=customers.filter(c=>c.name.toLowerCase().includes(search.toLowerCase())||c.town.toLowerCase().includes(search.toLowerCase()));
+  const filtered=customers.filter(c=>c.name.toLowerCase().includes(search.toLowerCase())||c.town.toLowerCase().includes(search.toLowerCase())).sort((a,b)=>a.name.localeCompare(b.name));
   const printCustomers=()=>{
     const rows=customers.map(c=>{const orders=completed.filter(o=>o.customerId===c.id);const total=orders.reduce((s,o)=>s+o.total,0);return`<tr><td><strong>${c.name}</strong></td><td>${c.phone||"—"}</td><td>${c.town||"—"}</td><td>${c.bday||"—"}</td><td>${orders.length}</td><td>€${total.toFixed(2)}</td><td>${c.prefs||""}</td></tr>`}).join("");
     printWindow("PPB Designs — Customer Directory",`<h1>👥 Customer Directory</h1><p class="meta">PPB Designs · Printed ${fmt(new Date())} · ${customers.length} customers</p><table><thead><tr><th>Name</th><th>Phone</th><th>Town</th><th>Birthday</th><th>Orders</th><th>Spent</th><th>Preferences</th></tr></thead><tbody>${rows}</tbody></table>`);
