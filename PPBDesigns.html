@@ -327,6 +327,7 @@ function InProgressTab({inProgress,setInProgress,onMarkComplete,showToast}){
   const rest=inProgress.filter(o=>!o.dueDate||(daysUntil(o.dueDate)>7));
   const toggle=(id,field)=>setInProgress(p=>p.map(o=>o.id===id?{...o,[field]:!o[field]}:o));
   const setPhoto=(id,photo)=>{setInProgress(p=>p.map(o=>o.id===id?{...o,photo}:o));showToast("Photo saved!")};
+  const toggleNeedsPostage=(id)=>setInProgress(p=>p.map(o=>o.id===id?{...o,needsPostage:!o.needsPostage,postage:o.needsPostage?null:o.postage,postageReceipt:o.needsPostage?null:o.postageReceipt}:o));
   const setPostage=(id,postage)=>setInProgress(p=>p.map(o=>o.id===id?{...o,postage}:o));
   const setPostageReceipt=(id,postageReceipt)=>{setInProgress(p=>p.map(o=>o.id===id?{...o,postageReceipt}:o));showToast("Postage receipt saved!")};
   const deleteOrder=(id)=>{setInProgress(p=>p.filter(o=>o.id!==id));showToast("Order deleted");};
@@ -335,7 +336,7 @@ function InProgressTab({inProgress,setInProgress,onMarkComplete,showToast}){
     const rows=inProgress.map(o=>`<tr><td><strong>${o.customerName}</strong></td><td>${o.cardType}</td><td>${o.dueDate?fmt(o.dueDate):"—"}</td><td>${o.personalised}</td><td><span class="tag ${o.made?"done":"pending"}">${o.made?"✓ Done":"Pending"}</span></td><td>${o.postage>0?"€"+parseFloat(o.postage).toFixed(2):"—"}</td><td>${o.notes||""}</td></tr>`).join("");
     printWindow("PPB Designs — Orders in Progress",`<h1>📋 Orders in Progress</h1><p class="meta">PPB Designs · Printed ${fmt(new Date())} · ${inProgress.length} order${inProgress.length!==1?"s":""}</p><table><thead><tr><th>Customer</th><th>Card Type</th><th>Due Date</th><th>Personalised</th><th>Made</th><th>Postage</th><th>Notes</th></tr></thead><tbody>${rows}</tbody></table>`);
   };
-  const Sec=({title,items,tc})=>items.length===0?null:<><div style={{fontSize:11,fontWeight:700,color:tc,letterSpacing:.6,textTransform:"uppercase",marginBottom:8,marginTop:16}}>{title}</div>{items.map(o=><IPCard key={o.id} order={o} onToggleMade={()=>toggle(o.id,"made")} onUpdatePhoto={p=>setPhoto(o.id,p)} onUpdatePostage={v=>setPostage(o.id,v)} onUpdatePostageReceipt={v=>setPostageReceipt(o.id,v)} onMarkComplete={()=>onMarkComplete(o)} onEdit={()=>setEditOrder(o)} onDelete={()=>deleteOrder(o.id)}/>)}</>;
+  const Sec=({title,items,tc})=>items.length===0?null:<><div style={{fontSize:11,fontWeight:700,color:tc,letterSpacing:.6,textTransform:"uppercase",marginBottom:8,marginTop:16}}>{title}</div>{items.map(o=><IPCard key={o.id} order={o} onToggleMade={()=>toggle(o.id,"made")} onToggleNeedsPostage={()=>toggleNeedsPostage(o.id)} onUpdatePhoto={p=>setPhoto(o.id,p)} onUpdatePostage={v=>setPostage(o.id,v)} onUpdatePostageReceipt={v=>setPostageReceipt(o.id,v)} onMarkComplete={()=>onMarkComplete(o)} onEdit={()=>setEditOrder(o)} onDelete={()=>deleteOrder(o.id)}/>)}</>;
   return<div className="fade-in">
     <SecTitle right={<Btn onClick={printOrders} variant="ghost" small>🖨️ Print Orders</Btn>}>In Progress</SecTitle>
     {inProgress.length===0?<Empty icon="🎉" title="All caught up!" sub="No orders in progress right now."/>:<><Sec title="⚠️ Overdue" items={overdue} tc="#c62828"/><Sec title="📅 Due This Week" items={soon} tc={C.amber}/><Sec title="🔧 Other Orders" items={rest} tc={C.rose}/></>}
@@ -344,7 +345,7 @@ function InProgressTab({inProgress,setInProgress,onMarkComplete,showToast}){
     </Modal>
   </div>;
 }
-function IPCard({order,onToggleMade,onUpdatePhoto,onUpdatePostage,onUpdatePostageReceipt,onMarkComplete,onEdit,onDelete}){
+function IPCard({order,onToggleMade,onToggleNeedsPostage,onUpdatePhoto,onUpdatePostage,onUpdatePostageReceipt,onMarkComplete,onEdit,onDelete}){
   const days=order.dueDate?daysUntil(order.dueDate):null;
   const overdue=days!==null&&days<0,soon=days!==null&&days>=0&&days<=3,both=order.made;
   return<div className="fade-in" style={{background:"#fff",borderRadius:16,border:`2px solid ${overdue?C.blush:soon?"#ffe0b2":C.light}`,padding:16,display:"flex",gap:14,alignItems:"flex-start",boxShadow:"0 2px 12px rgba(194,24,91,.06)",marginBottom:12}}>
@@ -359,9 +360,11 @@ function IPCard({order,onToggleMade,onUpdatePhoto,onUpdatePostage,onUpdatePostag
         </div>
       </div>
       {order.notes&&<div style={{marginTop:7,fontSize:13,color:C.grey,fontStyle:"italic"}}>📝 {order.notes}</div>}
-      <div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}><CheckPill checked={order.made} onClick={onToggleMade} label="Card made"/></div>
-      <div style={{marginTop:10,paddingTop:10,borderTop:`1px solid ${C.light}`,display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-        <span style={{fontSize:11,fontWeight:700,color:C.blue,letterSpacing:.4,textTransform:"uppercase",flexShrink:0}}>📮 Postage</span>
+      <div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}>
+        <CheckPill checked={order.made} onClick={onToggleMade} label="Card made"/>
+        <CheckPill checked={!!order.needsPostage} onClick={onToggleNeedsPostage} label="📮 Needs posting"/>
+      </div>
+      {order.needsPostage&&<div style={{marginTop:10,paddingTop:10,borderTop:`1px solid ${C.light}`,display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
         <div style={{display:"flex",alignItems:"center",gap:4}}>
           <span style={{fontSize:12,color:C.muted}}>€</span>
           <input type="number" step="0.01" min={0} placeholder="0.00" value={order.postage||""} onChange={e=>onUpdatePostage(e.target.value?parseFloat(e.target.value):null)} style={{width:68,padding:"4px 8px",border:`1.5px solid ${C.blush}`,borderRadius:8,fontSize:13,fontFamily:"Lato,sans-serif",outline:"none"}} onFocus={e=>e.target.style.borderColor=C.blue} onBlur={e=>e.target.style.borderColor=C.blush}/>
@@ -371,7 +374,7 @@ function IPCard({order,onToggleMade,onUpdatePhoto,onUpdatePostage,onUpdatePostag
           <PhotoUpload value={order.postageReceipt||null} onChange={onUpdatePostageReceipt} size={36}/>
         </div>
         {order.postageReceipt&&<span style={{fontSize:10,color:C.green,fontWeight:700}}>✅ Saved</span>}
-      </div>
+      </div>}
       <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap",alignItems:"center"}}>
         <Btn onClick={onMarkComplete} variant={both?"green":"ghost"} small>{both?"✅ Mark Complete & Deliver":"Mark Complete"}</Btn>
         <button onClick={onEdit} style={{fontSize:11,padding:"5px 12px",borderRadius:8,border:`1px solid ${C.blush}`,background:"#fff",color:C.rose,cursor:"pointer",fontFamily:"Lato,sans-serif"}}>Edit</button>
