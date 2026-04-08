@@ -3,25 +3,27 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Wendy's Whims & Wonders — Sales Tracker</title>
+<title>Wendy's Whims &amp; Wonders</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
 
 <style>
   :root {
-    --rose:     #e8a0b0;
-    --rose-lt:  #f7dde4;
-    --rose-dk:  #c4647c;
-    --cream:    #fdf6f0;
-    --cream2:   #f9ede6;
-    --gold:     #d4a843;
-    --gold-lt:  #faf0d7;
-    --ink:      #3a2832;
-    --ink-mid:  #7a5868;
-    --ink-lt:   #b8929e;
-    --shadow:   rgba(196,100,124,0.12);
-    --radius:   14px;
-    --radius-sm:8px;
+    --rose:     #c4647c;
+    --rose-lt:  #f9eaee;
+    --rose-mid: #e8a0b0;
+    --cream:    #fafafa;
+    --white:    #ffffff;
+    --ink:      #2d2d2d;
+    --ink-mid:  #666;
+    --ink-lt:   #999;
+    --green:    #2a7a4f;
+    --green-lt: #eaf5ee;
+    --gold:     #b07d20;
+    --gold-lt:  #faf4e1;
+    --shadow:   rgba(0,0,0,0.06);
+    --radius:   16px;
+    --radius-sm:10px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,156 +33,195 @@
     background: var(--cream);
     color: var(--ink);
     min-height: 100vh;
+    font-size: 16px;
   }
 
   .topbar {
-    background: white;
+    background: var(--white);
     border-bottom: 1px solid var(--rose-lt);
-    padding: 0.7rem 1.5rem;
+    padding: 1rem 1.5rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
     position: sticky;
     top: 0;
     z-index: 100;
-    box-shadow: 0 2px 12px var(--shadow);
+    box-shadow: 0 1px 8px var(--shadow);
   }
 
   .topbar-brand {
     font-family: 'Playfair Display', serif;
     font-style: italic;
-    font-size: 1.4rem;
-    color: var(--rose-dk);
+    font-size: 1.5rem;
+    color: var(--rose);
+    line-height: 1.2;
   }
 
   .topbar-brand span {
-    font-size: 0.65rem;
+    font-size: 0.68rem;
     font-style: normal;
     font-family: 'Lato', sans-serif;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--ink-lt);
     display: block;
-    margin-top: -2px;
+    margin-top: 1px;
   }
 
   .nav-tabs {
-    background: white;
-    border-bottom: 1px solid var(--rose-lt);
+    background: var(--white);
+    border-bottom: 2px solid var(--rose-lt);
     display: flex;
-    padding: 0 1.5rem;
+    padding: 0 0.5rem;
     overflow-x: auto;
+    scrollbar-width: none;
   }
+  .nav-tabs::-webkit-scrollbar { display: none; }
 
   .nav-tab {
-    padding: 0.75rem 1.2rem;
-    font-size: 0.82rem;
-    letter-spacing: 0.08em;
+    padding: 0.85rem 1rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--ink-lt);
     cursor: pointer;
     border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
     transition: color 0.2s, border-color 0.2s;
     white-space: nowrap;
     font-weight: 700;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    min-width: 60px;
   }
 
-  .nav-tab:hover { color: var(--rose-dk); }
-  .nav-tab.active { color: var(--rose-dk); border-bottom-color: var(--rose-dk); }
+  .nav-tab .tab-icon { font-size: 1.2rem; }
+  .nav-tab:hover { color: var(--rose); }
+  .nav-tab.active { color: var(--rose); border-bottom-color: var(--rose); }
 
-  .main { padding: 1.5rem; max-width: 1100px; width: 100%; margin: 0 auto; }
+  .main { padding: 1.5rem; max-width: 960px; width: 100%; margin: 0 auto; padding-bottom: 6rem; }
 
   .page { display: none; }
   .page.active { display: block; }
 
+  /* STAT CARDS */
   .stat-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
   }
 
   .stat-card {
-    background: white;
+    background: var(--white);
     border-radius: var(--radius);
-    padding: 1.2rem 1rem;
+    padding: 1.5rem 1rem;
     text-align: center;
-    box-shadow: 0 2px 10px var(--shadow);
-    border-top: 3px solid var(--rose);
+    box-shadow: 0 2px 8px var(--shadow);
+    border-top: 3px solid var(--rose-mid);
   }
 
-  .stat-card.gold-top { border-top-color: var(--gold); }
+  .stat-card.green-top { border-top-color: var(--green); }
 
   .stat-val {
     font-family: 'Playfair Display', serif;
-    font-size: 1.9rem;
+    font-size: 2rem;
     font-weight: 600;
     color: var(--ink);
+    line-height: 1.1;
   }
 
   .stat-lbl {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.1em;
     color: var(--ink-lt);
-    margin-top: 4px;
+    margin-top: 6px;
+    line-height: 1.4;
   }
 
+  /* SECTION */
   .section-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1rem;
+    margin-bottom: 1.2rem;
     flex-wrap: wrap;
     gap: 0.5rem;
   }
 
   .section-title {
     font-family: 'Playfair Display', serif;
-    font-size: 1.25rem;
+    font-size: 1.3rem;
     color: var(--ink);
   }
 
+  /* BUTTONS */
   .btn {
-    padding: 0.6rem 1.2rem;
+    padding: 0.7rem 1.4rem;
     border-radius: var(--radius-sm);
     border: none;
     font-family: 'Lato', sans-serif;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     cursor: pointer;
     transition: opacity 0.2s, transform 0.1s;
     font-weight: 700;
+    line-height: 1;
   }
   .btn:active { transform: scale(0.97); }
-  .btn-primary { background: var(--rose-dk); color: white; }
+  .btn-primary { background: var(--rose); color: white; }
   .btn-primary:hover { opacity: 0.88; }
-  .btn-outline { background: white; border: 1.5px solid var(--rose); color: var(--rose-dk); }
+  .btn-outline { background: var(--white); border: 2px solid var(--rose-lt); color: var(--rose); }
   .btn-outline:hover { background: var(--rose-lt); }
-  .btn-sm { padding: 0.4rem 0.85rem; font-size: 0.78rem; }
+  .btn-sm { padding: 0.5rem 1rem; font-size: 0.82rem; }
   .btn-danger { background: #c0392b; color: white; }
   .btn-danger:hover { opacity: 0.88; }
 
+  .btn-add {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    background: var(--rose);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 0.9rem 1.8rem;
+    font-family: 'Lato', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(196,100,124,0.45);
+    z-index: 90;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-add:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(196,100,124,0.55); }
+  .btn-add:active { transform: scale(0.97); }
+
+  /* ARTWORK GRID */
   .artwork-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 1.2rem;
   }
 
   .artwork-card {
-    background: white;
+    background: var(--white);
     border-radius: var(--radius);
     overflow: hidden;
-    box-shadow: 0 2px 12px var(--shadow);
+    box-shadow: 0 2px 10px var(--shadow);
     transition: transform 0.2s, box-shadow 0.2s;
     cursor: pointer;
+    border: 1.5px solid transparent;
   }
 
-  .artwork-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px var(--shadow); }
+  .artwork-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); border-color: var(--rose-lt); }
 
   .artwork-img {
     width: 100%;
-    height: 175px;
-    background: var(--cream2);
+    height: 190px;
+    background: var(--rose-lt);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -189,11 +230,11 @@
 
   .artwork-img img { width: 100%; height: 100%; object-fit: cover; }
 
-  .artwork-body { padding: 0.9rem; }
+  .artwork-body { padding: 1rem; }
 
   .artwork-title {
     font-family: 'Playfair Display', serif;
-    font-size: 1rem;
+    font-size: 1.05rem;
     color: var(--ink);
     margin-bottom: 4px;
     white-space: nowrap;
@@ -201,77 +242,80 @@
     text-overflow: ellipsis;
   }
 
-  .artwork-price { font-size: 1.1rem; font-weight: 700; color: var(--rose-dk); margin-bottom: 6px; }
-  .artwork-meta  { font-size: 0.75rem; color: var(--ink-lt); line-height: 1.6; }
+  .artwork-price { font-size: 1.1rem; font-weight: 700; color: var(--rose); margin-bottom: 8px; }
+  .artwork-meta  { font-size: 0.8rem; color: var(--ink-lt); line-height: 1.6; margin-bottom: 6px; }
 
+  /* STATUS BADGES */
   .status-badge {
-    display: inline-block;
-    padding: 2px 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
     border-radius: 20px;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    margin-top: 6px;
+    letter-spacing: 0.04em;
   }
 
-  .badge-shop    { background: var(--gold-lt); color: #7a5000; }
-  .badge-sold    { background: #e8f7e8;         color: #2a6e2a; }
-  .badge-home    { background: var(--rose-lt);  color: var(--rose-dk); }
+  .badge-shop    { background: var(--gold-lt); color: var(--gold); }
+  .badge-sold    { background: var(--green-lt); color: var(--green); }
+  .badge-home    { background: var(--rose-lt);  color: var(--rose); }
   .badge-consign { background: #ede8f7;         color: #5030a0; }
 
+  /* MODALS */
   .modal-overlay {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(58,40,50,0.45);
+    background: rgba(0,0,0,0.4);
     z-index: 500;
     align-items: flex-start;
     justify-content: center;
-    padding: 1.5rem;
+    padding: 1rem;
     overflow-y: auto;
   }
 
   .modal-overlay.open { display: flex; }
 
   .modal {
-    background: white;
+    background: var(--white);
     border-radius: 20px;
     width: 100%;
-    max-width: 560px;
+    max-width: 540px;
     padding: 2rem;
     margin: auto;
-    box-shadow: 0 12px 50px rgba(196,100,124,0.2);
+    box-shadow: 0 16px 60px rgba(0,0,0,0.15);
   }
 
   .modal-title {
     font-family: 'Playfair Display', serif;
-    font-size: 1.4rem;
+    font-size: 1.5rem;
     color: var(--ink);
-    margin-bottom: 1.4rem;
+    margin-bottom: 1.6rem;
   }
 
-  .form-group { margin-bottom: 1rem; }
+  /* FORMS */
+  .form-group { margin-bottom: 1.2rem; }
 
   label {
     display: block;
-    font-size: 0.78rem;
+    font-size: 0.82rem;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     color: var(--ink-mid);
-    margin-bottom: 5px;
+    margin-bottom: 6px;
     font-weight: 700;
   }
 
   input[type=text], input[type=number], input[type=date], select, textarea {
     width: 100%;
-    padding: 0.65rem 0.9rem;
-    border: 1.5px solid var(--rose-lt);
+    padding: 0.85rem 1rem;
+    border: 2px solid #eee;
     border-radius: var(--radius-sm);
     font-family: 'Lato', sans-serif;
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: var(--ink);
-    background: var(--cream);
+    background: var(--white);
     transition: border-color 0.2s;
     outline: none;
   }
@@ -281,7 +325,7 @@
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
   .img-upload-area {
-    border: 2px dashed var(--rose);
+    border: 2px dashed var(--rose-mid);
     border-radius: var(--radius);
     padding: 1.5rem;
     text-align: center;
@@ -291,7 +335,7 @@
     position: relative;
   }
 
-  .img-upload-area:hover { background: #f0cdd6; }
+  .img-upload-area:hover { background: #f2d5dc; }
 
   .img-upload-area input[type=file] {
     position: absolute;
@@ -306,63 +350,119 @@
 
   .img-preview { width: 100%; max-height: 200px; object-fit: contain; border-radius: var(--radius-sm); margin-top: 0.5rem; display: none; }
 
-  .table-wrap { background: white; border-radius: var(--radius); overflow: hidden; box-shadow: 0 2px 12px var(--shadow); overflow-x: auto; }
+  .form-divider { border: none; border-top: 1px solid #eee; margin: 1.2rem 0; }
 
-  .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  /* TABLE */
+  .table-wrap { background: var(--white); border-radius: var(--radius); overflow: hidden; box-shadow: 0 2px 10px var(--shadow); overflow-x: auto; }
+
+  .data-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 
   .data-table th {
     background: var(--rose-lt);
-    padding: 0.7rem 0.9rem;
+    padding: 0.9rem 1rem;
     text-align: left;
     font-size: 0.72rem;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--rose-dk);
+    letter-spacing: 0.08em;
+    color: var(--rose);
     font-weight: 700;
-    border-bottom: 2px solid var(--rose);
+    border-bottom: 2px solid var(--rose-mid);
     white-space: nowrap;
   }
 
-  .data-table td { padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--rose-lt); color: var(--ink); vertical-align: middle; }
+  .data-table td { padding: 0.85rem 1rem; border-bottom: 1px solid #f0f0f0; color: var(--ink); vertical-align: middle; }
   .data-table tr:last-child td { border-bottom: none; }
-  .data-table tr:hover td { background: var(--cream2); }
+  .data-table tr:hover td { background: var(--rose-lt); }
 
-  .filter-bar { display: flex; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; }
-  .filter-bar input, .filter-bar select { width: auto; flex: 1; min-width: 120px; max-width: 220px; font-size: 0.82rem; padding: 0.5rem 0.8rem; }
+  /* FILTER BAR */
+  .filter-bar { display: flex; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 1.2rem; align-items: center; }
+  .filter-bar input, .filter-bar select { width: auto; flex: 1; min-width: 140px; max-width: 240px; font-size: 0.9rem; padding: 0.65rem 0.9rem; }
 
-  .info-box { background: var(--gold-lt); border: 1px solid var(--gold); border-radius: var(--radius-sm); padding: 0.8rem 1rem; font-size: 0.82rem; color: #7a5000; margin-bottom: 1rem; }
+  /* DETAIL */
+  .detail-img { width: 100%; max-height: 280px; object-fit: contain; border-radius: var(--radius); background: var(--rose-lt); margin-bottom: 1.2rem; }
 
-  .chart-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-  .chart-bar-label { font-size: 0.75rem; color: var(--ink-mid); width: 56px; text-align: right; flex-shrink: 0; }
-  .chart-bar-track { flex: 1; background: var(--rose-lt); border-radius: 4px; height: 22px; overflow: hidden; }
-  .chart-bar-fill { height: 100%; background: linear-gradient(90deg, var(--rose-dk), var(--rose)); border-radius: 4px; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; min-width: 2px; }
-  .chart-bar-fill span { font-size: 0.7rem; color: white; font-weight: 700; white-space: nowrap; }
-
-  .detail-img { width: 100%; max-height: 280px; object-fit: contain; border-radius: var(--radius); background: var(--cream2); margin-bottom: 1rem; }
-
-  .detail-row { display: flex; justify-content: space-between; align-items: baseline; padding: 0.55rem 0; border-bottom: 1px solid var(--rose-lt); font-size: 0.88rem; gap: 1rem; }
+  .detail-row { display: flex; justify-content: space-between; align-items: baseline; padding: 0.65rem 0; border-bottom: 1px solid #f0f0f0; font-size: 0.9rem; gap: 1rem; }
   .detail-row:last-child { border-bottom: none; }
-  .detail-row .lbl { color: var(--ink-lt); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; flex-shrink: 0; }
+  .detail-row .lbl { color: var(--ink-lt); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; flex-shrink: 0; }
   .detail-row .val { font-weight: 700; color: var(--ink); text-align: right; }
 
+  /* EMPTY STATE */
   .empty-state { text-align: center; padding: 3rem 1rem; color: var(--ink-lt); grid-column: 1 / -1; }
-  .empty-state .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+  .empty-state .empty-icon { font-size: 3.5rem; margin-bottom: 1rem; display: block; }
+  .empty-state p { font-size: 1rem; }
+
+  /* SALES TOTALS */
+  .sales-total-bar {
+    background: var(--white);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.2rem;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: var(--ink-mid);
+    box-shadow: 0 1px 6px var(--shadow);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+    align-items: center;
+  }
+
+  /* SETTINGS */
+  .settings-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px var(--shadow);
+    margin-bottom: 1.5rem;
+  }
+
+  .settings-card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: var(--ink);
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 5.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    z-index: 9999;
+    animation: fadeUp 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateX(-50%) translateY(10px); }
+    to   { opacity:1; transform: translateX(-50%) translateY(0); }
+  }
 
   @media print {
-    .topbar, .nav-tabs, .btn, .filter-bar, .modal-overlay, .no-print { display: none !important; }
+    .topbar, .nav-tabs, .btn, .btn-add, .filter-bar, .modal-overlay, .no-print { display: none !important; }
     .main { padding: 0; max-width: 100%; }
     .page { display: block !important; }
     .page:not(.active) { display: none !important; }
     body { background: white; }
     .artwork-grid { grid-template-columns: repeat(3,1fr); }
-    .artwork-card { break-inside: avoid; }
+    .artwork-card { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
   }
 
   @media (max-width: 600px) {
     .form-row { grid-template-columns: 1fr; }
-    .nav-tab { padding: 0.7rem 0.6rem; font-size: 0.7rem; }
-    .stat-grid { grid-template-columns: 1fr 1fr; }
-    .topbar-brand { font-size: 1.1rem; }
+    .nav-tab { padding: 0.8rem 0.5rem; font-size: 0.62rem; min-width: 52px; }
+    .stat-grid { grid-template-columns: 1fr; }
+    .topbar-brand { font-size: 1.2rem; }
+    .main { padding: 1rem; }
+    .modal { padding: 1.5rem; }
   }
 </style>
 </head>
@@ -373,15 +473,14 @@
     Wendy's Whims &amp; Wonders
     <span>Sales Tracker</span>
   </div>
-  <button class="btn btn-primary btn-sm no-print" onclick="openAddModal()">+ Add Artwork</button>
 </div>
 
 <div class="nav-tabs">
-  <div class="nav-tab active" data-page="dashboard">Dashboard</div>
-  <div class="nav-tab" data-page="inventory">In Shop</div>
-  <div class="nav-tab" data-page="all-works">All Works</div>
-  <div class="nav-tab" data-page="sales">Sales</div>
-  <div class="nav-tab" data-page="reports">Reports</div>
+  <div class="nav-tab active" data-page="dashboard"><span class="tab-icon">🏠</span>Home</div>
+  <div class="nav-tab" data-page="inventory"><span class="tab-icon">🏪</span>In Shop</div>
+  <div class="nav-tab" data-page="all-works"><span class="tab-icon">🎨</span>All Works</div>
+  <div class="nav-tab" data-page="sales"><span class="tab-icon">💰</span>Sales</div>
+  <div class="nav-tab" data-page="reports"><span class="tab-icon">📊</span>Reports</div>
 </div>
 
 <div class="main">
@@ -389,18 +488,23 @@
   <!-- DASHBOARD -->
   <div class="page active" id="page-dashboard">
     <div class="stat-grid">
-      <div class="stat-card"><div class="stat-val" id="stat-in-shop">0</div><div class="stat-lbl">In Shop Now</div></div>
-      <div class="stat-card gold-top"><div class="stat-val" id="stat-gross">€0</div><div class="stat-lbl">Gross Sales (All Time)</div></div>
-      <div class="stat-card gold-top"><div class="stat-val" id="stat-net">€0</div><div class="stat-lbl">Net After Commission</div></div>
-      <div class="stat-card"><div class="stat-val" id="stat-this-month">€0</div><div class="stat-lbl">Net This Month</div></div>
-      <div class="stat-card"><div class="stat-val" id="stat-total-works">0</div><div class="stat-lbl">Total Works Tracked</div></div>
-      <div class="stat-card"><div class="stat-val" id="stat-sold-count">0</div><div class="stat-lbl">Total Sold</div></div>
+      <div class="stat-card">
+        <div class="stat-val" id="stat-in-shop">0</div>
+        <div class="stat-lbl">In Shop Now</div>
+      </div>
+      <div class="stat-card green-top">
+        <div class="stat-val" id="stat-this-month">€0</div>
+        <div class="stat-lbl">Earned This Month</div>
+      </div>
+      <div class="stat-card green-top">
+        <div class="stat-val" id="stat-net">€0</div>
+        <div class="stat-lbl">All Time Earned</div>
+      </div>
     </div>
-    <div class="section-header"><div class="section-title">Monthly Earnings (Net)</div></div>
-    <div style="background:white;border-radius:var(--radius);padding:1.2rem;box-shadow:0 2px 12px var(--shadow);margin-bottom:1.5rem;">
-      <div id="monthly-chart"></div>
+
+    <div class="section-header">
+      <div class="section-title">Recently Added</div>
     </div>
-    <div class="section-header"><div class="section-title">Recently Added</div></div>
     <div class="artwork-grid" id="recent-grid"></div>
   </div>
 
@@ -410,7 +514,6 @@
       <div class="section-title">Currently In Shop</div>
       <button class="btn btn-outline btn-sm no-print" onclick="window.print()">🖨 Print</button>
     </div>
-    <div class="info-box" id="shop-commission-info">✦ Commission rate: 30% — update in Reports &amp; Settings.</div>
     <div class="filter-bar no-print">
       <input type="text" id="inv-search" placeholder="Search by title…" oninput="renderInventory()"/>
     </div>
@@ -456,55 +559,58 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>Artwork</th><th>Date Placed</th><th>Date Sold</th>
-            <th>Asking Price</th><th>Sold For</th><th>Commission</th>
-            <th>Net to Wendy</th><th>Notes</th>
+            <th>Artwork</th>
+            <th>Date Placed</th>
+            <th>Date Sold</th>
+            <th>Asking Price</th>
+            <th>Sold For</th>
+            <th>Commission</th>
+            <th>Net to Wendy</th>
+            <th>Notes</th>
           </tr>
         </thead>
         <tbody id="sales-tbody"></tbody>
       </table>
     </div>
-    <div style="margin-top:1rem;font-size:0.85rem;color:var(--ink-mid);" id="sales-totals"></div>
+    <div id="sales-totals"></div>
   </div>
 
   <!-- REPORTS -->
   <div class="page" id="page-reports">
     <div class="section-header">
       <div class="section-title">Reports &amp; Settings</div>
-      <button class="btn btn-outline btn-sm no-print" onclick="window.print()">🖨 Print Report</button>
+      <button class="btn btn-outline btn-sm no-print" onclick="window.print()">🖨 Print</button>
     </div>
 
-    <div style="background:white;border-radius:var(--radius);padding:1.5rem;box-shadow:0 2px 12px var(--shadow);margin-bottom:1.5rem;">
-      <div class="section-title" style="font-size:1rem;margin-bottom:1rem;">Shop Commission Rate</div>
+    <div class="settings-card">
+      <div class="settings-card-title">Shop Commission Rate</div>
       <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
         <div style="display:flex;align-items:center;gap:8px;">
           <input type="number" id="commission-rate" style="width:90px;" min="0" max="100" step="0.5" value="30"/>
-          <span style="font-size:0.9rem;color:var(--ink-mid);">%</span>
+          <span style="color:var(--ink-mid);">%</span>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="saveCommission()">Save Rate</button>
-        <span id="commission-saved" style="font-size:0.8rem;color:green;display:none;">✓ Saved</span>
+        <button class="btn btn-primary btn-sm" onclick="saveCommission()">Save</button>
+        <span id="commission-saved" style="font-size:0.85rem;color:var(--green);display:none;font-weight:700;">✓ Saved!</span>
       </div>
-      <p style="font-size:0.78rem;color:var(--ink-lt);margin-top:0.6rem;">This rate is deducted from all sale prices to calculate your net earnings. Update anytime.</p>
-    </div>
-
-    <div style="background:white;border-radius:var(--radius);padding:1.5rem;box-shadow:0 2px 12px var(--shadow);margin-bottom:1.5rem;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
-        <div class="section-title" style="font-size:1rem;">Annual Summary</div>
-        <select id="report-year" onchange="renderReports()" style="width:auto;min-width:100px;padding:0.4rem 0.7rem;font-size:0.82rem;"></select>
-      </div>
-      <div class="stat-grid" id="report-stats"></div>
-      <div id="report-monthly-table"></div>
-    </div>
-
-    <div style="background:var(--gold-lt);border:1px solid var(--gold);border-radius:var(--radius);padding:1.2rem 1.5rem;margin-bottom:1.5rem;">
-      <strong style="font-size:0.9rem;color:#7a5000;">📋 For Tax Records</strong>
-      <p style="font-size:0.82rem;color:#7a5000;margin-top:0.4rem;line-height:1.6;">
-        Use <strong>🖨 Print Report</strong> above for a full annual summary. The Sales page gives a date-filtered breakdown you can print per month. Keep records of gross sales, commission paid, and net income for your accountant.
+      <p style="font-size:0.82rem;color:var(--ink-lt);margin-top:0.8rem;line-height:1.6;">
+        The shop takes this percentage from each sale. Your net earnings are calculated automatically.
       </p>
+    </div>
+
+    <div class="settings-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
+        <div class="settings-card-title" style="margin-bottom:0;">Annual Summary</div>
+        <select id="report-year" onchange="renderReports()" style="width:auto;min-width:100px;"></select>
+      </div>
+      <div class="stat-grid" id="report-stats" style="margin-bottom:1rem;"></div>
+      <div id="report-monthly-table"></div>
     </div>
   </div>
 
 </div>
+
+<!-- FLOATING ADD BUTTON -->
+<button class="btn-add no-print" onclick="openAddModal()">+ Add Artwork</button>
 
 <!-- ADD / EDIT MODAL -->
 <div class="modal-overlay" id="modal-add">
@@ -512,27 +618,27 @@
     <div class="modal-title" id="modal-add-title">Add New Artwork</div>
 
     <div class="form-group">
-      <label>Photo of Artwork</label>
+      <label>Photo</label>
       <div class="img-upload-area">
         <input type="file" id="photo-input" accept="image/*" onchange="handlePhotoChange(event)"/>
         <div id="upload-placeholder">
-          <div style="font-size:2rem;margin-bottom:0.3rem;">🎨</div>
-          <div style="font-size:0.85rem;color:var(--ink-mid);">Tap or click to upload photo</div>
-          <div style="font-size:0.75rem;color:var(--ink-lt);margin-top:0.2rem;">JPEG, PNG, HEIC supported</div>
+          <div style="font-size:2.5rem;margin-bottom:0.4rem;">🎨</div>
+          <div style="font-size:0.9rem;color:var(--ink-mid);">Tap to add a photo</div>
+          <div style="font-size:0.78rem;color:var(--ink-lt);margin-top:0.3rem;">JPEG, PNG, HEIC</div>
         </div>
         <img id="photo-preview" class="img-preview"/>
       </div>
     </div>
 
     <div class="form-group">
-      <label>Title / Name</label>
-      <input type="text" id="f-title" placeholder="e.g. Pink Fluid Rose, Abstract No. 7…"/>
+      <label>Title</label>
+      <input type="text" id="f-title" placeholder="e.g. Pink Fluid Rose…"/>
     </div>
 
     <div class="form-row">
       <div class="form-group">
-        <label>Medium / Type</label>
-        <input type="text" id="f-medium" placeholder="e.g. Mixed Media, Acrylic…"/>
+        <label>Medium</label>
+        <input type="text" id="f-medium" placeholder="e.g. Acrylic…"/>
       </div>
       <div class="form-group">
         <label>Size</label>
@@ -556,37 +662,36 @@
       </div>
     </div>
 
-    <div class="form-row">
-      <div class="form-group">
-        <label>Date Placed in Shop</label>
-        <input type="date" id="f-date-placed"/>
-      </div>
-      <div class="form-group" id="sold-date-group">
-        <label>Date Sold</label>
-        <input type="date" id="f-date-sold"/>
-      </div>
+    <div class="form-group">
+      <label>Date Placed in Shop</label>
+      <input type="date" id="f-date-placed"/>
     </div>
 
-    <div class="form-row" id="sold-price-group">
-      <div class="form-group">
-        <label>Sold For (€)</label>
-        <input type="number" id="f-sold-price" min="0" step="0.01" placeholder="0.00" oninput="autoCommission()"/>
+    <hr class="form-divider" id="sold-divider" style="display:none;"/>
+
+    <div id="sold-fields" style="display:none;">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date Sold</label>
+          <input type="date" id="f-date-sold"/>
+        </div>
+        <div class="form-group">
+          <label>Sold For (€)</label>
+          <input type="number" id="f-sold-price" min="0" step="0.01" placeholder="0.00" oninput="autoCommission()"/>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Commission Paid (€) <span style="font-size:0.7rem;font-weight:400;color:var(--ink-lt);">auto-calculated</span></label>
-        <input type="number" id="f-commission-paid" min="0" step="0.01" placeholder="auto"/>
-      </div>
+      <input type="hidden" id="f-commission-paid"/>
     </div>
 
     <div class="form-group">
       <label>Notes</label>
-      <textarea id="f-notes" placeholder="Buyer info, exhibition, inspiration…"></textarea>
+      <textarea id="f-notes" placeholder="Any extra details…"></textarea>
     </div>
 
-    <div style="display:flex;gap:0.7rem;justify-content:flex-end;margin-top:1.2rem;flex-wrap:wrap;align-items:center;">
+    <div style="display:flex;gap:0.7rem;justify-content:flex-end;margin-top:1.4rem;flex-wrap:wrap;align-items:center;">
       <button class="btn btn-danger btn-sm" id="btn-delete" style="display:none;margin-right:auto;" onclick="deleteCurrentWork()">Delete</button>
       <button class="btn btn-outline" onclick="closeAddModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveWork()">Save Artwork</button>
+      <button class="btn btn-primary" onclick="saveWork()">Save</button>
     </div>
   </div>
 </div>
@@ -638,7 +743,7 @@ function fmt(n) {
 }
 
 function statusBadge(s) {
-  const map={in_shop:['badge-shop','In Shop'],sold:['badge-sold','Sold'],at_home:['badge-home','At Home'],consignment:['badge-consign','Consignment']};
+  const map={in_shop:['badge-shop','🏪 In Shop'],sold:['badge-sold','✓ Sold'],at_home:['badge-home','🏠 At Home'],consignment:['badge-consign','📦 Consignment']};
   const [cls,lbl]=map[s]||['badge-home',s];
   return `<span class="status-badge ${cls}">${lbl}</span>`;
 }
@@ -660,9 +765,7 @@ function artworkCard(w) {
       <div class="artwork-price">${fmt(w.price)}</div>
       <div class="artwork-meta">
         ${w.medium?w.medium+'<br/>':''}
-        ${w.size?w.size+'<br/>':''}
-        ${w.datePlaced?'Placed: '+w.datePlaced+'<br/>':''}
-        ${w.dateSold?'Sold: '+w.dateSold:''}
+        ${w.size?w.size:''}
       </div>
       ${statusBadge(w.status)}
     </div>
@@ -670,7 +773,15 @@ function artworkCard(w) {
 }
 
 function emptyState(msg) {
-  return `<div class="empty-state"><div class="empty-icon">🎨</div><p>${msg}</p></div>`;
+  return `<div class="empty-state"><span class="empty-icon">🎨</span><p>${msg}</p></div>`;
+}
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2400);
 }
 
 function refreshAll() {
@@ -678,34 +789,21 @@ function refreshAll() {
   renderDashboard(); renderInventory(); renderAllWorks(); renderSales(); renderReports();
 }
 
-// Dashboard
+// Dashboard — 3 key stats only
 function renderDashboard() {
   const inShop = works.filter(w=>w.status==='in_shop');
   const sold   = works.filter(w=>w.status==='sold');
-  const gross  = sold.reduce((a,w)=>a+(w.soldPrice||0),0);
   const net    = sold.reduce((a,w)=>a+netAmt(w.soldPrice||0),0);
   const now=new Date(), tm=now.getMonth(), ty=now.getFullYear();
   const netTM  = sold.filter(w=>{ if(!w.dateSold)return false; const d=new Date(w.dateSold); return d.getMonth()===tm&&d.getFullYear()===ty; })
                      .reduce((a,w)=>a+netAmt(w.soldPrice||0),0);
 
   document.getElementById('stat-in-shop').textContent    = inShop.length;
-  document.getElementById('stat-gross').textContent      = fmt(gross);
-  document.getElementById('stat-net').textContent        = fmt(net);
   document.getElementById('stat-this-month').textContent = fmt(netTM);
-  document.getElementById('stat-total-works').textContent= works.length;
-  document.getElementById('stat-sold-count').textContent = sold.length;
-
-  const months=[];
-  for(let i=5;i>=0;i--){ const d=new Date(ty,tm-i,1); months.push({label:MONTHS[d.getMonth()]+"'"+String(d.getFullYear()).slice(2),m:d.getMonth(),y:d.getFullYear()}); }
-  const vals=months.map(mo=>sold.filter(w=>{if(!w.dateSold)return false;const d=new Date(w.dateSold);return d.getMonth()===mo.m&&d.getFullYear()===mo.y;}).reduce((a,w)=>a+netAmt(w.soldPrice||0),0));
-  const maxV=Math.max(...vals,1);
-  document.getElementById('monthly-chart').innerHTML=months.map((mo,i)=>{
-    const pct=Math.round((vals[i]/maxV)*100);
-    return `<div class="chart-bar-row"><div class="chart-bar-label">${mo.label}</div><div class="chart-bar-track"><div class="chart-bar-fill" style="width:${pct}%"><span>${vals[i]>0?fmt(vals[i]):''}</span></div></div></div>`;
-  }).join('');
+  document.getElementById('stat-net').textContent        = fmt(net);
 
   const recent=[...works].sort((a,b)=>b.createdAt-a.createdAt).slice(0,4);
-  document.getElementById('recent-grid').innerHTML=recent.length?recent.map(artworkCard).join(''):emptyState('No works yet — add your first!');
+  document.getElementById('recent-grid').innerHTML=recent.length?recent.map(artworkCard).join(''):emptyState('No works yet — tap the button below to add your first!');
 }
 
 // Inventory
@@ -713,8 +811,7 @@ function renderInventory() {
   const q=(document.getElementById('inv-search')?.value||'').toLowerCase();
   let items=works.filter(w=>w.status==='in_shop');
   if(q) items=items.filter(w=>(w.title||'').toLowerCase().includes(q));
-  document.getElementById('inventory-grid').innerHTML=items.length?items.map(artworkCard).join(''):emptyState('No items currently in the shop.');
-  document.getElementById('shop-commission-info').textContent=`✦ Shop commission rate: ${commissionRate}%. Net to Wendy per sale is calculated automatically.`;
+  document.getElementById('inventory-grid').innerHTML=items.length?items.map(artworkCard).join(''):emptyState('Nothing in the shop right now.');
 }
 
 // All works
@@ -750,12 +847,14 @@ function renderSales() {
   const tbody=document.getElementById('sales-tbody');
   tbody.innerHTML=f.length
     ?f.map(w=>{ const sp=w.soldPrice||0, comm=w.commissionPaid!=null?w.commissionPaid:commAmt(sp), net=sp-comm;
-      return `<tr><td><strong>${w.title||'Untitled'}</strong>${w.medium?`<br/><span style="font-size:0.75rem;color:var(--ink-lt);">${w.medium}</span>`:''}</td><td>${w.datePlaced||'—'}</td><td>${w.dateSold||'—'}</td><td>${fmt(w.price)}</td><td>${fmt(sp)}</td><td style="color:var(--rose-dk);">${fmt(comm)}</td><td style="font-weight:700;color:#2a6e2a;">${fmt(net)}</td><td style="font-size:0.78rem;color:var(--ink-lt);max-width:160px;">${w.notes||'—'}</td></tr>`;
+      return `<tr><td><strong>${w.title||'Untitled'}</strong>${w.medium?`<br/><span style="font-size:0.78rem;color:var(--ink-lt);">${w.medium}</span>`:''}</td><td>${w.datePlaced||'—'}</td><td>${w.dateSold||'—'}</td><td>${fmt(w.price)}</td><td>${fmt(sp)}</td><td style="color:var(--rose);">${fmt(comm)}</td><td style="font-weight:700;color:var(--green);">${fmt(net)}</td><td style="font-size:0.8rem;color:var(--ink-lt);max-width:160px;">${w.notes||'—'}</td></tr>`;
     }).join('')
     :'<tr><td colspan="8" style="text-align:center;color:var(--ink-lt);padding:2rem;">No sales for this period.</td></tr>';
   const tg=f.reduce((a,w)=>a+(w.soldPrice||0),0);
   const tc=f.reduce((a,w)=>{ const sp=w.soldPrice||0; return a+(w.commissionPaid!=null?w.commissionPaid:commAmt(sp)); },0);
-  document.getElementById('sales-totals').innerHTML=f.length?`<strong>${f.length} sale${f.length!==1?'s':''}</strong> · Gross: <strong>${fmt(tg)}</strong> · Commission: <strong style="color:var(--rose-dk);">${fmt(tc)}</strong> · <strong style="color:#2a6e2a;">Net to Wendy: ${fmt(tg-tc)}</strong>`:'';
+  document.getElementById('sales-totals').innerHTML=f.length
+    ?`<div class="sales-total-bar"><span><strong>${f.length}</strong> sale${f.length!==1?'s':''}</span><span>Gross: <strong>${fmt(tg)}</strong></span><span style="color:var(--rose);">Commission: <strong>${fmt(tc)}</strong></span><span style="color:var(--green);font-weight:700;">Net to Wendy: ${fmt(tg-tc)}</span></div>`
+    :'';
 }
 
 // Reports
@@ -772,17 +871,17 @@ function renderReports() {
   const net=gross-comm;
   document.getElementById('report-stats').innerHTML=`
     <div class="stat-card"><div class="stat-val">${forY.length}</div><div class="stat-lbl">Works Sold</div></div>
-    <div class="stat-card gold-top"><div class="stat-val">${fmt(gross)}</div><div class="stat-lbl">Gross Sales</div></div>
-    <div class="stat-card"><div class="stat-val" style="color:var(--rose-dk);">${fmt(comm)}</div><div class="stat-lbl">Commission Paid</div></div>
-    <div class="stat-card gold-top"><div class="stat-val" style="color:#2a6e2a;">${fmt(net)}</div><div class="stat-lbl">Net Income</div></div>`;
+    <div class="stat-card green-top"><div class="stat-val">${fmt(gross)}</div><div class="stat-lbl">Gross Sales</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--rose);">${fmt(comm)}</div><div class="stat-lbl">Commission Paid</div></div>
+    <div class="stat-card green-top"><div class="stat-val" style="color:var(--green);">${fmt(net)}</div><div class="stat-lbl">Net Income</div></div>`;
   const rows=MONTHS.map((m,i)=>{
     const mn=String(i+1).padStart(2,'0'), ms=forY.filter(w=>w.dateSold?.slice(5,7)===mn);
     const mg=ms.reduce((a,w)=>a+(w.soldPrice||0),0), mc=ms.reduce((a,w)=>{ const sp=w.soldPrice||0; return a+(w.commissionPaid!=null?w.commissionPaid:commAmt(sp)); },0);
     return {m,count:ms.length,gross:mg,comm:mc,net:mg-mc};
   });
   document.getElementById('report-monthly-table').innerHTML=`<table class="data-table" style="margin-top:1rem;"><thead><tr><th>Month</th><th>Sales</th><th>Gross</th><th>Commission</th><th>Net</th></tr></thead><tbody>
-    ${rows.map(r=>`<tr><td>${r.m}</td><td>${r.count||'—'}</td><td>${r.gross>0?fmt(r.gross):'—'}</td><td style="color:var(--rose-dk);">${r.comm>0?fmt(r.comm):'—'}</td><td style="font-weight:700;color:${r.net>0?'#2a6e2a':'var(--ink-lt)'};">${r.net>0?fmt(r.net):'—'}</td></tr>`).join('')}
-    <tr style="background:var(--cream2);font-weight:700;"><td>Total</td><td>${forY.length}</td><td>${fmt(gross)}</td><td style="color:var(--rose-dk);">${fmt(comm)}</td><td style="color:#2a6e2a;">${fmt(net)}</td></tr>
+    ${rows.map(r=>`<tr><td>${r.m}</td><td>${r.count||'—'}</td><td>${r.gross>0?fmt(r.gross):'—'}</td><td style="color:var(--rose);">${r.comm>0?fmt(r.comm):'—'}</td><td style="font-weight:700;color:${r.net>0?'var(--green)':'var(--ink-lt)'};">${r.net>0?fmt(r.net):'—'}</td></tr>`).join('')}
+    <tr style="background:var(--rose-lt);font-weight:700;"><td>Total</td><td>${forY.length}</td><td>${fmt(gross)}</td><td style="color:var(--rose);">${fmt(comm)}</td><td style="color:var(--green);">${fmt(net)}</td></tr>
   </tbody></table>`;
 }
 
@@ -829,8 +928,8 @@ function closeAddModal(){ document.getElementById('modal-add').classList.remove(
 
 function handleStatusChange(){
   const isSold=document.getElementById('f-status').value==='sold';
-  document.getElementById('sold-date-group').style.display=isSold?'':'none';
-  document.getElementById('sold-price-group').style.display=isSold?'':'none';
+  document.getElementById('sold-fields').style.display=isSold?'':'none';
+  document.getElementById('sold-divider').style.display=isSold?'':'none';
 }
 
 function autoCommission(){
@@ -867,12 +966,14 @@ function saveWork(){
   if(editingId){ const idx=works.findIndex(x=>x.id===editingId); if(idx>-1){w.id=editingId;w.createdAt=works[idx].createdAt;works[idx]=w;} }
   else{ w.id=uid(); w.createdAt=Date.now(); works.unshift(w); }
   saveWorks(works); closeAddModal(); refreshAll();
+  showToast(editingId?'Artwork updated!':'Artwork added!');
 }
 
 function deleteCurrentWork(){
   if(!editingId) return;
   if(!confirm('Delete this artwork? This cannot be undone.')) return;
   works=works.filter(w=>w.id!==editingId); saveWorks(works); closeAddModal(); refreshAll();
+  showToast('Artwork deleted.');
 }
 
 // Detail modal
@@ -881,14 +982,14 @@ function openDetail(id){
   const sp=w.soldPrice||0, comm=w.commissionPaid!=null?w.commissionPaid:(w.status==='sold'?commAmt(sp):null), net=comm!=null?sp-comm:null;
   document.getElementById('detail-content').innerHTML=`
     ${w.photoData?`<img src="${w.photoData}" class="detail-img"/>`:` <div class="detail-img" style="display:flex;align-items:center;justify-content:center;font-size:4rem;">🎨</div>`}
-    <div style="font-family:'Playfair Display',serif;font-size:1.3rem;margin-bottom:0.3rem;">${w.title||'Untitled'}</div>
+    <div style="font-family:'Playfair Display',serif;font-size:1.3rem;margin-bottom:0.5rem;">${w.title||'Untitled'}</div>
     ${statusBadge(w.status)}
     <div style="margin-top:1rem;">
       ${drow('Medium',w.medium)}${drow('Size',w.size)}${drow('Asking Price',fmt(w.price))}${drow('Date Placed',w.datePlaced)}
       ${w.status==='sold'?drow('Date Sold',w.dateSold):''}
       ${w.status==='sold'?drow('Sold For',fmt(sp)):''}
-      ${w.status==='sold'?drow('Commission Paid',fmt(comm),'color:var(--rose-dk)'):''}
-      ${w.status==='sold'?drow('Net to Wendy',fmt(net),'color:#2a6e2a;font-weight:700;'):''}
+      ${w.status==='sold'?drow('Commission',fmt(comm),'color:var(--rose)'):''}
+      ${w.status==='sold'?drow('Net to Wendy',fmt(net),'color:var(--green);font-weight:700;'):''}
       ${drow('Notes',w.notes)}
     </div>`;
   document.getElementById('modal-detail').classList.add('open');
