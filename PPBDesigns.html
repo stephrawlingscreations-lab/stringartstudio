@@ -46,6 +46,7 @@ const CARD_TYPES=["Birthday","Anniversary","Thank You","Sympathy","New Baby","Ea
 const PAYMENT=["Cash","Revolut","Bank Transfer","PayPal","Other"];
 const SOURCES=["Facebook","Instagram","TikTok","Word of mouth","Annacarty Tea Rooms","Website","Other"];
 const SUPPLY_CATS=["Card Blanks","Envelopes","Ribbon & Twine","Embellishments","Adhesives","Ink & Stamps","Packaging","Tools","Other"];
+const SHOP_CATEGORIES=["Birthday","Sympathy","Wedding","Baby","Christmas","Notelets","Anniversary","Thank You","Easter","Other"];
 const SEASONS=[
   {name:"Valentine's Day",emoji:"❤️",date:"2026-02-14",leadWeeks:5,tip:"Red, pink, hearts. Personalised ones sell out fast — get ahead of it."},
   {name:"St. Patrick's Day",emoji:"☘️",date:"2026-03-17",leadWeeks:3,tip:"Green & gold themes. Great seller at Annacarty Tea Rooms around this time."},
@@ -74,7 +75,7 @@ const SEED={
     {id:"SUP001",name:"Example — White card blanks A6",cat:"Card Blanks",qty:0,reorderAt:20,supplier:"",cost:0,notes:"Edit or delete me and add your own supplies!"},
   ],
   shopStock:[
-    {id:"STK001",cardType:"Birthday",qty:0,price:0,notes:"Edit me — add your real card types and prices"},
+    {id:"STK001",category:"Birthday",qtyAdded:0,dateAdded:"2026-01-01"},
   ],
   expenses:[
     {id:"EXP001",date:"2026-03-01",item:"Card blanks x50",cat:"Materials",amount:8.50,receipt:true,notes:""},
@@ -270,7 +271,7 @@ function Dashboard({inProgress,completed,customers,shopStock,lowSupplies,overdue
       {lowSupplies.length>0&&<div style={{background:"#fff3e0",border:"1.5px solid #ffe0b2",borderRadius:12,padding:"12px 16px",cursor:"pointer",display:"flex",alignItems:"center",gap:10}} onClick={()=>setTab("supplies")}><span style={{fontSize:20}}>📦</span><div><strong style={{color:C.amber}}>Low stock: </strong><span style={{color:C.amber,fontSize:13}}>{lowSupplies.map(s=>s.name).join(", ")}</span></div></div>}
     </div>}
     <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12,marginBottom:20}}>
-      {[{label:"This Month",val:"€"+monthRev.toFixed(2),icon:"💰",color:C.rose,bg:C.light,t:"money"},{label:"Due This Week",val:dueWeek.length+" orders",icon:"📋",color:C.blue,bg:C.blight,t:"inprogress"},{label:"Shop Cards Left",val:shopStock.reduce((s,i)=>s+i.qty,0)+" cards",icon:"🏪",color:C.teal,bg:C.tlight,t:"shop"},{label:"Repeat Customers",val:customers.filter(c=>completed.filter(o=>o.customerId===c.id).length>1).length,icon:"💕",color:C.green,bg:C.glight,t:"customers"}].map(k=><div key={k.label} onClick={()=>setTab(k.t)} style={{background:k.bg,borderRadius:14,padding:"16px",cursor:"pointer",transition:"transform .15s,box-shadow .15s"}} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 6px 20px rgba(0,0,0,.1)"}} onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none"}}><div style={{fontSize:24,marginBottom:6}}>{k.icon}</div><div style={{fontWeight:900,fontSize:20,color:k.color,fontFamily:"'Playfair Display',serif"}}>{k.val}</div><div style={{fontSize:11,color:C.muted,marginTop:2,fontWeight:700,letterSpacing:.4,textTransform:"uppercase"}}>{k.label}</div></div>)}
+      {[{label:"This Month",val:"€"+monthRev.toFixed(2),icon:"💰",color:C.rose,bg:C.light,t:"money"},{label:"Due This Week",val:dueWeek.length+" orders",icon:"📋",color:C.blue,bg:C.blight,t:"inprogress"},{label:"Shop Cards Left",val:Math.max(0,shopStock.reduce((s,i)=>s+(i.qtyAdded!=null?i.qtyAdded:(i.qty||0)),0)-completed.filter(o=>o.channel==="Shop").reduce((s,o)=>s+(o.qty||0),0))+" cards",icon:"🏪",color:C.teal,bg:C.tlight,t:"shop"},{label:"Repeat Customers",val:customers.filter(c=>completed.filter(o=>o.customerId===c.id).length>1).length,icon:"💕",color:C.green,bg:C.glight,t:"customers"}].map(k=><div key={k.label} onClick={()=>setTab(k.t)} style={{background:k.bg,borderRadius:14,padding:"16px",cursor:"pointer",transition:"transform .15s,box-shadow .15s"}} onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow="0 6px 20px rgba(0,0,0,.1)"}} onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow="none"}}><div style={{fontSize:24,marginBottom:6}}>{k.icon}</div><div style={{fontWeight:900,fontSize:20,color:k.color,fontFamily:"'Playfair Display',serif"}}>{k.val}</div><div style={{fontSize:11,color:C.muted,marginTop:2,fontWeight:700,letterSpacing:.4,textTransform:"uppercase"}}>{k.label}</div></div>)}
     </div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:20}}>
       <Card>
@@ -381,123 +382,173 @@ function EditIPOrderForm({order,onSave,onCancel}){
 
 // ── Shop Tab ────────────────────────────────────────────────────────────────────
 function ShopTab({shopStock,setShopStock,completed,setCompleted,showToast}){
+  const[addStockModal,setAddStockModal]=useState(false);
+  const[recordSaleModal,setRecordSaleModal]=useState(false);
+
   const shopSales=completed.filter(o=>o.channel==="Shop");
-  const shopRev=shopSales.reduce((s,o)=>s+o.total,0);
-  const[addModal,setAddModal]=useState(false);
-  const[filter,setFilter]=useState("All");
+  const totalRevenue=shopSales.reduce((s,o)=>s+o.total,0);
 
-  const toggleSold=(id)=>{
-    const item=shopStock.find(i=>i.id===id);
-    if(!item)return;
-    const nowSold=!item.sold;
-    if(nowSold){
-      const saleId="SHOP"+genId();
-      setShopStock(s=>s.map(i=>i.id===id?{...i,sold:true,soldDate:new Date().toISOString().slice(0,10),saleId}:i));
-      setCompleted(c=>[{id:saleId,customerId:"",customerName:"Annacarty Tea Rooms",cardType:item.cardType,qty:1,total:item.price||0,payment:"Cash",completedDate:new Date().toISOString().slice(0,10),notes:item.notes||"",photo:item.photo||null,channel:"Shop"},...c]);
-      showToast("✅ Marked as sold & revenue recorded!");
-    }else{
-      setCompleted(c=>c.filter(o=>o.id!==item.saleId));
-      setShopStock(s=>s.map(i=>i.id===id?{...i,sold:false,soldDate:null,saleId:null}:i));
-      showToast("↩️ Marked as unsold — revenue reversed");
-    }
+  // Aggregate stock by category — handles both old format (cardType/qty) and new (category/qtyAdded)
+  const stockByCategory={};
+  shopStock.forEach(e=>{
+    const cat=e.category||e.cardType||"Other";
+    stockByCategory[cat]=(stockByCategory[cat]||0)+(e.qtyAdded!=null?e.qtyAdded:(e.qty||0));
+  });
+
+  // Aggregate sales by category from completed orders
+  const salesByCategory={};
+  shopSales.forEach(sale=>{
+    const cat=sale.cardType||"Other";
+    if(!salesByCategory[cat])salesByCategory[cat]={qty:0,total:0};
+    salesByCategory[cat].qty+=(sale.qty||0);
+    salesByCategory[cat].total+=(sale.total||0);
+  });
+
+  const allCategories=[...new Set([...Object.keys(stockByCategory),...Object.keys(salesByCategory)])].sort();
+  const totalAdded=Object.values(stockByCategory).reduce((s,v)=>s+v,0);
+  const totalSold=shopSales.reduce((s,o)=>s+(o.qty||0),0);
+  const totalRemaining=Math.max(0,totalAdded-totalSold);
+  const sortedBySales=allCategories.slice().sort((a,b)=>(salesByCategory[b]?.qty||0)-(salesByCategory[a]?.qty||0));
+  const bestSellerDisplay=shopSales.length>0&&sortedBySales.length>0&&(salesByCategory[sortedBySales[0]]?.qty||0)>0?sortedBySales[0]:"—";
+
+  const addStock=(entry)=>{
+    setShopStock(s=>[{id:"STK"+genId(),category:entry.category,qtyAdded:entry.qty,dateAdded:entry.date},...s]);
+    setAddStockModal(false);showToast("Stock added to shop!");
   };
 
-  const addDesign=(design)=>{
-    setShopStock(s=>[{id:"STK"+genId(),...design,sold:false,soldDate:null,dateAdded:new Date().toISOString().slice(0,10)},...s]);
-    setAddModal(false);showToast("Design added to shop!");
+  const recordSale=(sale)=>{
+    const priceEach=sale.category==="Notelets"?sale.price:10.00;
+    const total=parseFloat((priceEach*sale.qty).toFixed(2));
+    setCompleted(c=>[{id:"SHOP"+genId(),customerId:"",customerName:"Annacarty Tea Rooms",cardType:sale.category,qty:sale.qty,total,payment:"Cash",completedDate:sale.date,notes:"",photo:null,channel:"Shop"},...c]);
+    setRecordSaleModal(false);showToast("Sale recorded!");
   };
-
-  const unsold=shopStock.filter(i=>!i.sold);
-  const sold=shopStock.filter(i=>i.sold);
-  const allTypes=["All",...new Set(shopStock.map(i=>i.cardType))];
-
-  const filterItems=(items)=>filter==="All"?items:items.filter(i=>i.cardType===filter);
 
   return<div className="fade-in">
-    <SecTitle right={<Btn onClick={()=>setAddModal(true)} small variant="teal">+ Add Design to Shop</Btn>}>🏪 Annacarty Tea Rooms</SecTitle>
+    <SecTitle>🏪 Annacarty Tea Rooms</SecTitle>
 
     {/* Stats */}
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:10,marginBottom:20}}>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
       {[
-        {label:"In Shop",val:unsold.length,bg:C.tlight,color:C.teal},
-        {label:"Sold",val:sold.length,bg:C.glight,color:C.green},
-        {label:"Shop Revenue",val:"€"+shopRev.toFixed(2),bg:C.light,color:C.rose},
-        {label:"Best Seller",val:shopSales.length>0?Object.entries(shopSales.reduce((a,o)=>{a[o.cardType]=(a[o.cardType]||0)+1;return a},{})).sort((a,b)=>b[1]-a[1])[0]?.[0]||"—":"—",bg:C.gld,color:C.gold},
+        {label:"In Stock",val:totalRemaining,bg:C.tlight,color:C.teal},
+        {label:"Sold",val:totalSold,bg:C.glight,color:C.green},
+        {label:"Shop Revenue",val:"€"+totalRevenue.toFixed(2),bg:C.light,color:C.rose},
+        {label:"Best Seller",val:bestSellerDisplay,bg:C.gld,color:C.gold},
       ].map(k=><div key={k.label} style={{background:k.bg,borderRadius:12,padding:"12px 10px",textAlign:"center"}}>
-        <div style={{fontWeight:900,fontSize:16,color:k.color,fontFamily:"Playfair Display,serif"}}>{k.val}</div>
+        <div style={{fontWeight:900,fontSize:k.label==="Best Seller"?12:16,color:k.color,fontFamily:"Playfair Display,serif",wordBreak:"break-word",lineHeight:1.3}}>{k.val}</div>
         <div style={{fontSize:10,color:C.muted,marginTop:2,fontWeight:700,letterSpacing:.4,textTransform:"uppercase"}}>{k.label}</div>
       </div>)}
     </div>
 
-    {/* Filter bar */}
-    {shopStock.length>0&&<div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:16}}>
-      {allTypes.map(t=><button key={t} onClick={()=>setFilter(t)} style={{padding:"5px 12px",borderRadius:20,border:`1.5px solid ${filter===t?C.teal:"#e0e0e0"}`,background:filter===t?C.tlight:"#fff",color:filter===t?C.teal:C.muted,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"Lato,sans-serif"}}>{t}</button>)}
-    </div>}
-
-    {/* In Shop — unsold */}
-    <div style={{marginBottom:24}}>
-      <div style={{fontSize:11,fontWeight:700,color:C.teal,letterSpacing:.6,textTransform:"uppercase",marginBottom:10}}>Currently In Shop ({filterItems(unsold).length})</div>
-      {filterItems(unsold).length===0
-        ?<div style={{textAlign:"center",padding:"30px",color:C.muted,fontSize:13,background:"#fff",borderRadius:14,border:`1.5px dashed ${C.blush}`}}>No designs in shop yet — tap <strong>+ Add Design to Shop</strong> above</div>
-        :<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:12}}>
-          {filterItems(unsold).map(item=><DesignCard key={item.id} item={item} onToggleSold={()=>toggleSold(item.id)} onRemove={()=>{setShopStock(s=>s.filter(i=>i.id!==item.id));showToast("Removed from shop")}}/>)}
-        </div>}
+    {/* Action buttons */}
+    <div style={{display:"flex",gap:10,marginBottom:22,flexWrap:"wrap"}}>
+      <Btn onClick={()=>setAddStockModal(true)} variant="teal" small>+ Add Shop Stock</Btn>
+      <Btn onClick={()=>setRecordSaleModal(true)} variant="green" small disabled={allCategories.length===0}>Record Sale</Btn>
     </div>
 
-    {/* Sold designs */}
-    {filterItems(sold).length>0&&<div>
-      <div style={{fontSize:11,fontWeight:700,color:C.green,letterSpacing:.6,textTransform:"uppercase",marginBottom:10}}>Sold Designs ({filterItems(sold).length})</div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))",gap:12}}>
-        {filterItems(sold).map(item=><DesignCard key={item.id} item={item} onToggleSold={()=>toggleSold(item.id)}/>)}
-      </div>
-    </div>}
+    {/* Current Shop Stock table */}
+    <Card style={{marginBottom:20}}>
+      <div style={{fontWeight:700,color:C.teal,fontSize:12,letterSpacing:.5,textTransform:"uppercase",marginBottom:14}}>📦 Current Shop Stock</div>
+      {allCategories.length===0
+        ?<Empty icon="🏪" title="No stock added yet" sub="Tap '+ Add Shop Stock' to get started"/>
+        :<div style={{overflowX:"auto"}}>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+            <thead><tr style={{borderBottom:`2px solid ${C.light}`}}>{["Category","Added","Sold","Remaining"].map(h=><th key={h} style={{textAlign:"left",padding:"8px 10px",fontSize:11,color:C.muted,fontWeight:700,letterSpacing:.5,textTransform:"uppercase"}}>{h}</th>)}</tr></thead>
+            <tbody>
+              {allCategories.map(cat=>{
+                const added=stockByCategory[cat]||0;
+                const sold=salesByCategory[cat]?.qty||0;
+                const remaining=Math.max(0,added-sold);
+                return<tr key={cat} style={{borderBottom:`1px solid ${C.light}`}}>
+                  <td style={{padding:"10px 10px",fontWeight:700,color:C.deep}}>{cat}</td>
+                  <td style={{padding:"10px 10px",color:C.muted,textAlign:"center"}}>{added}</td>
+                  <td style={{padding:"10px 10px",color:C.green,fontWeight:700,textAlign:"center"}}>{sold}</td>
+                  <td style={{padding:"10px 10px",textAlign:"center"}}>
+                    <span style={{fontWeight:700,color:remaining===0?C.muted:C.teal}}>{remaining}</span>
+                    {remaining===0&&sold>0&&<><br/><Badge color="grey" style={{fontSize:9}}>Out</Badge></>}
+                  </td>
+                </tr>;
+              })}
+            </tbody>
+          </table>
+        </div>
+      }
+    </Card>
 
-    <Modal open={addModal} onClose={()=>setAddModal(false)}>
-      <AddDesignForm onSubmit={addDesign} onCancel={()=>setAddModal(false)}/>
+    {/* Sales Summary */}
+    {shopSales.length>0&&<Card>
+      <div style={{fontWeight:700,color:C.rose,fontSize:12,letterSpacing:.5,textTransform:"uppercase",marginBottom:14}}>💰 Shop Sales Summary</div>
+      <div style={{overflowX:"auto"}}>
+        <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+          <thead><tr style={{borderBottom:`2px solid ${C.light}`}}>{["Category","Qty Sold","Revenue"].map(h=><th key={h} style={{textAlign:"left",padding:"8px 10px",fontSize:11,color:C.muted,fontWeight:700,letterSpacing:.5,textTransform:"uppercase"}}>{h}</th>)}</tr></thead>
+          <tbody>
+            {Object.entries(salesByCategory).sort((a,b)=>b[1].qty-a[1].qty).map(([cat,data])=><tr key={cat} style={{borderBottom:`1px solid ${C.light}`}}>
+              <td style={{padding:"10px 10px",fontWeight:700,color:C.deep}}>{cat}</td>
+              <td style={{padding:"10px 10px",color:C.green,fontWeight:700}}>{data.qty}</td>
+              <td style={{padding:"10px 10px",color:C.rose,fontWeight:700}}>€{data.total.toFixed(2)}</td>
+            </tr>)}
+            <tr style={{borderTop:`2px solid ${C.light}`,background:C.pale}}>
+              <td style={{padding:"10px 10px",fontWeight:700,color:C.deep}}>Total</td>
+              <td style={{padding:"10px 10px",fontWeight:700,color:C.green}}>{totalSold}</td>
+              <td style={{padding:"10px 10px",fontWeight:700,color:C.rose}}>€{totalRevenue.toFixed(2)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </Card>}
+
+    <Modal open={addStockModal} onClose={()=>setAddStockModal(false)}>
+      <AddShopStockForm onSubmit={addStock} onCancel={()=>setAddStockModal(false)}/>
+    </Modal>
+    <Modal open={recordSaleModal} onClose={()=>setRecordSaleModal(false)}>
+      <RecordShopSaleForm stockCategories={Object.keys(stockByCategory)} onSubmit={recordSale} onCancel={()=>setRecordSaleModal(false)}/>
     </Modal>
   </div>;
 }
 
-function DesignCard({item,onToggleSold,onRemove}){
-  return<div style={{background:"#fff",borderRadius:14,border:`2px solid ${item.sold?C.glight:C.light}`,overflow:"hidden",boxShadow:"0 2px 10px rgba(194,24,91,.07)",opacity:item.sold?.8:1,transition:"all .2s"}}>
-    {/* Photo */}
-    <div style={{width:"100%",height:130,background:item.sold?C.glight:C.light,display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",position:"relative"}}>
-      {item.photo
-        ?<img src={item.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
-        :<span style={{fontSize:36}}>🌸</span>}
-      {item.sold&&<div style={{position:"absolute",inset:0,background:"rgba(46,125,50,.15)",display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:32}}>✅</span></div>}
-    </div>
-    {/* Info */}
-    <div style={{padding:"10px 12px"}}>
-      <div style={{fontWeight:700,fontSize:13,color:item.sold?C.green:C.deep}}>{item.cardType}</div>
-      {item.price>0&&<div style={{fontSize:12,color:C.rose,fontWeight:700,marginTop:2}}>€{item.price.toFixed(2)}</div>}
-      {item.notes&&<div style={{fontSize:11,color:C.muted,marginTop:2,lineHeight:1.3}}>{item.notes}</div>}
-      <div style={{fontSize:10,color:C.muted,marginTop:3}}>{item.sold?`Sold ${item.soldDate?new Date(item.soldDate).toLocaleDateString("en-IE"):""}`:item.dateAdded?`Added ${new Date(item.dateAdded).toLocaleDateString("en-IE")}`:""}</div>
-      {/* Tick sold button */}
-      <button onClick={onToggleSold} style={{marginTop:8,width:"100%",padding:"6px",borderRadius:8,border:`1.5px solid ${item.sold?C.green:C.blush}`,background:item.sold?C.glight:C.light,color:item.sold?C.green:C.rose,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"Lato,sans-serif",transition:"all .2s"}}>
-        {item.sold?"↩️ Mark Unsold":"✅ Mark as Sold"}
-      </button>
-      {onRemove&&!item.sold&&<button onClick={onRemove} style={{marginTop:4,width:"100%",padding:"4px",borderRadius:8,border:"none",background:"transparent",color:C.muted,fontSize:10,cursor:"pointer",fontFamily:"Lato,sans-serif"}}>Remove</button>}
+function AddShopStockForm({onSubmit,onCancel}){
+  const[category,setCategory]=useState("");
+  const[customCat,setCustomCat]=useState("");
+  const[qty,setQty]=useState("");
+  const[date,setDate]=useState(new Date().toISOString().slice(0,10));
+  const isCustom=category==="Custom...";
+  const finalCat=isCustom?customCat.trim():category;
+  const valid=!!finalCat&&parseInt(qty)>0;
+  return<div>
+    <MTitle>Add Shop Stock</MTitle>
+    <Sel label="Category / Occasion" req options={[...SHOP_CATEGORIES,"Custom..."]} value={category} onChange={e=>setCategory(e.target.value)}/>
+    {isCustom&&<Inp label="Custom category name" req value={customCat} onChange={e=>setCustomCat(e.target.value)} placeholder="e.g. Confirmation"/>}
+    <Inp label="Quantity added to shop" req type="number" min={1} value={qty} onChange={e=>setQty(e.target.value)} placeholder="e.g. 5"/>
+    <Inp label="Date added" type="date" value={date} onChange={e=>setDate(e.target.value)}/>
+    <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+      <Btn onClick={onCancel} variant="ghost" small>Cancel</Btn>
+      <Btn onClick={()=>valid&&onSubmit({category:finalCat,qty:parseInt(qty),date})} variant="teal" small disabled={!valid}>Add Stock</Btn>
     </div>
   </div>;
 }
 
-function AddDesignForm({onSubmit,onCancel}){
-  const[f,setF]=useState({cardType:"",price:"",notes:"",photo:null});
-  const s=(k,v)=>setF(x=>({...x,[k]:v}));
+function RecordShopSaleForm({stockCategories,onSubmit,onCancel}){
+  const allCats=[...new Set([...stockCategories,...SHOP_CATEGORIES])];
+  const[category,setCategory]=useState("");
+  const[qty,setQty]=useState("");
+  const[notePrice,setNotePrice]=useState("");
+  const[date,setDate]=useState(new Date().toISOString().slice(0,10));
+  const isNotelet=category==="Notelets";
+  const priceEach=isNotelet?parseFloat(notePrice)||0:10.00;
+  const totalVal=priceEach*(parseInt(qty)||0);
+  const valid=!!category&&parseInt(qty)>0&&(!isNotelet||parseFloat(notePrice)>0);
   return<div>
-    <MTitle>Add Design to Shop</MTitle>
-    <div style={{marginBottom:14}}>
-      <label style={{display:"block",fontSize:11,fontWeight:700,color:C.deep,marginBottom:6,letterSpacing:.6,textTransform:"uppercase"}}>Photo of Design</label>
-      <PhotoUpload value={f.photo} onChange={v=>s("photo",v)} size={120}/>
-      <div style={{fontSize:10,color:C.muted,marginTop:4}}>Tap to add a photo of the card design</div>
-    </div>
-    <Sel label="Card Type" req options={CARD_TYPES} value={f.cardType} onChange={e=>s("cardType",e.target.value)}/>
-    <Inp label="Price (€)" type="number" step="0.01" placeholder="0.00" value={f.price} onChange={e=>s("price",parseFloat(e.target.value)||0)}/>
-    <Txt label="Design notes" value={f.notes} onChange={e=>s("notes",e.target.value)} placeholder="e.g. Pink floral, kraft background, ribbon detail…"/>
+    <MTitle>Record Shop Sale</MTitle>
+    <Sel label="Category / Occasion" req options={allCats} value={category} onChange={e=>setCategory(e.target.value)}/>
+    <Inp label="Quantity sold" req type="number" min={1} value={qty} onChange={e=>setQty(e.target.value)} placeholder="e.g. 3"/>
+    {isNotelet
+      ?<Inp label="Price per notelet (€)" req type="number" step="0.01" value={notePrice} onChange={e=>setNotePrice(e.target.value)} placeholder="e.g. 5.00"/>
+      :category&&<div style={{marginBottom:13,padding:"10px 14px",background:C.glight,borderRadius:10,fontSize:13,color:C.green}}>Price: €10.00 per card</div>
+    }
+    {qty&&parseInt(qty)>0&&priceEach>0&&<div style={{marginBottom:13,padding:"10px 14px",background:C.light,borderRadius:10,fontSize:14,fontWeight:700,color:C.rose}}>Total: €{totalVal.toFixed(2)}</div>}
+    <Inp label="Sale date" type="date" value={date} onChange={e=>setDate(e.target.value)}/>
     <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
       <Btn onClick={onCancel} variant="ghost" small>Cancel</Btn>
-      <Btn onClick={()=>f.cardType&&onSubmit(f)} variant="teal" small disabled={!f.cardType}>Add to Shop</Btn>
+      <Btn onClick={()=>valid&&onSubmit({category,qty:parseInt(qty),price:priceEach,date})} variant="green" small disabled={!valid}>Record Sale</Btn>
     </div>
   </div>;
 }
