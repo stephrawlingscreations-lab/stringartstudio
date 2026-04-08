@@ -380,9 +380,10 @@ function CompletedTab({completed,setCompleted,showToast}){
 // ── In Progress Tab ───────────────────────────────────────────────────────────
 function InProgressTab({inProgress,setInProgress,onMarkComplete,showToast}){
   const[editOrder,setEditOrder]=useState(null);
-  const overdue=inProgress.filter(o=>o.dueDate&&daysUntil(o.dueDate)<0);
-  const soon=inProgress.filter(o=>{if(!o.dueDate)return false;const d=daysUntil(o.dueDate);return d>=0&&d<=7});
-  const rest=inProgress.filter(o=>!o.dueDate||(daysUntil(o.dueDate)>7));
+  const sortByDue=(a,b)=>{if(!a.dueDate&&!b.dueDate)return 0;if(!a.dueDate)return 1;if(!b.dueDate)return -1;return new Date(a.dueDate)-new Date(b.dueDate)};
+  const overdue=inProgress.filter(o=>o.dueDate&&daysUntil(o.dueDate)<0).sort(sortByDue);
+  const soon=inProgress.filter(o=>{if(!o.dueDate)return false;const d=daysUntil(o.dueDate);return d>=0&&d<=7}).sort(sortByDue);
+  const rest=inProgress.filter(o=>!o.dueDate||(daysUntil(o.dueDate)>7)).sort(sortByDue);
   const toggle=(id,field)=>setInProgress(p=>p.map(o=>o.id===id?{...o,[field]:!o[field]}:o));
   const setPhoto=(id,photo)=>{setInProgress(p=>p.map(o=>o.id===id?{...o,photo}:o));showToast("Photo saved!")};
   const toggleNeedsPostage=(id)=>setInProgress(p=>p.map(o=>o.id===id?{...o,needsPostage:!o.needsPostage,postage:o.needsPostage?null:o.postage,postageReceipt:o.needsPostage?null:o.postageReceipt}:o));
