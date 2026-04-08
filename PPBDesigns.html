@@ -46,7 +46,7 @@ const CARD_TYPES=["Birthday","Anniversary","Thank You","Sympathy","New Baby","Ea
 const PAYMENT=["Cash","Revolut","Bank Transfer","PayPal","Other"];
 const SOURCES=["Facebook","Instagram","TikTok","Word of mouth","Annacarty Tea Rooms","Website","Other"];
 const SUPPLY_CATS=["Card Blanks","Envelopes","Ribbon & Twine","Embellishments","Adhesives","Ink & Stamps","Packaging","Tools","Other"];
-const SHOP_CATEGORIES=["Birthday","Sympathy","Wedding","Baby","Christmas","Notelets","Anniversary","Thank You","Easter","Other"];
+const SHOP_CATEGORIES=["Birthday","Anniversary","Thank You","Sympathy","New Baby","Easter","Christmas","Valentine's","Mother's Day","Father's Day","Congratulations","Get Well","Communion","Confirmation","Wedding","Halloween","Notelets","Other"];
 const SEASONS=[
   {name:"Valentine's Day",emoji:"❤️",date:"2026-02-14",leadWeeks:5,tip:"Red, pink, hearts. Personalised ones sell out fast — get ahead of it."},
   {name:"St. Patrick's Day",emoji:"☘️",date:"2026-03-17",leadWeeks:3,tip:"Green & gold themes. Great seller at Annacarty Tea Rooms around this time."},
@@ -384,6 +384,7 @@ function EditIPOrderForm({order,onSave,onCancel}){
 function ShopTab({shopStock,setShopStock,completed,setCompleted,showToast}){
   const[addStockModal,setAddStockModal]=useState(false);
   const[recordSaleModal,setRecordSaleModal]=useState(false);
+  const[editCat,setEditCat]=useState(null);
 
   const shopSales=completed.filter(o=>o.channel==="Shop");
   const totalRevenue=shopSales.reduce((s,o)=>s+o.total,0);
@@ -423,6 +424,17 @@ function ShopTab({shopStock,setShopStock,completed,setCompleted,showToast}){
     setRecordSaleModal(false);showToast("Sale recorded!");
   };
 
+  const editStock=({oldCategory,newCategory,newAdded})=>{
+    setShopStock(s=>{
+      const filtered=s.filter(e=>(e.category||e.cardType||"Other")!==oldCategory);
+      return[...filtered,{id:"STK"+genId(),category:newCategory,qtyAdded:newAdded,dateAdded:new Date().toISOString().slice(0,10)}];
+    });
+    if(oldCategory!==newCategory){
+      setCompleted(c=>c.map(o=>o.channel==="Shop"&&o.cardType===oldCategory?{...o,cardType:newCategory}:o));
+    }
+    setEditCat(null);showToast("Stock updated!");
+  };
+
   return<div className="fade-in">
     <SecTitle>🏪 Annacarty Tea Rooms</SecTitle>
 
@@ -452,7 +464,7 @@ function ShopTab({shopStock,setShopStock,completed,setCompleted,showToast}){
         ?<Empty icon="🏪" title="No stock added yet" sub="Tap '+ Add Shop Stock' to get started"/>
         :<div style={{overflowX:"auto"}}>
           <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
-            <thead><tr style={{borderBottom:`2px solid ${C.light}`}}>{["Category","Added","Sold","Remaining"].map(h=><th key={h} style={{textAlign:"left",padding:"8px 10px",fontSize:11,color:C.muted,fontWeight:700,letterSpacing:.5,textTransform:"uppercase"}}>{h}</th>)}</tr></thead>
+            <thead><tr style={{borderBottom:`2px solid ${C.light}`}}>{["Category","Added","Sold","Remaining",""].map(h=><th key={h} style={{textAlign:"left",padding:"8px 10px",fontSize:11,color:C.muted,fontWeight:700,letterSpacing:.5,textTransform:"uppercase"}}>{h}</th>)}</tr></thead>
             <tbody>
               {allCategories.map(cat=>{
                 const added=stockByCategory[cat]||0;
@@ -465,6 +477,9 @@ function ShopTab({shopStock,setShopStock,completed,setCompleted,showToast}){
                   <td style={{padding:"10px 10px",textAlign:"center"}}>
                     <span style={{fontWeight:700,color:remaining===0?C.muted:C.teal}}>{remaining}</span>
                     {remaining===0&&sold>0&&<><br/><Badge color="grey" style={{fontSize:9}}>Out</Badge></>}
+                  </td>
+                  <td style={{padding:"6px 10px"}}>
+                    <button onClick={()=>setEditCat({category:cat,added})} style={{fontSize:11,padding:"4px 10px",borderRadius:7,border:`1px solid ${C.blush}`,background:"#fff",color:C.rose,cursor:"pointer",fontFamily:"Lato,sans-serif"}}>Edit</button>
                   </td>
                 </tr>;
               })}
@@ -501,6 +516,9 @@ function ShopTab({shopStock,setShopStock,completed,setCompleted,showToast}){
     </Modal>
     <Modal open={recordSaleModal} onClose={()=>setRecordSaleModal(false)}>
       <RecordShopSaleForm stockCategories={Object.keys(stockByCategory)} onSubmit={recordSale} onCancel={()=>setRecordSaleModal(false)}/>
+    </Modal>
+    <Modal open={!!editCat} onClose={()=>setEditCat(null)}>
+      {editCat&&<EditShopStockForm category={editCat.category} currentAdded={editCat.added} onSave={editStock} onCancel={()=>setEditCat(null)}/>}
     </Modal>
   </div>;
 }
@@ -553,6 +571,25 @@ function RecordShopSaleForm({stockCategories,onSubmit,onCancel}){
   </div>;
 }
 
+function EditShopStockForm({category,currentAdded,onSave,onCancel}){
+  const[newCategory,setNewCategory]=useState(category);
+  const[customCat,setCustomCat]=useState("");
+  const[newAdded,setNewAdded]=useState(String(currentAdded));
+  const isCustom=newCategory==="Custom...";
+  const finalCat=isCustom?customCat.trim():newCategory;
+  const valid=!!finalCat&&parseInt(newAdded)>=0;
+  return<div>
+    <MTitle sub="Correct a mistake in your shop stock">Edit Stock Entry</MTitle>
+    <Sel label="Category / Occasion" req options={[...SHOP_CATEGORIES,"Custom..."]} value={newCategory} onChange={e=>setNewCategory(e.target.value)}/>
+    {isCustom&&<Inp label="Custom category name" req value={customCat} onChange={e=>setCustomCat(e.target.value)} placeholder="e.g. Confirmation"/>}
+    <Inp label="Total quantity added (corrected)" req type="number" min={0} value={newAdded} onChange={e=>setNewAdded(e.target.value)}/>
+    <div style={{background:"#fff3e0",borderRadius:10,padding:"10px 14px",fontSize:12,color:C.amber,marginBottom:14}}>⚠️ This replaces the total added for this category. Sales already recorded are not changed.</div>
+    <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+      <Btn onClick={onCancel} variant="ghost" small>Cancel</Btn>
+      <Btn onClick={()=>valid&&onSave({oldCategory:category,newCategory:finalCat,newAdded:parseInt(newAdded)})} variant="primary" small disabled={!valid}>Save</Btn>
+    </div>
+  </div>;
+}
 
 // ── Customers Tab ─────────────────────────────────────────────────────────────
 function CustomersTab({customers,completed,openModal}){
