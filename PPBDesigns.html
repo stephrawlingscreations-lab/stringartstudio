@@ -193,7 +193,7 @@ function App({user}){
   const revenue=completed.reduce((s,o)=>s+o.total,0);
   const lowSupplies=supplies.filter(s=>s.qty<=s.reorderAt);
   const overdueOrders=inProgress.filter(o=>o.dueDate&&daysUntil(o.dueDate)<0);
-  const TABS=[{key:"dashboard",label:"🏠 Home"},{key:"inprogress",label:"🔧 In Progress",badge:inProgress.length,bc:"rose"},{key:"shop",label:"🏪 Shop"},{key:"customers",label:"👥 Customers"},{key:"expenses",label:"🧾 Expenses"},{key:"money",label:"💰 Money"},{key:"seasons",label:"📅 Seasons"}];
+  const TABS=[{key:"dashboard",label:"🏠 Home"},{key:"inprogress",label:"🔧 In Progress",badge:inProgress.length,bc:"rose"},{key:"completed",label:"✅ Completed"},{key:"shop",label:"🏪 Shop"},{key:"customers",label:"👥 Customers"},{key:"expenses",label:"🧾 Expenses"},{key:"money",label:"💰 Money"},{key:"seasons",label:"📅 Seasons"}];
   if(fbLoading)return<LoadingScreen/>;
   return<div style={{minHeight:"100vh",background:`linear-gradient(150deg,${C.light} 0%,${C.pale} 60%,${C.light} 100%)`}}>
     {/* HEADER */}
@@ -230,6 +230,7 @@ function App({user}){
     <div style={{maxWidth:900,margin:"0 auto",padding:"22px 14px 70px"}}>
       {tab==="dashboard"&&<Dashboard inProgress={inProgress} completed={completed} customers={customers} shopStock={shopStock} lowSupplies={lowSupplies} overdueOrders={overdueOrders} setTab={setTab}/>}
       {tab==="inprogress"&&<InProgressTab inProgress={inProgress} setInProgress={setInProgress} onMarkComplete={o=>openM("complete",o)} showToast={showT}/>}
+      {tab==="completed"&&<CompletedTab completed={completed} setCompleted={setCompleted} showToast={showT}/>}
       {tab==="shop"&&<ShopTab shopStock={shopStock} setShopStock={setShopStock} completed={completed} setCompleted={setCompleted} showToast={showT}/>}
       {tab==="customers"&&<CustomersTab customers={customers} completed={completed} openModal={openM}/>}
       {tab==="expenses"&&<ExpensesTab expenses={expenses} setExpenses={setExpenses} showToast={showT}/>}
@@ -316,6 +317,63 @@ function Dashboard({inProgress,completed,customers,shopStock,lowSupplies,overdue
         {upcoming.map(s=>{const urgent=s.days<=s.leadWeeks*7;return<div key={s.name} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",borderRadius:12,background:urgent?C.light:C.lgrey,border:`1.5px solid ${urgent?C.blush:"#e0e0e0"}`}}><span style={{fontSize:26,flexShrink:0}}>{s.emoji}</span><div style={{flex:1}}><div style={{fontWeight:700,color:urgent?C.rose:C.text,fontSize:14}}>{s.name}</div><div style={{fontSize:12,color:C.muted,marginTop:2}}>{s.tip}</div></div><div style={{textAlign:"right",flexShrink:0}}><div style={{fontWeight:700,color:urgent?C.rose:C.grey,fontSize:13}}>{s.days}d</div>{urgent&&<div className="pulse" style={{fontSize:10,color:C.rose,fontWeight:700}}>START NOW</div>}</div></div>})}
       </div>
     </Card>
+  </div>;
+}
+
+// ── Completed Tab ─────────────────────────────────────────────────────────────
+function CompletedTab({completed,setCompleted,showToast}){
+  const[filter,setFilter]=useState("All");
+  const[search,setSearch]=useState("");
+  const filtered=completed
+    .filter(o=>filter==="All"||o.channel===filter)
+    .filter(o=>!search||o.customerName.toLowerCase().includes(search.toLowerCase())||o.cardType.toLowerCase().includes(search.toLowerCase()));
+  const totalRev=filtered.reduce((s,o)=>s+o.total,0);
+  const deleteOrder=(id)=>{setCompleted(c=>c.filter(o=>o.id!==id));showToast("Order removed");};
+  const printCompleted=()=>{
+    const rows=filtered.map(o=>`<tr><td>${fmt(o.completedDate)}</td><td>${o.customerName}</td><td>${o.cardType}</td><td>${o.qty}</td><td>€${o.total.toFixed(2)}</td><td>${o.payment}</td><td>${o.channel}</td>${o.postage>0?`<td>€${parseFloat(o.postage).toFixed(2)}</td>`:"<td>—</td>"}</tr>`).join("");
+    printWindow("PPB Designs — Completed Orders",`<h1>✅ Completed Orders</h1><p class="meta">PPB Designs · Printed ${fmt(new Date())} · ${filtered.length} order${filtered.length!==1?"s":""} · Total €${totalRev.toFixed(2)}</p><table><thead><tr><th>Date</th><th>Customer</th><th>Card Type</th><th>Qty</th><th>Total</th><th>Payment</th><th>Channel</th><th>Postage</th></tr></thead><tbody>${rows}</tbody></table>`);
+  };
+  return<div className="fade-in">
+    <SecTitle right={<Btn onClick={printCompleted} variant="ghost" small>🖨️ Print</Btn>}>✅ Completed Orders</SecTitle>
+    {/* Summary stats */}
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:16}}>
+      {[
+        {label:"Total Orders",val:completed.length,bg:C.light,color:C.rose},
+        {label:"Direct",val:completed.filter(o=>o.channel==="Direct").length,bg:C.glight,color:C.green},
+        {label:"Shop",val:completed.filter(o=>o.channel==="Shop").length,bg:C.tlight,color:C.teal},
+      ].map(k=><div key={k.label} style={{background:k.bg,borderRadius:12,padding:"12px",textAlign:"center"}}>
+        <div style={{fontWeight:900,fontSize:20,color:k.color,fontFamily:"'Playfair Display',serif"}}>{k.val}</div>
+        <div style={{fontSize:10,color:C.muted,marginTop:2,fontWeight:700,letterSpacing:.4,textTransform:"uppercase"}}>{k.label}</div>
+      </div>)}
+    </div>
+    {/* Search + filter */}
+    <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap",alignItems:"center"}}>
+      <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="🔍  Search name or card type…" style={{...iSt,flex:1,minWidth:160,fontSize:13}} onFocus={e=>e.target.style.borderColor=C.rose} onBlur={e=>e.target.style.borderColor=C.blush}/>
+      {["All","Direct","Shop"].map(f=><button key={f} onClick={()=>setFilter(f)} style={{padding:"8px 14px",borderRadius:20,border:`1.5px solid ${filter===f?C.rose:"#e0e0e0"}`,background:filter===f?C.light:"#fff",color:filter===f?C.rose:C.muted,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"Lato,sans-serif"}}>{f}</button>)}
+    </div>
+    {/* List */}
+    {filtered.length===0
+      ?<Empty icon="✅" title="Nothing here yet" sub="Completed orders will appear here"/>
+      :<div style={{display:"flex",flexDirection:"column",gap:10}}>
+        {filtered.map(o=><div key={o.id} style={{background:"#fff",borderRadius:14,border:`1.5px solid ${C.light}`,padding:"12px 16px",display:"flex",gap:12,alignItems:"center"}}>
+          <div style={{width:48,height:48,borderRadius:10,background:C.light,overflow:"hidden",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>
+            {o.photo?<img src={o.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:"🌸"}
+          </div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontWeight:700,color:C.deep,fontSize:13,fontFamily:"'Playfair Display',serif"}}>{o.customerName}</div>
+            <div style={{fontSize:12,color:C.muted,marginTop:1}}>{o.cardType} · {new Date(o.completedDate).toLocaleDateString("en-IE")} · {o.qty} card{o.qty!==1?"s":""}</div>
+            {o.postage>0&&<div style={{fontSize:11,color:C.blue,marginTop:1}}>📮 Postage: €{parseFloat(o.postage).toFixed(2)}{o.postageReceipt&&<button onClick={()=>window.open(o.postageReceipt,"_blank")} style={{marginLeft:6,fontSize:10,padding:"1px 6px",borderRadius:5,border:`1px solid ${C.blight}`,background:C.blight,color:C.blue,cursor:"pointer",fontFamily:"Lato,sans-serif"}}>View receipt</button>}</div>}
+          </div>
+          <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4,flexShrink:0}}>
+            <div style={{fontWeight:700,color:C.rose,fontSize:14}}>€{o.total.toFixed(2)}</div>
+            <Badge color={o.channel==="Shop"?"teal":"green"} style={{fontSize:9}}>{o.channel}</Badge>
+            <button onClick={()=>deleteOrder(o.id)} style={{fontSize:10,padding:"2px 8px",borderRadius:6,border:"1px solid #ffcdd2",background:"#ffebee",color:"#c62828",cursor:"pointer",fontFamily:"Lato,sans-serif"}}>Delete</button>
+          </div>
+        </div>)}
+        <div style={{textAlign:"center",padding:"10px",fontSize:12,color:C.muted,fontWeight:700}}>
+          {filtered.length} order{filtered.length!==1?"s":""} · Total €{totalRev.toFixed(2)}
+        </div>
+      </div>}
   </div>;
 }
 
