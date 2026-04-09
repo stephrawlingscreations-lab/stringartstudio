@@ -1067,7 +1067,11 @@ function Root(){
   const[user,setUser]=useState(null);
   const[checking,setChecking]=useState(true);
   useEffect(()=>{
-    const unsub=fbAuth.onAuthStateChanged(u=>{setUser(u);setChecking(false)});
+    const ALLOWED=['stephrawlingscreations@gmail.com','ppbdesigns1@gmail.com'];
+    const unsub=fbAuth.onAuthStateChanged(u=>{
+      if(u&&!ALLOWED.includes(u.email)){fbAuth.signOut();setChecking(false);return;}
+      setUser(u);setChecking(false);
+    });
     return()=>unsub();
   },[]);
   if(checking)return<LoadingScreen/>;
