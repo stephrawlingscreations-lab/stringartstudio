@@ -842,23 +842,12 @@
     </div>
 
     <hr class="form-divider"/>
-    <div style="font-size:0.78rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-mid);font-weight:700;margin-bottom:0.8rem;">Materials / Costs</div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Materials Cost (€)</label>
-        <input type="number" id="f-materials-cost" min="0" step="0.01" placeholder="0.00"/>
-      </div>
-      <div class="form-group">
-        <label>Cost Category</label>
-        <select id="f-materials-cat">
-          <option value="supplies">Supplies</option>
-          <option value="frames">Frames</option>
-          <option value="fees">Fees</option>
-          <option value="transport">Transport</option>
-          <option value="other">Other</option>
-        </select>
-      </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.8rem;">
+      <div style="font-size:0.78rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-mid);font-weight:700;">Materials / Costs</div>
+      <button type="button" class="btn btn-outline btn-sm" onclick="addLinkedCostRow()">+ Add Cost</button>
     </div>
+    <div id="linked-costs-list" style="display:flex;flex-direction:column;gap:0.5rem;"></div>
+    <div id="linked-costs-empty" style="font-size:0.82rem;color:var(--ink-lt);padding:0.4rem 0;">No costs added yet.</div>
 
     <div class="form-group">
       <label>Notes</label>
@@ -1319,15 +1308,19 @@ function openAddModal(id=null) {
     document.getElementById('f-date-sold').value=w.dateSold||'';
     document.getElementById('f-sold-price').value=w.soldPrice||'';
     document.getElementById('f-commission-paid').value=w.commissionPaid!=null?w.commissionPaid:'';
-    document.getElementById('f-materials-cost').value=w.materialsCost||'';
-    document.getElementById('f-materials-cat').value=w.materialsCategory||'supplies';
     document.getElementById('f-notes').value=w.notes||'';
+    document.getElementById('linked-costs-list').innerHTML='';
+    const costItems = w.linkedExpenses && w.linkedExpenses.length ? w.linkedExpenses
+      : (w.materialsCost > 0 ? [{description:'Materials', amount:w.materialsCost, category:w.materialsCategory||'supplies'}] : []);
+    costItems.forEach(c => addLinkedCostRow(c.description||'', c.amount||'', c.category||'supplies'));
+    syncLinkedCostsEmpty();
     if(w.photoData){ const p=document.getElementById('photo-preview'); p.src=w.photoData; p.style.display='block'; document.getElementById('upload-placeholder').style.display='none'; }
   } else {
-    ['f-title','f-id-number','f-item-number','f-medium','f-size','f-price','f-date-sold','f-sold-price','f-commission-paid','f-materials-cost','f-notes'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('f-materials-cat').value='supplies';
+    ['f-title','f-id-number','f-item-number','f-medium','f-size','f-price','f-date-sold','f-sold-price','f-commission-paid','f-notes'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('f-status').value='in_shop';
     document.getElementById('f-date-placed').value=new Date().toISOString().slice(0,10);
+    document.getElementById('linked-costs-list').innerHTML='';
+    syncLinkedCostsEmpty();
   }
   handleStatusChange();
   document.getElementById('modal-add').classList.add('open');
@@ -1388,8 +1381,10 @@ function saveWork(){
     soldPrice:status==='sold'?sp:null,
     commissionPaid:status==='sold'?commPaid:null,
     notes:document.getElementById('f-notes').value.trim(),
-    materialsCost:parseFloat(document.getElementById('f-materials-cost').value)||0,
-    materialsCategory:document.getElementById('f-materials-cat').value,
+    linkedExpenses:[...document.querySelectorAll('#linked-costs-list .linked-cost-row')].map(row=>{
+      const [desc,amt,cat]=row.querySelectorAll('input,select');
+      return {description:desc.value.trim(), amount:parseFloat(amt.value)||0, category:cat.value};
+    }).filter(e=>e.amount>0||e.description),
   };
   if(pendingPhotoData){ w.photoData=pendingPhotoData; }
   else if(editingId){ const ex=works.find(x=>x.id===editingId); if(ex?.photoData) w.photoData=ex.photoData; }
@@ -1566,20 +1561,51 @@ function editFromExpense(artworkId) {
   openAddModal(artworkId);
 }
 
+function catSelectHtml(sel='supplies') {
+  return [['supplies','Supplies'],['frames','Frames'],['fees','Fees'],['transport','Transport'],['other','Other']]
+    .map(([v,l])=>`<option value="${v}"${sel===v?' selected':''}>${l}</option>`).join('');
+}
+
+function syncLinkedCostsEmpty() {
+  const list = document.getElementById('linked-costs-list');
+  const empty = document.getElementById('linked-costs-empty');
+  if(list && empty) empty.style.display = list.children.length ? 'none' : '';
+}
+
+function addLinkedCostRow(desc='', amount='', cat='supplies') {
+  const list = document.getElementById('linked-costs-list');
+  if(!list) return;
+  const row = document.createElement('div');
+  row.className = 'linked-cost-row';
+  row.style.cssText = 'display:flex;gap:0.4rem;align-items:center;';
+  row.innerHTML = `
+    <input type="text" placeholder="Description (e.g. Frame)" value="${desc.replace(/"/g,'&quot;')}" style="flex:2;min-width:0;"/>
+    <input type="number" placeholder="0.00" value="${amount}" min="0" step="0.01" style="flex:1;min-width:60px;"/>
+    <select style="flex:1.5;min-width:90px;">${catSelectHtml(cat)}</select>
+    <button type="button" onclick="this.closest('.linked-cost-row').remove();syncLinkedCostsEmpty();" style="background:none;border:none;color:var(--rose);font-size:1.1rem;cursor:pointer;padding:0 4px;line-height:1;">✕</button>`;
+  list.appendChild(row);
+  syncLinkedCostsEmpty();
+}
+
 function syncLinkedExpense(w) {
   expenses = expenses.filter(e => e.artworkId !== w.id);
-  if ((w.materialsCost || 0) > 0) {
-    expenses.push({
-      id: 'link_' + w.id,
-      artworkId: w.id,
-      description: (w.title || 'Untitled') + ' – materials',
-      amount: w.materialsCost,
-      category: w.materialsCategory || 'supplies',
-      date: w.datePlaced || new Date().toISOString().slice(0, 10),
-      notes: '',
-      createdAt: Date.now(),
-    });
-  }
+  const items = w.linkedExpenses && w.linkedExpenses.length ? w.linkedExpenses
+    : (w.materialsCost > 0 ? [{description:'Materials', amount:w.materialsCost, category:w.materialsCategory||'supplies'}] : []);
+  const date = w.datePlaced || new Date().toISOString().slice(0,10);
+  items.forEach((item, i) => {
+    if((item.amount||0) > 0) {
+      expenses.push({
+        id: 'link_' + w.id + '_' + i,
+        artworkId: w.id,
+        description: (w.title||'Untitled') + (item.description ? ' – ' + item.description : ' – materials'),
+        amount: item.amount,
+        category: item.category || 'supplies',
+        date,
+        notes: '',
+        createdAt: Date.now(),
+      });
+    }
+  });
   saveExpenses(expenses);
 }
 
