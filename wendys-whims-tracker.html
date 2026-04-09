@@ -1168,7 +1168,8 @@ function confirmQuickSell() {
 // ── Auth state ────────────────────────────────────────────────────────────────
 fbAuth.onAuthStateChanged(user => {
   if (user) {
-    if (user.email !== 'wendyswhimsandwonders@gmail.com') {
+    const ALLOWED = ['wendyswhimsandwonders@gmail.com', 'stephrawlingscreations@gmail.com'];
+    if (!ALLOWED.includes(user.email)) {
       fbAuth.signOut();
       const err = document.getElementById('login-error');
       err.textContent = 'Access is restricted to the account owner.';
