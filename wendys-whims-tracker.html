@@ -929,7 +929,7 @@ function renderAllWorks() {
   const status=document.getElementById('all-status')?.value||'';
   const sort=document.getElementById('all-sort')?.value||'date_added_desc';
   let items=[...works];
-  if(q) items=items.filter(w=>(w.title||'').toLowerCase().includes(q)||(w.medium||'').toLowerCase().includes(q)||(w.notes||'').toLowerCase().includes(q));
+  if(q) items=items.filter(w=>[w.title,w.medium,w.notes,w.size,w.idNumber,w.itemNumber].some(v=>(v||'').toLowerCase().includes(q)));
   if(status) items=items.filter(w=>w.status===status);
   items.sort((a,b)=>{
     if(sort==='price_desc') return (b.price||0)-(a.price||0);
