@@ -663,6 +663,21 @@
       <div class="stat-grid" id="report-pl-stats" style="margin-bottom:1rem;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));"></div>
       <div id="report-pl-table"></div>
     </div>
+
+    <div class="settings-card">
+      <div class="settings-card-title">Backup &amp; Restore</div>
+      <p style="font-size:0.85rem;color:var(--ink-mid);margin-bottom:1.2rem;line-height:1.6;">
+        Download a complete backup of all your data (artworks, expenses, payments, classes and photos) as a single file. Save it to OneDrive, Google Drive or a USB stick. To restore, choose a backup file and confirm.
+      </p>
+      <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-primary" onclick="downloadBackup()">⬇ Download Backup</button>
+        <label class="btn btn-outline" style="cursor:pointer;margin:0;">
+          ⬆ Restore from Backup
+          <input type="file" id="restore-input" accept=".json" style="display:none;" onchange="restoreBackup(event)"/>
+        </label>
+      </div>
+      <div id="restore-msg" style="display:none;margin-top:1rem;padding:0.75rem 1rem;border-radius:var(--radius-sm);font-size:0.88rem;font-weight:700;"></div>
+    </div>
   </div>
 
   <!-- EXPENSES -->
@@ -1374,6 +1389,58 @@ function exportCSV() {
   a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
   a.download = 'wendys-whims-' + new Date().toISOString().slice(0,10) + '.csv';
   a.click();
+}
+
+// Backup & Restore
+function downloadBackup() {
+  const backup = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    works,
+    expenses,
+    payments,
+    classes,
+    settings: loadSettings(),
+  };
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'}));
+  a.download = 'wendys-whims-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  showToast('Backup downloaded!');
+}
+
+function restoreBackup(event) {
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const msgEl = document.getElementById('restore-msg');
+    try {
+      const data = JSON.parse(e.target.result);
+      if(!data.version || !data.works) throw new Error('Not a valid backup file.');
+      if(!confirm('This will replace ALL current data with the backup from ' + (data.exportedAt?.slice(0,10)||'unknown date') + '. Are you sure?')) {
+        event.target.value=''; return;
+      }
+      works    = toArr(data.works    || []);
+      expenses = toArr(data.expenses || []);
+      payments = toArr(data.payments || []);
+      classes  = toArr(data.classes  || []);
+      saveWorks(works);
+      saveExpenses(expenses);
+      savePayments(payments);
+      saveClasses(classes);
+      if(data.settings) { saveSettings(data.settings); commissionRate=data.settings.commissionRate||25; document.getElementById('commission-rate').value=commissionRate; }
+      refreshAll();
+      msgEl.style.display='';
+      msgEl.style.cssText='display:block;margin-top:1rem;padding:0.75rem 1rem;border-radius:var(--radius-sm);font-size:0.88rem;font-weight:700;background:var(--green-lt);color:var(--green);border:1px solid #b2dcc2;';
+      msgEl.textContent='✓ Restore complete! ' + works.length + ' artworks, ' + expenses.length + ' expenses, ' + classes.length + ' classes loaded.';
+    } catch(err) {
+      msgEl.style.cssText='display:block;margin-top:1rem;padding:0.75rem 1rem;border-radius:var(--radius-sm);font-size:0.88rem;font-weight:700;background:var(--rose-lt);color:var(--rose);border:1px solid var(--rose-mid);';
+      msgEl.textContent='Error: ' + err.message;
+    }
+    event.target.value='';
+  };
+  reader.readAsText(file);
 }
 
 // Commission save
