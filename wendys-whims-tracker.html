@@ -907,8 +907,12 @@ const STORE_KEY = 'wwwWorks';
 const SETT_KEY  = 'wwwSettings';
 
 function toArr(d)       { return !d ? [] : Array.isArray(d) ? d : Object.values(d); }
+function stripPhoto(w)  { const {photoData, ...rest} = w; return rest; }
 function loadWorks()    { try { return toArr(JSON.parse(localStorage.getItem(STORE_KEY))); } catch(e){ return []; } }
-function saveWorks(a)   { localStorage.setItem(STORE_KEY, JSON.stringify(a)); if(currentUser) fbDb.ref('users/'+currentUser.uid+'/works').set(a).catch(()=>{}); }
+function saveWorks(a)   {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(a.map(stripPhoto))); } catch(e) {}
+  if(currentUser) fbDb.ref('users/'+currentUser.uid+'/works').set(a).catch(()=>{});
+}
 function loadSettings() { try { return JSON.parse(localStorage.getItem(SETT_KEY))||{}; } catch(e){ return {}; } }
 function saveSettings(s){ localStorage.setItem(SETT_KEY, JSON.stringify(s)); if(currentUser) fbDb.ref('users/'+currentUser.uid+'/settings').set(s).catch(()=>{}); }
 
@@ -999,8 +1003,6 @@ function showToast(msg) {
 }
 
 function refreshAll() {
-  works = loadWorks();
-  expenses = loadExpenses();
   [renderDashboard, renderInventory, renderAllWorks, renderSales, renderReports, renderExpenses]
     .forEach(fn => { try { fn(); } catch(e) { console.error(fn.name + ':', e); } });
 }
@@ -1198,7 +1200,7 @@ function deleteCurrentWork(){
   if(!editingId) return;
   if(!confirm('Delete this artwork? This cannot be undone.')) return;
   works=works.filter(w=>w.id!==editingId); saveWorks(works); closeAddModal();
-  try { refreshAll(); } catch(e) { console.error('Render error:', e); works=loadWorks(); renderDashboard(); }
+  refreshAll();
   showToast('Artwork deleted.');
 }
 
@@ -1232,7 +1234,7 @@ function deleteFromDetail(){
   if(!detailId) return;
   if(!confirm('Delete this artwork? This cannot be undone.')) return;
   works=works.filter(w=>w.id!==detailId); saveWorks(works); closeDetailModal();
-  try { refreshAll(); } catch(e) { console.error('Render error:', e); works=loadWorks(); renderDashboard(); }
+  refreshAll();
   showToast('Artwork deleted.');
 }
 
@@ -1270,14 +1272,18 @@ function confirmQuickSell() {
   works[idx]=w;
   saveWorks(works);
   closeQuickSell();
-  try { refreshAll(); } catch(e) { console.error(e); works=loadWorks(); renderDashboard(); }
+  refreshAll();
   showToast(type==='installments'?'Marked as installments!':'Marked as sold!');
 }
 
 // ── Expenses ──────────────────────────────────────────────────────────────────
 const EXP_KEY = 'wwwExpenses';
+function stripReceipt(e) { const {receiptData, ...rest} = e; return rest; }
 function loadExpenses()   { try { return toArr(JSON.parse(localStorage.getItem(EXP_KEY))); } catch(e){ return []; } }
-function saveExpenses(a)  { localStorage.setItem(EXP_KEY, JSON.stringify(a)); if(currentUser) fbDb.ref('users/'+currentUser.uid+'/expenses').set(a).catch(()=>{}); }
+function saveExpenses(a)  {
+  try { localStorage.setItem(EXP_KEY, JSON.stringify(a.map(stripReceipt))); } catch(e) {}
+  if(currentUser) fbDb.ref('users/'+currentUser.uid+'/expenses').set(a).catch(()=>{});
+}
 let expenses = loadExpenses();
 
 const EXP_CAT = {
@@ -1427,13 +1433,13 @@ fbAuth.onAuthStateChanged(user => {
       const data = snap.val() || {};
       if (data.works != null) {
         works = toArr(data.works);
-        localStorage.setItem(STORE_KEY, JSON.stringify(works));
+        try { localStorage.setItem(STORE_KEY, JSON.stringify(works.map(stripPhoto))); } catch(e) {}
       } else {
         fbDb.ref('users/' + user.uid).set({ works: works, settings: loadSettings(), expenses: expenses }).catch(() => {});
       }
       if (data.expenses != null) {
         expenses = toArr(data.expenses);
-        localStorage.setItem(EXP_KEY, JSON.stringify(expenses));
+        try { localStorage.setItem(EXP_KEY, JSON.stringify(expenses.map(stripReceipt))); } catch(e) {}
       }
       if (data.settings) {
         const s = data.settings;
