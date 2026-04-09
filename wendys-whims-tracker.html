@@ -745,7 +745,7 @@
       </div>
     </div>
 
-    <div class="form-group">
+    <div class="form-group" id="date-placed-group">
       <label>Date Placed in Shop</label>
       <input type="date" id="f-date-placed"/>
     </div>
@@ -1143,9 +1143,11 @@ function openAddModal(id=null) {
 function closeAddModal(){ document.getElementById('modal-add').classList.remove('open'); editingId=null; pendingPhotoData=null; }
 
 function handleStatusChange(){
-  const isSold=['sold','sold_installments'].includes(document.getElementById('f-status').value);
+  const status=document.getElementById('f-status').value;
+  const isSold=['sold','sold_installments'].includes(status);
   document.getElementById('sold-fields').style.display=isSold?'':'none';
   document.getElementById('sold-divider').style.display=isSold?'':'none';
+  document.getElementById('date-placed-group').style.display=status==='in_shop'?'':'none';
 }
 
 function autoCommission(){
