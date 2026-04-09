@@ -507,6 +507,7 @@
   <div class="nav-tab" data-page="all-works"><span class="tab-icon">🎨</span>All Works</div>
   <div class="nav-tab" data-page="sales"><span class="tab-icon">💰</span>Sales</div>
   <div class="nav-tab" data-page="reports"><span class="tab-icon">📊</span>Reports</div>
+  <div class="nav-tab" data-page="expenses"><span class="tab-icon">🧾</span>Expenses</div>
 </div>
 
 <div class="main">
@@ -634,6 +635,51 @@
     </div>
   </div>
 
+  <!-- EXPENSES -->
+  <div class="page" id="page-expenses">
+    <div class="section-header">
+      <div class="section-title">Expenses</div>
+      <div style="display:flex;gap:0.5rem;" class="no-print">
+        <button class="btn btn-outline btn-sm" onclick="window.print()">🖨 Print Report</button>
+        <button class="btn btn-primary btn-sm" onclick="openExpenseModal()">+ Add Expense</button>
+      </div>
+    </div>
+
+    <div class="stat-grid" id="exp-stat-grid" style="margin-bottom:1.5rem;"></div>
+
+    <div class="filter-bar no-print">
+      <input type="text" id="exp-search" placeholder="Search…" oninput="renderExpenses()"/>
+      <select id="exp-category" onchange="renderExpenses()">
+        <option value="">All Categories</option>
+        <option value="supplies">Supplies</option>
+        <option value="frames">Frames</option>
+        <option value="fees">Fees</option>
+        <option value="transport">Transport</option>
+        <option value="other">Other</option>
+      </select>
+      <select id="exp-month" onchange="renderExpenses()"><option value="">All Months</option></select>
+      <select id="exp-year"  onchange="renderExpenses()"><option value="">All Years</option></select>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Receipt</th>
+            <th>Description</th>
+            <th>Category</th>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Notes</th>
+            <th class="no-print"></th>
+          </tr>
+        </thead>
+        <tbody id="exp-tbody"></tbody>
+      </table>
+    </div>
+    <div id="exp-totals"></div>
+  </div>
+
 </div>
 
 
@@ -741,6 +787,63 @@
       <button class="btn btn-danger btn-sm" style="margin-right:auto;" onclick="deleteFromDetail()">Delete</button>
       <button class="btn btn-outline" onclick="closeDetailModal()">Close</button>
       <button class="btn btn-primary btn-sm" onclick="editFromDetail()">Edit</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXPENSE MODAL -->
+<div class="modal-overlay" id="modal-expense">
+  <div class="modal">
+    <div class="modal-title" id="modal-expense-title">Add Expense</div>
+
+    <div class="form-group">
+      <label>Receipt Photo (optional)</label>
+      <div class="img-upload-area">
+        <input type="file" id="exp-photo-input" accept="image/*" onchange="handleExpPhotoChange(event)"/>
+        <div id="exp-upload-placeholder">
+          <div style="font-size:2.5rem;margin-bottom:0.4rem;">🧾</div>
+          <div style="font-size:0.9rem;color:var(--ink-mid);">Tap to add a receipt photo</div>
+        </div>
+        <img id="exp-photo-preview" class="img-preview"/>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Description</label>
+      <input type="text" id="ef-description" placeholder="e.g. Canvas &amp; brushes…"/>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Amount (€)</label>
+        <input type="number" id="ef-amount" min="0" step="0.01" placeholder="0.00"/>
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="ef-category">
+          <option value="supplies">Supplies</option>
+          <option value="frames">Frames</option>
+          <option value="fees">Fees</option>
+          <option value="transport">Transport</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Date</label>
+      <input type="date" id="ef-date"/>
+    </div>
+
+    <div class="form-group">
+      <label>Notes</label>
+      <textarea id="ef-notes" placeholder="Any extra details…"></textarea>
+    </div>
+
+    <div style="display:flex;gap:0.7rem;justify-content:flex-end;margin-top:1.4rem;flex-wrap:wrap;align-items:center;">
+      <button class="btn btn-danger btn-sm" id="btn-delete-exp" style="display:none;margin-right:auto;" onclick="deleteCurrentExpense()">Delete</button>
+      <button class="btn btn-outline" onclick="closeExpenseModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveExpense()">Save</button>
     </div>
   </div>
 </div>
@@ -896,7 +999,8 @@ function showToast(msg) {
 
 function refreshAll() {
   works = loadWorks();
-  renderDashboard(); renderInventory(); renderAllWorks(); renderSales(); renderReports();
+  expenses = loadExpenses();
+  renderDashboard(); renderInventory(); renderAllWorks(); renderSales(); renderReports(); renderExpenses();
 }
 
 // Dashboard — 3 key stats only
@@ -1166,6 +1270,138 @@ function confirmQuickSell() {
   showToast(type==='installments'?'Marked as installments!':'Marked as sold!');
 }
 
+// ── Expenses ──────────────────────────────────────────────────────────────────
+const EXP_KEY = 'wwwExpenses';
+function loadExpenses()   { try { return JSON.parse(localStorage.getItem(EXP_KEY))||[]; } catch(e){ return []; } }
+function saveExpenses(a)  { localStorage.setItem(EXP_KEY, JSON.stringify(a)); if(currentUser) fbDb.ref('users/'+currentUser.uid+'/expenses').set(a).catch(()=>{}); }
+let expenses = loadExpenses();
+
+const EXP_CAT = {
+  supplies:  { label:'Supplies',  color:'#5030a0', bg:'#ede8f7' },
+  frames:    { label:'Frames',    color:'#b07d20', bg:'#faf4e1' },
+  fees:      { label:'Fees',      color:'#c4647c', bg:'#f9eaee' },
+  transport: { label:'Transport', color:'#2a7a4f', bg:'#eaf5ee' },
+  other:     { label:'Other',     color:'#666',    bg:'#f5f5f5' },
+};
+
+let editingExpId = null, pendingExpPhotoData = null;
+
+function renderExpenses() {
+  const q   = (document.getElementById('exp-search')?.value||'').toLowerCase();
+  const cat = document.getElementById('exp-category')?.value||'';
+  const selY = document.getElementById('exp-year'),  selM = document.getElementById('exp-month');
+  const curY = selY.value, curM = selM.value;
+  const years = [...new Set(expenses.map(e=>e.date?.slice(0,4)))].filter(Boolean).sort().reverse();
+  selY.innerHTML = '<option value="">All Years</option>'  + years.map(y=>`<option value="${y}"${y===curY?' selected':''}>${y}</option>`).join('');
+  selM.innerHTML = '<option value="">All Months</option>' + MONTHS.map((m,i)=>{ const v=String(i+1).padStart(2,'0'); return `<option value="${v}"${v===curM?' selected':''}>${m}</option>`; }).join('');
+
+  let items = [...expenses];
+  if(q)   items = items.filter(e=>[e.description,e.notes,EXP_CAT[e.category]?.label].some(v=>(v||'').toLowerCase().includes(q)));
+  if(cat) items = items.filter(e=>e.category===cat);
+  if(selY.value) items = items.filter(e=>e.date?.startsWith(selY.value));
+  if(selM.value) items = items.filter(e=>e.date?.slice(5,7)===selM.value);
+  items.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+
+  const now=new Date(), tm=now.getMonth(), ty=now.getFullYear();
+  const tmAmt = expenses.filter(e=>{ if(!e.date)return false; const d=new Date(e.date); return d.getMonth()===tm&&d.getFullYear()===ty; }).reduce((a,e)=>a+(e.amount||0),0);
+  const tyAmt = expenses.filter(e=>e.date?.startsWith(String(ty))).reduce((a,e)=>a+(e.amount||0),0);
+  const allAmt = expenses.reduce((a,e)=>a+(e.amount||0),0);
+  document.getElementById('exp-stat-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-val" style="color:var(--rose);">${fmt(tmAmt)}</div><div class="stat-lbl">Spent This Month</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--rose);">${fmt(tyAmt)}</div><div class="stat-lbl">Spent This Year</div></div>
+    <div class="stat-card green-top"><div class="stat-val">${fmt(allAmt)}</div><div class="stat-lbl">All Time</div></div>`;
+
+  const tbody = document.getElementById('exp-tbody');
+  tbody.innerHTML = items.length
+    ? items.map(e => {
+        const c = EXP_CAT[e.category]||EXP_CAT.other;
+        const thumb = e.receiptData
+          ? `<img src="${e.receiptData}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;cursor:pointer;" onclick="viewReceipt('${e.id}')" title="View receipt"/>`
+          : '<span style="color:var(--ink-lt);font-size:0.8rem;">—</span>';
+        return `<tr>
+          <td>${thumb}</td>
+          <td><strong>${e.description||'—'}</strong></td>
+          <td><span class="status-badge" style="background:${c.bg};color:${c.color};">${c.label}</span></td>
+          <td style="white-space:nowrap;">${e.date||'—'}</td>
+          <td style="font-weight:700;color:var(--rose);white-space:nowrap;">${fmt(e.amount)}</td>
+          <td style="font-size:0.8rem;color:var(--ink-lt);max-width:160px;">${e.notes||'—'}</td>
+          <td class="no-print"><button class="btn btn-outline btn-sm" onclick="openExpenseModal('${e.id}')">Edit</button></td>
+        </tr>`;
+      }).join('')
+    : '<tr><td colspan="7" style="text-align:center;color:var(--ink-lt);padding:2rem;">No expenses found.</td></tr>';
+
+  const total = items.reduce((a,e)=>a+(e.amount||0),0);
+  document.getElementById('exp-totals').innerHTML = items.length
+    ? `<div class="sales-total-bar"><span><strong>${items.length}</strong> expense${items.length!==1?'s':''}</span><span style="color:var(--rose);font-weight:700;">Total: ${fmt(total)}</span></div>`
+    : '';
+}
+
+function openExpenseModal(id=null) {
+  editingExpId=id; pendingExpPhotoData=null;
+  document.getElementById('modal-expense-title').textContent = id ? 'Edit Expense' : 'Add Expense';
+  document.getElementById('btn-delete-exp').style.display = id ? 'inline-block' : 'none';
+  document.getElementById('exp-photo-preview').style.display = 'none';
+  document.getElementById('exp-upload-placeholder').style.display = 'block';
+  document.getElementById('exp-photo-input').value = '';
+  if(id) {
+    const e=expenses.find(x=>x.id===id); if(!e) return;
+    document.getElementById('ef-description').value = e.description||'';
+    document.getElementById('ef-amount').value      = e.amount||'';
+    document.getElementById('ef-category').value    = e.category||'supplies';
+    document.getElementById('ef-date').value        = e.date||'';
+    document.getElementById('ef-notes').value       = e.notes||'';
+    if(e.receiptData){ const p=document.getElementById('exp-photo-preview'); p.src=e.receiptData; p.style.display='block'; document.getElementById('exp-upload-placeholder').style.display='none'; }
+  } else {
+    ['ef-description','ef-amount','ef-notes'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('ef-category').value = 'supplies';
+    document.getElementById('ef-date').value     = new Date().toISOString().slice(0,10);
+  }
+  document.getElementById('modal-expense').classList.add('open');
+}
+
+function closeExpenseModal() { document.getElementById('modal-expense').classList.remove('open'); editingExpId=null; pendingExpPhotoData=null; }
+
+function handleExpPhotoChange(ev) {
+  const file=ev.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{ pendingExpPhotoData=e.target.result; const p=document.getElementById('exp-photo-preview'); p.src=pendingExpPhotoData; p.style.display='block'; document.getElementById('exp-upload-placeholder').style.display='none'; };
+  reader.readAsDataURL(file);
+}
+
+function saveExpense() {
+  const isEditing = !!editingExpId;
+  const e = {
+    description: document.getElementById('ef-description').value.trim(),
+    amount:      parseFloat(document.getElementById('ef-amount').value)||0,
+    category:    document.getElementById('ef-category').value,
+    date:        document.getElementById('ef-date').value,
+    notes:       document.getElementById('ef-notes').value.trim(),
+  };
+  if(pendingExpPhotoData){ e.receiptData=pendingExpPhotoData; }
+  else if(editingExpId){ const ex=expenses.find(x=>x.id===editingExpId); if(ex?.receiptData) e.receiptData=ex.receiptData; }
+  if(editingExpId){ const idx=expenses.findIndex(x=>x.id===editingExpId); if(idx>-1){e.id=editingExpId;e.createdAt=expenses[idx].createdAt;expenses[idx]=e;} }
+  else { e.id=uid(); e.createdAt=Date.now(); expenses.unshift(e); }
+  saveExpenses(expenses);
+  closeExpenseModal();
+  renderExpenses();
+  showToast(isEditing?'Expense updated!':'Expense added!');
+}
+
+function deleteCurrentExpense() {
+  if(!editingExpId) return;
+  if(!confirm('Delete this expense? This cannot be undone.')) return;
+  expenses=expenses.filter(e=>e.id!==editingExpId); saveExpenses(expenses); closeExpenseModal(); renderExpenses();
+  showToast('Expense deleted.');
+}
+
+function viewReceipt(id) {
+  const e=expenses.find(x=>x.id===id); if(!e?.receiptData) return;
+  document.getElementById('detail-content').innerHTML=`<img src="${e.receiptData}" style="width:100%;border-radius:var(--radius);"/><div style="margin-top:1rem;font-weight:700;">${e.description||''}</div>`;
+  document.getElementById('modal-detail').classList.add('open');
+}
+
+document.getElementById('modal-expense').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeExpenseModal(); });
+
 // ── Auth state ────────────────────────────────────────────────────────────────
 fbAuth.onAuthStateChanged(user => {
   if (user) {
@@ -1189,8 +1425,11 @@ fbAuth.onAuthStateChanged(user => {
         works = data.works;
         localStorage.setItem(STORE_KEY, JSON.stringify(works));
       } else {
-        // First sign-in: push any existing localStorage data up to Firebase
-        fbDb.ref('users/' + user.uid).set({ works: works, settings: loadSettings() }).catch(() => {});
+        fbDb.ref('users/' + user.uid).set({ works: works, settings: loadSettings(), expenses: expenses }).catch(() => {});
+      }
+      if (data.expenses != null) {
+        expenses = data.expenses;
+        localStorage.setItem(EXP_KEY, JSON.stringify(expenses));
       }
       if (data.settings) {
         const s = data.settings;
