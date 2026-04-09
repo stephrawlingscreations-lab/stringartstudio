@@ -1223,7 +1223,7 @@ function drow(lbl,val,style=''){
 }
 
 function closeDetailModal(){ document.getElementById('modal-detail').classList.remove('open'); detailId=null; }
-function editFromDetail(){ closeDetailModal(); openAddModal(detailId); }
+function editFromDetail(){ const id=detailId; closeDetailModal(); openAddModal(id); }
 function deleteFromDetail(){
   if(!detailId) return;
   if(!confirm('Delete this artwork? This cannot be undone.')) return;
