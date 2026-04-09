@@ -261,6 +261,7 @@
   .badge-sold    { background: var(--green-lt); color: var(--green); }
   .badge-home    { background: var(--rose-lt);  color: var(--rose); }
   .badge-consign { background: #ede8f7;         color: #5030a0; }
+  .badge-install { background: #e8f0fe;         color: #1a56c4; }
 
   /* MODALS */
   .modal-overlay {
@@ -554,6 +555,7 @@
         <option value="">All Statuses</option>
         <option value="in_shop">In Shop</option>
         <option value="sold">Sold</option>
+        <option value="sold_installments">Installments</option>
         <option value="at_home">At Home</option>
         <option value="consignment">Consignment</option>
       </select>
@@ -691,6 +693,7 @@
           <option value="at_home">At Home</option>
           <option value="consignment">Consignment</option>
           <option value="sold">Sold</option>
+          <option value="sold_installments">Sold – Installments</option>
         </select>
       </div>
     </div>
@@ -737,6 +740,31 @@
       <button class="btn btn-danger btn-sm" style="margin-right:auto;" onclick="deleteFromDetail()">Delete</button>
       <button class="btn btn-outline" onclick="closeDetailModal()">Close</button>
       <button class="btn btn-primary btn-sm" onclick="editFromDetail()">Edit</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUICK SELL MODAL -->
+<div class="modal-overlay" id="modal-quick-sell">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-title" id="qsell-title">Mark as Sold</div>
+    <input type="hidden" id="qsell-id"/>
+    <input type="hidden" id="qsell-type"/>
+    <div class="form-group">
+      <label>Sold Price (€)</label>
+      <input type="number" id="qsell-price" min="0" step="0.01" placeholder="0.00"/>
+    </div>
+    <div class="form-group">
+      <label>Date Sold</label>
+      <input type="date" id="qsell-date"/>
+    </div>
+    <div class="form-group" id="qsell-notes-group" style="display:none;">
+      <label>Payment Notes</label>
+      <textarea id="qsell-notes" placeholder="e.g. 3 payments of €50…"></textarea>
+    </div>
+    <div style="display:flex;gap:0.7rem;justify-content:flex-end;margin-top:1.4rem;">
+      <button class="btn btn-outline" onclick="closeQuickSell()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmQuickSell()">Save</button>
     </div>
   </div>
 </div>
@@ -806,7 +834,7 @@ function fmt(n) {
 }
 
 function statusBadge(s) {
-  const map={in_shop:['badge-shop','🏪 In Shop'],sold:['badge-sold','✓ Sold'],at_home:['badge-home','🏠 At Home'],consignment:['badge-consign','📦 Consignment']};
+  const map={in_shop:['badge-shop','🏪 In Shop'],sold:['badge-sold','✓ Sold'],at_home:['badge-home','🏠 At Home'],consignment:['badge-consign','📦 Consignment'],sold_installments:['badge-install','💳 Installments']};
   const [cls,lbl]=map[s]||['badge-home',s];
   return `<span class="status-badge ${cls}">${lbl}</span>`;
 }
@@ -818,6 +846,24 @@ function imgEl(w) {
   return w.photoData
     ? `<img src="${w.photoData}" style="width:100%;height:100%;object-fit:cover;"/>`
     : `<span style="font-size:3rem;">🎨</span>`;
+}
+
+function inventoryCard(w) {
+  return `<div class="artwork-card">
+    <div onclick="openDetail('${w.id}')" style="cursor:pointer;">
+      <div class="artwork-img">${imgEl(w)}</div>
+      <div class="artwork-body">
+        <div class="artwork-title">${w.title||'Untitled'}</div>
+        <div class="artwork-price">${fmt(w.price)}</div>
+        <div class="artwork-meta">${w.medium?w.medium+'<br/>':''}${w.size?w.size:''}</div>
+        ${statusBadge(w.status)}
+      </div>
+    </div>
+    <div style="display:flex;gap:0.5rem;padding:0.75rem 1rem;border-top:1px solid #f0f0f0;">
+      <button class="btn btn-sm" style="flex:1;background:var(--green-lt);color:var(--green);border:2px solid var(--green);font-weight:700;" onclick="event.stopPropagation();openQuickSell('${w.id}','sold')">✓ Sold</button>
+      <button class="btn btn-sm" style="flex:1;background:#e8f0fe;color:#1a56c4;border:2px solid #a8c4f0;font-weight:700;" onclick="event.stopPropagation();openQuickSell('${w.id}','installments')">💳 Installments</button>
+    </div>
+  </div>`;
 }
 
 function artworkCard(w) {
@@ -855,7 +901,7 @@ function refreshAll() {
 // Dashboard — 3 key stats only
 function renderDashboard() {
   const inShop = works.filter(w=>w.status==='in_shop');
-  const sold   = works.filter(w=>w.status==='sold');
+  const sold   = works.filter(w=>w.status==='sold'||w.status==='sold_installments');
   const net    = sold.reduce((a,w)=>a+netAmt(w.soldPrice||0),0);
   const now=new Date(), tm=now.getMonth(), ty=now.getFullYear();
   const netTM  = sold.filter(w=>{ if(!w.dateSold)return false; const d=new Date(w.dateSold); return d.getMonth()===tm&&d.getFullYear()===ty; })
@@ -874,7 +920,7 @@ function renderInventory() {
   const q=(document.getElementById('inv-search')?.value||'').toLowerCase();
   let items=works.filter(w=>w.status==='in_shop');
   if(q) items=items.filter(w=>(w.title||'').toLowerCase().includes(q));
-  document.getElementById('inventory-grid').innerHTML=items.length?items.map(artworkCard).join(''):emptyState('Nothing in the shop right now.');
+  document.getElementById('inventory-grid').innerHTML=items.length?items.map(inventoryCard).join(''):emptyState('Nothing in the shop right now.');
 }
 
 // All works
@@ -896,7 +942,7 @@ function renderAllWorks() {
 
 // Sales
 function renderSales() {
-  const sold=works.filter(w=>w.status==='sold'&&w.dateSold);
+  const sold=works.filter(w=>(w.status==='sold'||w.status==='sold_installments')&&w.dateSold);
   const years=[...new Set(sold.map(w=>w.dateSold?.slice(0,4)))].filter(Boolean).sort().reverse();
   const selY=document.getElementById('sales-year'), selM=document.getElementById('sales-month');
   const curY=selY.value, curM=selM.value;
@@ -922,7 +968,7 @@ function renderSales() {
 
 // Reports
 function renderReports() {
-  const sold=works.filter(w=>w.status==='sold'&&w.dateSold);
+  const sold=works.filter(w=>(w.status==='sold'||w.status==='sold_installments')&&w.dateSold);
   const years=[...new Set(sold.map(w=>w.dateSold?.slice(0,4)))].filter(Boolean).sort().reverse();
   const sel=document.getElementById('report-year'), prev=sel.value;
   sel.innerHTML=years.length?years.map(y=>`<option value="${y}"${y===prev?' selected':''}>${y}</option>`).join(''):`<option value="${new Date().getFullYear()}">${new Date().getFullYear()}</option>`;
@@ -992,7 +1038,7 @@ function openAddModal(id=null) {
 function closeAddModal(){ document.getElementById('modal-add').classList.remove('open'); editingId=null; pendingPhotoData=null; }
 
 function handleStatusChange(){
-  const isSold=document.getElementById('f-status').value==='sold';
+  const isSold=['sold','sold_installments'].includes(document.getElementById('f-status').value);
   document.getElementById('sold-fields').style.display=isSold?'':'none';
   document.getElementById('sold-divider').style.display=isSold?'':'none';
 }
@@ -1083,6 +1129,41 @@ function deleteFromDetail(){
 
 document.getElementById('modal-add').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeAddModal(); });
 document.getElementById('modal-detail').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeDetailModal(); });
+document.getElementById('modal-quick-sell').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeQuickSell(); });
+
+function openQuickSell(id, type) {
+  const w=works.find(x=>x.id===id); if(!w) return;
+  document.getElementById('qsell-id').value=id;
+  document.getElementById('qsell-type').value=type;
+  document.getElementById('qsell-title').textContent=type==='installments'?'Mark as Sold – Installments':'Mark as Sold';
+  document.getElementById('qsell-price').value=w.price||'';
+  document.getElementById('qsell-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('qsell-notes').value='';
+  document.getElementById('qsell-notes-group').style.display=type==='installments'?'':'none';
+  document.getElementById('modal-quick-sell').classList.add('open');
+}
+
+function closeQuickSell() { document.getElementById('modal-quick-sell').classList.remove('open'); }
+
+function confirmQuickSell() {
+  const id=document.getElementById('qsell-id').value;
+  const type=document.getElementById('qsell-type').value;
+  const sp=parseFloat(document.getElementById('qsell-price').value)||0;
+  const date=document.getElementById('qsell-date').value;
+  const notes=document.getElementById('qsell-notes').value.trim();
+  const idx=works.findIndex(x=>x.id===id); if(idx<0) return;
+  const w={...works[idx]};
+  w.status=type==='installments'?'sold_installments':'sold';
+  w.soldPrice=sp;
+  w.dateSold=date;
+  w.commissionPaid=commAmt(sp);
+  if(notes) w.notes=(w.notes?w.notes+'\n':'')+notes;
+  works[idx]=w;
+  saveWorks(works);
+  closeQuickSell();
+  try { refreshAll(); } catch(e) { console.error(e); works=loadWorks(); renderDashboard(); }
+  showToast(type==='installments'?'Marked as installments!':'Marked as sold!');
+}
 
 // ── Auth state ────────────────────────────────────────────────────────────────
 fbAuth.onAuthStateChanged(user => {
