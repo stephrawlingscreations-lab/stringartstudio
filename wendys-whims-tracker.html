@@ -907,11 +907,11 @@ const STORE_KEY = 'wwwWorks';
 const SETT_KEY  = 'wwwSettings';
 
 function toArr(d)       { return !d ? [] : Array.isArray(d) ? d : Object.values(d); }
-function stripPhoto(w)  { const {photoData, ...rest} = w; return rest; }
+function stripPhoto(w)  { if(!w) return null; const {photoData, ...rest} = w; return rest; }
 function loadWorks()    { try { return toArr(JSON.parse(localStorage.getItem(STORE_KEY))); } catch(e){ return []; } }
 function saveWorks(a)   {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(a.map(stripPhoto))); } catch(e) {}
-  if(currentUser) fbDb.ref('users/'+currentUser.uid+'/works').set(a).catch(()=>{});
+  if(currentUser) try { fbDb.ref('users/'+currentUser.uid+'/works').set(a).catch(()=>{}); } catch(e) { console.warn('Firebase works save:', e); }
 }
 function loadSettings() { try { return JSON.parse(localStorage.getItem(SETT_KEY))||{}; } catch(e){ return {}; } }
 function saveSettings(s){ localStorage.setItem(SETT_KEY, JSON.stringify(s)); if(currentUser) fbDb.ref('users/'+currentUser.uid+'/settings').set(s).catch(()=>{}); }
@@ -1159,10 +1159,24 @@ function autoCommission(){
   if(sp>0) document.getElementById('f-commission-paid').value=commAmt(sp).toFixed(2);
 }
 
+function resizeImage(dataUrl, callback) {
+  const img = new Image();
+  img.onload = () => {
+    const MAX = 1200;
+    let w = img.width, h = img.height;
+    if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    callback(canvas.toDataURL('image/jpeg', 0.75));
+  };
+  img.src = dataUrl;
+}
+
 function handlePhotoChange(e){
   const file=e.target.files[0]; if(!file) return;
   const reader=new FileReader();
-  reader.onload=ev=>{ pendingPhotoData=ev.target.result; const p=document.getElementById('photo-preview'); p.src=pendingPhotoData; p.style.display='block'; document.getElementById('upload-placeholder').style.display='none'; };
+  reader.onload=ev=>{ resizeImage(ev.target.result, resized => { pendingPhotoData=resized; const p=document.getElementById('photo-preview'); p.src=resized; p.style.display='block'; document.getElementById('upload-placeholder').style.display='none'; }); };
   reader.readAsDataURL(file);
 }
 
@@ -1282,7 +1296,7 @@ function stripReceipt(e) { const {receiptData, ...rest} = e; return rest; }
 function loadExpenses()   { try { return toArr(JSON.parse(localStorage.getItem(EXP_KEY))); } catch(e){ return []; } }
 function saveExpenses(a)  {
   try { localStorage.setItem(EXP_KEY, JSON.stringify(a.map(stripReceipt))); } catch(e) {}
-  if(currentUser) fbDb.ref('users/'+currentUser.uid+'/expenses').set(a).catch(()=>{});
+  if(currentUser) try { fbDb.ref('users/'+currentUser.uid+'/expenses').set(a).catch(()=>{}); } catch(e) { console.warn('Firebase expenses save:', e); }
 }
 let expenses = loadExpenses();
 
@@ -1374,7 +1388,7 @@ function closeExpenseModal() { document.getElementById('modal-expense').classLis
 function handleExpPhotoChange(ev) {
   const file=ev.target.files[0]; if(!file) return;
   const reader=new FileReader();
-  reader.onload=e=>{ pendingExpPhotoData=e.target.result; const p=document.getElementById('exp-photo-preview'); p.src=pendingExpPhotoData; p.style.display='block'; document.getElementById('exp-upload-placeholder').style.display='none'; };
+  reader.onload=e=>{ resizeImage(e.target.result, resized => { pendingExpPhotoData=resized; const p=document.getElementById('exp-photo-preview'); p.src=resized; p.style.display='block'; document.getElementById('exp-upload-placeholder').style.display='none'; }); };
   reader.readAsDataURL(file);
 }
 
