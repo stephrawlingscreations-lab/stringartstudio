@@ -683,6 +683,9 @@
         <option value="">All Categories</option>
         <option value="supplies">Supplies</option>
         <option value="frames">Frames</option>
+        <option value="canvas">Canvas</option>
+        <option value="ceramics">Ceramics</option>
+        <option value="base">Base</option>
         <option value="fees">Fees</option>
         <option value="transport">Transport</option>
         <option value="other">Other</option>
@@ -1024,6 +1027,9 @@
         <select id="ef-category">
           <option value="supplies">Supplies</option>
           <option value="frames">Frames</option>
+          <option value="canvas">Canvas</option>
+          <option value="ceramics">Ceramics</option>
+          <option value="base">Base</option>
           <option value="fees">Fees</option>
           <option value="transport">Transport</option>
           <option value="other">Other</option>
@@ -1586,6 +1592,9 @@ let expenses = loadExpenses();
 const EXP_CAT = {
   supplies:  { label:'Supplies',  color:'#5030a0', bg:'#ede8f7' },
   frames:    { label:'Frames',    color:'#b07d20', bg:'#faf4e1' },
+  canvas:    { label:'Canvas',    color:'#1a6896', bg:'#e3f0fa' },
+  ceramics:  { label:'Ceramics',  color:'#8b4513', bg:'#f5ece4' },
+  base:      { label:'Base',      color:'#4a7c59', bg:'#e8f3ec' },
   fees:      { label:'Fees',      color:'#c4647c', bg:'#f9eaee' },
   transport: { label:'Transport', color:'#2a7a4f', bg:'#eaf5ee' },
   other:     { label:'Other',     color:'#666',    bg:'#f5f5f5' },
@@ -1654,7 +1663,7 @@ function editFromExpense(artworkId) {
 }
 
 function catSelectHtml(sel='supplies') {
-  return [['supplies','Supplies'],['frames','Frames'],['fees','Fees'],['transport','Transport'],['other','Other']]
+  return [['supplies','Supplies'],['frames','Frames'],['canvas','Canvas'],['ceramics','Ceramics'],['base','Base'],['fees','Fees'],['transport','Transport'],['other','Other']]
     .map(([v,l])=>`<option value="${v}"${sel===v?' selected':''}>${l}</option>`).join('');
 }
 
