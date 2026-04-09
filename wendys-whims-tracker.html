@@ -614,7 +614,7 @@
       <div class="settings-card-title">Shop Commission Rate</div>
       <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
         <div style="display:flex;align-items:center;gap:8px;">
-          <input type="number" id="commission-rate" style="width:90px;" min="0" max="100" step="0.5" value="30"/>
+          <input type="number" id="commission-rate" style="width:90px;" min="0" max="100" step="0.5" value="25"/>
           <span style="color:var(--ink-mid);">%</span>
         </div>
         <button class="btn btn-primary btn-sm" onclick="saveCommission()">Save</button>
@@ -912,7 +912,7 @@ function loadSettings() { try { return JSON.parse(localStorage.getItem(SETT_KEY)
 function saveSettings(s){ localStorage.setItem(SETT_KEY, JSON.stringify(s)); if(currentUser) fbDb.ref('users/'+currentUser.uid+'/settings').set(s).catch(()=>{}); }
 
 let works = loadWorks();
-let commissionRate = loadSettings().commissionRate || 30;
+let commissionRate = loadSettings().commissionRate || 25;
 document.getElementById('commission-rate').value = commissionRate;
 
 let editingId = null, pendingPhotoData = null, detailId = null;
@@ -1436,7 +1436,7 @@ fbAuth.onAuthStateChanged(user => {
       if (data.settings) {
         const s = data.settings;
         localStorage.setItem(SETT_KEY, JSON.stringify(s));
-        commissionRate = s.commissionRate || 30;
+        commissionRate = s.commissionRate || 25;
         document.getElementById('commission-rate').value = commissionRate;
       }
       refreshAll();
