@@ -544,7 +544,14 @@
       <button class="btn btn-outline btn-sm no-print" onclick="window.print()">🖨 Print</button>
     </div>
     <div class="filter-bar no-print">
-      <input type="text" id="inv-search" placeholder="Search by title…" oninput="renderInventory()"/>
+      <input type="text" id="inv-search" placeholder="Search by title, medium…" oninput="renderInventory()"/>
+      <select id="inv-sort" onchange="renderInventory()">
+        <option value="date_desc">Newest First</option>
+        <option value="date_asc">Oldest First</option>
+        <option value="price_desc">Price High–Low</option>
+        <option value="price_asc">Price Low–High</option>
+        <option value="days_desc">Longest in Shop</option>
+      </select>
     </div>
     <div id="inv-summary" style="display:none;background:var(--gold-lt);border:1px solid #e8d89a;border-radius:var(--radius-sm);padding:0.75rem 1.25rem;margin-bottom:1rem;font-size:0.9rem;display:flex;gap:1.5rem;flex-wrap:wrap;align-items:center;">
       <span id="inv-summary-count" style="color:var(--ink-mid);"></span>
@@ -586,6 +593,7 @@
       <button class="btn btn-outline btn-sm no-print" onclick="window.print()">🖨 Print</button>
     </div>
     <div class="filter-bar no-print">
+      <input type="text" id="sales-search" placeholder="Search by title…" oninput="renderSales()"/>
       <select id="sales-month" onchange="renderSales()"><option value="">All Months</option></select>
       <select id="sales-year"  onchange="renderSales()"><option value="">All Years</option></select>
     </div>
@@ -758,6 +766,10 @@
     <div class="section-header" style="margin-top:1rem;">
       <div class="section-title" style="font-size:1.1rem;">Payment History</div>
     </div>
+    <div class="filter-bar no-print">
+      <select id="pay-month" onchange="renderPayments()"><option value="">All Months</option></select>
+      <select id="pay-year"  onchange="renderPayments()"><option value="">All Years</option></select>
+    </div>
     <div class="table-wrap">
       <table class="data-table">
         <thead>
@@ -786,6 +798,10 @@
 
     <div class="stat-grid" id="class-stat-grid" style="margin-bottom:1.5rem;"></div>
 
+    <div class="filter-bar no-print">
+      <input type="text" id="class-search" placeholder="Search by class name or venue…" oninput="renderClasses()"/>
+      <select id="class-year" onchange="renderClasses()"><option value="">All Years</option></select>
+    </div>
     <div class="table-wrap">
       <table class="data-table">
         <thead>
@@ -1270,7 +1286,8 @@ function renderDashboard() {
 
 // Inventory
 function renderInventory() {
-  const q=(document.getElementById('inv-search')?.value||'').toLowerCase();
+  const q=    (document.getElementById('inv-search')?.value||'').toLowerCase();
+  const sort= document.getElementById('inv-sort')?.value||'date_desc';
   let items=works.filter(w=>w.status==='in_shop');
   const totalValue=items.reduce((a,w)=>a+(w.price||0),0);
   const sumEl=document.getElementById('inv-summary');
@@ -1279,7 +1296,14 @@ function renderInventory() {
     document.getElementById('inv-summary-count').textContent=items.length+' item'+(items.length!==1?'s':'')+' in shop';
     document.getElementById('inv-summary-value').textContent='Total asking value: '+fmt(totalValue);
   }
-  if(q) items=items.filter(w=>(w.title||'').toLowerCase().includes(q));
+  if(q) items=items.filter(w=>[w.title,w.medium,w.size,w.idNumber,w.itemNumber].some(v=>(v||'').toLowerCase().includes(q)));
+  items.sort((a,b)=>{
+    if(sort==='price_desc') return (b.price||0)-(a.price||0);
+    if(sort==='price_asc')  return (a.price||0)-(b.price||0);
+    if(sort==='date_asc')   return (a.datePlaced||'').localeCompare(b.datePlaced||'');
+    if(sort==='days_desc')  return (a.datePlaced||'').localeCompare(b.datePlaced||'');
+    return (b.datePlaced||'').localeCompare(a.datePlaced||'');
+  });
   document.getElementById('inventory-grid').innerHTML=items.length?items.map(inventoryCard).join(''):emptyState('Nothing in the shop right now.');
 }
 
@@ -1302,6 +1326,7 @@ function renderAllWorks() {
 
 // Sales
 function renderSales() {
+  const q=document.getElementById('sales-search')?.value.toLowerCase()||'';
   const sold=works.filter(w=>(w.status==='sold'||w.status==='sold_installments')&&w.dateSold);
   const years=[...new Set(sold.map(w=>w.dateSold?.slice(0,4)))].filter(Boolean).sort().reverse();
   const selY=document.getElementById('sales-year'), selM=document.getElementById('sales-month');
@@ -1310,6 +1335,7 @@ function renderSales() {
   if(!curY&&years.length) selY.value=years[0];
   selM.innerHTML='<option value="">All Months</option>'+MONTHS.map((m,i)=>{ const v=String(i+1).padStart(2,'0'); return `<option value="${v}"${v===curM?' selected':''}>${m}</option>`; }).join('');
   let f=sold;
+  if(q) f=f.filter(w=>[w.title,w.medium,w.notes].some(v=>(v||'').toLowerCase().includes(q)));
   if(selY.value) f=f.filter(w=>w.dateSold?.startsWith(selY.value));
   if(selM.value) f=f.filter(w=>w.dateSold?.slice(5,7)===selM.value);
   f.sort((a,b)=>(b.dateSold||'').localeCompare(a.dateSold||''));
@@ -1895,20 +1921,31 @@ function renderPayments() {
     }
   }
 
-  const sorted = [...payments].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const selPY = document.getElementById('pay-year'), selPM = document.getElementById('pay-month');
+  const curPY = selPY?.value||'', curPM = selPM?.value||'';
+  const payYears = [...new Set(payments.map(p=>p.date?.slice(0,4)))].filter(Boolean).sort().reverse();
+  if(selPY) selPY.innerHTML = '<option value="">All Years</option>' + payYears.map(y=>`<option value="${y}"${y===curPY?' selected':''}>${y}</option>`).join('');
+  if(selPM) selPM.innerHTML = '<option value="">All Months</option>' + MONTHS.map((m,i)=>{ const v=String(i+1).padStart(2,'0'); return `<option value="${v}"${v===curPM?' selected':''}>${m}</option>`; }).join('');
+
+  let filtered = [...payments].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if(curPY) filtered = filtered.filter(p=>p.date?.startsWith(curPY));
+  if(curPM) filtered = filtered.filter(p=>p.date?.slice(5,7)===curPM);
+
   const tbody = document.getElementById('pay-tbody');
-  tbody.innerHTML = sorted.length
-    ? sorted.map(p => `<tr>
+  tbody.innerHTML = filtered.length
+    ? filtered.map(p => `<tr>
         <td style="white-space:nowrap;">${p.date||'—'}</td>
         <td style="font-weight:700;color:var(--green);">${fmt(p.amount)}</td>
         <td style="color:var(--ink-mid);">${p.notes||'—'}</td>
         <td class="no-print"><button class="btn btn-outline btn-sm" onclick="openPaymentModal('${p.id}')">Edit</button></td>
       </tr>`).join('')
-    : '<tr><td colspan="4" style="text-align:center;color:var(--ink-lt);padding:2rem;">No payments logged yet.</td></tr>';
+    : '<tr><td colspan="4" style="text-align:center;color:var(--ink-lt);padding:2rem;">No payments for this period.</td></tr>';
 
-  const total = payments.reduce((a,p)=>a+(p.amount||0),0);
+  const filteredTotal = filtered.reduce((a,p)=>a+(p.amount||0),0);
+  const allTotal = payments.reduce((a,p)=>a+(p.amount||0),0);
+  const isFiltered = curPY||curPM;
   document.getElementById('pay-totals').innerHTML = payments.length
-    ? `<div class="sales-total-bar"><span><strong>${payments.length}</strong> payment${payments.length!==1?'s':''}</span><span style="color:var(--green);font-weight:700;">Total received: ${fmt(total)}</span></div>`
+    ? `<div class="sales-total-bar"><span><strong>${filtered.length}</strong> payment${filtered.length!==1?'s':''}</span>${isFiltered?`<span style="color:var(--green);">Period total: <strong>${fmt(filteredTotal)}</strong></span><span>All time: <strong>${fmt(allTotal)}</strong></span>`:`<span style="color:var(--green);font-weight:700;">Total received: ${fmt(allTotal)}</span>`}</div>`
     : '';
 }
 
@@ -2018,7 +2055,13 @@ function syncClassExpenses(c) {
 }
 
 function renderClasses() {
-  const all = [...classes].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const q = (document.getElementById('class-search')?.value||'').toLowerCase();
+  const selCY = document.getElementById('class-year');
+  const curCY = selCY?.value||'';
+  const classYears = [...new Set(classes.map(c=>c.date?.slice(0,4)))].filter(Boolean).sort().reverse();
+  if(selCY) selCY.innerHTML = '<option value="">All Years</option>' + classYears.map(y=>`<option value="${y}"${y===curCY?' selected':''}>${y}</option>`).join('');
+
+  // Stats always show all-time totals
   const totalIncome  = classes.reduce((s,c)=>s+(c.totalPaid||0),0);
   const totalExp     = classes.reduce((s,c)=>s+(c.linkedExpenses||[]).reduce((a,e)=>a+(e.amount||0),0),0);
   const totalNet     = totalIncome - totalExp;
@@ -2028,9 +2071,14 @@ function renderClasses() {
     <div class="stat-card green-top"><div class="stat-val" style="color:var(--green);">${fmt(totalIncome)}</div><div class="stat-lbl">Total Income</div></div>
     <div class="stat-card"><div class="stat-val" style="color:var(--rose);">${fmt(totalExp)}</div><div class="stat-lbl">Total Expenses</div></div>
     <div class="stat-card" style="border-top-color:${netCol};"><div class="stat-val" style="color:${netCol};">${totalNet<0?'−':''}${fmt(Math.abs(totalNet))}</div><div class="stat-lbl">${totalNet>=0?'Net Profit':'Net Loss'}</div></div>`;
+
+  let all = [...classes].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  if(q) all = all.filter(c=>[c.title,c.venue,c.notes].some(v=>(v||'').toLowerCase().includes(q)));
+  if(curCY) all = all.filter(c=>c.date?.startsWith(curCY));
+
   const tbody = document.getElementById('class-tbody');
   if(!all.length) {
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--ink-lt);padding:2rem;">No classes recorded yet.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--ink-lt);padding:2rem;">No classes found.</td></tr>';
     document.getElementById('class-totals').innerHTML = '';
     return;
   }
@@ -2049,12 +2097,16 @@ function renderClasses() {
       <td class="no-print"><button class="btn btn-outline btn-sm" onclick="openClassModal('${c.id}')">Edit</button></td>
     </tr>`;
   }).join('');
+  const fIncome = all.reduce((s,c)=>s+(c.totalPaid||0),0);
+  const fExp    = all.reduce((s,c)=>s+(c.linkedExpenses||[]).reduce((a,e)=>a+(e.amount||0),0),0);
+  const fNet    = fIncome - fExp;
+  const fCol    = fNet >= 0 ? 'var(--green)' : 'var(--rose)';
   document.getElementById('class-totals').innerHTML = `
     <div class="sales-total-bar">
-      <span><strong>${classes.length}</strong> class${classes.length!==1?'es':''}</span>
-      <span style="color:var(--green);">Income: <strong>${fmt(totalIncome)}</strong></span>
-      <span style="color:var(--rose);">Expenses: <strong>${fmt(totalExp)}</strong></span>
-      <span style="color:${netCol};font-weight:700;">Net: ${totalNet<0?'−':''}${fmt(Math.abs(totalNet))}</span>
+      <span><strong>${all.length}</strong> class${all.length!==1?'es':''}</span>
+      <span style="color:var(--green);">Income: <strong>${fmt(fIncome)}</strong></span>
+      <span style="color:var(--rose);">Expenses: <strong>${fmt(fExp)}</strong></span>
+      <span style="color:${fCol};font-weight:700;">Net: ${fNet<0?'−':''}${fmt(Math.abs(fNet))}</span>
     </div>`;
 }
 
