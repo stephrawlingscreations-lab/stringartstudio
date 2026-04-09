@@ -561,7 +561,7 @@
         <option value="sold">Sold</option>
         <option value="sold_installments">Installments</option>
         <option value="at_home">At Home</option>
-        <option value="consignment">Consignment</option>
+        <option value="consignment">Commission</option>
       </select>
       <select id="all-sort" onchange="renderAllWorks()">
         <option value="date_added_desc">Newest First</option>
@@ -738,7 +738,7 @@
         <select id="f-status" onchange="handleStatusChange()">
           <option value="in_shop">In Shop</option>
           <option value="at_home">At Home</option>
-          <option value="consignment">Consignment</option>
+          <option value="consignment">Commission</option>
           <option value="sold">Sold</option>
           <option value="sold_installments">Sold – Installments</option>
         </select>
@@ -938,7 +938,7 @@ function fmt(n) {
 }
 
 function statusBadge(s) {
-  const map={in_shop:['badge-shop','🏪 In Shop'],sold:['badge-sold','✓ Sold'],at_home:['badge-home','🏠 At Home'],consignment:['badge-consign','📦 Consignment'],sold_installments:['badge-install','💳 Installments']};
+  const map={in_shop:['badge-shop','🏪 In Shop'],sold:['badge-sold','✓ Sold'],at_home:['badge-home','🏠 At Home'],consignment:['badge-consign','📦 Commission'],sold_installments:['badge-install','💳 Installments']};
   const [cls,lbl]=map[s]||['badge-home',s];
   return `<span class="status-badge ${cls}">${lbl}</span>`;
 }
