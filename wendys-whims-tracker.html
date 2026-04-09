@@ -509,6 +509,7 @@
   <div class="nav-tab" data-page="reports"><span class="tab-icon">📊</span>Reports</div>
   <div class="nav-tab" data-page="expenses"><span class="tab-icon">🧾</span>Expenses</div>
   <div class="nav-tab" data-page="payments"><span class="tab-icon">💳</span>Payments</div>
+  <div class="nav-tab" data-page="classes"><span class="tab-icon">🎓</span>Classes</div>
 </div>
 
 <div class="main">
@@ -755,6 +756,38 @@
     <div id="pay-totals"></div>
   </div>
 
+  <!-- CLASSES -->
+  <div class="page" id="page-classes">
+    <div class="section-header">
+      <div class="section-title">Classes</div>
+      <div style="display:flex;gap:0.5rem;" class="no-print">
+        <button class="btn btn-outline btn-sm" onclick="window.print()">🖨 Print</button>
+        <button class="btn btn-primary btn-sm" onclick="openClassModal()">+ Add Class</button>
+      </div>
+    </div>
+
+    <div class="stat-grid" id="class-stat-grid" style="margin-bottom:1.5rem;"></div>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Class</th>
+            <th>Venue</th>
+            <th>Attendees</th>
+            <th style="color:var(--green);">Income</th>
+            <th style="color:var(--rose);">Expenses</th>
+            <th>Net</th>
+            <th class="no-print"></th>
+          </tr>
+        </thead>
+        <tbody id="class-tbody"></tbody>
+      </table>
+    </div>
+    <div id="class-totals"></div>
+  </div>
+
 </div>
 
 
@@ -896,6 +929,65 @@
       <button class="btn btn-danger btn-sm" id="btn-delete-pay" style="display:none;margin-right:auto;" onclick="deleteCurrentPayment()">Delete</button>
       <button class="btn btn-outline" onclick="closePaymentModal()">Cancel</button>
       <button class="btn btn-primary" onclick="savePayment()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLASS MODAL -->
+<div class="modal-overlay" id="modal-class">
+  <div class="modal">
+    <div class="modal-title" id="modal-class-title">Add Class</div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Class Name</label>
+        <input type="text" id="cf-title" placeholder="e.g. Beginner String Art…"/>
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="cf-date"/>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Venue (optional)</label>
+      <input type="text" id="cf-venue" placeholder="e.g. Community Hall…"/>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>No. of Attendees</label>
+        <input type="number" id="cf-attendees" min="0" step="1" placeholder="0" oninput="classAutoTotal()"/>
+      </div>
+      <div class="form-group">
+        <label>Price Per Person (€)</label>
+        <input type="number" id="cf-price-per" min="0" step="0.01" placeholder="0.00" oninput="classAutoTotal()"/>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Total Paid to Wendy (€)</label>
+      <input type="number" id="cf-total-paid" min="0" step="0.01" placeholder="0.00"/>
+      <div style="font-size:0.78rem;color:var(--ink-lt);margin-top:4px;">Auto-filled from attendees × price — edit to override.</div>
+    </div>
+
+    <hr class="form-divider"/>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.8rem;">
+      <div style="font-size:0.78rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-mid);font-weight:700;">Class Expenses</div>
+      <button type="button" class="btn btn-outline btn-sm" onclick="addClassCostRow()">+ Add Expense</button>
+    </div>
+    <div id="class-costs-list" style="display:flex;flex-direction:column;gap:0.5rem;"></div>
+    <div id="class-costs-empty" style="font-size:0.82rem;color:var(--ink-lt);padding:0.4rem 0;">No expenses added yet.</div>
+
+    <div class="form-group" style="margin-top:1rem;">
+      <label>Notes</label>
+      <input type="text" id="cf-notes" placeholder="Any notes…"/>
+    </div>
+
+    <div style="display:flex;gap:0.7rem;justify-content:flex-end;margin-top:1.4rem;flex-wrap:wrap;align-items:center;">
+      <button class="btn btn-danger btn-sm" id="btn-delete-class" style="display:none;margin-right:auto;" onclick="deleteCurrentClass()">Delete</button>
+      <button class="btn btn-outline" onclick="closeClassModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveClass()">Save</button>
     </div>
   </div>
 </div>
@@ -1123,7 +1215,7 @@ function showToast(msg) {
 }
 
 function refreshAll() {
-  [renderDashboard, renderInventory, renderAllWorks, renderSales, renderReports, renderExpenses, renderPayments]
+  [renderDashboard, renderInventory, renderAllWorks, renderSales, renderReports, renderExpenses, renderPayments, renderClasses]
     .forEach(fn => { try { fn(); } catch(e) { console.error(fn.name + ':', e); } });
 }
 
@@ -1792,6 +1884,172 @@ function deleteCurrentPayment() {
 
 document.getElementById('modal-payment').addEventListener('click',e=>{ if(e.target===e.currentTarget) closePaymentModal(); });
 
+// ── Classes ───────────────────────────────────────────────────────────────────
+const CLASSES_KEY = 'wwwClasses';
+function loadClasses()   { try { return toArr(JSON.parse(localStorage.getItem(CLASSES_KEY))); } catch(e){ return []; } }
+function saveClasses(a)  {
+  try { localStorage.setItem(CLASSES_KEY, JSON.stringify(a)); } catch(e) {}
+  if(currentUser) try { fbDb.ref('users/'+currentUser.uid+'/classes').set(a).catch(()=>{}); } catch(e) {}
+}
+let classes = loadClasses();
+let editingClassId = null;
+
+function addClassCostRow(desc='', amount='', cat='supplies') {
+  const list = document.getElementById('class-costs-list');
+  if(!list) return;
+  const row = document.createElement('div');
+  row.className = 'linked-cost-row';
+  row.style.cssText = 'display:flex;gap:0.4rem;align-items:center;';
+  row.innerHTML = `
+    <input type="text" placeholder="Description (e.g. Materials)" value="${desc.replace(/"/g,'&quot;')}" style="flex:2;min-width:0;"/>
+    <input type="number" placeholder="0.00" value="${amount}" min="0" step="0.01" style="flex:1;min-width:60px;"/>
+    <select style="flex:1.5;min-width:90px;">${catSelectHtml(cat)}</select>
+    <button type="button" onclick="this.closest('.linked-cost-row').remove();syncClassCostsEmpty();" style="background:none;border:none;color:var(--rose);font-size:1.1rem;cursor:pointer;padding:0 4px;line-height:1;">✕</button>`;
+  list.appendChild(row);
+  syncClassCostsEmpty();
+}
+
+function syncClassCostsEmpty() {
+  const list = document.getElementById('class-costs-list');
+  const empty = document.getElementById('class-costs-empty');
+  if(list && empty) empty.style.display = list.children.length ? 'none' : '';
+}
+
+function classAutoTotal() {
+  const att = parseFloat(document.getElementById('cf-attendees').value) || 0;
+  const ppp = parseFloat(document.getElementById('cf-price-per').value) || 0;
+  if(att > 0 && ppp > 0) document.getElementById('cf-total-paid').value = (att * ppp).toFixed(2);
+}
+
+function syncClassExpenses(c) {
+  expenses = expenses.filter(e => e.classId !== c.id);
+  const date = c.date || new Date().toISOString().slice(0,10);
+  (c.linkedExpenses || []).forEach((item, i) => {
+    if((item.amount||0) > 0) {
+      expenses.push({
+        id: 'classlink_' + c.id + '_' + i,
+        classId: c.id,
+        description: (c.title||'Class') + (item.description ? ' – ' + item.description : ' – expense'),
+        amount: item.amount,
+        category: item.category || 'supplies',
+        date,
+        notes: '',
+        createdAt: Date.now(),
+      });
+    }
+  });
+  saveExpenses(expenses);
+}
+
+function renderClasses() {
+  const all = [...classes].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const totalIncome  = classes.reduce((s,c)=>s+(c.totalPaid||0),0);
+  const totalExp     = classes.reduce((s,c)=>s+(c.linkedExpenses||[]).reduce((a,e)=>a+(e.amount||0),0),0);
+  const totalNet     = totalIncome - totalExp;
+  const netCol       = totalNet >= 0 ? 'var(--green)' : 'var(--rose)';
+  document.getElementById('class-stat-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-val">${classes.length}</div><div class="stat-lbl">Classes Held</div></div>
+    <div class="stat-card green-top"><div class="stat-val" style="color:var(--green);">${fmt(totalIncome)}</div><div class="stat-lbl">Total Income</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--rose);">${fmt(totalExp)}</div><div class="stat-lbl">Total Expenses</div></div>
+    <div class="stat-card" style="border-top-color:${netCol};"><div class="stat-val" style="color:${netCol};">${totalNet<0?'−':''}${fmt(Math.abs(totalNet))}</div><div class="stat-lbl">${totalNet>=0?'Net Profit':'Net Loss'}</div></div>`;
+  const tbody = document.getElementById('class-tbody');
+  if(!all.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--ink-lt);padding:2rem;">No classes recorded yet.</td></tr>';
+    document.getElementById('class-totals').innerHTML = '';
+    return;
+  }
+  tbody.innerHTML = all.map(c => {
+    const exp = (c.linkedExpenses||[]).reduce((a,e)=>a+(e.amount||0),0);
+    const net = (c.totalPaid||0) - exp;
+    const nc  = net >= 0 ? 'var(--green)' : 'var(--rose)';
+    return `<tr>
+      <td>${c.date||'—'}</td>
+      <td><strong>${c.title||'Untitled'}</strong></td>
+      <td style="color:var(--ink-mid);">${c.venue||'—'}</td>
+      <td style="text-align:center;">${c.attendees||'—'}</td>
+      <td style="color:var(--green);font-weight:700;">${fmt(c.totalPaid)}</td>
+      <td style="color:var(--rose);">${exp>0?fmt(exp):'—'}</td>
+      <td style="font-weight:700;color:${nc};">${net<0?'−':''}${fmt(Math.abs(net))}</td>
+      <td class="no-print"><button class="btn btn-outline btn-sm" onclick="openClassModal('${c.id}')">Edit</button></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('class-totals').innerHTML = `
+    <div class="sales-total-bar">
+      <span><strong>${classes.length}</strong> class${classes.length!==1?'es':''}</span>
+      <span style="color:var(--green);">Income: <strong>${fmt(totalIncome)}</strong></span>
+      <span style="color:var(--rose);">Expenses: <strong>${fmt(totalExp)}</strong></span>
+      <span style="color:${netCol};font-weight:700;">Net: ${totalNet<0?'−':''}${fmt(Math.abs(totalNet))}</span>
+    </div>`;
+}
+
+function openClassModal(id=null) {
+  editingClassId = id;
+  document.getElementById('modal-class-title').textContent = id ? 'Edit Class' : 'Add Class';
+  document.getElementById('btn-delete-class').style.display = id ? 'inline-block' : 'none';
+  document.getElementById('class-costs-list').innerHTML = '';
+  if(id) {
+    const c = classes.find(x=>x.id===id); if(!c) return;
+    document.getElementById('cf-title').value      = c.title||'';
+    document.getElementById('cf-date').value       = c.date||'';
+    document.getElementById('cf-venue').value      = c.venue||'';
+    document.getElementById('cf-attendees').value  = c.attendees||'';
+    document.getElementById('cf-price-per').value  = c.pricePerPerson||'';
+    document.getElementById('cf-total-paid').value = c.totalPaid||'';
+    document.getElementById('cf-notes').value      = c.notes||'';
+    (c.linkedExpenses||[]).forEach(e=>addClassCostRow(e.description||'',e.amount||'',e.category||'supplies'));
+  } else {
+    ['cf-title','cf-venue','cf-attendees','cf-price-per','cf-total-paid','cf-notes'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('cf-date').value = new Date().toISOString().slice(0,10);
+  }
+  syncClassCostsEmpty();
+  document.getElementById('modal-class').classList.add('open');
+}
+
+function closeClassModal() { document.getElementById('modal-class').classList.remove('open'); editingClassId=null; }
+
+function saveClass() {
+  const title = document.getElementById('cf-title').value.trim();
+  if(!title) { alert('Please enter a class name.'); return; }
+  const linkedExpenses = [...document.querySelectorAll('#class-costs-list .linked-cost-row')].map(row=>{
+    const [desc,amt,cat] = row.querySelectorAll('input,select');
+    return {description:desc.value.trim(), amount:parseFloat(amt.value)||0, category:cat.value};
+  }).filter(e=>e.amount>0||e.description);
+  const c = {
+    title,
+    date:          document.getElementById('cf-date').value,
+    venue:         document.getElementById('cf-venue').value.trim(),
+    attendees:     parseInt(document.getElementById('cf-attendees').value)||0,
+    pricePerPerson:parseFloat(document.getElementById('cf-price-per').value)||0,
+    totalPaid:     parseFloat(document.getElementById('cf-total-paid').value)||0,
+    notes:         document.getElementById('cf-notes').value.trim(),
+    linkedExpenses,
+  };
+  if(editingClassId) {
+    const i = classes.findIndex(x=>x.id===editingClassId);
+    if(i>-1){ c.id=editingClassId; c.createdAt=classes[i].createdAt; classes[i]=c; }
+  } else {
+    c.id=uid(); c.createdAt=Date.now(); classes.unshift(c);
+  }
+  saveClasses(classes);
+  syncClassExpenses(c);
+  closeClassModal();
+  refreshAll();
+  showToast('Class saved!');
+}
+
+function deleteCurrentClass() {
+  if(!editingClassId||!confirm('Delete this class? This cannot be undone.')) return;
+  const c = classes.find(x=>x.id===editingClassId);
+  classes = classes.filter(x=>x.id!==editingClassId);
+  saveClasses(classes);
+  if(c) { expenses = expenses.filter(e=>e.classId!==c.id); saveExpenses(expenses); }
+  closeClassModal();
+  refreshAll();
+  showToast('Class deleted.');
+}
+
+document.getElementById('modal-class').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeClassModal(); });
+
 // ── Auth state ────────────────────────────────────────────────────────────────
 fbAuth.onAuthStateChanged(user => {
   if (user) {
@@ -1815,7 +2073,7 @@ fbAuth.onAuthStateChanged(user => {
         works = toArr(data.works);
         try { localStorage.setItem(STORE_KEY, JSON.stringify(works.map(stripPhoto))); } catch(e) {}
       } else {
-        fbDb.ref('users/' + user.uid).set({ works: works, settings: loadSettings(), expenses: expenses, payments: payments }).catch(() => {});
+        fbDb.ref('users/' + user.uid).set({ works: works, settings: loadSettings(), expenses: expenses, payments: payments, classes: classes }).catch(() => {});
       }
       if (data.expenses != null) {
         expenses = toArr(data.expenses);
@@ -1824,6 +2082,10 @@ fbAuth.onAuthStateChanged(user => {
       if (data.payments != null) {
         payments = toArr(data.payments);
         try { localStorage.setItem(PAY_KEY, JSON.stringify(payments)); } catch(e) {}
+      }
+      if (data.classes != null) {
+        classes = toArr(data.classes);
+        try { localStorage.setItem(CLASSES_KEY, JSON.stringify(classes)); } catch(e) {}
       }
       if (data.settings) {
         const s = data.settings;
