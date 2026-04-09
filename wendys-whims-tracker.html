@@ -109,7 +109,7 @@
   /* STAT CARDS */
   .stat-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 1rem;
     margin-bottom: 2rem;
   }
@@ -528,6 +528,18 @@
         <div class="stat-val" id="stat-net">€0</div>
         <div class="stat-lbl">All Time Earned</div>
       </div>
+      <div class="stat-card" style="border-top-color:var(--gold);">
+        <div class="stat-val" id="stat-stock-value" style="color:var(--gold);">€0</div>
+        <div class="stat-lbl">Stock Value</div>
+      </div>
+      <div class="stat-card green-top">
+        <div class="stat-val" id="stat-items-sold">0</div>
+        <div class="stat-lbl">Total Sold</div>
+      </div>
+      <div class="stat-card" id="stat-profit-card" style="border-top-color:var(--green);">
+        <div class="stat-val" id="stat-profit-month">€0</div>
+        <div class="stat-lbl">Profit This Month</div>
+      </div>
     </div>
 
     <div class="section-header">
@@ -544,6 +556,10 @@
     </div>
     <div class="filter-bar no-print">
       <input type="text" id="inv-search" placeholder="Search by title…" oninput="renderInventory()"/>
+    </div>
+    <div id="inv-summary" style="display:none;background:var(--gold-lt);border:1px solid #e8d89a;border-radius:var(--radius-sm);padding:0.75rem 1.25rem;margin-bottom:1rem;font-size:0.9rem;display:flex;gap:1.5rem;flex-wrap:wrap;align-items:center;">
+      <span id="inv-summary-count" style="color:var(--ink-mid);"></span>
+      <span id="inv-summary-value" style="font-weight:700;color:var(--gold);font-size:1.05rem;"></span>
     </div>
     <div class="artwork-grid" id="inventory-grid"></div>
   </div>
@@ -629,10 +645,19 @@
     <div class="settings-card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem;">
         <div class="settings-card-title" style="margin-bottom:0;">Annual Summary</div>
-        <select id="report-year" onchange="renderReports()" style="width:auto;min-width:100px;"></select>
+        <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+          <select id="report-year" onchange="renderReports()" style="width:auto;min-width:100px;"></select>
+          <button class="btn btn-outline btn-sm no-print" onclick="exportCSV()">⬇ Export CSV</button>
+        </div>
       </div>
       <div class="stat-grid" id="report-stats" style="margin-bottom:1rem;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));"></div>
       <div id="report-monthly-table"></div>
+    </div>
+
+    <div class="settings-card">
+      <div class="settings-card-title">Profit &amp; Loss</div>
+      <div class="stat-grid" id="report-pl-stats" style="margin-bottom:1rem;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));"></div>
+      <div id="report-pl-table"></div>
     </div>
   </div>
 
@@ -1049,6 +1074,16 @@ function imgEl(w) {
     : `<span style="font-size:3rem;">🎨</span>`;
 }
 
+function daysInShopBadge(w) {
+  if(!w.datePlaced) return '';
+  const days = Math.floor((Date.now() - new Date(w.datePlaced).getTime()) / 86400000);
+  if(days < 0) return '';
+  let bg='#e8e8e8', color='#777';
+  if(days >= 60) { bg='#fde8e8'; color='var(--rose)'; }
+  else if(days >= 30) { bg='#fff3e0'; color='#b36200'; }
+  return `<span style="display:inline-block;margin-top:0.4rem;padding:2px 8px;border-radius:20px;font-size:0.68rem;font-weight:700;background:${bg};color:${color};">${days}d in shop</span>`;
+}
+
 function inventoryCard(w) {
   return `<div class="artwork-card">
     <div onclick="openDetail('${w.id}')" style="cursor:pointer;">
@@ -1058,6 +1093,7 @@ function inventoryCard(w) {
         <div class="artwork-price">${fmt(w.price)}</div>
         <div class="artwork-meta">${w.medium?w.medium+'<br/>':''}${w.size?w.size:''}</div>
         ${statusBadge(w.status)}
+        ${daysInShopBadge(w)}
       </div>
     </div>
     <div style="display:flex;gap:0.5rem;padding:0.75rem 1rem;border-top:1px solid #f0f0f0;">
@@ -1099,18 +1135,29 @@ function refreshAll() {
     .forEach(fn => { try { fn(); } catch(e) { console.error(fn.name + ':', e); } });
 }
 
-// Dashboard — 3 key stats only
+// Dashboard
 function renderDashboard() {
   const inShop = works.filter(w=>w.status==='in_shop');
   const sold   = works.filter(w=>w.status==='sold'||w.status==='sold_installments');
   const net    = sold.reduce((a,w)=>a+netAmt(w.soldPrice||0),0);
   const now=new Date(), tm=now.getMonth(), ty=now.getFullYear();
-  const netTM  = sold.filter(w=>{ if(!w.dateSold)return false; const d=new Date(w.dateSold); return d.getMonth()===tm&&d.getFullYear()===ty; })
-                     .reduce((a,w)=>a+netAmt(w.soldPrice||0),0);
+  const soldTM = sold.filter(w=>{ if(!w.dateSold)return false; const d=new Date(w.dateSold); return d.getMonth()===tm&&d.getFullYear()===ty; });
+  const netTM  = soldTM.reduce((a,w)=>a+netAmt(w.soldPrice||0),0);
+  const stockValue = inShop.reduce((a,w)=>a+(w.price||0),0);
+  const tyStr=String(ty), tmStr=String(tm+1).padStart(2,'0');
+  const expTM = expenses.filter(e=>e.date&&e.date.startsWith(tyStr+'-'+tmStr)).reduce((a,e)=>a+(e.amount||0),0);
+  const profitTM = netTM - expTM;
 
   document.getElementById('stat-in-shop').textContent    = inShop.length;
   document.getElementById('stat-this-month').textContent = fmt(netTM);
   document.getElementById('stat-net').textContent        = fmt(net);
+  document.getElementById('stat-stock-value').textContent= fmt(stockValue);
+  document.getElementById('stat-items-sold').textContent = sold.length;
+  const profitEl = document.getElementById('stat-profit-month');
+  profitEl.textContent = fmt(Math.abs(profitTM));
+  profitEl.style.color = profitTM >= 0 ? 'var(--green)' : 'var(--rose)';
+  if (profitTM < 0) profitEl.textContent = '−' + fmt(Math.abs(profitTM));
+  document.getElementById('stat-profit-card').style.borderTopColor = profitTM >= 0 ? 'var(--green)' : 'var(--rose)';
 
   const recent=[...works].sort((a,b)=>b.createdAt-a.createdAt).slice(0,4);
   document.getElementById('recent-grid').innerHTML=recent.length?recent.map(artworkCard).join(''):emptyState('No works yet — tap the button below to add your first!');
@@ -1120,6 +1167,13 @@ function renderDashboard() {
 function renderInventory() {
   const q=(document.getElementById('inv-search')?.value||'').toLowerCase();
   let items=works.filter(w=>w.status==='in_shop');
+  const totalValue=items.reduce((a,w)=>a+(w.price||0),0);
+  const sumEl=document.getElementById('inv-summary');
+  if(sumEl){
+    sumEl.style.display=items.length?'flex':'none';
+    document.getElementById('inv-summary-count').textContent=items.length+' item'+(items.length!==1?'s':'')+' in shop';
+    document.getElementById('inv-summary-value').textContent='Total asking value: '+fmt(totalValue);
+  }
   if(q) items=items.filter(w=>(w.title||'').toLowerCase().includes(q));
   document.getElementById('inventory-grid').innerHTML=items.length?items.map(inventoryCard).join(''):emptyState('Nothing in the shop right now.');
 }
@@ -1193,6 +1247,43 @@ function renderReports() {
     ${rows.map(r=>`<tr><td>${r.m}</td><td>${r.count||'—'}</td><td>${r.gross>0?fmt(r.gross):'—'}</td><td style="color:var(--rose);">${r.comm>0?fmt(r.comm):'—'}</td><td style="font-weight:700;color:${r.net>0?'var(--green)':'var(--ink-lt)'};">${r.net>0?fmt(r.net):'—'}</td></tr>`).join('')}
     <tr style="background:var(--rose-lt);font-weight:700;"><td>Total</td><td>${forY.length}</td><td>${fmt(gross)}</td><td style="color:var(--rose);">${fmt(comm)}</td><td style="color:var(--green);">${fmt(net)}</td></tr>
   </tbody></table>`;
+
+  // Profit & Loss
+  const expForY = expenses.filter(e=>e.date&&e.date.startsWith(year));
+  const totalExp = expForY.reduce((a,e)=>a+(e.amount||0),0);
+  const profit = net - totalExp;
+  const plColour = profit >= 0 ? 'var(--green)' : 'var(--rose)';
+  document.getElementById('report-pl-stats').innerHTML=`
+    <div class="stat-card green-top"><div class="stat-val" style="color:var(--green);">${fmt(net)}</div><div class="stat-lbl">Net Income (${year})</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--rose);">${fmt(totalExp)}</div><div class="stat-lbl">Total Expenses (${year})</div></div>
+    <div class="stat-card" style="border-top-color:${plColour};"><div class="stat-val" style="color:${plColour};">${profit<0?'−':''}${fmt(Math.abs(profit))}</div><div class="stat-lbl">${profit>=0?'Profit':'Loss'} (${year})</div></div>`;
+  const plRows = MONTHS.map((m,i)=>{
+    const mn=String(i+1).padStart(2,'0');
+    const mNet = rows[i].net;
+    const mExp = expForY.filter(e=>e.date?.slice(5,7)===mn).reduce((a,e)=>a+(e.amount||0),0);
+    const mPL = mNet - mExp;
+    return {m, net:mNet, exp:mExp, pl:mPL};
+  });
+  document.getElementById('report-pl-table').innerHTML=`<table class="data-table" style="margin-top:1rem;"><thead><tr><th>Month</th><th>Net Income</th><th>Expenses</th><th>Profit / Loss</th></tr></thead><tbody>
+    ${plRows.map(r=>`<tr><td>${r.m}</td><td style="color:var(--green);">${r.net>0?fmt(r.net):'—'}</td><td style="color:var(--rose);">${r.exp>0?fmt(r.exp):'—'}</td><td style="font-weight:700;color:${r.pl>0?'var(--green)':r.pl<0?'var(--rose)':'var(--ink-lt)'};">${r.pl>0?fmt(r.pl):r.pl<0?'−'+fmt(Math.abs(r.pl)):'—'}</td></tr>`).join('')}
+    <tr style="background:var(--rose-lt);font-weight:700;"><td>Total</td><td style="color:var(--green);">${fmt(net)}</td><td style="color:var(--rose);">${fmt(totalExp)}</td><td style="color:${plColour};">${profit<0?'−':''}${fmt(Math.abs(profit))}</td></tr>
+  </tbody></table>`;
+}
+
+// CSV export
+function exportCSV() {
+  const headers = ['Title','ID Number','Item Number','Medium','Size','Asking Price','Status','Date Placed','Date Sold','Sold Price','Commission Paid','Net Earned','Notes'];
+  const escape = v => '"' + String(v??'').replace(/"/g,'""') + '"';
+  const rows = works.map(w => {
+    const sp = w.soldPrice||0;
+    const comm = w.commissionPaid!=null ? w.commissionPaid : commAmt(sp);
+    return [w.title,w.idNumber,w.itemNumber,w.medium,w.size,w.price,w.status,w.datePlaced,w.dateSold,sp,(w.status==='sold'||w.status==='sold_installments')?comm:'',sp?sp-comm:'',w.notes].map(escape).join(',');
+  });
+  const csv = [headers.map(escape).join(','), ...rows].join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download = 'wendys-whims-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
 }
 
 // Commission save
