@@ -508,6 +508,7 @@
   <div class="nav-tab" data-page="sales"><span class="tab-icon">💰</span>Sales</div>
   <div class="nav-tab" data-page="reports"><span class="tab-icon">📊</span>Reports</div>
   <div class="nav-tab" data-page="expenses"><span class="tab-icon">🧾</span>Expenses</div>
+  <div class="nav-tab" data-page="payments"><span class="tab-icon">💳</span>Payments</div>
 </div>
 
 <div class="main">
@@ -680,6 +681,52 @@
     <div id="exp-totals"></div>
   </div>
 
+  <!-- PAYMENTS -->
+  <div class="page" id="page-payments">
+    <div class="section-header">
+      <div class="section-title">Shop Payments</div>
+      <div style="display:flex;gap:0.5rem;" class="no-print">
+        <button class="btn btn-outline btn-sm" onclick="window.print()">🖨 Print</button>
+        <button class="btn btn-primary btn-sm" onclick="openPaymentModal()">+ Log Payment</button>
+      </div>
+    </div>
+
+    <div id="payment-alert" style="display:none;border-radius:var(--radius-sm);padding:1rem 1.2rem;margin-bottom:1.5rem;font-weight:700;font-size:0.95rem;"></div>
+
+    <div class="stat-grid" style="margin-bottom:1.5rem;">
+      <div class="stat-card green-top">
+        <div class="stat-val" id="pay-stat-owed">€0</div>
+        <div class="stat-lbl">Total Net Sales<br/>(should receive)</div>
+      </div>
+      <div class="stat-card green-top">
+        <div class="stat-val" id="pay-stat-received">€0</div>
+        <div class="stat-lbl">Total Received<br/>from Shop</div>
+      </div>
+      <div class="stat-card" id="pay-stat-card-outstanding">
+        <div class="stat-val" id="pay-stat-outstanding">€0</div>
+        <div class="stat-lbl">Outstanding<br/>Balance</div>
+      </div>
+    </div>
+
+    <div class="section-header" style="margin-top:1rem;">
+      <div class="section-title" style="font-size:1.1rem;">Payment History</div>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Amount Received</th>
+            <th>Notes</th>
+            <th class="no-print"></th>
+          </tr>
+        </thead>
+        <tbody id="pay-tbody"></tbody>
+      </table>
+    </div>
+    <div id="pay-totals"></div>
+  </div>
+
 </div>
 
 
@@ -806,6 +853,32 @@
       <button class="btn btn-danger btn-sm" style="margin-right:auto;" onclick="deleteFromDetail()">Delete</button>
       <button class="btn btn-outline" onclick="closeDetailModal()">Close</button>
       <button class="btn btn-primary btn-sm" onclick="editFromDetail()">Edit</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAYMENT MODAL -->
+<div class="modal-overlay" id="modal-payment">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-title" id="modal-payment-title">Log Payment</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Amount Received (€)</label>
+        <input type="number" id="pf-amount" min="0" step="0.01" placeholder="0.00"/>
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="pf-date"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Notes</label>
+      <input type="text" id="pf-notes" placeholder="e.g. December payment…"/>
+    </div>
+    <div style="display:flex;gap:0.7rem;justify-content:flex-end;margin-top:1.4rem;flex-wrap:wrap;align-items:center;">
+      <button class="btn btn-danger btn-sm" id="btn-delete-pay" style="display:none;margin-right:auto;" onclick="deleteCurrentPayment()">Delete</button>
+      <button class="btn btn-outline" onclick="closePaymentModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePayment()">Save</button>
     </div>
   </div>
 </div>
@@ -1022,7 +1095,7 @@ function showToast(msg) {
 }
 
 function refreshAll() {
-  [renderDashboard, renderInventory, renderAllWorks, renderSales, renderReports, renderExpenses]
+  [renderDashboard, renderInventory, renderAllWorks, renderSales, renderReports, renderExpenses, renderPayments]
     .forEach(fn => { try { fn(); } catch(e) { console.error(fn.name + ':', e); } });
 }
 
@@ -1482,6 +1555,123 @@ function viewReceipt(id) {
 
 document.getElementById('modal-expense').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeExpenseModal(); });
 
+// ── Payments ─────────────────────────────────────────────────────────────────
+const PAY_KEY = 'wwwPayments';
+function loadPayments()   { try { return toArr(JSON.parse(localStorage.getItem(PAY_KEY))); } catch(e){ return []; } }
+function savePayments(a)  {
+  try { localStorage.setItem(PAY_KEY, JSON.stringify(a)); } catch(e) {}
+  if(currentUser) try { fbDb.ref('users/'+currentUser.uid+'/payments').set(a).catch(()=>{}); } catch(e) {}
+}
+let payments = loadPayments();
+let editingPayId = null;
+
+function renderPayments() {
+  const totalOwed = works
+    .filter(w => w.status==='sold' || w.status==='sold_installments')
+    .reduce((a, w) => a + netAmt(w.soldPrice||0), 0);
+  const totalReceived = payments.reduce((a, p) => a + (p.amount||0), 0);
+  const outstanding = totalOwed - totalReceived;
+
+  document.getElementById('pay-stat-owed').textContent = fmt(totalOwed);
+  document.getElementById('pay-stat-received').textContent = fmt(totalReceived);
+  document.getElementById('pay-stat-outstanding').textContent = fmt(Math.abs(outstanding));
+
+  const alertEl = document.getElementById('payment-alert');
+  const cardEl  = document.getElementById('pay-stat-card-outstanding');
+  if (outstanding > 0.50) {
+    alertEl.style.display = '';
+    alertEl.style.background = '#fff3cd';
+    alertEl.style.color = '#856404';
+    alertEl.style.border = '1px solid #ffc107';
+    alertEl.innerHTML = `⚠️ The shop owes you <strong>${fmt(outstanding)}</strong>. You have not yet been fully paid for your sales.`;
+    cardEl.style.borderTopColor = '#ffc107';
+    document.getElementById('pay-stat-outstanding').style.color = '#856404';
+  } else if (outstanding < -0.50) {
+    alertEl.style.display = '';
+    alertEl.style.background = '#f8d7da';
+    alertEl.style.color = '#721c24';
+    alertEl.style.border = '1px solid #f5c6cb';
+    alertEl.innerHTML = `⚠️ You have been overpaid by <strong>${fmt(Math.abs(outstanding))}</strong>. Check your sales records.`;
+    cardEl.style.borderTopColor = '#c0392b';
+    document.getElementById('pay-stat-outstanding').style.color = '#c0392b';
+  } else {
+    alertEl.style.display = 'none';
+    cardEl.style.borderTopColor = 'var(--green)';
+    document.getElementById('pay-stat-outstanding').style.color = 'var(--green)';
+    if (totalOwed > 0) {
+      alertEl.style.display = '';
+      alertEl.style.background = 'var(--green-lt)';
+      alertEl.style.color = 'var(--green)';
+      alertEl.style.border = '1px solid #a8d5b8';
+      alertEl.innerHTML = `✓ All paid up! You have received everything you are owed.`;
+    }
+  }
+
+  const sorted = [...payments].sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const tbody = document.getElementById('pay-tbody');
+  tbody.innerHTML = sorted.length
+    ? sorted.map(p => `<tr>
+        <td style="white-space:nowrap;">${p.date||'—'}</td>
+        <td style="font-weight:700;color:var(--green);">${fmt(p.amount)}</td>
+        <td style="color:var(--ink-mid);">${p.notes||'—'}</td>
+        <td class="no-print"><button class="btn btn-outline btn-sm" onclick="openPaymentModal('${p.id}')">Edit</button></td>
+      </tr>`).join('')
+    : '<tr><td colspan="4" style="text-align:center;color:var(--ink-lt);padding:2rem;">No payments logged yet.</td></tr>';
+
+  const total = payments.reduce((a,p)=>a+(p.amount||0),0);
+  document.getElementById('pay-totals').innerHTML = payments.length
+    ? `<div class="sales-total-bar"><span><strong>${payments.length}</strong> payment${payments.length!==1?'s':''}</span><span style="color:var(--green);font-weight:700;">Total received: ${fmt(total)}</span></div>`
+    : '';
+}
+
+function openPaymentModal(id=null) {
+  editingPayId=id;
+  document.getElementById('modal-payment-title').textContent = id ? 'Edit Payment' : 'Log Payment';
+  document.getElementById('btn-delete-pay').style.display = id ? 'inline-block' : 'none';
+  if(id) {
+    const p=payments.find(x=>x.id===id); if(!p) return;
+    document.getElementById('pf-amount').value = p.amount||'';
+    document.getElementById('pf-date').value   = p.date||'';
+    document.getElementById('pf-notes').value  = p.notes||'';
+  } else {
+    document.getElementById('pf-amount').value = '';
+    document.getElementById('pf-notes').value  = '';
+    document.getElementById('pf-date').value   = new Date().toISOString().slice(0,10);
+  }
+  document.getElementById('modal-payment').classList.add('open');
+}
+
+function closePaymentModal() { document.getElementById('modal-payment').classList.remove('open'); editingPayId=null; }
+
+function savePayment() {
+  const p = {
+    amount: parseFloat(document.getElementById('pf-amount').value)||0,
+    date:   document.getElementById('pf-date').value,
+    notes:  document.getElementById('pf-notes').value.trim(),
+  };
+  if(!p.amount) { showToast('Please enter an amount.'); return; }
+  if(editingPayId) {
+    const idx=payments.findIndex(x=>x.id===editingPayId);
+    if(idx>-1){ p.id=editingPayId; p.createdAt=payments[idx].createdAt; payments[idx]=p; }
+  } else {
+    p.id=uid(); p.createdAt=Date.now(); payments.unshift(p);
+  }
+  savePayments(payments);
+  closePaymentModal();
+  renderPayments();
+  showToast(editingPayId?'Payment updated!':'Payment logged!');
+}
+
+function deleteCurrentPayment() {
+  if(!editingPayId) return;
+  if(!confirm('Delete this payment record?')) return;
+  payments=payments.filter(p=>p.id!==editingPayId);
+  savePayments(payments); closePaymentModal(); renderPayments();
+  showToast('Payment deleted.');
+}
+
+document.getElementById('modal-payment').addEventListener('click',e=>{ if(e.target===e.currentTarget) closePaymentModal(); });
+
 // ── Auth state ────────────────────────────────────────────────────────────────
 fbAuth.onAuthStateChanged(user => {
   if (user) {
@@ -1505,11 +1695,15 @@ fbAuth.onAuthStateChanged(user => {
         works = toArr(data.works);
         try { localStorage.setItem(STORE_KEY, JSON.stringify(works.map(stripPhoto))); } catch(e) {}
       } else {
-        fbDb.ref('users/' + user.uid).set({ works: works, settings: loadSettings(), expenses: expenses }).catch(() => {});
+        fbDb.ref('users/' + user.uid).set({ works: works, settings: loadSettings(), expenses: expenses, payments: payments }).catch(() => {});
       }
       if (data.expenses != null) {
         expenses = toArr(data.expenses);
         try { localStorage.setItem(EXP_KEY, JSON.stringify(expenses.map(stripReceipt))); } catch(e) {}
+      }
+      if (data.payments != null) {
+        payments = toArr(data.payments);
+        try { localStorage.setItem(PAY_KEY, JSON.stringify(payments)); } catch(e) {}
       }
       if (data.settings) {
         const s = data.settings;
