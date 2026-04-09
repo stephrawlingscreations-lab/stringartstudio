@@ -465,14 +465,36 @@
     .modal { padding: 1.5rem; }
   }
 </style>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" style="min-height:100vh;background:var(--cream);display:flex;align-items:center;justify-content:center;padding:1.5rem;">
+  <div style="background:var(--white);border-radius:var(--radius);padding:2.5rem 2rem;max-width:380px;width:100%;box-shadow:0 4px 32px rgba(196,100,124,0.15);text-align:center;">
+    <div style="font-size:3rem;margin-bottom:1rem;">🎨</div>
+    <div style="font-family:'Playfair Display',serif;font-style:italic;font-size:1.8rem;color:var(--rose);margin-bottom:0.4rem;">Wendy's Whims &amp; Wonders</div>
+    <div style="font-size:0.78rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-lt);margin-bottom:1.8rem;">Sales Tracker</div>
+    <p style="font-size:0.9rem;color:var(--ink-mid);margin-bottom:2rem;line-height:1.6;">Your artwork data is saved to the cloud — sign in with Google to access it from any device.</p>
+    <button onclick="signIn()" style="width:100%;padding:0.9rem;border-radius:var(--radius-sm);border:2px solid var(--rose-lt);background:var(--white);color:var(--rose);font-family:'Lato',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
+      Sign in with Google
+    </button>
+    <p id="login-error" style="display:none;margin-top:1rem;color:#c0392b;font-size:0.85rem;"></p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-wrapper" style="display:none">
 
 <div class="topbar">
   <div class="topbar-brand">
     Wendy's Whims &amp; Wonders
     <span>Sales Tracker</span>
   </div>
+  <img id="user-avatar" src="" alt="" onclick="fbAuth.signOut()" title="Sign out (tap to sign out)" style="display:none;width:34px;height:34px;border-radius:50%;cursor:pointer;border:2px solid var(--rose-lt);">
 </div>
 
 <div class="nav-tabs">
@@ -707,14 +729,43 @@
   </div>
 </div>
 
+</div><!-- end app-wrapper -->
+
 <script>
+// ── Firebase ──────────────────────────────────────────────────────────────────
+firebase.initializeApp({
+  apiKey: "AIzaSyCESWY3unUN9rd5zcpgpxXDQsFZkPIW7cM",
+  authDomain: "wendy-s-whims-and-wonders.firebaseapp.com",
+  databaseURL: "https://wendy-s-whims-and-wonders-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "wendy-s-whims-and-wonders",
+  storageBucket: "wendy-s-whims-and-wonders.firebasestorage.app",
+  messagingSenderId: "800933762871",
+  appId: "1:800933762871:web:a47cc7a4a528b9ef5a6cb2"
+});
+const fbAuth = firebase.auth();
+const fbDb   = firebase.database();
+let currentUser = null;
+
+function signIn() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  fbAuth.signInWithPopup(provider).catch(e => {
+    if (e.code === 'auth/popup-blocked') {
+      fbAuth.signInWithRedirect(provider);
+    } else {
+      const err = document.getElementById('login-error');
+      err.textContent = 'Sign-in failed. Please try again.';
+      err.style.display = 'block';
+    }
+  });
+}
+
 const STORE_KEY = 'wwwWorks';
 const SETT_KEY  = 'wwwSettings';
 
 function loadWorks()    { try { return JSON.parse(localStorage.getItem(STORE_KEY))||[]; } catch(e){ return []; } }
-function saveWorks(a)   { localStorage.setItem(STORE_KEY, JSON.stringify(a)); }
+function saveWorks(a)   { localStorage.setItem(STORE_KEY, JSON.stringify(a)); if(currentUser) fbDb.ref('users/'+currentUser.uid+'/works').set(a).catch(()=>{}); }
 function loadSettings() { try { return JSON.parse(localStorage.getItem(SETT_KEY))||{}; } catch(e){ return {}; } }
-function saveSettings(s){ localStorage.setItem(SETT_KEY, JSON.stringify(s)); }
+function saveSettings(s){ localStorage.setItem(SETT_KEY, JSON.stringify(s)); if(currentUser) fbDb.ref('users/'+currentUser.uid+'/settings').set(s).catch(()=>{}); }
 
 let works = loadWorks();
 let commissionRate = loadSettings().commissionRate || 30;
@@ -1010,7 +1061,45 @@ function editFromDetail(){ closeDetailModal(); openAddModal(detailId); }
 document.getElementById('modal-add').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeAddModal(); });
 document.getElementById('modal-detail').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeDetailModal(); });
 
-refreshAll();
+// ── Auth state ────────────────────────────────────────────────────────────────
+fbAuth.onAuthStateChanged(user => {
+  if (user) {
+    if (user.email !== 'wendyswhimsandwonders@gmail.com') {
+      fbAuth.signOut();
+      const err = document.getElementById('login-error');
+      err.textContent = 'Access is restricted to the account owner.';
+      err.style.display = 'block';
+      return;
+    }
+    currentUser = user;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-wrapper').style.display  = '';
+    const av = document.getElementById('user-avatar');
+    if (user.photoURL) { av.src = user.photoURL; av.style.display = 'inline-block'; }
+
+    fbDb.ref('users/' + user.uid).once('value').then(snap => {
+      const data = snap.val() || {};
+      if (data.works != null) {
+        works = data.works;
+        localStorage.setItem(STORE_KEY, JSON.stringify(works));
+      } else {
+        // First sign-in: push any existing localStorage data up to Firebase
+        fbDb.ref('users/' + user.uid).set({ works: works, settings: loadSettings() }).catch(() => {});
+      }
+      if (data.settings) {
+        const s = data.settings;
+        localStorage.setItem(SETT_KEY, JSON.stringify(s));
+        commissionRate = s.commissionRate || 30;
+        document.getElementById('commission-rate').value = commissionRate;
+      }
+      refreshAll();
+    }).catch(() => refreshAll());
+  } else {
+    currentUser = null;
+    document.getElementById('login-screen').style.display = '';
+    document.getElementById('app-wrapper').style.display  = 'none';
+  }
+});
 </script>
 </body>
 </html>

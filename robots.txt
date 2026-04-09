@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /PPBDesigns.html
+Disallow: /wendys-whims-tracker.html
 
 Sitemap: https://stephrawlingscreations.ie/sitemap.xml
