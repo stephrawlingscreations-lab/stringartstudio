@@ -495,7 +495,10 @@
     Wendy's Whims &amp; Wonders
     <span>Sales Tracker</span>
   </div>
-  <img id="user-avatar" src="" alt="" onclick="fbAuth.signOut()" title="Sign out (tap to sign out)" style="display:none;width:34px;height:34px;border-radius:50%;cursor:pointer;border:2px solid var(--rose-lt);">
+  <div style="display:flex;align-items:center;gap:0.75rem;">
+    <button class="btn btn-primary no-print" onclick="openAddModal()" style="white-space:nowrap;">+ Add Artwork</button>
+    <img id="user-avatar" src="" alt="" onclick="fbAuth.signOut()" title="Sign out (tap to sign out)" style="display:none;width:34px;height:34px;border-radius:50%;cursor:pointer;border:2px solid var(--rose-lt);">
+  </div>
 </div>
 
 <div class="nav-tabs">
@@ -633,8 +636,6 @@
 
 </div>
 
-<!-- FLOATING ADD BUTTON -->
-<button class="btn-add no-print" onclick="openAddModal()">+ Add Artwork</button>
 
 <!-- ADD / EDIT MODAL -->
 <div class="modal-overlay" id="modal-add">
