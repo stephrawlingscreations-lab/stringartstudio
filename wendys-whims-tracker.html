@@ -906,7 +906,8 @@ function signIn() {
 const STORE_KEY = 'wwwWorks';
 const SETT_KEY  = 'wwwSettings';
 
-function loadWorks()    { try { return JSON.parse(localStorage.getItem(STORE_KEY))||[]; } catch(e){ return []; } }
+function toArr(d)       { return !d ? [] : Array.isArray(d) ? d : Object.values(d); }
+function loadWorks()    { try { return toArr(JSON.parse(localStorage.getItem(STORE_KEY))); } catch(e){ return []; } }
 function saveWorks(a)   { localStorage.setItem(STORE_KEY, JSON.stringify(a)); if(currentUser) fbDb.ref('users/'+currentUser.uid+'/works').set(a).catch(()=>{}); }
 function loadSettings() { try { return JSON.parse(localStorage.getItem(SETT_KEY))||{}; } catch(e){ return {}; } }
 function saveSettings(s){ localStorage.setItem(SETT_KEY, JSON.stringify(s)); if(currentUser) fbDb.ref('users/'+currentUser.uid+'/settings').set(s).catch(()=>{}); }
@@ -1000,7 +1001,8 @@ function showToast(msg) {
 function refreshAll() {
   works = loadWorks();
   expenses = loadExpenses();
-  renderDashboard(); renderInventory(); renderAllWorks(); renderSales(); renderReports(); renderExpenses();
+  [renderDashboard, renderInventory, renderAllWorks, renderSales, renderReports, renderExpenses]
+    .forEach(fn => { try { fn(); } catch(e) { console.error(fn.name + ':', e); } });
 }
 
 // Dashboard — 3 key stats only
@@ -1188,7 +1190,7 @@ function saveWork(){
   else{ w.id=uid(); w.createdAt=Date.now(); works.unshift(w); }
   saveWorks(works);
   closeAddModal();
-  try { refreshAll(); } catch(e) { console.error('Render error:', e); works=loadWorks(); renderDashboard(); }
+  refreshAll();
   showToast(isEditing?'Artwork updated!':'Artwork added!');
 }
 
@@ -1274,7 +1276,7 @@ function confirmQuickSell() {
 
 // ── Expenses ──────────────────────────────────────────────────────────────────
 const EXP_KEY = 'wwwExpenses';
-function loadExpenses()   { try { return JSON.parse(localStorage.getItem(EXP_KEY))||[]; } catch(e){ return []; } }
+function loadExpenses()   { try { return toArr(JSON.parse(localStorage.getItem(EXP_KEY))); } catch(e){ return []; } }
 function saveExpenses(a)  { localStorage.setItem(EXP_KEY, JSON.stringify(a)); if(currentUser) fbDb.ref('users/'+currentUser.uid+'/expenses').set(a).catch(()=>{}); }
 let expenses = loadExpenses();
 
@@ -1424,13 +1426,13 @@ fbAuth.onAuthStateChanged(user => {
     fbDb.ref('users/' + user.uid).once('value').then(snap => {
       const data = snap.val() || {};
       if (data.works != null) {
-        works = data.works;
+        works = toArr(data.works);
         localStorage.setItem(STORE_KEY, JSON.stringify(works));
       } else {
         fbDb.ref('users/' + user.uid).set({ works: works, settings: loadSettings(), expenses: expenses }).catch(() => {});
       }
       if (data.expenses != null) {
-        expenses = data.expenses;
+        expenses = toArr(data.expenses);
         localStorage.setItem(EXP_KEY, JSON.stringify(expenses));
       }
       if (data.settings) {
