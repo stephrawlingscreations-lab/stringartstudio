@@ -1338,7 +1338,6 @@ function renderSales() {
   const selY=document.getElementById('sales-year'), selM=document.getElementById('sales-month');
   const curY=selY.value, curM=selM.value;
   selY.innerHTML='<option value="">All Years</option>'+years.map(y=>`<option value="${y}"${y===curY?' selected':''}>${y}</option>`).join('');
-  if(!curY&&years.length) selY.value=years[0];
   selM.innerHTML='<option value="">All Months</option>'+MONTHS.map((m,i)=>{ const v=String(i+1).padStart(2,'0'); return `<option value="${v}"${v===curM?' selected':''}>${m}</option>`; }).join('');
   let f=sold;
   if(q) f=f.filter(w=>[w.title,w.medium,w.notes].some(v=>(v||'').toLowerCase().includes(q)));
