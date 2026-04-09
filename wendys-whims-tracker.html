@@ -659,6 +659,17 @@
 
     <div class="form-row">
       <div class="form-group">
+        <label>ID Number</label>
+        <input type="text" id="f-id-number" placeholder="e.g. W001"/>
+      </div>
+      <div class="form-group">
+        <label>Item Number</label>
+        <input type="text" id="f-item-number" placeholder="e.g. 42"/>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
         <label>Medium</label>
         <input type="text" id="f-medium" placeholder="e.g. Acrylic…"/>
       </div>
@@ -722,7 +733,8 @@
 <div class="modal-overlay" id="modal-detail">
   <div class="modal">
     <div id="detail-content"></div>
-    <div style="display:flex;gap:0.7rem;justify-content:flex-end;margin-top:1rem;flex-wrap:wrap;">
+    <div style="display:flex;gap:0.7rem;justify-content:flex-end;margin-top:1rem;flex-wrap:wrap;align-items:center;">
+      <button class="btn btn-danger btn-sm" style="margin-right:auto;" onclick="deleteFromDetail()">Delete</button>
       <button class="btn btn-outline" onclick="closeDetailModal()">Close</button>
       <button class="btn btn-primary btn-sm" onclick="editFromDetail()">Edit</button>
     </div>
@@ -956,6 +968,8 @@ function openAddModal(id=null) {
   if(id) {
     const w=works.find(x=>x.id===id); if(!w) return;
     document.getElementById('f-title').value=w.title||'';
+    document.getElementById('f-id-number').value=w.idNumber||'';
+    document.getElementById('f-item-number').value=w.itemNumber||'';
     document.getElementById('f-medium').value=w.medium||'';
     document.getElementById('f-size').value=w.size||'';
     document.getElementById('f-price').value=w.price||'';
@@ -967,7 +981,7 @@ function openAddModal(id=null) {
     document.getElementById('f-notes').value=w.notes||'';
     if(w.photoData){ const p=document.getElementById('photo-preview'); p.src=w.photoData; p.style.display='block'; document.getElementById('upload-placeholder').style.display='none'; }
   } else {
-    ['f-title','f-medium','f-size','f-price','f-date-sold','f-sold-price','f-commission-paid','f-notes'].forEach(id=>document.getElementById(id).value='');
+    ['f-title','f-id-number','f-item-number','f-medium','f-size','f-price','f-date-sold','f-sold-price','f-commission-paid','f-notes'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('f-status').value='in_shop';
     document.getElementById('f-date-placed').value=new Date().toISOString().slice(0,10);
   }
@@ -1003,6 +1017,8 @@ function saveWork(){
   const commPaid=commRaw!==''?parseFloat(commRaw):(status==='sold'?commAmt(sp):null);
   const w={
     title:document.getElementById('f-title').value.trim(),
+    idNumber:document.getElementById('f-id-number').value.trim(),
+    itemNumber:document.getElementById('f-item-number').value.trim(),
     medium:document.getElementById('f-medium').value.trim(),
     size:document.getElementById('f-size').value.trim(),
     price:parseFloat(document.getElementById('f-price').value)||0,
@@ -1040,7 +1056,7 @@ function openDetail(id){
     <div style="font-family:'Playfair Display',serif;font-size:1.3rem;margin-bottom:0.5rem;">${w.title||'Untitled'}</div>
     ${statusBadge(w.status)}
     <div style="margin-top:1rem;">
-      ${drow('Medium',w.medium)}${drow('Size',w.size)}${drow('Asking Price',fmt(w.price))}${drow('Date Placed',w.datePlaced)}
+      ${drow('ID Number',w.idNumber)}${drow('Item Number',w.itemNumber)}${drow('Medium',w.medium)}${drow('Size',w.size)}${drow('Asking Price',fmt(w.price))}${drow('Date Placed',w.datePlaced)}
       ${w.status==='sold'?drow('Date Sold',w.dateSold):''}
       ${w.status==='sold'?drow('Sold For',fmt(sp)):''}
       ${w.status==='sold'?drow('Commission',fmt(comm),'color:var(--rose)'):''}
@@ -1057,6 +1073,13 @@ function drow(lbl,val,style=''){
 
 function closeDetailModal(){ document.getElementById('modal-detail').classList.remove('open'); detailId=null; }
 function editFromDetail(){ closeDetailModal(); openAddModal(detailId); }
+function deleteFromDetail(){
+  if(!detailId) return;
+  if(!confirm('Delete this artwork? This cannot be undone.')) return;
+  works=works.filter(w=>w.id!==detailId); saveWorks(works); closeDetailModal();
+  try { refreshAll(); } catch(e) { console.error('Render error:', e); works=loadWorks(); renderDashboard(); }
+  showToast('Artwork deleted.');
+}
 
 document.getElementById('modal-add').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeAddModal(); });
 document.getElementById('modal-detail').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeDetailModal(); });
