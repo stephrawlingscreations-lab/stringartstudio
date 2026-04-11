@@ -1241,6 +1241,7 @@ function artworkCard(w) {
         ${w.size?w.size:''}
       </div>
       ${statusBadge(w.status)}
+      ${w.status==='in_shop' ? daysInShopBadge(w) : ''}
     </div>
   </div>`;
 }
