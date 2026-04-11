@@ -1218,7 +1218,7 @@ function inventoryCard(w) {
       <div class="artwork-body">
         <div class="artwork-title">${w.title||'Untitled'}</div>
         <div class="artwork-price">${fmt(w.price)}</div>
-        <div class="artwork-meta">${w.medium?w.medium+'<br/>':''}${w.size?w.size:''}</div>
+        <div class="artwork-meta">${w.medium?w.medium+'<br/>':''}${w.size?w.size:''}${(w.itemNumber||w.idNumber)?`<br/><span style="font-size:0.7rem;color:var(--ink-lt);">${[w.itemNumber?'#'+w.itemNumber:'',w.idNumber?w.idNumber:''].filter(Boolean).join(' · ')}</span>`:''}</div>
         ${statusBadge(w.status)}
         ${daysInShopBadge(w)}
       </div>
@@ -1239,6 +1239,7 @@ function artworkCard(w) {
       <div class="artwork-meta">
         ${w.medium?w.medium+'<br/>':''}
         ${w.size?w.size:''}
+        ${(w.itemNumber||w.idNumber)?`<br/><span style="font-size:0.7rem;color:var(--ink-lt);">${[w.itemNumber?'#'+w.itemNumber:'',w.idNumber?w.idNumber:''].filter(Boolean).join(' · ')}</span>`:''}
       </div>
       ${statusBadge(w.status)}
       ${w.status==='in_shop' ? daysInShopBadge(w) : ''}
