@@ -581,6 +581,7 @@
         <option value="date_added_asc">Oldest First</option>
         <option value="price_desc">Price High–Low</option>
         <option value="price_asc">Price Low–High</option>
+        <option value="days_in_shop_desc">Longest in Shop</option>
       </select>
     </div>
     <div class="artwork-grid" id="all-works-grid"></div>
@@ -1328,6 +1329,7 @@ function renderAllWorks() {
     if(sort==='price_desc') return (b.price||0)-(a.price||0);
     if(sort==='price_asc')  return (a.price||0)-(b.price||0);
     if(sort==='date_added_asc') return a.createdAt-b.createdAt;
+    if(sort==='days_in_shop_desc') return (a.datePlaced||'zzz').localeCompare(b.datePlaced||'zzz');
     return b.createdAt-a.createdAt;
   });
   document.getElementById('all-works-grid').innerHTML=items.length?items.map(artworkCard).join(''):emptyState('No works found.');
