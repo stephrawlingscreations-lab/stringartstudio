@@ -841,6 +841,7 @@
         </div>
         <img id="photo-preview" class="img-preview"/>
       </div>
+      <button type="button" id="btn-remove-photo" onclick="removePhoto()" style="display:none;margin-top:0.5rem;background:none;border:none;color:var(--rose);font-size:0.82rem;cursor:pointer;text-decoration:underline;padding:0;">Remove photo</button>
     </div>
 
     <div class="form-group">
@@ -1486,13 +1487,24 @@ function saveCommission() {
 }
 
 // Add/Edit modal
+let photoRemoved = false;
+function removePhoto() {
+  pendingPhotoData = null;
+  photoRemoved = true;
+  const p = document.getElementById('photo-preview');
+  p.src = ''; p.style.display = 'none';
+  document.getElementById('upload-placeholder').style.display = 'block';
+  document.getElementById('btn-remove-photo').style.display = 'none';
+  document.getElementById('photo-input').value = '';
+}
 function openAddModal(id=null) {
-  editingId=id; pendingPhotoData=null;
+  editingId=id; pendingPhotoData=null; photoRemoved=false;
   document.getElementById('modal-add-title').textContent=id?'Edit Artwork':'Add New Artwork';
   document.getElementById('btn-delete').style.display=id?'inline-block':'none';
   document.getElementById('photo-preview').style.display='none';
   document.getElementById('upload-placeholder').style.display='block';
   document.getElementById('photo-input').value='';
+  document.getElementById('btn-remove-photo').style.display='none';
   if(id) {
     const w=works.find(x=>x.id===id); if(!w) return;
     document.getElementById('f-title').value=w.title||'';
@@ -1512,7 +1524,7 @@ function openAddModal(id=null) {
       : (w.materialsCost > 0 ? [{description:'Materials', amount:w.materialsCost, category:w.materialsCategory||'supplies'}] : []);
     costItems.forEach(c => addLinkedCostRow(c.description||'', c.amount||'', c.category||'supplies'));
     syncLinkedCostsEmpty();
-    if(w.photoData){ const p=document.getElementById('photo-preview'); p.src=w.photoData; p.style.display='block'; document.getElementById('upload-placeholder').style.display='none'; }
+    if(w.photoData){ const p=document.getElementById('photo-preview'); p.src=w.photoData; p.style.display='block'; document.getElementById('upload-placeholder').style.display='none'; document.getElementById('btn-remove-photo').style.display='block'; }
   } else {
     ['f-title','f-id-number','f-item-number','f-medium','f-size','f-price','f-date-sold','f-sold-price','f-commission-paid','f-notes'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('f-status').value='in_shop';
@@ -1556,7 +1568,7 @@ function resizeImage(dataUrl, callback) {
 function handlePhotoChange(e){
   const file=e.target.files[0]; if(!file) return;
   const reader=new FileReader();
-  reader.onload=ev=>{ resizeImage(ev.target.result, resized => { pendingPhotoData=resized; const p=document.getElementById('photo-preview'); p.src=resized; p.style.display='block'; document.getElementById('upload-placeholder').style.display='none'; }); };
+  reader.onload=ev=>{ resizeImage(ev.target.result, resized => { pendingPhotoData=resized; photoRemoved=false; const p=document.getElementById('photo-preview'); p.src=resized; p.style.display='block'; document.getElementById('upload-placeholder').style.display='none'; document.getElementById('btn-remove-photo').style.display='block'; }); };
   reader.readAsDataURL(file);
 }
 
@@ -1585,7 +1597,7 @@ function saveWork(){
     }).filter(e=>e.amount>0||e.description),
   };
   if(pendingPhotoData){ w.photoData=pendingPhotoData; }
-  else if(editingId){ const ex=works.find(x=>x.id===editingId); if(ex?.photoData) w.photoData=ex.photoData; }
+  else if(editingId && !photoRemoved){ const ex=works.find(x=>x.id===editingId); if(ex?.photoData) w.photoData=ex.photoData; }
   if(editingId){ const idx=works.findIndex(x=>x.id===editingId); if(idx>-1){w.id=editingId;w.createdAt=works[idx].createdAt;works[idx]=w;} }
   else{ w.id=uid(); w.createdAt=Date.now(); works.unshift(w); }
   saveWorks(works);
