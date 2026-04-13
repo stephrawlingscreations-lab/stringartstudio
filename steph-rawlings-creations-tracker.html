@@ -605,6 +605,7 @@
             <th>Artwork</th>
             <th>Date Placed</th>
             <th>Date Sold</th>
+            <th>Channel</th>
             <th>Asking Price</th>
             <th>Sold For</th>
             <th>Commission</th>
@@ -906,6 +907,15 @@
           <label>Sold For (€)</label>
           <input type="number" id="f-sold-price" min="0" step="0.01" placeholder="0.00" oninput="autoCommission()"/>
         </div>
+      </div>
+      <div class="form-group">
+        <label>Sale Channel</label>
+        <select id="f-sale-channel" onchange="autoCommission()">
+          <option value="shop">Shop</option>
+          <option value="private">Private Sale</option>
+          <option value="market">Market / Fair</option>
+          <option value="online">Online</option>
+        </select>
       </div>
       <input type="hidden" id="f-commission-paid"/>
     </div>
@@ -1352,9 +1362,11 @@ function renderSales() {
   const tbody=document.getElementById('sales-tbody');
   tbody.innerHTML=f.length
     ?f.map(w=>{ const sp=w.soldPrice||0, comm=w.commissionPaid!=null?w.commissionPaid:commAmt(sp), net=sp-comm;
-      return `<tr><td><strong>${w.title||'Untitled'}</strong>${w.medium?`<br/><span style="font-size:0.78rem;color:var(--ink-lt);">${w.medium}</span>`:''}</td><td>${fmtDate(w.datePlaced)}</td><td>${fmtDate(w.dateSold)}</td><td>${fmt(w.price)}</td><td>${fmt(sp)}</td><td style="color:var(--rose);">${fmt(comm)}</td><td style="font-weight:700;color:var(--green);">${fmt(net)}</td><td style="font-size:0.8rem;color:var(--ink-lt);max-width:160px;">${w.notes||'—'}</td></tr>`;
+      const chLabels={shop:'🏪 Shop',private:'🤝 Private',market:'🛍️ Market',online:'🌐 Online'};
+      const ch=chLabels[w.saleChannel]||chLabels.shop;
+      return `<tr><td><strong>${w.title||'Untitled'}</strong>${w.medium?`<br/><span style="font-size:0.78rem;color:var(--ink-lt);">${w.medium}</span>`:''}</td><td>${fmtDate(w.datePlaced)}</td><td>${fmtDate(w.dateSold)}</td><td style="font-size:0.82rem;">${ch}</td><td>${fmt(w.price)}</td><td>${fmt(sp)}</td><td style="color:var(--rose);">${fmt(comm)}</td><td style="font-weight:700;color:var(--green);">${fmt(net)}</td><td style="font-size:0.8rem;color:var(--ink-lt);max-width:160px;">${w.notes||'—'}</td></tr>`;
     }).join('')
-    :'<tr><td colspan="8" style="text-align:center;color:var(--ink-lt);padding:2rem;">No sales for this period.</td></tr>';
+    :'<tr><td colspan="9" style="text-align:center;color:var(--ink-lt);padding:2rem;">No sales for this period.</td></tr>';
   const tg=f.reduce((a,w)=>a+(w.soldPrice||0),0);
   const tc=f.reduce((a,w)=>{ const sp=w.soldPrice||0; return a+(w.commissionPaid!=null?w.commissionPaid:commAmt(sp)); },0);
   document.getElementById('sales-totals').innerHTML=f.length
@@ -1413,12 +1425,12 @@ function renderReports() {
 
 // CSV export
 function exportCSV() {
-  const headers = ['Title','Item Number','Code Number','Medium','Size','Asking Price','Status','Date Placed','Date Sold','Sold Price','Commission Paid','Net Earned','Notes'];
+  const headers = ['Title','Item Number','Code Number','Medium','Size','Asking Price','Status','Sale Channel','Date Placed','Date Sold','Sold Price','Commission Paid','Net Earned','Notes'];
   const escape = v => '"' + String(v??'').replace(/"/g,'""') + '"';
   const rows = works.map(w => {
     const sp = w.soldPrice||0;
     const comm = w.commissionPaid!=null ? w.commissionPaid : commAmt(sp);
-    return [w.title,w.idNumber,w.itemNumber,w.medium,w.size,w.price,w.status,w.datePlaced,w.dateSold,sp,(w.status==='sold'||w.status==='sold_installments')?comm:'',sp?sp-comm:'',w.notes].map(escape).join(',');
+    return [w.title,w.idNumber,w.itemNumber,w.medium,w.size,w.price,w.status,w.saleChannel||'',w.datePlaced,w.dateSold,sp,(w.status==='sold'||w.status==='sold_installments')?comm:'',sp?sp-comm:'',w.notes].map(escape).join(',');
   });
   const csv = [headers.map(escape).join(','), ...rows].join('\r\n');
   const a = document.createElement('a');
@@ -1519,6 +1531,7 @@ function openAddModal(id=null) {
     document.getElementById('f-date-placed').value=w.datePlaced||'';
     document.getElementById('f-date-sold').value=w.dateSold||'';
     document.getElementById('f-sold-price').value=w.soldPrice||'';
+    document.getElementById('f-sale-channel').value=w.saleChannel||'shop';
     document.getElementById('f-commission-paid').value=w.commissionPaid!=null?w.commissionPaid:'';
     document.getElementById('f-notes').value=w.notes||'';
     document.getElementById('linked-costs-list').innerHTML='';
@@ -1550,7 +1563,8 @@ function handleStatusChange(){
 
 function autoCommission(){
   const sp=parseFloat(document.getElementById('f-sold-price').value)||0;
-  if(sp>0) document.getElementById('f-commission-paid').value=commAmt(sp).toFixed(2);
+  const channel=document.getElementById('f-sale-channel')?.value||'shop';
+  if(sp>0) document.getElementById('f-commission-paid').value=(channel==='shop'?commAmt(sp):0).toFixed(2);
 }
 
 function resizeImage(dataUrl, callback) {
@@ -1588,6 +1602,7 @@ function saveWork(){
     size:document.getElementById('f-size').value.trim(),
     price:parseFloat(document.getElementById('f-price').value)||0,
     status,
+    saleChannel:['sold','sold_installments'].includes(status)?document.getElementById('f-sale-channel').value:'',
     datePlaced:document.getElementById('f-date-placed').value,
     dateSold:status==='sold'?document.getElementById('f-date-sold').value:null,
     soldPrice:status==='sold'?sp:null,
@@ -1630,6 +1645,7 @@ function openDetail(id){
     <div style="margin-top:1rem;">
       ${drow('Item Number',w.itemNumber)}${drow('Code Number',w.idNumber)}${drow('Medium',w.medium)}${drow('Size',w.size)}${drow('Asking Price',fmt(w.price))}${drow('Date Placed',fmtDate(w.datePlaced))}
       ${w.status==='sold'?drow('Date Sold',fmtDate(w.dateSold)):''}
+      ${w.status==='sold'?drow('Sale Channel',{shop:'🏪 Shop',private:'🤝 Private',market:'🛍️ Market',online:'🌐 Online'}[w.saleChannel]||'🏪 Shop'):''}
       ${w.status==='sold'?drow('Sold For',fmt(sp)):''}
       ${w.status==='sold'?drow('Commission',fmt(comm),'color:var(--rose)'):''}
       ${w.status==='sold'?drow('Net to Steph',fmt(net),'color:var(--green);font-weight:700;'):''}
