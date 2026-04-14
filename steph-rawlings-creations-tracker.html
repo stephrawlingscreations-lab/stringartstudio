@@ -1153,8 +1153,8 @@ function signIn() {
   });
 }
 
-const STORE_KEY = 'wwwWorks';
-const SETT_KEY  = 'wwwSettings';
+const STORE_KEY = 'srcWorks';
+const SETT_KEY  = 'srcSettings';
 
 function toArr(d)       { return !d ? [] : Array.isArray(d) ? d : Object.values(d); }
 function stripPhoto(w)  { if(!w) return null; const {photoData, ...rest} = w; return rest; }
