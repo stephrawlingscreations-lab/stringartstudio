@@ -1734,7 +1734,7 @@ function confirmQuickSell() {
 }
 
 // ── Expenses ──────────────────────────────────────────────────────────────────
-const EXP_KEY = 'wwwExpenses';
+const EXP_KEY = 'srcExpenses';
 function stripReceipt(e) { const {receiptData, ...rest} = e; return rest; }
 function loadExpenses()   { try { return toArr(JSON.parse(localStorage.getItem(EXP_KEY))); } catch(e){ return []; } }
 function saveExpenses(a)  {
@@ -1931,7 +1931,7 @@ function viewReceipt(id) {
 document.getElementById('modal-expense').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeExpenseModal(); });
 
 // ── Payments ─────────────────────────────────────────────────────────────────
-const PAY_KEY = 'wwwPayments';
+const PAY_KEY = 'srcPayments';
 function loadPayments()   { try { return toArr(JSON.parse(localStorage.getItem(PAY_KEY))); } catch(e){ return []; } }
 function savePayments(a)  {
   try { localStorage.setItem(PAY_KEY, JSON.stringify(a)); } catch(e) {}
@@ -2059,7 +2059,7 @@ function deleteCurrentPayment() {
 document.getElementById('modal-payment').addEventListener('click',e=>{ if(e.target===e.currentTarget) closePaymentModal(); });
 
 // ── Classes ───────────────────────────────────────────────────────────────────
-const CLASSES_KEY = 'wwwClasses';
+const CLASSES_KEY = 'srcClasses';
 function loadClasses()   { try { return toArr(JSON.parse(localStorage.getItem(CLASSES_KEY))); } catch(e){ return []; } }
 function saveClasses(a)  {
   try { localStorage.setItem(CLASSES_KEY, JSON.stringify(a)); } catch(e) {}
