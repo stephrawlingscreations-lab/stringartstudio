@@ -1117,6 +1117,15 @@
       <label>Date Sold</label>
       <input type="date" id="qsell-date"/>
     </div>
+    <div class="form-group">
+      <label>Sale Channel</label>
+      <select id="qsell-channel">
+        <option value="shop">Shop</option>
+        <option value="private">Private Sale</option>
+        <option value="market">Market / Fair</option>
+        <option value="online">Online</option>
+      </select>
+    </div>
     <div class="form-group" id="qsell-notes-group" style="display:none;">
       <label>Payment Notes</label>
       <textarea id="qsell-notes" placeholder="e.g. 3 payments of €50…"></textarea>
@@ -1248,19 +1257,26 @@ function inventoryCard(w) {
 }
 
 function artworkCard(w) {
-  return `<div class="artwork-card" onclick="openDetail('${w.id}')">
-    <div class="artwork-img">${imgEl(w)}</div>
-    <div class="artwork-body">
-      <div class="artwork-title">${w.title||'Untitled'}</div>
-      <div class="artwork-price">${fmt(w.price)}</div>
-      <div class="artwork-meta">
-        ${w.medium?w.medium+'<br/>':''}
-        ${w.size?w.size:''}
-        ${(w.itemNumber||w.idNumber)?`<br/><span style="font-size:0.7rem;color:var(--ink-lt);">${[w.itemNumber?'#'+w.itemNumber:'',w.idNumber?w.idNumber:''].filter(Boolean).join(' · ')}</span>`:''}
+  const notSold = w.status!=='sold' && w.status!=='sold_installments';
+  return `<div class="artwork-card">
+    <div onclick="openDetail('${w.id}')" style="cursor:pointer;">
+      <div class="artwork-img">${imgEl(w)}</div>
+      <div class="artwork-body">
+        <div class="artwork-title">${w.title||'Untitled'}</div>
+        <div class="artwork-price">${fmt(w.price)}</div>
+        <div class="artwork-meta">
+          ${w.medium?w.medium+'<br/>':''}
+          ${w.size?w.size:''}
+          ${(w.itemNumber||w.idNumber)?`<br/><span style="font-size:0.7rem;color:var(--ink-lt);">${[w.itemNumber?'#'+w.itemNumber:'',w.idNumber?w.idNumber:''].filter(Boolean).join(' · ')}</span>`:''}
+        </div>
+        ${statusBadge(w.status)}
+        ${w.status==='in_shop' ? daysInShopBadge(w) : ''}
       </div>
-      ${statusBadge(w.status)}
-      ${w.status==='in_shop' ? daysInShopBadge(w) : ''}
     </div>
+    ${notSold ? `<div style="display:flex;gap:0.5rem;padding:0.75rem 1rem;border-top:1px solid #f0f0f0;">
+      <button class="btn btn-sm" style="flex:1;background:var(--green-lt);color:var(--green);border:2px solid var(--green);font-weight:700;" onclick="event.stopPropagation();openQuickSell('${w.id}','sold')">✓ Sold</button>
+      <button class="btn btn-sm" style="flex:1;background:#e8f0fe;color:#1a56c4;border:2px solid #a8c4f0;font-weight:700;" onclick="event.stopPropagation();openQuickSell('${w.id}','installments')">💳 Installments</button>
+    </div>` : ''}
   </div>`;
 }
 
@@ -1688,6 +1704,7 @@ function openQuickSell(id, type) {
   document.getElementById('qsell-price').value=w.price||'';
   document.getElementById('qsell-date').value=new Date().toISOString().slice(0,10);
   document.getElementById('qsell-notes').value='';
+  document.getElementById('qsell-channel').value=w.saleChannel||'shop';
   document.getElementById('qsell-notes-group').style.display=type==='installments'?'':'none';
   document.getElementById('modal-quick-sell').classList.add('open');
 }
@@ -1700,11 +1717,13 @@ function confirmQuickSell() {
   const sp=parseFloat(document.getElementById('qsell-price').value)||0;
   const date=document.getElementById('qsell-date').value;
   const notes=document.getElementById('qsell-notes').value.trim();
+  const channel=document.getElementById('qsell-channel').value||'shop';
   const idx=works.findIndex(x=>x.id===id); if(idx<0) return;
   const w={...works[idx]};
   w.status=type==='installments'?'sold_installments':'sold';
   w.soldPrice=sp;
   w.dateSold=date;
+  w.saleChannel=channel;
   w.commissionPaid=commAmt(sp);
   if(notes) w.notes=(w.notes?w.notes+'\n':'')+notes;
   works[idx]=w;
