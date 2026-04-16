@@ -1175,18 +1175,14 @@ function signIn() {
   });
 }
 
-const STORE_KEY = 'srcWorks';
-const SETT_KEY  = 'srcSettings';
-
 function toArr(d)       { return !d ? [] : Array.isArray(d) ? d : Object.values(d); }
 function stripPhoto(w)  { if(!w) return null; const {photoData, ...rest} = w; return rest; }
-function loadWorks()    { try { return toArr(JSON.parse(localStorage.getItem(STORE_KEY))); } catch(e){ return []; } }
+function loadWorks()    { return []; }
 function saveWorks(a)   {
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(a.map(stripPhoto))); } catch(e) {}
   if(currentUser) try { fbDb.ref('users/'+currentUser.uid+'/works').set(a).catch(()=>{}); } catch(e) { console.warn('Firebase works save:', e); }
 }
-function loadSettings() { try { return JSON.parse(localStorage.getItem(SETT_KEY))||{}; } catch(e){ return {}; } }
-function saveSettings(s){ localStorage.setItem(SETT_KEY, JSON.stringify(s)); if(currentUser) fbDb.ref('users/'+currentUser.uid+'/settings').set(s).catch(()=>{}); }
+function loadSettings() { return {}; }
+function saveSettings(s){ if(currentUser) fbDb.ref('users/'+currentUser.uid+'/settings').set(s).catch(()=>{}); }
 
 let works = loadWorks();
 let commissionRate = loadSettings().commissionRate || 25;
@@ -1742,11 +1738,9 @@ function confirmQuickSell() {
 }
 
 // ── Expenses ──────────────────────────────────────────────────────────────────
-const EXP_KEY = 'srcExpenses';
 function stripReceipt(e) { const {receiptData, ...rest} = e; return rest; }
-function loadExpenses()   { try { return toArr(JSON.parse(localStorage.getItem(EXP_KEY))); } catch(e){ return []; } }
+function loadExpenses()   { return []; }
 function saveExpenses(a)  {
-  try { localStorage.setItem(EXP_KEY, JSON.stringify(a.map(stripReceipt))); } catch(e) {}
   if(currentUser) try { fbDb.ref('users/'+currentUser.uid+'/expenses').set(a).catch(()=>{}); } catch(e) { console.warn('Firebase expenses save:', e); }
 }
 let expenses = loadExpenses();
@@ -1947,10 +1941,8 @@ function viewReceipt(id) {
 document.getElementById('modal-expense').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeExpenseModal(); });
 
 // ── Payments ─────────────────────────────────────────────────────────────────
-const PAY_KEY = 'srcPayments';
-function loadPayments()   { try { return toArr(JSON.parse(localStorage.getItem(PAY_KEY))); } catch(e){ return []; } }
+function loadPayments()   { return []; }
 function savePayments(a)  {
-  try { localStorage.setItem(PAY_KEY, JSON.stringify(a)); } catch(e) {}
   if(currentUser) try { fbDb.ref('users/'+currentUser.uid+'/payments').set(a).catch(()=>{}); } catch(e) {}
 }
 let payments = loadPayments();
@@ -2075,10 +2067,8 @@ function deleteCurrentPayment() {
 document.getElementById('modal-payment').addEventListener('click',e=>{ if(e.target===e.currentTarget) closePaymentModal(); });
 
 // ── Classes ───────────────────────────────────────────────────────────────────
-const CLASSES_KEY = 'srcClasses';
-function loadClasses()   { try { return toArr(JSON.parse(localStorage.getItem(CLASSES_KEY))); } catch(e){ return []; } }
+function loadClasses()   { return []; }
 function saveClasses(a)  {
-  try { localStorage.setItem(CLASSES_KEY, JSON.stringify(a)); } catch(e) {}
   if(currentUser) try { fbDb.ref('users/'+currentUser.uid+'/classes').set(a).catch(()=>{}); } catch(e) {}
 }
 let classes = loadClasses();
@@ -2276,25 +2266,20 @@ fbAuth.onAuthStateChanged(user => {
       const data = snap.val() || {};
       if (data.works != null) {
         works = toArr(data.works);
-        try { localStorage.setItem(STORE_KEY, JSON.stringify(works.map(stripPhoto))); } catch(e) {}
       } else {
         fbDb.ref('users/' + user.uid).set({ works: works, settings: loadSettings(), expenses: expenses, payments: payments, classes: classes }).catch(() => {});
       }
       if (data.expenses != null) {
         expenses = toArr(data.expenses);
-        try { localStorage.setItem(EXP_KEY, JSON.stringify(expenses.map(stripReceipt))); } catch(e) {}
       }
       if (data.payments != null) {
         payments = toArr(data.payments);
-        try { localStorage.setItem(PAY_KEY, JSON.stringify(payments)); } catch(e) {}
       }
       if (data.classes != null) {
         classes = toArr(data.classes);
-        try { localStorage.setItem(CLASSES_KEY, JSON.stringify(classes)); } catch(e) {}
       }
       if (data.settings) {
         const s = data.settings;
-        localStorage.setItem(SETT_KEY, JSON.stringify(s));
         commissionRate = s.commissionRate || 25;
         document.getElementById('commission-rate').value = commissionRate;
       }

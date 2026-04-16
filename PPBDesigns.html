@@ -85,8 +85,6 @@ const SEED={
   ],
 };
 
-const load=(k,fb)=>{try{const v=localStorage.getItem("ppb_"+k);return v?JSON.parse(v):fb}catch{return fb}};
-const saveLS=(k,v)=>{try{localStorage.setItem("ppb_"+k,JSON.stringify(v))}catch{}};
 const saveFB=(uid,k,v)=>{if(!uid)return;fbDb.ref(`users/${uid}/${k}`).set(v).catch(()=>{})};
 const loadFB=(uid)=>fbDb.ref(`users/${uid}`).once("value").then(s=>s.val()||{});
 const genId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
@@ -145,12 +143,12 @@ function Card({children,style:s={}}){return<div style={{background:"#fff",border
 // ════════════════════════════════════════════════════════════════════════════
 function App({user}){
   const[fbLoading,setFbLoading]=useState(true);
-  const[customers,  setCR]=useState(()=>load("customers",  SEED.customers));
-  const[inProgress, setIPR]=useState(()=>load("inProgress",SEED.inProgress));
-  const[completed,  setCOR]=useState(()=>load("completed", SEED.completed));
-  const[supplies,   setSR]=useState(()=>load("supplies",   SEED.supplies));
-  const[shopStock,  setSSR]=useState(()=>load("shopStock", SEED.shopStock));
-  const[expenses,   setER]=useState(()=>load("expenses",   SEED.expenses));
+  const[customers,  setCR]=useState(SEED.customers);
+  const[inProgress, setIPR]=useState(SEED.inProgress);
+  const[completed,  setCOR]=useState(SEED.completed);
+  const[supplies,   setSR]=useState(SEED.supplies);
+  const[shopStock,  setSSR]=useState(SEED.shopStock);
+  const[expenses,   setER]=useState(SEED.expenses);
   const[tab,setTab]=useState("dashboard");
   const[toast,setToast]=useState({msg:"",color:C.green});
   const[modals,setModals]=useState({newOrder:false,newCustomer:false,complete:null,viewCard:null,viewCustomer:null,newExpense:false,newSupply:false,backup:false});
@@ -160,16 +158,8 @@ function App({user}){
     const setters={customers:setCR,inProgress:setIPR,completed:setCOR,supplies:setSR,shopStock:setSSR,expenses:setER};
     loadFB(user.uid).then(data=>{
       const hasCloud=Object.keys(data).length>0;
-      Object.keys(defs).forEach(k=>{
-        const val=hasCloud?(data[k]??defs[k]):load(k,defs[k]);
-        setters[k](val);saveLS(k,val);
-      });
-      // First sign-in on a new device: push any existing localStorage data up to Firebase
-      if(!hasCloud){
-        const migrate={};
-        Object.keys(defs).forEach(k=>migrate[k]=load(k,defs[k]));
-        fbDb.ref(`users/${user.uid}`).set(migrate).catch(()=>{});
-      }
+      Object.keys(defs).forEach(k=>setters[k](hasCloud?(data[k]??defs[k]):defs[k]));
+      if(!hasCloud) fbDb.ref(`users/${user.uid}`).set(defs).catch(()=>{});
       setFbLoading(false);
     }).catch(()=>setFbLoading(false));
   },[user.uid]);
@@ -177,7 +167,7 @@ function App({user}){
   const openM=(k,v=true)=>setModals(m=>({...m,[k]:v}));
   const closeM=k=>setModals(m=>({...m,[k]:false}));
   const showT=(msg,color=C.green)=>{setToast({msg,color});setTimeout(()=>setToast({msg:"",color:C.green}),2200)};
-  const mk=(set,key)=>fn=>set(prev=>{const next=typeof fn==="function"?fn(prev):fn;saveLS(key,next);saveFB(user.uid,key,next);return next});
+  const mk=(set,key)=>fn=>set(prev=>{const next=typeof fn==="function"?fn(prev):fn;saveFB(user.uid,key,next);return next});
   const setCustomers=useCallback(mk(setCR,"customers"),[]);
   const setInProgress=useCallback(mk(setIPR,"inProgress"),[]);
   const setCompleted=useCallback(mk(setCOR,"completed"),[]);
