@@ -693,6 +693,14 @@
       </div>
       <div id="restore-msg" style="display:none;margin-top:1rem;padding:0.75rem 1rem;border-radius:var(--radius-sm);font-size:0.88rem;font-weight:700;"></div>
     </div>
+
+    <div class="settings-card">
+      <div class="settings-card-title">Clear Expenses Data</div>
+      <p style="font-size:0.85rem;color:var(--ink-mid);margin-bottom:1.2rem;line-height:1.6;">
+        If you see expenses from another tracker appearing here, use this to permanently clear all expenses from this tracker. Download a backup first if you want to keep a copy.
+      </p>
+      <button class="btn btn-danger btn-sm" onclick="clearAllExpenses()">Clear All Expenses</button>
+    </div>
   </div>
 
   <!-- EXPENSES -->
@@ -1920,6 +1928,14 @@ function deleteCurrentExpense() {
   if(!confirm('Delete this expense? This cannot be undone.')) return;
   expenses=expenses.filter(e=>e.id!==editingExpId); saveExpenses(expenses); closeExpenseModal(); renderExpenses();
   showToast('Expense deleted.');
+}
+
+function clearAllExpenses() {
+  if(!confirm('This will permanently delete ALL expenses from this tracker. Download a backup first if you need to keep them.\n\nContinue?')) return;
+  expenses = [];
+  saveExpenses(expenses);
+  renderExpenses();
+  showToast('All expenses cleared.');
 }
 
 function viewReceipt(id) {
