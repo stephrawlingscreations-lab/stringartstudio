@@ -319,7 +319,7 @@ function CompletedTab({completed,setCompleted,showToast}){
     .filter(o=>filter==="All"||o.channel===filter)
     .filter(o=>!search||o.customerName.toLowerCase().includes(search.toLowerCase())||o.cardType.toLowerCase().includes(search.toLowerCase()));
   const totalRev=filtered.reduce((s,o)=>s+o.total,0);
-  const deleteOrder=(id)=>{setCompleted(c=>c.filter(o=>o.id!==id));showToast("Order removed");};
+  const deleteOrder=(id)=>{if(!window.confirm("Delete this completed order? This can't be undone."))return;setCompleted(c=>c.filter(o=>o.id!==id));showToast("Order removed");};
   const setPhoto=(id,photo)=>{setCompleted(c=>c.map(o=>o.id===id?{...o,photo}:o));showToast("Photo saved!")};
   const saveOrder=(id,changes)=>{setCompleted(c=>c.map(o=>o.id===id?{...o,...changes}:o));setEditOrder(null);showToast("Order updated!")};
   const printCompleted=()=>{
@@ -372,7 +372,7 @@ function CompletedTab({completed,setCompleted,showToast}){
   </div>;
 }
 function EditCompletedOrderForm({order,onSave,onCancel}){
-  const[f,setF]=useState({cardType:order.cardType,qty:order.qty,total:order.total,payment:order.payment||"Cash",completedDate:order.completedDate||"",notes:order.notes||""});
+  const[f,setF]=useState({cardType:order.cardType,qty:order.qty,total:order.total,payment:order.payment||"Cash",completedDate:order.completedDate||"",notes:order.notes||"",postage:order.postage||""});
   const sf=(k,v)=>setF(x=>({...x,[k]:v}));
   return<div>
     <MTitle sub={order.customerName}>Edit Completed Order</MTitle>
@@ -381,10 +381,11 @@ function EditCompletedOrderForm({order,onSave,onCancel}){
     <Inp label="Total (€)" type="number" step="0.01" min={0} value={f.total} onChange={e=>sf("total",parseFloat(e.target.value)||0)}/>
     <Sel label="Payment" options={PAYMENT} value={f.payment} onChange={e=>sf("payment",e.target.value)}/>
     <Inp label="Completed Date" type="date" value={f.completedDate} onChange={e=>sf("completedDate",e.target.value)}/>
+    <Inp label="Postage (€, leave blank if none)" type="number" step="0.01" min={0} value={f.postage} onChange={e=>sf("postage",e.target.value?parseFloat(e.target.value):"")}/>
     <Txt label="Notes" value={f.notes} onChange={e=>sf("notes",e.target.value)} placeholder="Any notes…"/>
     <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
       <Btn onClick={onCancel} variant="ghost" small>Cancel</Btn>
-      <Btn onClick={()=>f.cardType&&onSave(f)} variant="primary" small disabled={!f.cardType}>Save</Btn>
+      <Btn onClick={()=>f.cardType&&onSave({...f,postage:f.postage!==""?parseFloat(f.postage):null})} variant="primary" small disabled={!f.cardType}>Save</Btn>
     </div>
   </div>;
 }
@@ -401,13 +402,13 @@ function InProgressTab({inProgress,setInProgress,onMarkComplete,showToast}){
   const toggleNeedsPostage=(id)=>setInProgress(p=>p.map(o=>o.id===id?{...o,needsPostage:!o.needsPostage,postage:o.needsPostage?null:o.postage,postageReceipt:o.needsPostage?null:o.postageReceipt}:o));
   const setPostage=(id,postage)=>setInProgress(p=>p.map(o=>o.id===id?{...o,postage}:o));
   const setPostageReceipt=(id,postageReceipt)=>{setInProgress(p=>p.map(o=>o.id===id?{...o,postageReceipt}:o));showToast("Postage receipt saved!")};
-  const deleteOrder=(id)=>{setInProgress(p=>p.filter(o=>o.id!==id));showToast("Order deleted");};
+  const deleteOrder=(id)=>{if(!window.confirm("Delete this order? This can't be undone."))return;setInProgress(p=>p.filter(o=>o.id!==id));showToast("Order deleted");};
   const saveOrder=(id,changes)=>{setInProgress(p=>p.map(o=>o.id===id?{...o,...changes}:o));setEditOrder(null);showToast("Order updated!");};
   const printOrders=()=>{
     const rows=inProgress.map(o=>`<tr><td><strong>${o.customerName}</strong></td><td>${o.cardType}</td><td>${o.dueDate?fmt(o.dueDate):"—"}</td><td>${o.personalised}</td><td><span class="tag ${o.made?"done":"pending"}">${o.made?"✓ Done":"Pending"}</span></td><td>${o.postage>0?"€"+parseFloat(o.postage).toFixed(2):"—"}</td><td>${o.notes||""}</td></tr>`).join("");
     printWindow("PPB Designs — Orders in Progress",`<h1>📋 Orders in Progress</h1><p class="meta">PPB Designs · Printed ${fmt(new Date())} · ${inProgress.length} order${inProgress.length!==1?"s":""}</p><table><thead><tr><th>Customer</th><th>Card Type</th><th>Due Date</th><th>Personalised</th><th>Made</th><th>Postage</th><th>Notes</th></tr></thead><tbody>${rows}</tbody></table>`);
   };
-  const Sec=({title,items,tc})=>items.length===0?null:<><div style={{fontSize:11,fontWeight:700,color:tc,letterSpacing:.6,textTransform:"uppercase",marginBottom:8,marginTop:16}}>{title}</div>{items.map(o=><IPCard key={o.id} order={o} onToggleMade={()=>toggle(o.id,"made")} onToggleNeedsPostage={()=>toggleNeedsPostage(o.id)} onUpdatePhoto={p=>setPhoto(o.id,p)} onUpdatePostage={v=>setPostage(o.id,v)} onUpdatePostageReceipt={v=>setPostageReceipt(o.id,v)} onMarkComplete={()=>onMarkComplete(o)} onEdit={()=>setEditOrder(o)} onDelete={()=>deleteOrder(o.id)}/>)}</>;
+  const Sec=({title,items,tc})=>items.length===0?null:<><div style={{fontSize:11,fontWeight:700,color:tc,letterSpacing:.6,textTransform:"uppercase",marginBottom:8,marginTop:16}}>{title}</div>{items.map(o=><IPCard key={o.id} order={o} onToggleMade={()=>toggle(o.id,"made")} onToggleDesignDone={()=>toggle(o.id,"designDone")} onToggleNeedsPostage={()=>toggleNeedsPostage(o.id)} onUpdatePhoto={p=>setPhoto(o.id,p)} onUpdatePostage={v=>setPostage(o.id,v)} onUpdatePostageReceipt={v=>setPostageReceipt(o.id,v)} onMarkComplete={()=>onMarkComplete(o)} onEdit={()=>setEditOrder(o)} onDelete={()=>deleteOrder(o.id)}/>)}</>;
   return<div className="fade-in">
     <SecTitle right={<Btn onClick={printOrders} variant="ghost" small>🖨️ Print Orders</Btn>}>In Progress</SecTitle>
     {inProgress.length===0?<Empty icon="🎉" title="All caught up!" sub="No orders in progress right now."/>:<><Sec title="⚠️ Overdue" items={overdue} tc="#c62828"/><Sec title="📅 Due This Week" items={soon} tc={C.amber}/><Sec title="🔧 Other Orders" items={rest} tc={C.rose}/></>}
@@ -416,7 +417,7 @@ function InProgressTab({inProgress,setInProgress,onMarkComplete,showToast}){
     </Modal>
   </div>;
 }
-function IPCard({order,onToggleMade,onToggleNeedsPostage,onUpdatePhoto,onUpdatePostage,onUpdatePostageReceipt,onMarkComplete,onEdit,onDelete}){
+function IPCard({order,onToggleMade,onToggleDesignDone,onToggleNeedsPostage,onUpdatePhoto,onUpdatePostage,onUpdatePostageReceipt,onMarkComplete,onEdit,onDelete}){
   const days=order.dueDate?daysUntil(order.dueDate):null;
   const overdue=days!==null&&days<0,soon=days!==null&&days>=0&&days<=3,both=order.made;
   return<div className="fade-in" style={{background:"#fff",borderRadius:16,border:`2px solid ${overdue?C.blush:soon?"#ffe0b2":C.light}`,padding:16,display:"flex",gap:14,alignItems:"flex-start",boxShadow:"0 2px 12px rgba(194,24,91,.06)",marginBottom:12}}>
@@ -432,6 +433,7 @@ function IPCard({order,onToggleMade,onToggleNeedsPostage,onUpdatePhoto,onUpdateP
       </div>
       {order.notes&&<div style={{marginTop:7,fontSize:13,color:C.grey,fontStyle:"italic"}}>📝 {order.notes}</div>}
       <div style={{display:"flex",gap:8,marginTop:10,flexWrap:"wrap"}}>
+        <CheckPill checked={!!order.designDone} onClick={onToggleDesignDone} label="Design done"/>
         <CheckPill checked={order.made} onClick={onToggleMade} label="Card made"/>
         <CheckPill checked={!!order.needsPostage} onClick={onToggleNeedsPostage} label="📮 Needs posting"/>
       </div>
@@ -716,7 +718,7 @@ function CustomerDetail({customer,completed,setCustomers,setCompleted,onClose,sh
     setCustomers(cs=>cs.filter(c=>c.id!==customer.id));
     showToast("Customer deleted");onClose();
   };
-  const deleteOrder=(id)=>{setCompleted(c=>c.filter(o=>o.id!==id));showToast("Order deleted");};
+  const deleteOrder=(id)=>{if(!window.confirm("Delete this order from the customer history? This can't be undone."))return;setCompleted(c=>c.filter(o=>o.id!==id));showToast("Order deleted");};
   const saveOrder=(id,changes)=>{setCompleted(c=>c.map(o=>o.id===id?{...o,...changes}:o));setEditOrder(null);showToast("Order updated!");};
 
   if(mode==="edit")return<div>
@@ -776,22 +778,24 @@ function CustomerDetail({customer,completed,setCustomers,setCompleted,onClose,sh
       </div>)}
     </div>}
     <Modal open={!!editOrder} onClose={()=>setEditOrder(null)}>
-      {editOrder&&<EditCompletedOrderForm order={editOrder} onSave={(changes)=>saveOrder(editOrder.id,changes)} onCancel={()=>setEditOrder(null)}/>}
+      {editOrder&&<EditCustomerCompletedOrderForm order={editOrder} onSave={(changes)=>saveOrder(editOrder.id,changes)} onCancel={()=>setEditOrder(null)}/>}
     </Modal>
   </div>;
 }
-function EditCompletedOrderForm({order,onSave,onCancel}){
-  const[f,setF]=useState({qty:order.qty,total:order.total,payment:order.payment,notes:order.notes||""});
+function EditCustomerCompletedOrderForm({order,onSave,onCancel}){
+  const[f,setF]=useState({cardType:order.cardType,qty:order.qty,total:order.total,payment:order.payment||"Cash",completedDate:order.completedDate||"",notes:order.notes||""});
   const sf=(k,v)=>setF(x=>({...x,[k]:v}));
   return<div>
-    <MTitle sub={`${order.customerName} · ${order.cardType}`}>Edit Completed Order</MTitle>
+    <MTitle sub={order.customerName}>Edit Completed Order</MTitle>
+    <Sel label="Card Type" req options={CARD_TYPES} value={f.cardType} onChange={e=>sf("cardType",e.target.value)}/>
     <Inp label="Qty" type="number" min={1} value={f.qty} onChange={e=>sf("qty",parseInt(e.target.value)||1)}/>
-    <Inp label="Total charged (€)" req type="number" step="0.01" value={f.total} onChange={e=>sf("total",e.target.value)}/>
+    <Inp label="Total (€)" type="number" step="0.01" min={0} value={f.total} onChange={e=>sf("total",parseFloat(e.target.value)||0)}/>
     <Sel label="Payment" options={PAYMENT} value={f.payment} onChange={e=>sf("payment",e.target.value)}/>
-    <Txt label="Notes" value={f.notes} onChange={e=>sf("notes",e.target.value)}/>
+    <Inp label="Completed Date" type="date" value={f.completedDate} onChange={e=>sf("completedDate",e.target.value)}/>
+    <Txt label="Notes" value={f.notes} onChange={e=>sf("notes",e.target.value)} placeholder="Any notes…"/>
     <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
       <Btn onClick={onCancel} variant="ghost" small>Cancel</Btn>
-      <Btn onClick={()=>onSave({...f,qty:parseInt(f.qty)||1,total:parseFloat(f.total)||0})} variant="primary" small>Save</Btn>
+      <Btn onClick={()=>f.cardType&&onSave(f)} variant="primary" small disabled={!f.cardType}>Save</Btn>
     </div>
   </div>;
 }
@@ -799,7 +803,10 @@ function EditCompletedOrderForm({order,onSave,onCancel}){
 // ── Supplies Tab ──────────────────────────────────────────────────────────────
 function SuppliesTab({supplies,setSupplies,openModal,showToast}){
   const cats=[...new Set(supplies.map(s=>s.cat))];
+  const[editSupply,setEditSupply]=useState(null);
   const upd=(id,field,val)=>setSupplies(ss=>ss.map(s=>s.id===id?{...s,[field]:val}:s));
+  const deleteSupply=(id)=>{if(!window.confirm("Delete this supply item? This can't be undone."))return;setSupplies(ss=>ss.filter(s=>s.id!==id));showToast("Supply removed");};
+  const saveSupply=(id,changes)=>{setSupplies(ss=>ss.map(s=>s.id===id?{...s,...changes}:s));setEditSupply(null);showToast("Supply updated!")};
   const printSupplies=(lowOnly)=>{
     const list=lowOnly?supplies.filter(s=>s.qty<=s.reorderAt):supplies;
     const rows=list.map(s=>`<tr><td><strong class="${s.qty<=s.reorderAt?"low":""}">${s.name}</strong></td><td>${s.cat}</td><td class="${s.qty<=s.reorderAt?"low":""}">${s.qty}</td><td>${s.reorderAt}</td><td>${s.qty<=s.reorderAt?'<span class="tag pending">⚠️ Reorder</span>':'<span class="tag done">OK</span>'}</td><td>${s.supplier||"—"}</td><td>${s.cost>0?"€"+s.cost.toFixed(2):"—"}</td></tr>`).join("");
@@ -811,17 +818,27 @@ function SuppliesTab({supplies,setSupplies,openModal,showToast}){
       <div style={{fontSize:11,fontWeight:700,color:C.muted,letterSpacing:.7,textTransform:"uppercase",marginBottom:8,paddingBottom:6,borderBottom:`1px solid ${C.light}`}}>{cat}</div>
       <div style={{display:"flex",flexDirection:"column",gap:8}}>
         {items.map(s=>{const low=s.qty<=s.reorderAt;return<div key={s.id} style={{background:"#fff",borderRadius:12,border:`1.5px solid ${low?"#ffcdd2":C.light}`,padding:"12px 16px",display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
-          <div style={{flex:1,minWidth:120}}><div style={{fontWeight:700,fontSize:13,color:low?"#c62828":C.text}}>{s.name}</div><div style={{fontSize:11,color:C.muted,marginTop:2}}>{s.supplier}{s.cost>0?` · €${s.cost.toFixed(2)} each`:""}</div></div>
-          <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <div style={{flex:1,minWidth:120}}><div style={{fontWeight:700,fontSize:13,color:low?"#c62828":C.text}}>{s.name}</div><div style={{fontSize:11,color:C.muted,marginTop:2}}>{s.supplier}{s.cost>0?` · €${s.cost.toFixed(2)} each`:""}</div>{s.notes&&<div style={{fontSize:11,color:"#bdbdbd",marginTop:1}}>{s.notes}</div>}</div>
+          <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
             <button onClick={()=>upd(s.id,"qty",Math.max(0,s.qty-1))} style={{width:44,height:44,borderRadius:10,border:`1px solid ${C.blush}`,background:C.light,cursor:"pointer",fontSize:20,fontWeight:700,color:C.rose,lineHeight:1}}>−</button>
             <span style={{fontWeight:700,fontSize:15,color:low?C.rose:C.green,minWidth:32,textAlign:"center"}}>{s.qty}</span>
             <button onClick={()=>upd(s.id,"qty",s.qty+1)} style={{width:44,height:44,borderRadius:10,border:`1px solid ${C.blush}`,background:C.light,cursor:"pointer",fontSize:20,fontWeight:700,color:C.rose,lineHeight:1}}>+</button>
             {low&&<Badge color="amber">Reorder</Badge>}
+            <button onClick={()=>setEditSupply(s)} style={{fontSize:10,padding:"3px 8px",borderRadius:6,border:`1px solid ${C.blush}`,background:"#fff",color:C.rose,cursor:"pointer",fontFamily:"Lato,sans-serif"}}>Edit</button>
+            <button onClick={()=>deleteSupply(s.id)} style={{fontSize:10,padding:"3px 8px",borderRadius:6,border:"1px solid #ffcdd2",background:"#ffebee",color:"#c62828",cursor:"pointer",fontFamily:"Lato,sans-serif"}}>Delete</button>
           </div>
         </div>})}
       </div>
     </div>})}
+    <Modal open={!!editSupply} onClose={()=>setEditSupply(null)}>
+      {editSupply&&<EditSupplyForm supply={editSupply} onSave={(changes)=>saveSupply(editSupply.id,changes)} onCancel={()=>setEditSupply(null)}/>}
+    </Modal>
   </div>;
+}
+function EditSupplyForm({supply,onSave,onCancel}){
+  const[f,setF]=useState({name:supply.name,cat:supply.cat,reorderAt:supply.reorderAt,supplier:supply.supplier||"",cost:supply.cost||0,notes:supply.notes||""});
+  const s=(k,v)=>setF(x=>({...x,[k]:v}));
+  return<div><MTitle>Edit Supply</MTitle><Inp label="Item name" req value={f.name} onChange={e=>s("name",e.target.value)}/><Sel label="Category" req options={SUPPLY_CATS} value={f.cat} onChange={e=>s("cat",e.target.value)}/><Inp label="Reorder below" type="number" value={f.reorderAt} onChange={e=>s("reorderAt",parseInt(e.target.value)||0)}/><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}><Inp label="Supplier" value={f.supplier} onChange={e=>s("supplier",e.target.value)}/><Inp label="Cost each (€)" type="number" step="0.01" value={f.cost} onChange={e=>s("cost",parseFloat(e.target.value)||0)}/></div><Inp label="Notes" value={f.notes} onChange={e=>s("notes",e.target.value)}/><div style={{display:"flex",gap:10,justifyContent:"flex-end"}}><Btn onClick={onCancel} variant="ghost" small>Cancel</Btn><Btn onClick={()=>f.name&&f.cat&&onSave(f)} variant="primary" small disabled={!f.name||!f.cat}>Save</Btn></div></div>;
 }
 function NewSupplyForm({onSubmit,onCancel}){
   const[f,setF]=useState({name:"",cat:"",qty:0,reorderAt:10,supplier:"",cost:0,notes:""});
@@ -832,8 +849,10 @@ function NewSupplyForm({onSubmit,onCancel}){
 // ── Expenses Tab ──────────────────────────────────────────────────────────────
 function ExpensesTab({expenses,setExpenses,showToast}){
   const[addModal,setAddModal]=useState(false);
+  const[editExpense,setEditExpense]=useState(null);
   const total=expenses.reduce((s,e)=>s+e.amount,0);
-  const deleteExpense=(id)=>{setExpenses(e=>e.filter(x=>x.id!==id));showToast("Expense deleted");};
+  const deleteExpense=(id)=>{if(!window.confirm("Delete this expense? This can't be undone."))return;setExpenses(e=>e.filter(x=>x.id!==id));showToast("Expense deleted");};
+  const saveExpense=(id,changes)=>{setExpenses(e=>e.map(x=>x.id===id?{...x,...changes}:x));setEditExpense(null);showToast("Expense updated!")};
   const printExpenses=()=>{
     const rows=expenses.map(e=>`<tr><td>${fmt(e.date)}</td><td>${e.item}</td><td>${e.cat}</td><td>€${e.amount.toFixed(2)}</td><td>${e.receipt?"✓":"⚠️ Missing"}</td><td>${e.notes||""}</td></tr>`).join("");
     printWindow("PPB Designs — Expenses",`<h1>🧾 Expenses</h1><p class="meta">PPB Designs · Printed ${fmt(new Date())} · Total: €${total.toFixed(2)}</p><table><thead><tr><th>Date</th><th>Item</th><th>Category</th><th>Amount</th><th>Receipt</th><th>Notes</th></tr></thead><tbody>${rows}</tbody></table>`);
@@ -853,8 +872,9 @@ function ExpensesTab({expenses,setExpenses,showToast}){
             <div style={{fontSize:11,color:C.muted,marginTop:2}}>{new Date(e.date).toLocaleDateString("en-IE")} · {e.cat}{!e.receipt?" · ⚠️ No receipt":""}</div>
             {e.notes&&<div style={{fontSize:11,color:"#bdbdbd",marginTop:1}}>{e.notes}</div>}
           </div>
-          <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
             <span style={{fontWeight:700,color:C.amber,fontSize:14}}>€{e.amount.toFixed(2)}</span>
+            <button onClick={()=>setEditExpense(e)} style={{fontSize:10,padding:"3px 8px",borderRadius:6,border:`1px solid ${C.blush}`,background:"#fff",color:C.rose,cursor:"pointer",fontFamily:"Lato,sans-serif"}}>Edit</button>
             <button onClick={()=>deleteExpense(e.id)} style={{fontSize:10,padding:"3px 8px",borderRadius:6,border:"1px solid #ffcdd2",background:"#ffebee",color:"#c62828",cursor:"pointer",fontFamily:"Lato,sans-serif"}}>Delete</button>
           </div>
         </div>)}
@@ -862,7 +882,15 @@ function ExpensesTab({expenses,setExpenses,showToast}){
     <Modal open={addModal} onClose={()=>setAddModal(false)}>
       <NewExpenseForm onSubmit={e=>{setExpenses(prev=>[e,...prev]);setAddModal(false);showToast("Expense saved!");}} onCancel={()=>setAddModal(false)}/>
     </Modal>
+    <Modal open={!!editExpense} onClose={()=>setEditExpense(null)}>
+      {editExpense&&<EditExpenseForm expense={editExpense} onSave={(changes)=>saveExpense(editExpense.id,changes)} onCancel={()=>setEditExpense(null)}/>}
+    </Modal>
   </div>;
+}
+function EditExpenseForm({expense,onSave,onCancel}){
+  const[f,setF]=useState({date:expense.date,item:expense.item,cat:expense.cat,amount:expense.amount,receipt:expense.receipt,notes:expense.notes||""});
+  const s=(k,v)=>setF(x=>({...x,[k]:v}));
+  return<div><MTitle>Edit Expense</MTitle><Inp label="Date" type="date" value={f.date} onChange={e=>s("date",e.target.value)}/><Inp label="Item" req value={f.item} onChange={e=>s("item",e.target.value)}/><Sel label="Category" options={["Materials","Envelopes","Ribbon","Packaging","Postage","Tools","Marketing","Other"]} value={f.cat} onChange={e=>s("cat",e.target.value)}/><Inp label="Amount (€)" req type="number" step="0.01" value={f.amount} onChange={e=>s("amount",e.target.value)}/><div style={{display:"flex",alignItems:"center",gap:10,marginBottom:13}}><input type="checkbox" id="rc2" checked={f.receipt} onChange={e=>s("receipt",e.target.checked)} style={{width:16,height:16}}/><label htmlFor="rc2" style={{fontSize:13,cursor:"pointer"}}>Receipt kept</label></div><Txt label="Notes" value={f.notes} onChange={e=>s("notes",e.target.value)} placeholder="Any notes…"/><div style={{display:"flex",gap:10,justifyContent:"flex-end"}}><Btn onClick={onCancel} variant="ghost" small>Cancel</Btn><Btn onClick={()=>f.item&&f.amount&&onSave({...f,amount:parseFloat(f.amount)})} variant="amber" small disabled={!f.item||!f.amount}>Save</Btn></div></div>;
 }
 
 // ── Money Tab ─────────────────────────────────────────────────────────────────
