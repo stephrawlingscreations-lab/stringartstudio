@@ -314,11 +314,14 @@ function Dashboard({inProgress,completed,customers,shopStock,lowSupplies,overdue
 function CompletedTab({completed,setCompleted,showToast}){
   const[filter,setFilter]=useState("All");
   const[search,setSearch]=useState("");
+  const[editOrder,setEditOrder]=useState(null);
   const filtered=completed
     .filter(o=>filter==="All"||o.channel===filter)
     .filter(o=>!search||o.customerName.toLowerCase().includes(search.toLowerCase())||o.cardType.toLowerCase().includes(search.toLowerCase()));
   const totalRev=filtered.reduce((s,o)=>s+o.total,0);
   const deleteOrder=(id)=>{setCompleted(c=>c.filter(o=>o.id!==id));showToast("Order removed");};
+  const setPhoto=(id,photo)=>{setCompleted(c=>c.map(o=>o.id===id?{...o,photo}:o));showToast("Photo saved!")};
+  const saveOrder=(id,changes)=>{setCompleted(c=>c.map(o=>o.id===id?{...o,...changes}:o));setEditOrder(null);showToast("Order updated!")};
   const printCompleted=()=>{
     const rows=filtered.map(o=>`<tr><td>${fmt(o.completedDate)}</td><td>${o.customerName}</td><td>${o.cardType}</td><td>${o.qty}</td><td>€${o.total.toFixed(2)}</td><td>${o.payment}</td><td>${o.channel}</td>${o.postage>0?`<td>€${parseFloat(o.postage).toFixed(2)}</td>`:"<td>—</td>"}</tr>`).join("");
     printWindow("PPB Designs — Completed Orders",`<h1>✅ Completed Orders</h1><p class="meta">PPB Designs · Printed ${fmt(new Date())} · ${filtered.length} order${filtered.length!==1?"s":""} · Total €${totalRev.toFixed(2)}</p><table><thead><tr><th>Date</th><th>Customer</th><th>Card Type</th><th>Qty</th><th>Total</th><th>Payment</th><th>Channel</th><th>Postage</th></tr></thead><tbody>${rows}</tbody></table>`);
@@ -346,9 +349,7 @@ function CompletedTab({completed,setCompleted,showToast}){
       ?<Empty icon="✅" title="Nothing here yet" sub="Completed orders will appear here"/>
       :<div style={{display:"flex",flexDirection:"column",gap:10}}>
         {filtered.map(o=><div key={o.id} style={{background:"#fff",borderRadius:14,border:`1.5px solid ${C.light}`,padding:"12px 16px",display:"flex",gap:12,alignItems:"center"}}>
-          <div style={{width:48,height:48,borderRadius:10,background:C.light,overflow:"hidden",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>
-            {o.photo?<img src={o.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:"🌸"}
-          </div>
+          <PhotoUpload value={o.photo} onChange={p=>setPhoto(o.id,p)} size={48}/>
           <div style={{flex:1,minWidth:0}}>
             <div style={{fontWeight:700,color:C.deep,fontSize:13,fontFamily:"'Playfair Display',serif"}}>{o.customerName}</div>
             <div style={{fontSize:12,color:C.muted,marginTop:1}}>{o.cardType} · {new Date(o.completedDate).toLocaleDateString("en-IE")} · {o.qty} card{o.qty!==1?"s":""}</div>
@@ -357,6 +358,7 @@ function CompletedTab({completed,setCompleted,showToast}){
           <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4,flexShrink:0}}>
             <div style={{fontWeight:700,color:C.rose,fontSize:14}}>€{o.total.toFixed(2)}</div>
             <Badge color={o.channel==="Shop"?"teal":"green"} style={{fontSize:9}}>{o.channel}</Badge>
+            <button onClick={()=>setEditOrder(o)} style={{fontSize:10,padding:"2px 8px",borderRadius:6,border:`1px solid ${C.blush}`,background:"#fff",color:C.rose,cursor:"pointer",fontFamily:"Lato,sans-serif"}}>Edit</button>
             <button onClick={()=>deleteOrder(o.id)} style={{fontSize:10,padding:"2px 8px",borderRadius:6,border:"1px solid #ffcdd2",background:"#ffebee",color:"#c62828",cursor:"pointer",fontFamily:"Lato,sans-serif"}}>Delete</button>
           </div>
         </div>)}
@@ -364,6 +366,26 @@ function CompletedTab({completed,setCompleted,showToast}){
           {filtered.length} order{filtered.length!==1?"s":""} · Total €{totalRev.toFixed(2)}
         </div>
       </div>}
+    <Modal open={!!editOrder} onClose={()=>setEditOrder(null)}>
+      {editOrder&&<EditCompletedOrderForm order={editOrder} onSave={(changes)=>saveOrder(editOrder.id,changes)} onCancel={()=>setEditOrder(null)}/>}
+    </Modal>
+  </div>;
+}
+function EditCompletedOrderForm({order,onSave,onCancel}){
+  const[f,setF]=useState({cardType:order.cardType,qty:order.qty,total:order.total,payment:order.payment||"Cash",completedDate:order.completedDate||"",notes:order.notes||""});
+  const sf=(k,v)=>setF(x=>({...x,[k]:v}));
+  return<div>
+    <MTitle sub={order.customerName}>Edit Completed Order</MTitle>
+    <Sel label="Card Type" req options={CARD_TYPES} value={f.cardType} onChange={e=>sf("cardType",e.target.value)}/>
+    <Inp label="Qty" type="number" min={1} value={f.qty} onChange={e=>sf("qty",parseInt(e.target.value)||1)}/>
+    <Inp label="Total (€)" type="number" step="0.01" min={0} value={f.total} onChange={e=>sf("total",parseFloat(e.target.value)||0)}/>
+    <Sel label="Payment" options={PAYMENT} value={f.payment} onChange={e=>sf("payment",e.target.value)}/>
+    <Inp label="Completed Date" type="date" value={f.completedDate} onChange={e=>sf("completedDate",e.target.value)}/>
+    <Txt label="Notes" value={f.notes} onChange={e=>sf("notes",e.target.value)} placeholder="Any notes…"/>
+    <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+      <Btn onClick={onCancel} variant="ghost" small>Cancel</Btn>
+      <Btn onClick={()=>f.cardType&&onSave(f)} variant="primary" small disabled={!f.cardType}>Save</Btn>
+    </div>
   </div>;
 }
 
