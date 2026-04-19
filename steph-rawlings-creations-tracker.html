@@ -1224,7 +1224,7 @@ function statusBadge(s) {
 
 function commAmt(sp){ return sp*(commissionRate/100); }
 function netAmt(sp) { return sp*(1-commissionRate/100); }
-function workComm(w){ const sp=w.soldPrice||0; if(w.commissionPaid!=null) return w.commissionPaid; return w.saleChannel==='shop'?commAmt(sp):0; }
+function workComm(w){ if(w.saleChannel!=='shop') return 0; const sp=w.soldPrice||0; return w.commissionPaid!=null?w.commissionPaid:commAmt(sp); }
 
 function imgEl(w) {
   return w.photoData
