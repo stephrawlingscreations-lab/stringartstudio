@@ -1224,6 +1224,7 @@ function statusBadge(s) {
 
 function commAmt(sp){ return sp*(commissionRate/100); }
 function netAmt(sp) { return sp*(1-commissionRate/100); }
+function workComm(w){ const sp=w.soldPrice||0; if(w.commissionPaid!=null) return w.commissionPaid; return w.saleChannel==='shop'?commAmt(sp):0; }
 
 function imgEl(w) {
   return w.photoData
@@ -1386,14 +1387,14 @@ function renderSales() {
   f.sort((a,b)=>(b.dateSold||'').localeCompare(a.dateSold||''));
   const tbody=document.getElementById('sales-tbody');
   tbody.innerHTML=f.length
-    ?f.map(w=>{ const sp=w.soldPrice||0, comm=w.commissionPaid!=null?w.commissionPaid:commAmt(sp), net=sp-comm;
+    ?f.map(w=>{ const sp=w.soldPrice||0, comm=workComm(w), net=sp-comm;
       const chLabels={shop:'🏪 Shop',private:'🤝 Private',market:'🛍️ Market',online:'🌐 Online'};
       const ch=chLabels[w.saleChannel]||chLabels.shop;
       return `<tr><td><strong>${w.title||'Untitled'}</strong>${w.medium?`<br/><span style="font-size:0.78rem;color:var(--ink-lt);">${w.medium}</span>`:''}</td><td>${fmtDate(w.datePlaced)}</td><td>${fmtDate(w.dateSold)}</td><td style="font-size:0.82rem;">${ch}</td><td>${fmt(w.price)}</td><td>${fmt(sp)}</td><td style="color:var(--rose);">${fmt(comm)}</td><td style="font-weight:700;color:var(--green);">${fmt(net)}</td><td style="font-size:0.8rem;color:var(--ink-lt);max-width:160px;">${w.notes||'—'}</td></tr>`;
     }).join('')
     :'<tr><td colspan="9" style="text-align:center;color:var(--ink-lt);padding:2rem;">No sales for this period.</td></tr>';
   const tg=f.reduce((a,w)=>a+(w.soldPrice||0),0);
-  const tc=f.reduce((a,w)=>{ const sp=w.soldPrice||0; return a+(w.commissionPaid!=null?w.commissionPaid:commAmt(sp)); },0);
+  const tc=f.reduce((a,w)=>a+workComm(w),0);
   document.getElementById('sales-totals').innerHTML=f.length
     ?`<div class="sales-total-bar"><span><strong>${f.length}</strong> sale${f.length!==1?'s':''}</span><span>Gross: <strong>${fmt(tg)}</strong></span><span style="color:var(--rose);">Commission: <strong>${fmt(tc)}</strong></span><span style="color:var(--green);font-weight:700;">Net to Steph: ${fmt(tg-tc)}</span></div>`
     :'';
@@ -1409,7 +1410,7 @@ function renderReports() {
   const year=sel.value||String(new Date().getFullYear());
   const forY=sold.filter(w=>w.dateSold?.startsWith(year));
   const gross=forY.reduce((a,w)=>a+(w.soldPrice||0),0);
-  const comm=forY.reduce((a,w)=>{ const sp=w.soldPrice||0; return a+(w.commissionPaid!=null?w.commissionPaid:commAmt(sp)); },0);
+  const comm=forY.reduce((a,w)=>a+workComm(w),0);
   const net=gross-comm;
   document.getElementById('report-stats').innerHTML=`
     <div class="stat-card"><div class="stat-val">${forY.length}</div><div class="stat-lbl">Works Sold</div></div>
@@ -1418,7 +1419,7 @@ function renderReports() {
     <div class="stat-card green-top"><div class="stat-val" style="color:var(--green);">${fmt(net)}</div><div class="stat-lbl">Net Income</div></div>`;
   const rows=MONTHS.map((m,i)=>{
     const mn=String(i+1).padStart(2,'0'), ms=forY.filter(w=>w.dateSold?.slice(5,7)===mn);
-    const mg=ms.reduce((a,w)=>a+(w.soldPrice||0),0), mc=ms.reduce((a,w)=>{ const sp=w.soldPrice||0; return a+(w.commissionPaid!=null?w.commissionPaid:commAmt(sp)); },0);
+    const mg=ms.reduce((a,w)=>a+(w.soldPrice||0),0), mc=ms.reduce((a,w)=>a+workComm(w),0);
     return {m,count:ms.length,gross:mg,comm:mc,net:mg-mc};
   });
   document.getElementById('report-monthly-table').innerHTML=`<table class="data-table" style="margin-top:1rem;"><thead><tr><th>Month</th><th>Sales</th><th>Gross</th><th>Commission</th><th>Net</th></tr></thead><tbody>
@@ -1454,7 +1455,7 @@ function exportCSV() {
   const escape = v => '"' + String(v??'').replace(/"/g,'""') + '"';
   const rows = works.map(w => {
     const sp = w.soldPrice||0;
-    const comm = w.commissionPaid!=null ? w.commissionPaid : commAmt(sp);
+    const comm = workComm(w);
     return [w.title,w.idNumber,w.itemNumber,w.medium,w.size,w.price,w.status,w.saleChannel||'',w.datePlaced,w.dateSold,sp,(w.status==='sold'||w.status==='sold_installments')?comm:'',sp?sp-comm:'',w.notes].map(escape).join(',');
   });
   const csv = [headers.map(escape).join(','), ...rows].join('\r\n');
@@ -1618,7 +1619,9 @@ function saveWork(){
   const status=document.getElementById('f-status').value;
   const sp=parseFloat(document.getElementById('f-sold-price').value)||0;
   const commRaw=document.getElementById('f-commission-paid').value;
-  const commPaid=commRaw!==''?parseFloat(commRaw):(status==='sold'?commAmt(sp):null);
+  const channel=document.getElementById('f-sale-channel')?.value||'shop';
+  const isSoldStatus=['sold','sold_installments'].includes(status);
+  const commPaid=commRaw!==''?parseFloat(commRaw):(isSoldStatus?(channel==='shop'?commAmt(sp):0):null);
   const w={
     title:document.getElementById('f-title').value.trim(),
     idNumber:document.getElementById('f-id-number').value.trim(),
@@ -1627,11 +1630,11 @@ function saveWork(){
     size:document.getElementById('f-size').value.trim(),
     price:parseFloat(document.getElementById('f-price').value)||0,
     status,
-    saleChannel:['sold','sold_installments'].includes(status)?document.getElementById('f-sale-channel').value:'',
+    saleChannel:isSoldStatus?document.getElementById('f-sale-channel').value:'',
     datePlaced:document.getElementById('f-date-placed').value,
     dateSold:status==='sold'?document.getElementById('f-date-sold').value:null,
     soldPrice:status==='sold'?sp:null,
-    commissionPaid:status==='sold'?commPaid:null,
+    commissionPaid:isSoldStatus?commPaid:null,
     notes:document.getElementById('f-notes').value.trim(),
     linkedExpenses:[...document.querySelectorAll('#linked-costs-list .linked-cost-row')].map(row=>{
       const [desc,amt,cat]=row.querySelectorAll('input,select');
@@ -1662,7 +1665,7 @@ function deleteCurrentWork(){
 // Detail modal
 function openDetail(id){
   detailId=id; const w=works.find(x=>x.id===id); if(!w) return;
-  const sp=w.soldPrice||0, comm=w.commissionPaid!=null?w.commissionPaid:(w.status==='sold'?commAmt(sp):null), net=comm!=null?sp-comm:null;
+  const sp=w.soldPrice||0, comm=(w.status==='sold'||w.status==='sold_installments')?workComm(w):null, net=comm!=null?sp-comm:null;
   document.getElementById('detail-content').innerHTML=`
     ${w.photoData?`<img src="${w.photoData}" class="detail-img"/>`:` <div class="detail-img" style="display:flex;align-items:center;justify-content:center;font-size:4rem;">🎨</div>`}
     <div style="font-family:'Playfair Display',serif;font-size:1.3rem;margin-bottom:0.5rem;">${w.title||'Untitled'}</div>
