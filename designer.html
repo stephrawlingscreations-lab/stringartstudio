@@ -1833,7 +1833,6 @@
       /* Tour entry: hide button on mobile, show desktop-only note instead */
       @media (max-width: 899px) {
         .wt-entry-btn { display: none !important; }
-        .wt-desktop-note { display: block !important; }
       }
       .wt-desktop-note { display: none; }
 
@@ -2716,7 +2715,7 @@
                 <span style="font-size:0.75rem;color:var(--muted);"> nails — click to apply</span>
               </div>
             </div>
-            <button class="confirm-board-btn" onclick="confirmBoard()">Confirm board →</button>
+            <button class="confirm-board-btn" onclick="confirmBoard()">Apply →</button>
           </div><!-- end #step1Panel -->
 
           <!-- ══════════════════════════════════
@@ -3341,7 +3340,7 @@
 
     <div id="drawModeOverlay" class="draw-mode-overlay" aria-hidden="true">
       <div class="draw-mode-topbar">
-        <button id="drawModeSettings" class="draw-mode-settings-btn">⚙ Settings</button>
+        <button id="drawModeSettings" class="draw-mode-settings-btn">← Board Settings</button>
         <div class="draw-mode-brand">Steph Rawlings <em>Creations</em></div>
         <button id="closeDrawMode" class="draw-mode-exit">✓ Done</button>
       </div>
@@ -3681,6 +3680,10 @@
         if (boardEl) boardEl.dispatchEvent(new Event('change'));
         if (nailsEl) nailsEl.dispatchEvent(new Event('change'));
         goToStep(2);
+        // On mobile, jump straight back to the canvas after confirming board
+        if (window.innerWidth < 900 && typeof openDrawMode === 'function') {
+          setTimeout(openDrawMode, 60);
+        }
       };
 
       // Pre-populate summary with current default values on load

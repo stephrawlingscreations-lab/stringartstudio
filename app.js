@@ -2600,7 +2600,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     $("openDrawMode")?.addEventListener("click", openDrawMode);
-    $("closeDrawMode")?.addEventListener("click", closeDrawMode);
+    $("closeDrawMode")?.addEventListener("click", () => { closeDrawMode(); if (typeof goToStep === "function") goToStep(3); });
     $("drawModeSettings")?.addEventListener("click", closeDrawMode);
     $("drawUndo")?.addEventListener("click", undo);
     $("drawRedo")?.addEventListener("click", redo);
