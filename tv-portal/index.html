@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="IPTV Tracker">
+<meta name="robots" content="noindex, nofollow">
+<title>IPTV Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f13;
+    --surface: #1a1a22;
+    --surface2: #22222e;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0f0f4;
+    --muted: #8888a0;
+    --accent: #6c63ff;
+    --accent2: #4ecdc4;
+    --danger: #ff6b6b;
+    --warn: #ffa94d;
+    --ok: #51cf66;
+    --jungle: #6c63ff;
+    --stream: #4ecdc4;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* PIN SCREEN */
+  #pin-screen {
+    position: fixed; inset: 0; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 999; padding: 40px 20px;
+  }
+  .pin-logo { font-size: 28px; font-weight: 600; margin-bottom: 8px; letter-spacing: -0.5px; }
+  .pin-logo span { color: var(--accent); }
+  .pin-sub { font-size: 13px; color: var(--muted); margin-bottom: 40px; }
+  .pin-dots { display: flex; gap: 16px; margin-bottom: 40px; }
+  .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border2); background: transparent; transition: all 0.15s; }
+  .pin-dot.filled { background: var(--accent); border-color: var(--accent); }
+  .pin-error { font-size: 13px; color: var(--danger); margin-bottom: 16px; min-height: 20px; }
+  .keypad { display: grid; grid-template-columns: repeat(3, 72px); gap: 12px; }
+  .key { width: 72px; height: 72px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 22px; font-family: 'DM Sans', sans-serif; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.1s; }
+  .key:active { background: var(--surface2); transform: scale(0.94); }
+  .key.del { font-size: 16px; color: var(--muted); }
+  .key.empty { background: transparent; border: none; cursor: default; }
+
+  /* MAIN APP */
+  #app { display: none; padding-bottom: 100px; }
+
+  .header { padding: 56px 20px 20px; background: linear-gradient(180deg, #1a0a2e 0%, var(--bg) 100%); }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+  .app-title { font-size: 26px; font-weight: 600; letter-spacing: -0.5px; }
+  .app-title span { color: var(--accent); }
+  .header-date { font-size: 12px; color: var(--muted); }
+  .header-btns { display: flex; gap: 8px; flex-shrink: 0; }
+  .icon-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); color: var(--muted); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 0 20px 20px; }
+  .stat-card { background: var(--surface); border-radius: var(--radius-sm); padding: 10px 8px; text-align: center; border: 1px solid var(--border); }
+  .stat-val { font-size: 20px; font-weight: 600; }
+  .stat-val.red { color: var(--danger); }
+  .stat-val.amber { color: var(--warn); }
+  .stat-val.green { color: var(--ok); }
+  .stat-lbl { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  .tabs { display: flex; gap: 8px; padding: 0 20px 16px; }
+  .tab { flex: 1; padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--muted); font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.2s; }
+  .tab.active-jungle { background: rgba(108,99,255,0.15); border-color: var(--jungle); color: var(--jungle); }
+  .tab.active-stream { background: rgba(78,205,196,0.15); border-color: var(--stream); color: var(--stream); }
+
+  .search-wrap { padding: 0 20px 12px; }
+  .search { width: 100%; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 14px; font-family: 'DM Sans', sans-serif; }
+  .search:focus { outline: none; border-color: var(--border2); }
+  .search::placeholder { color: var(--muted); }
+
+  .filter-row { display: flex; gap: 6px; padding: 0 20px 16px; overflow-x: auto; scrollbar-width: none; }
+  .filter-row::-webkit-scrollbar { display: none; }
+  .filter-pill { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: none; color: var(--muted); font-size: 12px; font-family: 'DM Sans', sans-serif; cursor: pointer; white-space: nowrap; }
+  .filter-pill.active { border-color: var(--accent); color: var(--accent); background: rgba(108,99,255,0.1); }
+
+  .section-label { font-size: 11px; color: var(--muted); padding: 0 20px 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .cards { padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+
+  .card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 16px; position: relative; overflow: hidden; }
+  .card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+  .card.jungle::before { background: var(--jungle); }
+  .card.stream::before { background: var(--stream); }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .card-name { font-size: 15px; font-weight: 600; }
+  .card-tvs { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; flex-shrink: 0; }
+  .badge.ok { background: rgba(81,207,102,0.15); color: var(--ok); }
+  .badge.soon { background: rgba(255,169,77,0.15); color: var(--warn); }
+  .badge.overdue { background: rgba(255,107,107,0.15); color: var(--danger); }
+  .badge.nodate { background: rgba(136,136,160,0.15); color: var(--muted); }
+
+  /* Credentials — tappable to copy */
+  .card-creds { display: flex; gap: 8px; margin-bottom: 10px; }
+  .cred { flex: 1; background: var(--surface2); border-radius: var(--radius-sm); padding: 8px 10px; min-width: 0; cursor: pointer; position: relative; transition: background 0.15s; user-select: none; }
+  .cred:active { background: #2e2e3e; }
+  .cred.copied { background: rgba(81,207,102,0.15); }
+  .cred-label { font-size: 10px; color: var(--muted); margin-bottom: 3px; display: flex; justify-content: space-between; align-items: center; }
+  .cred-copy-hint { font-size: 9px; color: var(--muted); opacity: 0.6; }
+  .cred-val { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cred-copied-flash { position: absolute; inset: 0; background: rgba(81,207,102,0.2); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: var(--ok); opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+  .cred-copied-flash.show { opacity: 1; }
+
+  .card-footer { display: flex; justify-content: space-between; align-items: center; }
+  .renewal-info { font-size: 12px; color: var(--muted); }
+  .renewal-info strong { color: var(--text); }
+  .price-tag { font-size: 13px; font-weight: 600; color: var(--accent2); }
+
+  .card-notes { font-size: 11px; color: var(--muted); margin-top: 8px; padding: 6px 10px; background: var(--surface2); border-radius: var(--radius-sm); border-left: 2px solid var(--border2); }
+
+  .card-actions { display: flex; gap: 6px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .btn-sm { flex: 1; min-width: 60px; padding: 8px 6px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: none; color: var(--muted); font-size: 12px; font-family: 'DM Sans', sans-serif; cursor: pointer; white-space: nowrap; }
+  .btn-sm.edit { color: var(--accent); border-color: rgba(108,99,255,0.3); }
+  .btn-sm.del { color: var(--danger); border-color: rgba(255,107,107,0.3); }
+  .btn-sm.wa { color: #25d366; border-color: rgba(37,211,102,0.3); }
+  .btn-sm.renew { color: var(--warn); border-color: rgba(255,169,77,0.3); }
+
+  .empty { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 14px; }
+
+  /* Toast */
+  #toast { position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%); background: #2a2a38; border: 1px solid var(--border2); color: var(--text); padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 500; opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 500; white-space: nowrap; }
+  #toast.show { opacity: 1; }
+
+  /* Renew modal */
+  .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: flex-end; }
+  .modal-bg.open { display: flex; }
+  .modal { background: var(--surface); border-radius: var(--radius) var(--radius) 0 0; padding: 24px 20px 40px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .modal-handle { width: 36px; height: 4px; background: var(--border2); border-radius: 2px; margin: 0 auto 20px; }
+  .modal h2 { font-size: 17px; font-weight: 600; margin-bottom: 20px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .field input, .field select { width: 100%; padding: 13px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: 14px; font-family: 'DM Sans', sans-serif; -webkit-appearance: none; }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--accent); }
+  .field select option { background: var(--surface2); }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .btn-save { flex: 2; padding: 14px; border-radius: var(--radius-sm); background: var(--accent); border: none; color: #fff; font-size: 15px; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; }
+  .btn-cancel { flex: 1; padding: 14px; border-radius: var(--radius-sm); background: var(--surface2); border: 1px solid var(--border); color: var(--muted); font-size: 15px; font-family: 'DM Sans', sans-serif; cursor: pointer; }
+  .field-hint { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); padding: 12px 20px 28px; }
+  .nav-add { width: 100%; padding: 14px; border-radius: var(--radius-sm); background: var(--accent); border: none; color: #fff; font-size: 15px; font-weight: 600; font-family: 'DM Sans', sans-serif; cursor: pointer; }
+
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+</style>
+</head>
+<body>
+
+<!-- PIN SCREEN -->
+<div id="pin-screen">
+  <div class="pin-logo">IPTV <span>Tracker</span></div>
+  <div class="pin-sub">Enter your PIN to continue</div>
+  <div class="pin-dots" id="pin-dots">
+    <div class="pin-dot" id="d0"></div>
+    <div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div>
+    <div class="pin-dot" id="d3"></div>
+    <div class="pin-dot" id="d4"></div>
+    <div class="pin-dot" id="d5"></div>
+  </div>
+  <div class="pin-error" id="pin-error"></div>
+  <div class="keypad">
+    <button class="key" onclick="pinKey('1')">1</button>
+    <button class="key" onclick="pinKey('2')">2</button>
+    <button class="key" onclick="pinKey('3')">3</button>
+    <button class="key" onclick="pinKey('4')">4</button>
+    <button class="key" onclick="pinKey('5')">5</button>
+    <button class="key" onclick="pinKey('6')">6</button>
+    <button class="key" onclick="pinKey('7')">7</button>
+    <button class="key" onclick="pinKey('8')">8</button>
+    <button class="key" onclick="pinKey('9')">9</button>
+    <button class="key empty"></button>
+    <button class="key" onclick="pinKey('0')">0</button>
+    <button class="key del" onclick="pinDel()">&#x232B;</button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="app-title">IPTV <span>Tracker</span></div>
+        <div class="header-date" id="today-date"></div>
+      </div>
+      <div class="header-btns">
+        <button class="icon-btn" onclick="exportData()" title="Export backup">&#x1F4BE;</button>
+        <button class="icon-btn" onclick="lockApp()" title="Lock">&#x1F512;</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-row" id="stats-row"></div>
+
+  <div class="tabs">
+    <button class="tab active-jungle" onclick="switchTab('jungle')" id="tab-jungle">Jungle TV</button>
+    <button class="tab" onclick="switchTab('stream')" id="tab-stream">Stream</button>
+  </div>
+
+  <div class="search-wrap">
+    <input class="search" type="text" placeholder="Search subscribers..." oninput="render()" id="search-input">
+  </div>
+
+  <div class="filter-row">
+    <button class="filter-pill active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-pill" onclick="setFilter('overdue',this)">Overdue</button>
+    <button class="filter-pill" onclick="setFilter('soon',this)">Due soon</button>
+    <button class="filter-pill" onclick="setFilter('ok',this)">Active</button>
+    <button class="filter-pill" onclick="setFilter('nodate',this)">No date</button>
+  </div>
+
+  <div class="section-label" id="count-label"></div>
+  <div class="cards" id="cards"></div>
+
+  <div class="bottom-nav">
+    <button class="nav-add" onclick="openModal()">+ Add subscriber</button>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-bg" id="modal-bg" onclick="handleModalBgClick(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 id="modal-title">Add subscriber</h2>
+    <div class="field"><label>Customer name</label><input id="f-name" type="text" placeholder="e.g. John Murphy"></div>
+    <div class="field"><label>Service</label>
+      <select id="f-service">
+        <option value="jungle">Jungle TV</option>
+        <option value="stream">Stream</option>
+      </select>
+    </div>
+    <div class="two-col">
+      <div class="field"><label>Username</label><input id="f-user" type="text" autocomplete="off" autocorrect="off" autocapitalize="off"></div>
+      <div class="field"><label>Password</label><input id="f-pass" type="text" autocomplete="off" autocorrect="off" autocapitalize="off"></div>
+    </div>
+    <div class="two-col">
+      <div class="field"><label>No. of TVs</label>
+        <select id="f-tvs"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select>
+      </div>
+      <div class="field"><label>Price (&euro;)</label><input id="f-price" type="number" min="0" step="0.01" placeholder="60"></div>
+    </div>
+    <div class="two-col">
+      <div class="field"><label>Start date</label><input id="f-start" type="date"></div>
+      <div class="field"><label>Sub length</label>
+        <select id="f-months">
+          <option value="1">1 month</option>
+          <option value="3">3 months</option>
+          <option value="6">6 months</option>
+          <option value="12" selected>12 months</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Phone number</label>
+      <input id="f-phone" type="tel" autocomplete="off" placeholder="e.g. 083 123 4567">
+      <div class="field-hint">Used for WhatsApp reminders. Include country code or start with 0.</div>
+    </div>
+    <div class="field"><label>Notes (optional)</label><input id="f-notes" type="text" placeholder=""></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveEntry()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mark Renewed Modal -->
+<div class="modal-bg" id="renew-modal-bg" onclick="handleRenewBgClick(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>Mark as renewed</h2>
+    <div class="field">
+      <label>New start date</label>
+      <input id="r-start" type="date">
+    </div>
+    <div class="field">
+      <label>Sub length</label>
+      <select id="r-months">
+        <option value="1">1 month</option>
+        <option value="3">3 months</option>
+        <option value="6">6 months</option>
+        <option value="12" selected>12 months</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Price (&euro;)</label>
+      <input id="r-price" type="number" min="0" step="0.01">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeRenewModal()">Cancel</button>
+      <button class="btn-save" onclick="confirmRenew()">Confirm renewal</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+const CORRECT_PIN = '220677';
+const STORE_KEY = 'iptv_v2';
+let pinEntry = '';
+let currentTab = 'jungle';
+let currentFilter = 'all';
+let editId = null;
+let renewId = null;
+let showPw = {};
+
+// PIN
+function pinKey(k) {
+  if (pinEntry.length >= 6) return;
+  pinEntry += k;
+  updateDots();
+  if (pinEntry.length === 6) setTimeout(checkPin, 120);
+}
+function pinDel() {
+  pinEntry = pinEntry.slice(0, -1);
+  document.getElementById('pin-error').textContent = '';
+  updateDots();
+}
+function updateDots() {
+  for (let i = 0; i < 6; i++)
+    document.getElementById('d'+i).classList.toggle('filled', i < pinEntry.length);
+}
+function checkPin() {
+  if (pinEntry === CORRECT_PIN) {
+    document.getElementById('pin-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    init();
+  } else {
+    document.getElementById('pin-error').textContent = 'Incorrect PIN. Try again.';
+    pinEntry = '';
+    updateDots();
+    const dots = document.getElementById('pin-dots');
+    dots.style.animation = 'none';
+    dots.offsetHeight;
+    dots.style.animation = 'shake 0.3s ease';
+  }
+}
+function lockApp() {
+  pinEntry = '';
+  updateDots();
+  document.getElementById('pin-error').textContent = '';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('pin-screen').style.display = 'flex';
+}
+
+// DATA
+const PRELOADED = [
+  {id:'1',service:'jungle',name:'Loretta Brother',user:'Steph98765',pass:'TabftHCapK',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
+  {id:'2',service:'jungle',name:'Geraldine Ronan',user:'Gearldneronan',pass:'WRBK8HAskvm',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
+  {id:'3',service:'jungle',name:'John D no 36',user:'Johndonnelly9',pass:'8ufKeRzPy7',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
+  {id:'4',service:'jungle',name:'Jason Holmes',user:'Jasonholmes9',pass:'3ksHhxwNvZ',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
+  {id:'5',service:'jungle',name:'Amanda D',user:'AmandaD9',pass:'mNz7DzVEvr',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
+  {id:'6',service:'jungle',name:'Mikey Ohalloran',user:'Mikeyohalloran',pass:'Np5hNutvN3',tvs:2,price:120,start:'',renewal:'',months:12,phone:'',notes:'2 TVs'},
+  {id:'7',service:'jungle',name:'Paul Hay',user:'Paulhay26',pass:'5KtNRqzJhK',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
+  {id:'8',service:'jungle',name:'Sheila Alli',user:'Sheliaalli',pass:'Nj8j9bYVh5',tvs:1,price:60,start:'2026-03-25',renewal:'2027-03-25',months:12,phone:'',notes:''},
+  {id:'9',service:'jungle',name:'Steph Daly',user:'Stephdaly',pass:'mjP77M5hAk',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
+  {id:'10',service:'jungle',name:'John Meyler',user:'Johnmeyler',pass:'bzVKjEbbjz',tvs:1,price:60,start:'2026-03-09',renewal:'2027-03-09',months:12,phone:'',notes:''},
+  {id:'11',service:'jungle',name:'Sinead Allis',user:'Sineadallis',pass:'5PTVXnBRVD',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
+  {id:'12',service:'jungle',name:'Katarina Sebekova',user:'Katarinasebekova',pass:'sgbnrmG4Gy',tvs:1,price:60,start:'2026-02-18',renewal:'2027-02-18',months:12,phone:'',notes:''},
+  {id:'13',service:'jungle',name:'Jason Donn',user:'Jasondonn26',pass:'qCN58bREJJ',tvs:1,price:60,start:'2026-01-30',renewal:'2027-01-30',months:12,phone:'',notes:''},
+  {id:'14',service:'jungle',name:'Mary P',user:'Maryp2026',pass:'sxEUJpzcTk',tvs:1,price:60,start:'2026-01-30',renewal:'2027-01-30',months:12,phone:'',notes:''},
+  {id:'15',service:'jungle',name:'Chris Rawlings',user:'Chrisrawlings26',pass:'8c7gVAyqWu',tvs:1,price:60,start:'2026-01-27',renewal:'2027-01-27',months:12,phone:'',notes:''},
+  {id:'16',service:'jungle',name:"Robert O'Brien",user:'Robertobrien',pass:'DMHkJCSkrd',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
+  {id:'17',service:'jungle',name:'Donnacha',user:'Donnacha2025',pass:'Tdz9WeP88J',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
+  {id:'18',service:'jungle',name:'Kieran Ryan',user:'Kieranryan9',pass:'AU4una4m7c',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
+  {id:'19',service:'jungle',name:'Steph Rawlings',user:'Stephrawlings',pass:'PJvg7CFe6z',tvs:2,price:120,start:'2026-01-12',renewal:'2027-01-12',months:12,phone:'',notes:'2 TVs'},
+  {id:'20',service:'jungle',name:'Catherine Crowe',user:'Catherinecrowe',pass:'7qp7dDty22',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
+  {id:'21',service:'jungle',name:'Conor H',user:'Conorh2025',pass:'tU8mbCXsrm',tvs:1,price:60,start:'2025-12-09',renewal:'2026-12-09',months:12,phone:'',notes:''},
+];
+
+function loadData() {
+  const saved = localStorage.getItem(STORE_KEY);
+  if (saved) {
+    // Migrate older records that don't have a phone field
+    const parsed = JSON.parse(saved);
+    parsed.forEach(e => { if (e.phone === undefined) e.phone = ''; });
+    return parsed;
+  }
+  localStorage.setItem(STORE_KEY, JSON.stringify(PRELOADED));
+  return JSON.parse(JSON.stringify(PRELOADED));
+}
+
+let data = [];
+function saveData() { localStorage.setItem(STORE_KEY, JSON.stringify(data)); }
+
+// Export backup as JSON file
+function exportData() {
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `iptv-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Backup downloaded');
+}
+
+// Toast
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// Copy to clipboard
+function copyText(text, label) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => showToast(label + ' copied!'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast(label + ' copied!');
+  }
+}
+
+function copyUser(id) {
+  const e = data.find(x => x.id === id);
+  if (e) copyText(e.user, 'Username');
+}
+function copyPass(id) {
+  const e = data.find(x => x.id === id);
+  if (e) copyText(e.pass, 'Password');
+}
+
+// WhatsApp
+function whatsapp(id) {
+  const e = data.find(x => x.id === id);
+  if (!e || !e.phone) return;
+  let num = e.phone.replace(/[\s\-().+]/g, '');
+  if (num.startsWith('0')) num = '353' + num.slice(1);
+  const status = statusKey(e.renewal);
+  let msg;
+  if (status === 'overdue') {
+    msg = `Hi ${e.name.split(' ')[0]}! Just a reminder your IPTV subscription has expired. To renew for ${e.months} month(s) it's €${parseFloat(e.price).toFixed(0)}. Let me know if you'd like to continue 😊`;
+  } else if (status === 'soon') {
+    msg = `Hi ${e.name.split(' ')[0]}! Just to let you know your IPTV is due to renew on ${fmtDate(e.renewal)}. ${e.months} month(s) for €${parseFloat(e.price).toFixed(0)}. Give me a shout when you're ready 😊`;
+  } else {
+    msg = `Hi ${e.name.split(' ')[0]}! Just checking in about your IPTV subscription. Give me a shout if you need anything 😊`;
+  }
+  window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
+}
+
+// Mark renewed modal
+function openRenewModal(id) {
+  renewId = id;
+  const e = data.find(x => x.id === id);
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('r-start').value = today;
+  document.getElementById('r-months').value = e.months || '12';
+  document.getElementById('r-price').value = e.price || '60';
+  document.getElementById('renew-modal-bg').classList.add('open');
+}
+function closeRenewModal() {
+  document.getElementById('renew-modal-bg').classList.remove('open');
+  renewId = null;
+}
+function handleRenewBgClick(ev) {
+  if (ev.target === document.getElementById('renew-modal-bg')) closeRenewModal();
+}
+function confirmRenew() {
+  const idx = data.findIndex(x => x.id === renewId);
+  if (idx < 0) return;
+  const start = document.getElementById('r-start').value;
+  const months = parseInt(document.getElementById('r-months').value);
+  const price = parseFloat(document.getElementById('r-price').value) || data[idx].price;
+  data[idx].start = start;
+  data[idx].renewal = addMonths(start, months);
+  data[idx].months = months;
+  data[idx].price = price;
+  saveData();
+  closeRenewModal();
+  render();
+  showToast('Renewal saved!');
+}
+
+// Helpers
+function addMonths(dateStr, n) {
+  const d = new Date(dateStr);
+  d.setMonth(d.getMonth() + parseInt(n));
+  return d.toISOString().slice(0,10);
+}
+function daysLeft(renewal) {
+  if (!renewal) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const r = new Date(renewal); r.setHours(0,0,0,0);
+  return Math.round((r - today) / 86400000);
+}
+function statusKey(renewal) {
+  const d = daysLeft(renewal);
+  if (d === null) return 'nodate';
+  if (d < 0) return 'overdue';
+  if (d <= 30) return 'soon';
+  return 'ok';
+}
+function statusBadge(renewal) {
+  const d = daysLeft(renewal);
+  if (d === null) return '<span class="badge nodate">No date</span>';
+  if (d < 0) return `<span class="badge overdue">Overdue ${Math.abs(d)}d</span>`;
+  if (d === 0) return '<span class="badge soon">Due today</span>';
+  if (d <= 30) return `<span class="badge soon">Due in ${d}d</span>`;
+  return '<span class="badge ok">Active</span>';
+}
+function fmtDate(d) {
+  if (!d) return '—';
+  const [y,m,dd] = d.split('-');
+  return `${dd}/${m}/${y}`;
+}
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tab-jungle').className = 'tab' + (tab==='jungle'?' active-jungle':'');
+  document.getElementById('tab-stream').className = 'tab' + (tab==='stream'?' active-stream':'');
+  currentFilter = 'all';
+  document.querySelectorAll('.filter-pill').forEach((p,i) => p.classList.toggle('active', i===0));
+  render();
+}
+
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function render() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const list = data.filter(e => {
+    if (e.service !== currentTab) return false;
+    if (q && !e.name.toLowerCase().includes(q) && !e.user.toLowerCase().includes(q)) return false;
+    if (currentFilter !== 'all' && statusKey(e.renewal) !== currentFilter) return false;
+    return true;
+  });
+  const order = {overdue:0,soon:1,nodate:2,ok:3};
+  list.sort((a,b) => {
+    const diff = order[statusKey(a.renewal)] - order[statusKey(b.renewal)];
+    if (diff !== 0) return diff;
+    if (a.renewal && b.renewal) return new Date(a.renewal) - new Date(b.renewal);
+    return a.name.localeCompare(b.name);
+  });
+  document.getElementById('count-label').textContent = `${list.length} subscriber${list.length!==1?'s':''}`;
+  const container = document.getElementById('cards');
+  if (list.length === 0) {
+    container.innerHTML = '<div class="empty">No subscribers found</div>';
+  } else {
+    container.innerHTML = list.map(e => {
+      const shown = showPw[e.id];
+      const sk = statusKey(e.renewal);
+      const waBtn = e.phone ? `<button class="btn-sm wa" onclick="whatsapp('${e.id}')">WhatsApp</button>` : '';
+      const renewBtn = (sk === 'overdue' || sk === 'soon') ? `<button class="btn-sm renew" onclick="openRenewModal('${e.id}')">Mark renewed</button>` : '';
+      const notesHtml = e.notes ? `<div class="card-notes">${escHtml(e.notes)}</div>` : '';
+      return `<div class="card ${e.service}">
+        <div class="card-top">
+          <div>
+            <div class="card-name">${escHtml(e.name)}</div>
+            <div class="card-tvs">${e.tvs} TV${e.tvs>1?'s':''} &middot; &euro;${parseFloat(e.price).toFixed(2)}</div>
+          </div>
+          ${statusBadge(e.renewal)}
+        </div>
+        <div class="card-creds">
+          <div class="cred" onclick="copyUser('${e.id}')">
+            <div class="cred-label">Username <span class="cred-copy-hint">tap to copy</span></div>
+            <div class="cred-val">${escHtml(e.user)}</div>
+          </div>
+          <div class="cred" onclick="copyPass('${e.id}')">
+            <div class="cred-label">Password <span class="cred-copy-hint">tap to copy</span></div>
+            <div class="cred-val">${shown ? escHtml(e.pass) : '&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;'}</div>
+          </div>
+        </div>
+        ${notesHtml}
+        <div class="card-footer" style="margin-top:${notesHtml?'8px':'0'}">
+          <div class="renewal-info">${e.renewal ? `Renews <strong>${fmtDate(e.renewal)}</strong>` : '<span style="color:var(--muted)">No renewal date set</span>'}</div>
+          <div class="price-tag">&euro;${parseFloat(e.price).toFixed(2)}</div>
+        </div>
+        <div class="card-actions">
+          <button class="btn-sm" onclick="togglePw('${e.id}')">${shown?'Hide pw':'Show pw'}</button>
+          ${waBtn}
+          ${renewBtn}
+          <button class="btn-sm edit" onclick="editEntry('${e.id}')">Edit</button>
+          <button class="btn-sm del" onclick="deleteEntry('${e.id}')">Remove</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+  renderStats();
+}
+
+function renderStats() {
+  const list = data.filter(e => e.service === currentTab);
+  const overdue = list.filter(e => statusKey(e.renewal)==='overdue').length;
+  const soon = list.filter(e => statusKey(e.renewal)==='soon').length;
+  const revenue = list.reduce((s,e) => s + parseFloat(e.price||0), 0);
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-card"><div class="stat-val">${list.length}</div><div class="stat-lbl">Total</div></div>
+    <div class="stat-card"><div class="stat-val red">${overdue}</div><div class="stat-lbl">Overdue</div></div>
+    <div class="stat-card"><div class="stat-val amber">${soon}</div><div class="stat-lbl">Due soon</div></div>
+    <div class="stat-card"><div class="stat-val green">&euro;${revenue.toFixed(0)}</div><div class="stat-lbl">Value</div></div>
+  `;
+}
+
+function togglePw(id) { showPw[id] = !showPw[id]; render(); }
+
+function openModal() {
+  editId = null;
+  document.getElementById('modal-title').textContent = 'Add subscriber';
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-service').value = currentTab;
+  document.getElementById('f-user').value = '';
+  document.getElementById('f-pass').value = '';
+  document.getElementById('f-tvs').value = '1';
+  document.getElementById('f-price').value = '60';
+  document.getElementById('f-start').value = '';
+  document.getElementById('f-months').value = '12';
+  document.getElementById('f-phone').value = '';
+  document.getElementById('f-notes').value = '';
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+function editEntry(id) {
+  const e = data.find(x => x.id===id);
+  if (!e) return;
+  editId = id;
+  document.getElementById('modal-title').textContent = 'Edit subscriber';
+  document.getElementById('f-name').value = e.name;
+  document.getElementById('f-service').value = e.service;
+  document.getElementById('f-user').value = e.user;
+  document.getElementById('f-pass').value = e.pass;
+  document.getElementById('f-tvs').value = e.tvs||'1';
+  document.getElementById('f-price').value = e.price||'60';
+  document.getElementById('f-start').value = e.start||'';
+  document.getElementById('f-months').value = e.months||'12';
+  document.getElementById('f-phone').value = e.phone||'';
+  document.getElementById('f-notes').value = e.notes||'';
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal-bg').classList.remove('open'); editId = null; }
+function handleModalBgClick(e) { if (e.target===document.getElementById('modal-bg')) closeModal(); }
+
+function saveEntry() {
+  const name = document.getElementById('f-name').value.trim();
+  const user = document.getElementById('f-user').value.trim();
+  const start = document.getElementById('f-start').value;
+  if (!name || !user) { alert('Please enter at least a name and username.'); return; }
+  const months = document.getElementById('f-months').value;
+  const renewal = start ? addMonths(start, months) : '';
+  const entry = {
+    id: editId || Date.now().toString(),
+    service: document.getElementById('f-service').value,
+    name, user,
+    pass: document.getElementById('f-pass').value.trim(),
+    tvs: parseInt(document.getElementById('f-tvs').value),
+    price: parseFloat(document.getElementById('f-price').value)||60,
+    start, renewal,
+    months: parseInt(months),
+    phone: document.getElementById('f-phone').value.trim(),
+    notes: document.getElementById('f-notes').value.trim()
+  };
+  if (editId) {
+    const idx = data.findIndex(x => x.id===editId);
+    if (idx > -1) data[idx] = entry;
+  } else {
+    data.push(entry);
+  }
+  saveData();
+  closeModal();
+  render();
+}
+
+function deleteEntry(id) {
+  if (!confirm('Remove this subscriber?')) return;
+  data = data.filter(x => x.id !== id);
+  saveData();
+  render();
+}
+
+function init() {
+  data = loadData();
+  document.getElementById('today-date').textContent = new Date().toLocaleDateString('en-IE', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  render();
+}
+</script>
+</body>
+</html>
