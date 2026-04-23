@@ -481,7 +481,8 @@ function confirmRenew() {
   if (idx < 0) return;
   const start = document.getElementById('r-start').value;
   const months = parseInt(document.getElementById('r-months').value);
-  const price = parseFloat(document.getElementById('r-price').value) || data[idx].price;
+  const rPriceVal = document.getElementById('r-price').value;
+  const price = rPriceVal !== '' ? parseFloat(rPriceVal) : data[idx].price;
   data[idx].start = start;
   data[idx].renewal = addMonths(start, months);
   data[idx].months = months;
@@ -508,7 +509,7 @@ function statusKey(renewal) {
   const d = daysLeft(renewal);
   if (d === null) return 'nodate';
   if (d < 0) return 'overdue';
-  if (d <= 30) return 'soon';
+  if (d <= 60) return 'soon';
   return 'ok';
 }
 function statusBadge(renewal) {
@@ -516,7 +517,7 @@ function statusBadge(renewal) {
   if (d === null) return '<span class="badge nodate">No date</span>';
   if (d < 0) return `<span class="badge overdue">Overdue ${Math.abs(d)}d</span>`;
   if (d === 0) return '<span class="badge soon">Due today</span>';
-  if (d <= 30) return `<span class="badge soon">Due in ${d}d</span>`;
+  if (d <= 60) return `<span class="badge soon">Due in ${d}d</span>`;
   return '<span class="badge ok">Active</span>';
 }
 function fmtDate(d) {
@@ -671,7 +672,7 @@ function saveEntry() {
     name, user,
     pass: document.getElementById('f-pass').value.trim(),
     tvs: parseInt(document.getElementById('f-tvs').value),
-    price: parseFloat(document.getElementById('f-price').value)||60,
+    price: document.getElementById('f-price').value !== '' ? parseFloat(document.getElementById('f-price').value) : 60,
     start, renewal,
     months: parseInt(months),
     phone: document.getElementById('f-phone').value.trim(),
