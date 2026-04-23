@@ -83,6 +83,9 @@ const SEED={
     {id:"EXP003",date:"2026-03-15",item:"Ribbon assorted",cat:"Materials",amount:4.20,receipt:false,notes:""},
     {id:"EXP004",date:"2026-04-01",item:"Postage stamps x10",cat:"Postage",amount:9.00,receipt:true,notes:""},
   ],
+  homeCards:[
+    {id:"HC001",category:"Birthday",description:"Example — delete me and add your own!",qty:1,price:5.00,photo:null,dateAdded:"2026-01-01"},
+  ],
 };
 
 const saveFB=(uid,k,v)=>{if(!uid)return;fbDb.ref(`users/${uid}/${k}`).set(v).catch(()=>{})};
@@ -132,7 +135,8 @@ function Sel({label,req,options,labels,...p}){return<div style={{marginBottom:13
 function Txt({label,...p}){return<div style={{marginBottom:13}}>{label&&<Lbl text={label}/>}<textarea style={{...iSt,resize:"vertical",minHeight:58}} {...p} onFocus={e=>e.target.style.borderColor=C.rose} onBlur={e=>e.target.style.borderColor=C.blush}/></div>}
 function Modal({open,onClose,children,wide}){if(!open)return null;return<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16,overflowY:"auto"}} onClick={onClose}><div className="fade-in" onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:20,padding:28,maxWidth:wide?700:500,width:"100%",boxShadow:`0 24px 64px rgba(136,14,79,.22)`,maxHeight:"92vh",overflowY:"auto"}}>{children}</div></div>}
 function MTitle({children,sub,onClose}){return<div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}><div><h3 style={{margin:0,color:C.deep,fontFamily:"'Playfair Display',serif",fontWeight:700,fontSize:20}}>{children}</h3>{sub&&<p style={{margin:"4px 0 0",color:C.muted,fontSize:13}}>{sub}</p>}</div>{onClose&&<button onClick={onClose} style={{background:"none",border:"none",fontSize:20,cursor:"pointer",color:C.muted,padding:4}}>✕</button>}</div>}
-function PhotoUpload({value,onChange,size=80}){const ref=useRef();const handle=e=>{const f=e.target.files[0];if(!f)return;const img=new Image(),u=URL.createObjectURL(f);img.onload=()=>{const M=500,sc=Math.min(1,M/Math.max(img.width,img.height)),cv=document.createElement("canvas");cv.width=img.width*sc;cv.height=img.height*sc;cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);onChange(cv.toDataURL("image/jpeg",.72));URL.revokeObjectURL(u)};img.src=u};return<div onClick={()=>ref.current.click()} style={{width:size,height:size,borderRadius:12,border:`2px dashed ${C.blush}`,background:C.light,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",flexShrink:0,transition:"border-color .2s"}} onMouseEnter={e=>e.currentTarget.style.borderColor=C.rose} onMouseLeave={e=>e.currentTarget.style.borderColor=C.blush}><input ref={ref} type="file" accept="image/*" style={{display:"none"}} onChange={handle}/>{value?<img src={value} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<div style={{textAlign:"center",color:C.blush,fontSize:11,lineHeight:1.5}}><div style={{fontSize:22,marginBottom:3}}>📷</div>Tap to add photo</div>}</div>}
+function PhotoLightbox({src,onClose,onChange}){if(!src)return null;return<div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.93)",zIndex:9998,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20}}><button onClick={onClose} style={{position:"absolute",top:16,right:16,background:"rgba(255,255,255,.15)",border:"none",borderRadius:"50%",width:40,height:40,cursor:"pointer",fontSize:20,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"Lato,sans-serif"}}>✕</button><img src={src} alt="" onClick={e=>e.stopPropagation()} style={{maxWidth:"100%",maxHeight:"78vh",borderRadius:14,objectFit:"contain",boxShadow:"0 8px 40px rgba(0,0,0,.6)"}}/>{onChange&&<button onClick={e=>{e.stopPropagation();onChange();}} style={{marginTop:20,padding:"11px 24px",background:"rgba(255,255,255,.18)",border:"1.5px solid rgba(255,255,255,.4)",borderRadius:12,color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"Lato,sans-serif",letterSpacing:.3}}>📷 Change Photo</button>}</div>;}
+function PhotoUpload({value,onChange,size=80}){const ref=useRef();const[lb,setLb]=useState(false);const handle=e=>{const f=e.target.files[0];if(!f)return;const img=new Image(),u=URL.createObjectURL(f);img.onload=()=>{const M=500,sc=Math.min(1,M/Math.max(img.width,img.height)),cv=document.createElement("canvas");cv.width=img.width*sc;cv.height=img.height*sc;cv.getContext("2d").drawImage(img,0,0,cv.width,cv.height);onChange(cv.toDataURL("image/jpeg",.72));URL.revokeObjectURL(u)};img.src=u};return<><PhotoLightbox src={lb?value:null} onClose={()=>setLb(false)} onChange={onChange?()=>{setLb(false);setTimeout(()=>ref.current&&ref.current.click(),100)}:null}/><div onClick={()=>value?setLb(true):ref.current.click()} style={{width:size,height:size,borderRadius:12,border:`2px dashed ${C.blush}`,background:C.light,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",flexShrink:0,transition:"border-color .2s"}} onMouseEnter={e=>e.currentTarget.style.borderColor=C.rose} onMouseLeave={e=>e.currentTarget.style.borderColor=C.blush}><input ref={ref} type="file" accept="image/*" style={{display:"none"}} onChange={handle}/>{value?<img src={value} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<div style={{textAlign:"center",color:C.blush,fontSize:11,lineHeight:1.5}}><div style={{fontSize:22,marginBottom:3}}>📷</div>Tap to add photo</div>}</div></>;}
 function CheckPill({checked,onClick,label}){return<button onClick={onClick} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 14px",borderRadius:20,border:`1.5px solid ${checked?C.green:"#e0e0e0"}`,background:checked?C.glight:"#fafafa",cursor:"pointer",fontSize:12,fontWeight:700,color:checked?C.green:C.muted,fontFamily:"'Lato',sans-serif",transition:"all .2s"}}><span style={{fontSize:13}}>{checked?"✅":"⬜"}</span>{label}</button>}
 function SecTitle({children,right}){return<div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}><h2 style={{fontFamily:"'Playfair Display',serif",fontWeight:700,color:C.deep,fontSize:20,letterSpacing:.3}}>{children}</h2>{right}</div>}
 function Empty({icon,title,sub}){return<div style={{textAlign:"center",padding:"50px 20px",color:C.blush}}><div style={{fontSize:44,marginBottom:10}}>{icon}</div><div style={{fontWeight:700,color:C.rose,fontSize:15}}>{title}</div>{sub&&<div style={{fontSize:13,marginTop:6,color:C.muted}}>{sub}</div>}</div>}
@@ -149,13 +153,14 @@ function App({user}){
   const[supplies,   setSR]=useState(SEED.supplies);
   const[shopStock,  setSSR]=useState(SEED.shopStock);
   const[expenses,   setER]=useState(SEED.expenses);
+  const[homeCards,  setHCR]=useState(SEED.homeCards);
   const[tab,setTab]=useState("dashboard");
   const[toast,setToast]=useState({msg:"",color:C.green});
   const[modals,setModals]=useState({newOrder:false,newCustomer:false,complete:null,viewCard:null,viewCustomer:null,newExpense:false,newSupply:false,backup:false});
 
   useEffect(()=>{
-    const defs={customers:SEED.customers,inProgress:SEED.inProgress,completed:SEED.completed,supplies:SEED.supplies,shopStock:SEED.shopStock,expenses:SEED.expenses};
-    const setters={customers:setCR,inProgress:setIPR,completed:setCOR,supplies:setSR,shopStock:setSSR,expenses:setER};
+    const defs={customers:SEED.customers,inProgress:SEED.inProgress,completed:SEED.completed,supplies:SEED.supplies,shopStock:SEED.shopStock,expenses:SEED.expenses,homeCards:SEED.homeCards};
+    const setters={customers:setCR,inProgress:setIPR,completed:setCOR,supplies:setSR,shopStock:setSSR,expenses:setER,homeCards:setHCR};
     loadFB(user.uid).then(data=>{
       const hasCloud=Object.keys(data).length>0;
       Object.keys(defs).forEach(k=>setters[k](hasCloud?(data[k]??defs[k]):defs[k]));
@@ -174,6 +179,7 @@ function App({user}){
   const setSupplies=useCallback(mk(setSR,"supplies"),[]);
   const setShopStock=useCallback(mk(setSSR,"shopStock"),[]);
   const setExpenses=useCallback(mk(setER,"expenses"),[]);
+  const setHomeCards=useCallback(mk(setHCR,"homeCards"),[]);
 
   const finishOrder=useCallback((orderId,{photo,qty,total,payment,notes})=>{
     const order=inProgress.find(o=>o.id===orderId);if(!order)return;
@@ -221,7 +227,7 @@ function App({user}){
       {tab==="dashboard"&&<Dashboard inProgress={inProgress} completed={completed} customers={customers} shopStock={shopStock} lowSupplies={lowSupplies} overdueOrders={overdueOrders} setTab={setTab}/>}
       {tab==="inprogress"&&<InProgressTab inProgress={inProgress} setInProgress={setInProgress} onMarkComplete={o=>openM("complete",o)} showToast={showT}/>}
       {tab==="completed"&&<CompletedTab completed={completed} setCompleted={setCompleted} showToast={showT}/>}
-      {tab==="shop"&&<ShopTab shopStock={shopStock} setShopStock={setShopStock} completed={completed} setCompleted={setCompleted} showToast={showT}/>}
+      {tab==="shop"&&<ShopTab shopStock={shopStock} setShopStock={setShopStock} completed={completed} setCompleted={setCompleted} homeCards={homeCards} setHomeCards={setHomeCards} showToast={showT}/>}
       {tab==="customers"&&<CustomersTab customers={customers} completed={completed} openModal={openM}/>}
       {tab==="expenses"&&<ExpensesTab expenses={expenses} setExpenses={setExpenses} showToast={showT}/>}
       {/* Supplies tab hidden — code kept for future use */}
@@ -237,13 +243,14 @@ function App({user}){
     <Modal open={modals.newExpense} onClose={()=>closeM("newExpense")}><NewExpenseForm onSubmit={e=>{setExpenses(ex=>[e,...ex]);closeM("newExpense");showT("Expense saved!")}} onCancel={()=>closeM("newExpense")}/></Modal>
     <Modal open={modals.newSupply} onClose={()=>closeM("newSupply")}><NewSupplyForm onSubmit={s=>{setSupplies(sp=>[...sp,s]);closeM("newSupply");showT("Supply added!")}} onCancel={()=>closeM("newSupply")}/></Modal>
     <Modal open={modals.backup} onClose={()=>closeM("backup")}>
-      <BackupModal customers={customers} inProgress={inProgress} completed={completed} supplies={supplies} shopStock={shopStock} expenses={expenses} onImport={(data)=>{
+      <BackupModal customers={customers} inProgress={inProgress} completed={completed} supplies={supplies} shopStock={shopStock} expenses={expenses} homeCards={homeCards} onImport={(data)=>{
         if(data.customers){setCustomers(data.customers);}
         if(data.inProgress){setInProgress(data.inProgress);}
         if(data.completed){setCompleted(data.completed);}
         if(data.supplies){setSupplies(data.supplies);}
         if(data.shopStock){setShopStock(data.shopStock);}
         if(data.expenses){setExpenses(data.expenses);}
+        if(data.homeCards){setHomeCards(data.homeCards);}
         closeM("backup");showT("✅ Data restored successfully!");
       }} onClose={()=>closeM("backup")}/>
     </Modal>
@@ -473,10 +480,11 @@ function EditIPOrderForm({order,onSave,onCancel}){
 }
 
 // ── Shop Tab ────────────────────────────────────────────────────────────────────
-function ShopTab({shopStock,setShopStock,completed,setCompleted,showToast}){
+function ShopTab({shopStock,setShopStock,completed,setCompleted,homeCards,setHomeCards,showToast}){
   const[addStockModal,setAddStockModal]=useState(false);
   const[recordSaleModal,setRecordSaleModal]=useState(false);
   const[editCat,setEditCat]=useState(null);
+  const[subTab,setSubTab]=useState("tearooms");
 
   const shopSales=completed.filter(o=>o.channel==="Shop");
   const totalRevenue=shopSales.reduce((s,o)=>s+o.total,0);
@@ -528,7 +536,13 @@ function ShopTab({shopStock,setShopStock,completed,setCompleted,showToast}){
   };
 
   return<div className="fade-in">
-    <SecTitle>🏪 Annacarty Tea Rooms</SecTitle>
+    <SecTitle>🏪 Shop</SecTitle>
+    {/* Sub-tab toggle */}
+    <div style={{display:"flex",gap:0,marginBottom:22,background:C.light,borderRadius:12,padding:4}}>
+      {[{key:"tearooms",label:"🏪 Tea Rooms"},{key:"home",label:"🏠 Home Stock"}].map(t=><button key={t.key} onClick={()=>setSubTab(t.key)} style={{flex:1,padding:"9px 10px",border:"none",borderRadius:9,background:subTab===t.key?"#fff":"transparent",fontFamily:"Lato,sans-serif",fontSize:13,fontWeight:subTab===t.key?700:400,color:subTab===t.key?C.rose:C.muted,cursor:"pointer",boxShadow:subTab===t.key?"0 2px 8px rgba(194,24,91,.12)":"none",transition:"all .2s"}}>{t.label}</button>)}
+    </div>
+    {subTab==="home"&&<HomeStockSection homeCards={homeCards} setHomeCards={setHomeCards} showToast={showToast}/>}
+    {subTab==="tearooms"&&<div>
 
     {/* Stats */}
     <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
@@ -612,6 +626,7 @@ function ShopTab({shopStock,setShopStock,completed,setCompleted,showToast}){
     <Modal open={!!editCat} onClose={()=>setEditCat(null)}>
       {editCat&&<EditShopStockForm category={editCat.category} currentAdded={editCat.added} onSave={editStock} onCancel={()=>setEditCat(null)}/>}
     </Modal>
+    </div>}
   </div>;
 }
 
@@ -683,6 +698,85 @@ function EditShopStockForm({category,currentAdded,onSave,onCancel}){
   </div>;
 }
 
+// ── Home Stock Section ───────────────────────────────────────────────────────
+function HomeStockSection({homeCards,setHomeCards,showToast}){
+  const[addModal,setAddModal]=useState(false);
+  const[editCard,setEditCard]=useState(null);
+  const[viewPhoto,setViewPhoto]=useState(null);
+  const deleteCard=(id)=>{if(!window.confirm("Delete this card? This can't be undone."))return;setHomeCards(h=>h.filter(c=>c.id!==id));showToast("Card removed");};
+  const totalCards=homeCards.reduce((s,c)=>s+(c.qty||1),0);
+  const withPhotos=homeCards.filter(c=>c.photo).length;
+  return<div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}}>
+      <div style={{background:C.light,borderRadius:12,padding:"12px",textAlign:"center"}}>
+        <div style={{fontWeight:900,fontSize:20,color:C.rose,fontFamily:"'Playfair Display',serif"}}>{totalCards}</div>
+        <div style={{fontSize:10,color:C.muted,fontWeight:700,letterSpacing:.4,textTransform:"uppercase"}}>Cards at Home</div>
+      </div>
+      <div style={{background:C.blight,borderRadius:12,padding:"12px",textAlign:"center"}}>
+        <div style={{fontWeight:900,fontSize:20,color:C.blue,fontFamily:"'Playfair Display',serif"}}>{withPhotos}</div>
+        <div style={{fontSize:10,color:C.muted,fontWeight:700,letterSpacing:.4,textTransform:"uppercase"}}>With Photos</div>
+      </div>
+    </div>
+    <Btn onClick={()=>setAddModal(true)} variant="primary" small style={{marginBottom:20}}>+ Add Card</Btn>
+    {homeCards.length===0
+      ?<Empty icon="🏠" title="No home stock yet" sub="Add cards you've made to keep at home — great for showing people!"/>
+      :<div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12}}>
+        {homeCards.map(c=><div key={c.id} style={{background:"#fff",borderRadius:16,border:`1.5px solid ${C.light}`,overflow:"hidden",boxShadow:"0 2px 10px rgba(194,24,91,.06)"}}>
+          <div onClick={()=>c.photo&&setViewPhoto(c.photo)} style={{width:"100%",aspectRatio:"4/3",background:C.pale,cursor:c.photo?"pointer":"default",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",position:"relative"}}>
+            {c.photo
+              ?<><img src={c.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/><div style={{position:"absolute",bottom:6,right:6,background:"rgba(0,0,0,.45)",borderRadius:6,padding:"2px 8px",fontSize:11,color:"#fff",fontWeight:700}}>👁 View</div></>
+              :<div style={{textAlign:"center",color:C.blush}}><div style={{fontSize:30}}>📷</div><div style={{fontSize:11,marginTop:4}}>No photo yet</div></div>
+            }
+          </div>
+          <div style={{padding:"10px 12px"}}>
+            <div style={{fontWeight:700,color:C.deep,fontSize:13,fontFamily:"'Playfair Display',serif"}}>{c.category}</div>
+            {c.description&&<div style={{fontSize:11,color:C.muted,marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{c.description}</div>}
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:8,flexWrap:"wrap",gap:4}}>
+              <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                <Badge color="pink" style={{fontSize:10}}>x{c.qty}</Badge>
+                {c.price>0&&<span style={{fontWeight:700,color:C.rose,fontSize:12}}>€{parseFloat(c.price).toFixed(2)}</span>}
+              </div>
+              <div style={{display:"flex",gap:4}}>
+                <button onClick={()=>setEditCard(c)} style={{fontSize:10,padding:"3px 8px",borderRadius:6,border:`1px solid ${C.blush}`,background:"#fff",color:C.rose,cursor:"pointer",fontFamily:"Lato,sans-serif"}}>Edit</button>
+                <button onClick={()=>deleteCard(c.id)} style={{fontSize:10,padding:"3px 8px",borderRadius:6,border:"1px solid #ffcdd2",background:"#ffebee",color:"#c62828",cursor:"pointer",fontFamily:"Lato,sans-serif"}}>Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>)}
+      </div>
+    }
+    {viewPhoto&&<PhotoLightbox src={viewPhoto} onClose={()=>setViewPhoto(null)}/>}
+    <Modal open={addModal} onClose={()=>setAddModal(false)}>
+      <HomeCardForm onSubmit={c=>{setHomeCards(h=>[{id:"HC"+genId(),...c},...h]);setAddModal(false);showToast("Card added!");}} onCancel={()=>setAddModal(false)}/>
+    </Modal>
+    <Modal open={!!editCard} onClose={()=>setEditCard(null)}>
+      {editCard&&<HomeCardForm initial={editCard} onSubmit={c=>{setHomeCards(h=>h.map(x=>x.id===editCard.id?{...x,...c}:x));setEditCard(null);showToast("Card updated!");}} onCancel={()=>setEditCard(null)}/>}
+    </Modal>
+  </div>;
+}
+function HomeCardForm({initial,onSubmit,onCancel}){
+  const[f,setF]=useState({category:initial?.category||"",description:initial?.description||"",qty:initial?.qty||1,price:initial?.price||"",photo:initial?.photo||null,dateAdded:initial?.dateAdded||new Date().toISOString().slice(0,10)});
+  const sf=(k,v)=>setF(x=>({...x,[k]:v}));
+  return<div>
+    <MTitle>{initial?"Edit Card":"Add Home Card"}</MTitle>
+    <div style={{display:"flex",gap:14,marginBottom:14,alignItems:"flex-start"}}>
+      <div><label style={{display:"block",fontSize:11,fontWeight:700,color:C.deep,marginBottom:6,letterSpacing:.6,textTransform:"uppercase"}}>Photo</label><PhotoUpload value={f.photo} onChange={p=>sf("photo",p)} size={96}/><div style={{fontSize:10,color:C.muted,marginTop:4,textAlign:"center"}}>tap to add</div></div>
+      <div style={{flex:1}}>
+        <Sel label="Category / Occasion" req options={CARD_TYPES} value={f.category} onChange={e=>sf("category",e.target.value)}/>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          <Inp label="Qty" type="number" min={1} value={f.qty} onChange={e=>sf("qty",parseInt(e.target.value)||1)}/>
+          <Inp label="Price (€)" type="number" step="0.01" min={0} value={f.price} onChange={e=>sf("price",e.target.value)} placeholder="e.g. 5.00"/>
+        </div>
+      </div>
+    </div>
+    <Txt label="Description / design notes" value={f.description} onChange={e=>sf("description",e.target.value)} placeholder="e.g. Floral design with pink ribbon, A5 size…"/>
+    <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+      <Btn onClick={onCancel} variant="ghost" small>Cancel</Btn>
+      <Btn onClick={()=>f.category&&onSubmit({...f,qty:parseInt(f.qty)||1,price:f.price?parseFloat(f.price):0})} variant="primary" small disabled={!f.category}>Save</Btn>
+    </div>
+  </div>;
+}
+
 // ── Customers Tab ─────────────────────────────────────────────────────────────
 function CustomersTab({customers,completed,openModal}){
   const[search,setSearch]=useState("");
@@ -706,6 +800,7 @@ function CustomerDetail({customer,completed,setCustomers,setCompleted,onClose,sh
   const[mode,setMode]=useState("view"); // "view" | "edit" | "confirmDelete"
   const[f,setF]=useState({name:customer.name,phone:customer.phone||"",email:customer.email||"",town:customer.town||"",source:customer.source||"",prefs:customer.prefs||"",bday:customer.bday||""});
   const[editOrder,setEditOrder]=useState(null);
+  const[viewPhoto,setViewPhoto]=useState(null);
   const sf=(k,v)=>setF(x=>({...x,[k]:v}));
   const orders=completed.filter(o=>o.customerId===customer.id);const total=orders.reduce((s,o)=>s+o.total,0);
   const types=[...new Set(orders.map(o=>o.cardType))];
@@ -766,7 +861,7 @@ function CustomerDetail({customer,completed,setCustomers,setCompleted,onClose,sh
     <div style={{fontSize:12,fontWeight:700,color:C.deep,letterSpacing:.5,textTransform:"uppercase",marginBottom:10}}>Card History ({orders.length})</div>
     {orders.length===0?<p style={{color:C.muted,fontSize:13}}>No completed orders yet.</p>:<div style={{display:"flex",flexDirection:"column",gap:10}}>
       {orders.map(o=><div key={o.id} style={{display:"flex",gap:12,alignItems:"center",background:C.light,borderRadius:12,padding:"10px 14px"}}>
-        <div style={{width:48,height:48,borderRadius:10,background:C.blush,overflow:"hidden",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20}}>{o.photo?<img src={o.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:"🌸"}</div>
+        <div onClick={()=>o.photo&&setViewPhoto(o.photo)} style={{width:48,height:48,borderRadius:10,background:C.blush,overflow:"hidden",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,cursor:o.photo?"pointer":"default"}}>{o.photo?<img src={o.photo} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:"🌸"}</div>
         <div style={{flex:1,minWidth:0}}><div style={{fontWeight:700,color:C.deep,fontSize:13}}>{o.cardType}</div><div style={{fontSize:11,color:C.muted,marginTop:2}}>{new Date(o.completedDate).toLocaleDateString("en-IE")} · {o.qty} card{o.qty>1?"s":""} · {o.payment}</div>{o.postage>0&&<div style={{fontSize:11,color:C.blue,marginTop:2}}>📮 Postage: €{parseFloat(o.postage).toFixed(2)}{o.postageReceipt&&<button onClick={()=>window.open(o.postageReceipt,"_blank")} style={{marginLeft:6,fontSize:10,padding:"1px 7px",borderRadius:5,border:`1px solid ${C.blight}`,background:C.blight,color:C.blue,cursor:"pointer",fontFamily:"Lato,sans-serif"}}>View receipt</button>}</div>}{o.notes&&<div style={{fontSize:11,color:"#bdbdbd",marginTop:1}}>{o.notes}</div>}</div>
         <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4,flexShrink:0}}>
           <div style={{fontWeight:700,color:C.rose,fontSize:14}}>€{o.total.toFixed(2)}</div>
@@ -780,6 +875,7 @@ function CustomerDetail({customer,completed,setCustomers,setCompleted,onClose,sh
     <Modal open={!!editOrder} onClose={()=>setEditOrder(null)}>
       {editOrder&&<EditCustomerCompletedOrderForm order={editOrder} onSave={(changes)=>saveOrder(editOrder.id,changes)} onCancel={()=>setEditOrder(null)}/>}
     </Modal>
+    {viewPhoto&&<PhotoLightbox src={viewPhoto} onClose={()=>setViewPhoto(null)}/>}
   </div>;
 }
 function EditCustomerCompletedOrderForm({order,onSave,onCancel}){
@@ -970,7 +1066,7 @@ function NewCustomerForm({onSubmit,onCancel}){
 }
 
 // ── Backup & Restore ─────────────────────────────────────────────────────────
-function BackupModal({customers,inProgress,completed,supplies,shopStock,expenses,onImport,onClose}){
+function BackupModal({customers,inProgress,completed,supplies,shopStock,expenses,homeCards,onImport,onClose}){
   const[importError,setImportError]=useState("");
   const[imported,setImported]=useState(false);
   const fileRef=useRef();
@@ -979,7 +1075,7 @@ function BackupModal({customers,inProgress,completed,supplies,shopStock,expenses
     const data={
       exportDate:new Date().toISOString(),
       version:"1.0",
-      customers,inProgress,completed,supplies,shopStock,expenses
+      customers,inProgress,completed,supplies,shopStock,expenses,homeCards
     };
     const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
     const url=URL.createObjectURL(blob);
@@ -1019,6 +1115,7 @@ function BackupModal({customers,inProgress,completed,supplies,shopStock,expenses
     {label:"Supplies",val:supplies.length,icon:"📦"},
     {label:"Shop Designs",val:shopStock.length,icon:"🏪"},
     {label:"Expenses",val:expenses.length,icon:"💸"},
+    {label:"Home Cards",val:(homeCards||[]).length,icon:"🏠"},
   ];
 
   return<div>
