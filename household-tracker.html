@@ -35,6 +35,23 @@
   .backup-btn { margin-left: auto; padding: 6px 14px; border: 1px solid var(--border2); border-radius: var(--radius-sm); background: var(--surface); font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; color: var(--text2); transition: all 0.15s; }
   .backup-btn:hover { background: var(--text); color: var(--surface); border-color: var(--text); }
 
+  /* Sync modal */
+  #sync-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 9998; display: flex; align-items: center; justify-content: center; }
+  #sync-modal.gone { display: none; }
+  .sync-box { background: var(--surface); border-radius: var(--radius); padding: 28px; max-width: 480px; width: 92%; }
+  .sync-box h3 { font-family: 'DM Serif Display', serif; font-size: 18px; font-weight: 400; margin-bottom: 6px; }
+  .sync-box p { font-size: 13px; color: var(--text2); margin-bottom: 14px; line-height: 1.5; }
+  .sync-tabs { display: flex; gap: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 16px; }
+  .sync-tab { flex: 1; padding: 8px; border: none; background: transparent; font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; color: var(--text2); }
+  .sync-tab.active { background: var(--surface2); color: var(--text); font-weight: 500; }
+  .sync-panel { display: none; }
+  .sync-panel.active { display: block; }
+  .sync-code-box { width: 100%; font-family: monospace; font-size: 11px; padding: 10px; border: 1px solid var(--border2); border-radius: var(--radius-sm); background: var(--surface2); resize: none; height: 100px; color: var(--text); }
+  .sync-feedback { font-size: 12px; margin-top: 8px; min-height: 18px; }
+  .sync-feedback.ok { color: var(--accent); }
+  .sync-feedback.err { color: var(--danger); }
+  .sync-actions { display: flex; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+
   .container { max-width: 900px; margin: 0 auto; padding: 28px 20px; }
 
   .profile-row { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
@@ -159,9 +176,41 @@
   </div>
 </div>
 
+<!-- Sync modal -->
+<div id="sync-modal" class="gone">
+  <div class="sync-box">
+    <h3>Sync data</h3>
+    <div class="sync-tabs">
+      <button class="sync-tab active" onclick="switchSyncTab('copy')">Copy code (this device)</button>
+      <button class="sync-tab" onclick="switchSyncTab('load')">Load code (other device)</button>
+    </div>
+
+    <div class="sync-panel active" id="sync-copy-panel">
+      <p>Copy this code, then paste it into the "Load code" tab on your other device.</p>
+      <textarea class="sync-code-box" id="sync-copy-box" readonly></textarea>
+      <div class="sync-feedback ok" id="sync-copy-feedback"></div>
+      <div class="sync-actions">
+        <button class="cancel-btn" onclick="closeSyncModal()">Close</button>
+        <button class="save-btn" onclick="copySyncCode()">Copy to clipboard</button>
+      </div>
+    </div>
+
+    <div class="sync-panel" id="sync-load-panel">
+      <p>Paste the code from your other device below. <strong>This will replace all data on this device.</strong></p>
+      <textarea class="sync-code-box" id="sync-load-box" placeholder="Paste sync code here..."></textarea>
+      <div class="sync-feedback" id="sync-load-feedback"></div>
+      <div class="sync-actions">
+        <button class="cancel-btn" onclick="closeSyncModal()">Cancel</button>
+        <button class="save-btn" onclick="loadSyncCode()">Load data</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <header>
   <h1>Household Admin</h1>
   <span id="last-saved">Not saved yet</span>
+  <button class="backup-btn" onclick="openSyncModal()">Sync data</button>
   <button class="backup-btn" onclick="downloadBackup()">Download backup</button>
 </header>
 
@@ -416,6 +465,64 @@ let currentTab = 'overview';
 
 // editState tracks which item is being edited: { formKey: 'sub'|'income'|'out', idx: number } or null
 let editState = null;
+
+function openSyncModal() {
+  document.getElementById('sync-modal').classList.remove('gone');
+  document.getElementById('sync-copy-box').value = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  document.getElementById('sync-copy-feedback').textContent = '';
+  document.getElementById('sync-load-box').value = '';
+  document.getElementById('sync-load-feedback').textContent = '';
+  switchSyncTab('copy');
+}
+
+function closeSyncModal() {
+  document.getElementById('sync-modal').classList.add('gone');
+}
+
+function switchSyncTab(tab) {
+  document.querySelectorAll('.sync-tab').forEach((b, i) => b.classList.toggle('active', (i === 0) === (tab === 'copy')));
+  document.getElementById('sync-copy-panel').classList.toggle('active', tab === 'copy');
+  document.getElementById('sync-load-panel').classList.toggle('active', tab === 'load');
+}
+
+function copySyncCode() {
+  const box = document.getElementById('sync-copy-box');
+  box.select();
+  navigator.clipboard.writeText(box.value).then(() => {
+    const fb = document.getElementById('sync-copy-feedback');
+    fb.textContent = 'Copied! Now paste it on your other device.';
+    fb.className = 'sync-feedback ok';
+  }).catch(() => {
+    box.select();
+    document.execCommand('copy');
+    const fb = document.getElementById('sync-copy-feedback');
+    fb.textContent = 'Copied! Now paste it on your other device.';
+    fb.className = 'sync-feedback ok';
+  });
+}
+
+function loadSyncCode() {
+  const code = document.getElementById('sync-load-box').value.trim();
+  const fb = document.getElementById('sync-load-feedback');
+  if (!code) { fb.textContent = 'Please paste a sync code first.'; fb.className = 'sync-feedback err'; return; }
+  try {
+    const loaded = JSON.parse(decodeURIComponent(escape(atob(code))));
+    if (!loaded.steph && !loaded.debts) throw new Error('invalid');
+    data = loaded;
+    if (!data.debts) data.debts = defaultData.debts;
+    if (!data.debts.wendy) data.debts.wendy = defaultData.debts.wendy;
+    if (!data.debts.parents) data.debts.parents = defaultData.debts.parents;
+    if (!data.debts.wendy.monthlyPayment) data.debts.wendy.monthlyPayment = 0;
+    if (!data.debts.parents.monthlyPayment) data.debts.parents.monthlyPayment = 0;
+    save(); render();
+    fb.textContent = 'Data loaded successfully!';
+    fb.className = 'sync-feedback ok';
+    setTimeout(closeSyncModal, 1200);
+  } catch(e) {
+    fb.textContent = 'Invalid code — please check you copied the whole thing.';
+    fb.className = 'sync-feedback err';
+  }
+}
 
 function downloadBackup() {
   const date = new Date().toISOString().split('T')[0];
