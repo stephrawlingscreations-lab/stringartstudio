@@ -293,6 +293,7 @@
         <div class="debt-meta">
           <h3>Wendy &mdash; Boiler</h3>
           <p>Amount borrowed: <strong id="wendy-original">€0.00</strong></p>
+          <p id="wendy-monthly-label" style="display:none">Monthly payment: <strong id="wendy-monthly">€0.00</strong> <span style="color:var(--text3);font-size:11px">(included in your outgoings)</span></p>
         </div>
         <div class="debt-totals">
           <div class="owed" id="wendy-owed">€0.00</div>
@@ -311,6 +312,7 @@
       <div class="add-form" id="wendy-setup-form">
         <div class="form-row">
           <div class="fg"><label>Total amount owed (€)</label><input id="wendy-total-input" class="sm" type="number" step="0.01" placeholder="0.00"></div>
+          <div class="fg"><label>Monthly payment (€)</label><input id="wendy-monthly-input" class="sm" type="number" step="0.01" placeholder="0.00"></div>
           <div class="fg"><label>Notes</label><input id="wendy-total-note" placeholder="e.g. Boiler replacement"></div>
           <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px"><button class="save-btn" onclick="setDebtTotal('wendy')">Save</button><button class="cancel-btn" onclick="toggleForm('wendy-setup-form')">Cancel</button></div></div>
         </div>
@@ -332,6 +334,7 @@
         <div class="debt-meta">
           <h3>Mum &amp; Dad &mdash; Shed</h3>
           <p>Amount borrowed: <strong id="parents-original">€0.00</strong></p>
+          <p id="parents-monthly-label" style="display:none">Monthly payment: <strong id="parents-monthly">€0.00</strong> <span style="color:var(--text3);font-size:11px">(included in your outgoings)</span></p>
         </div>
         <div class="debt-totals">
           <div class="owed" id="parents-owed">€0.00</div>
@@ -350,6 +353,7 @@
       <div class="add-form" id="parents-setup-form">
         <div class="form-row">
           <div class="fg"><label>Total amount owed (€)</label><input id="parents-total-input" class="sm" type="number" step="0.01" placeholder="0.00"></div>
+          <div class="fg"><label>Monthly payment (€)</label><input id="parents-monthly-input" class="sm" type="number" step="0.01" placeholder="0.00"></div>
           <div class="fg"><label>Notes</label><input id="parents-total-note" placeholder="e.g. Garden shed"></div>
           <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px"><button class="save-btn" onclick="setDebtTotal('parents')">Save</button><button class="cancel-btn" onclick="toggleForm('parents-setup-form')">Cancel</button></div></div>
         </div>
@@ -395,8 +399,8 @@ const defaultData = {
   partner: { subs: [], income: [], outgoings: [] },
   shared:  { subs: [], income: [], outgoings: [] },
   debts: {
-    wendy:   { total: 0, note: '', payments: [] },
-    parents: { total: 0, note: '', payments: [] }
+    wendy:   { total: 0, note: '', monthlyPayment: 0, payments: [] },
+    parents: { total: 0, note: '', monthlyPayment: 0, payments: [] }
   }
 };
 
@@ -404,6 +408,8 @@ let data = JSON.parse(localStorage.getItem(KEY) || JSON.stringify(defaultData));
 if (!data.debts) data.debts = defaultData.debts;
 if (!data.debts.wendy) data.debts.wendy = defaultData.debts.wendy;
 if (!data.debts.parents) data.debts.parents = defaultData.debts.parents;
+if (!data.debts.wendy.monthlyPayment) data.debts.wendy.monthlyPayment = 0;
+if (!data.debts.parents.monthlyPayment) data.debts.parents.monthlyPayment = 0;
 
 let currentProfile = 'steph';
 let currentTab = 'overview';
@@ -656,12 +662,15 @@ function delItem(profile, type, idx) {
 
 function setDebtTotal(who) {
   const amount = parseFloat(document.getElementById(who + '-total-input').value);
+  const monthly = parseFloat(document.getElementById(who + '-monthly-input').value) || 0;
   const note = document.getElementById(who + '-total-note').value.trim();
   if (isNaN(amount) || amount <= 0) return;
   data.debts[who].total = amount;
+  data.debts[who].monthlyPayment = monthly;
   data.debts[who].note = note;
-  save(); renderDebts();
+  save(); renderDebts(); render();
   document.getElementById(who + '-total-input').value = '';
+  document.getElementById(who + '-monthly-input').value = '';
   document.getElementById(who + '-total-note').value = '';
   document.getElementById(who + '-setup-form').classList.remove('open');
 }
@@ -695,6 +704,9 @@ function renderDebts() {
     document.getElementById(who + '-bar').style.width = pct + '%';
     document.getElementById(who + '-paid-label').textContent = fmt(totalPaid) + ' paid';
     document.getElementById(who + '-pct').textContent = pct + '%';
+    const mp = Number(d.monthlyPayment) || 0;
+    document.getElementById(who + '-monthly-label').style.display = mp > 0 ? '' : 'none';
+    document.getElementById(who + '-monthly').textContent = fmt(mp);
     const tbody = document.getElementById(who + '-payments');
     if (!d.payments.length) {
       tbody.innerHTML = '<tr class="empty-row"><td colspan="4">No payments logged yet</td></tr>';
@@ -718,12 +730,14 @@ function render() {
   const totalSubsM = p.subs.reduce((s, x) => s + toMonthly(x.amount, x.freq), 0);
   const totalIncM  = p.income.reduce((s, x) => s + toMonthly(x.amount, x.freq), 0);
   const totalOutM  = p.outgoings.reduce((s, x) => s + toMonthly(x.amount, x.freq), 0);
-  const net = totalIncM - (totalSubsM + totalOutM);
+  const totalDebtM = Object.values(data.debts).reduce((s, d) => s + (Number(d.monthlyPayment) || 0), 0);
+  const net = totalIncM - (totalSubsM + totalOutM + totalDebtM);
 
   document.getElementById('summary-cards').innerHTML = `
     <div class="metric"><div class="metric-label">Monthly income</div><div class="metric-value green">${fmt(totalIncM)}</div></div>
     <div class="metric"><div class="metric-label">Subscriptions</div><div class="metric-value">${fmt(totalSubsM)}</div></div>
     <div class="metric"><div class="metric-label">Other outgoings</div><div class="metric-value">${fmt(totalOutM)}</div></div>
+    ${totalDebtM > 0 ? `<div class="metric"><div class="metric-label">Family debts</div><div class="metric-value">${fmt(totalDebtM)}</div></div>` : ''}
     <div class="metric"><div class="metric-label">Net monthly</div><div class="metric-value ${net >= 0 ? 'green' : 'red'}">${fmt(net)}</div></div>
   `;
 
