@@ -99,6 +99,8 @@
   .del-btn:hover { background: var(--danger-light); color: var(--danger); }
   .edit-btn { color: var(--text3); font-size: 13px; }
   .edit-btn:hover { background: var(--accent-light); color: var(--accent); }
+  .move-btn { color: var(--text3); font-size: 11px; padding: 3px 7px; border-radius: 4px; white-space: nowrap; }
+  .move-btn:hover { background: var(--info-light); color: var(--info); }
 
   .amount-col { text-align: right; font-weight: 500; font-family: 'DM Serif Display', serif; font-size: 15px; }
 
@@ -611,6 +613,19 @@ function saveOutgoing() {
   cancelForm('out');
 }
 
+function moveToSubs(idx) {
+  const x = data[currentProfile].outgoings[idx];
+  data[currentProfile].subs.push({
+    name: x.name,
+    amount: x.amount,
+    freq: x.freq,
+    billDay: x.freq === 'monthly' ? (x.day || null) : null,
+    date: x.freq === 'annual' ? '' : ''
+  });
+  data[currentProfile].outgoings.splice(idx, 1);
+  save(); render();
+}
+
 function delItem(profile, type, idx) {
   data[profile][type].splice(idx, 1);
   save(); render();
@@ -792,7 +807,7 @@ function render() {
       <td style="color:var(--text2);font-size:13px">${x.day ? ordinal(x.day) : '<span style="color:var(--text3)">—</span>'}</td>
       <td class="amount-col">${fmt(x.amount)}</td>
       <td class="amount-col" style="color:var(--text2);font-size:13px">${fmt(toMonthly(x.amount, x.freq))}/mo</td>
-      <td><div class="row-actions"><button class="edit-btn" onclick="editOutgoing(${x._i})" title="Edit">&#9998;</button><button class="del-btn" onclick="delItem('${currentProfile}','outgoings',${x._i})">&times;</button></div></td>
+      <td><div class="row-actions"><button class="move-btn edit-btn" onclick="moveToSubs(${x._i})" title="Move to subscriptions">&#8594; Sub</button><button class="edit-btn" onclick="editOutgoing(${x._i})" title="Edit">&#9998;</button><button class="del-btn" onclick="delItem('${currentProfile}','outgoings',${x._i})">&times;</button></div></td>
     </tr>`).join('');
   }
 
