@@ -68,7 +68,7 @@
   .fg input:focus, .fg select:focus { border-color: var(--accent); }
   .fg input { width: 160px; }
   .fg input.sm { width: 100px; }
-  .fg input.xs { width: 80px; }
+  .fg input.xs { width: 70px; }
   .save-btn { padding: 7px 18px; border: 1px solid var(--accent); border-radius: var(--radius-sm); background: var(--accent); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; color: #fff; transition: all 0.15s; }
   .save-btn:hover { background: #2f5239; }
   .cancel-btn { padding: 7px 14px; border: 1px solid var(--border2); border-radius: var(--radius-sm); background: transparent; font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; color: var(--text2); transition: all 0.15s; }
@@ -87,11 +87,21 @@
   .badge-weekly { background: var(--accent-light); color: var(--accent); }
   .badge-income { background: var(--accent-light); color: var(--accent); }
   .badge-expense { background: var(--danger-light); color: var(--danger); }
+  .badge-soon { background: var(--warning-light); color: var(--warning); }
+  .badge-today { background: var(--danger-light); color: var(--danger); font-weight: 500; }
+  .badge-done { background: var(--surface2); color: var(--text3); }
 
   .del-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 16px; padding: 2px 6px; border-radius: 4px; line-height: 1; transition: all 0.15s; }
   .del-btn:hover { background: var(--danger-light); color: var(--danger); }
 
   .amount-col { text-align: right; font-weight: 500; font-family: 'DM Serif Display', serif; font-size: 15px; }
+
+  /* Schedule rows */
+  .schedule-row-income td { background: #fafdfb; }
+  .schedule-row-soon td { background: #fffdf5; }
+  .schedule-row-today td { background: #fff8f7; }
+  .schedule-row-passed td { opacity: 0.5; }
+  .day-num { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--text3); min-width: 30px; display: inline-block; }
 
   /* Debt tracker */
   .debt-section { margin-bottom: 20px; }
@@ -113,7 +123,7 @@
   .lock-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 36px 32px; max-width: 320px; width: 90%; text-align: center; }
   .lock-box h2 { font-family: 'DM Serif Display', serif; font-size: 20px; font-weight: 400; margin-bottom: 6px; }
   .lock-box p { font-size: 12px; color: var(--text3); margin-bottom: 20px; }
-  .lock-box input { font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 9px 12px; border: 1px solid var(--border2); border-radius: var(--radius-sm); width: 100%; outline: none; margin-bottom: 10px; text-align: center; letter-spacing: 0.1em; }
+  .lock-box input { font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 9px 12px; border: 1px solid var(--border2); border-radius: var(--radius-sm); width: 100%; outline: none; margin-bottom: 10px; text-align: center; letter-spacing: 0.15em; }
   .lock-box input:focus { border-color: var(--accent); }
   .lock-box button { width: 100%; padding: 9px; background: var(--accent); border: none; border-radius: var(--radius-sm); color: #fff; font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; }
   .lock-box button:hover { background: #2f5239; }
@@ -134,8 +144,8 @@
 <div id="lock-screen">
   <div class="lock-box">
     <h2>Household Admin</h2>
-    <p>Enter your password to continue</p>
-    <input type="password" id="lock-input" placeholder="Password" onkeydown="if(event.key==='Enter')unlock()">
+    <p>Enter your code to continue</p>
+    <input type="password" id="lock-input" placeholder="••••••" inputmode="numeric" onkeydown="if(event.key==='Enter')unlock()">
     <button onclick="unlock()">Unlock</button>
     <div class="lock-error" id="lock-error"></div>
   </div>
@@ -167,10 +177,15 @@
   <!-- OVERVIEW -->
   <div id="tab-overview">
     <div class="summary-grid" id="summary-cards"></div>
-    <div class="card" id="overview-subs-card">
-      <div class="card-header"><span class="card-title">Subscriptions this month</span></div>
-      <table><thead><tr><th>Name</th><th>Frequency</th><th style="text-align:right">Monthly cost</th></tr></thead>
-      <tbody id="overview-subs-body"></tbody></table>
+    <div class="card">
+      <div class="card-header"><span class="card-title">This month's schedule</span></div>
+      <table><thead><tr><th>Day</th><th>Item</th><th>Type</th><th style="text-align:right">Amount</th><th style="text-align:right">When</th></tr></thead>
+      <tbody id="overview-schedule-body"></tbody></table>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Annual renewals coming up</span></div>
+      <table><thead><tr><th>Subscription</th><th>Renewal date</th><th style="text-align:right">Amount</th><th style="text-align:right">Days left</th></tr></thead>
+      <tbody id="overview-renewals-body"></tbody></table>
     </div>
   </div>
 
@@ -186,13 +201,17 @@
           <div class="fg"><label>Name</label><input id="sub-name" placeholder="Netflix, Spotify..."></div>
           <div class="fg"><label>Amount (€)</label><input id="sub-amount" class="sm" type="number" step="0.01" placeholder="0.00"></div>
           <div class="fg"><label>Frequency</label>
-            <select id="sub-freq"><option value="monthly">Monthly</option><option value="annual">Annual</option></select>
+            <select id="sub-freq" onchange="toggleSubDateFields()">
+              <option value="monthly">Monthly</option>
+              <option value="annual">Annual</option>
+            </select>
           </div>
-          <div class="fg"><label>Renewal date</label><input id="sub-date" type="date"></div>
+          <div class="fg" id="sub-billday-wrap"><label>Billing day</label><input id="sub-billday" class="xs" type="number" min="1" max="31" placeholder="e.g. 1"></div>
+          <div class="fg" id="sub-date-wrap" style="display:none"><label>Renewal date</label><input id="sub-date" type="date"></div>
           <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px"><button class="save-btn" onclick="addSub()">Save</button><button class="cancel-btn" onclick="toggleForm('sub-form')">Cancel</button></div></div>
         </div>
       </div>
-      <table><thead><tr><th>Name</th><th>Frequency</th><th>Renewal</th><th style="text-align:right">Amount</th><th style="text-align:right">Monthly equiv.</th><th></th></tr></thead>
+      <table><thead><tr><th>Name</th><th>Frequency</th><th>Date</th><th style="text-align:right">Amount</th><th style="text-align:right">Monthly equiv.</th><th></th></tr></thead>
       <tbody id="subs-body"></tbody></table>
     </div>
   </div>
@@ -211,10 +230,11 @@
           <div class="fg"><label>Frequency</label>
             <select id="inc-freq"><option value="monthly">Monthly</option><option value="weekly">Weekly</option><option value="annual">Annual</option></select>
           </div>
+          <div class="fg"><label>Day of month</label><input id="inc-day" class="xs" type="number" min="1" max="31" placeholder="e.g. 28"></div>
           <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px"><button class="save-btn" onclick="addIncome()">Save</button><button class="cancel-btn" onclick="toggleForm('income-form')">Cancel</button></div></div>
         </div>
       </div>
-      <table><thead><tr><th>Source</th><th>Frequency</th><th style="text-align:right">Amount</th><th style="text-align:right">Monthly equiv.</th><th></th></tr></thead>
+      <table><thead><tr><th>Source</th><th>Frequency</th><th>Day</th><th style="text-align:right">Amount</th><th style="text-align:right">Monthly equiv.</th><th></th></tr></thead>
       <tbody id="income-body"></tbody></table>
     </div>
   </div>
@@ -236,10 +256,11 @@
           <div class="fg"><label>Frequency</label>
             <select id="out-freq"><option value="monthly">Monthly</option><option value="weekly">Weekly</option><option value="annual">Annual</option></select>
           </div>
+          <div class="fg"><label>Day of month</label><input id="out-day" class="xs" type="number" min="1" max="31" placeholder="e.g. 1"></div>
           <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px"><button class="save-btn" onclick="addOutgoing()">Save</button><button class="cancel-btn" onclick="toggleForm('out-form')">Cancel</button></div></div>
         </div>
       </div>
-      <table><thead><tr><th>Name</th><th>Category</th><th>Frequency</th><th style="text-align:right">Amount</th><th style="text-align:right">Monthly equiv.</th><th></th></tr></thead>
+      <table><thead><tr><th>Name</th><th>Category</th><th>Frequency</th><th>Day</th><th style="text-align:right">Amount</th><th style="text-align:right">Monthly equiv.</th><th></th></tr></thead>
       <tbody id="outgoings-body"></tbody></table>
     </div>
   </div>
@@ -335,7 +356,6 @@
 </div><!-- end container -->
 
 <script>
-// Change this to your chosen password
 const PASSWORD = '220677';
 
 function unlock() {
@@ -345,13 +365,12 @@ function unlock() {
     document.getElementById('lock-screen').classList.add('gone');
     document.getElementById('lock-input').value = '';
   } else {
-    document.getElementById('lock-error').textContent = 'Incorrect password';
+    document.getElementById('lock-error').textContent = 'Incorrect code';
     document.getElementById('lock-input').value = '';
     document.getElementById('lock-input').focus();
   }
 }
 
-// Stay unlocked for the browser session
 if (sessionStorage.getItem('ha_auth') === '1') {
   document.getElementById('lock-screen').classList.add('gone');
 }
@@ -383,17 +402,49 @@ function save() {
 }
 
 function fmt(n) { return '€' + Number(n).toFixed(2); }
+
 function toMonthly(amount, freq) {
   if (freq === 'annual') return amount / 12;
   if (freq === 'weekly') return amount * 4.333;
   return Number(amount);
 }
 
+function ordinal(n) {
+  const s = ['th','st','nd','rd'];
+  const v = n % 100;
+  return n + (s[(v-20)%10] || s[v] || s[0]);
+}
+
+// Days until a given day-of-month recurs (0 = today, negative = already passed this month)
+function daysUntilDayOfMonth(day) {
+  const today = new Date();
+  const todayDay = today.getDate();
+  return day - todayDay;
+}
+
+// Days until a specific date (YYYY-MM-DD)
+function daysUntilDate(dateStr) {
+  if (!dateStr) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const target = new Date(dateStr); target.setHours(0,0,0,0);
+  return Math.round((target - today) / 86400000);
+}
+
+function toggleSubDateFields() {
+  const freq = document.getElementById('sub-freq').value;
+  document.getElementById('sub-billday-wrap').style.display = freq === 'monthly' ? '' : 'none';
+  document.getElementById('sub-date-wrap').style.display = freq === 'annual' ? '' : 'none';
+}
+
 function switchProfile(p) {
   currentProfile = p;
   document.querySelectorAll('.profile-btn').forEach(b => {
     const label = b.textContent.trim();
-    b.classList.toggle('active', (p==='steph'&&label==='Steph')||(p==='partner'&&label==='Caz')||(p==='shared'&&label.includes('Shared')));
+    b.classList.toggle('active',
+      (p==='steph' && label==='Steph') ||
+      (p==='partner' && label==='Caz') ||
+      (p==='shared' && label.includes('Shared'))
+    );
   });
   render();
 }
@@ -417,12 +468,14 @@ function addSub() {
   const name = document.getElementById('sub-name').value.trim();
   const amount = parseFloat(document.getElementById('sub-amount').value);
   const freq = document.getElementById('sub-freq').value;
+  const billDay = parseInt(document.getElementById('sub-billday').value) || null;
   const date = document.getElementById('sub-date').value;
   if (!name || isNaN(amount) || amount <= 0) return;
-  data[currentProfile].subs.push({ name, amount, freq, date });
+  data[currentProfile].subs.push({ name, amount, freq, billDay, date });
   save(); render();
   document.getElementById('sub-name').value = '';
   document.getElementById('sub-amount').value = '';
+  document.getElementById('sub-billday').value = '';
   document.getElementById('sub-date').value = '';
   document.getElementById('sub-form').classList.remove('open');
 }
@@ -431,11 +484,13 @@ function addIncome() {
   const name = document.getElementById('inc-name').value.trim();
   const amount = parseFloat(document.getElementById('inc-amount').value);
   const freq = document.getElementById('inc-freq').value;
+  const day = parseInt(document.getElementById('inc-day').value) || null;
   if (!name || isNaN(amount) || amount <= 0) return;
-  data[currentProfile].income.push({ name, amount, freq });
+  data[currentProfile].income.push({ name, amount, freq, day });
   save(); render();
   document.getElementById('inc-name').value = '';
   document.getElementById('inc-amount').value = '';
+  document.getElementById('inc-day').value = '';
   document.getElementById('income-form').classList.remove('open');
 }
 
@@ -444,11 +499,13 @@ function addOutgoing() {
   const amount = parseFloat(document.getElementById('out-amount').value);
   const cat = document.getElementById('out-cat').value;
   const freq = document.getElementById('out-freq').value;
+  const day = parseInt(document.getElementById('out-day').value) || null;
   if (!name || isNaN(amount) || amount <= 0) return;
-  data[currentProfile].outgoings.push({ name, amount, cat, freq });
+  data[currentProfile].outgoings.push({ name, amount, cat, freq, day });
   save(); render();
   document.getElementById('out-name').value = '';
   document.getElementById('out-amount').value = '';
+  document.getElementById('out-day').value = '';
   document.getElementById('out-form').classList.remove('open');
 }
 
@@ -505,7 +562,7 @@ function renderDebts() {
       tbody.innerHTML = '<tr class="empty-row"><td colspan="4">No payments logged yet</td></tr>';
     } else {
       const sorted = [...d.payments].sort((a,b) => (b.date||'').localeCompare(a.date||''));
-      tbody.innerHTML = sorted.map((p, i) => {
+      tbody.innerHTML = sorted.map(p => {
         const origIdx = d.payments.indexOf(p);
         return `<tr>
           <td>${p.date ? new Date(p.date).toLocaleDateString('en-IE') : '—'}</td>
@@ -518,6 +575,14 @@ function renderDebts() {
   });
 }
 
+function whenLabel(diff) {
+  if (diff === 0) return '<span class="badge badge-today">Today</span>';
+  if (diff === 1) return '<span class="badge badge-soon">Tomorrow</span>';
+  if (diff > 1 && diff <= 7) return `<span class="badge badge-soon">In ${diff} days</span>`;
+  if (diff > 7) return `<span class="badge badge-monthly" style="background:var(--surface2);color:var(--text3)">In ${diff} days</span>`;
+  return `<span class="badge badge-done">Passed</span>`;
+}
+
 function render() {
   const p = data[currentProfile];
   const totalSubsM = p.subs.reduce((s, x) => s + toMonthly(x.amount, x.freq), 0);
@@ -526,6 +591,7 @@ function render() {
   const totalAllOut = totalSubsM + totalOutM;
   const net = totalIncM - totalAllOut;
 
+  // Summary metrics
   document.getElementById('summary-cards').innerHTML = `
     <div class="metric"><div class="metric-label">Monthly income</div><div class="metric-value green">${fmt(totalIncM)}</div></div>
     <div class="metric"><div class="metric-label">Subscriptions</div><div class="metric-value">${fmt(totalSubsM)}</div></div>
@@ -533,56 +599,135 @@ function render() {
     <div class="metric"><div class="metric-label">Net monthly</div><div class="metric-value ${net >= 0 ? 'green' : 'red'}">${fmt(net)}</div></div>
   `;
 
-  const ob = document.getElementById('overview-subs-body');
-  if (!p.subs.length) {
-    ob.innerHTML = '<tr class="empty-row"><td colspan="3">No subscriptions added yet</td></tr>';
+  // Overview: monthly schedule (all items with a day set, sorted by day)
+  const scheduleItems = [];
+  p.income.forEach(x => {
+    if (x.day) scheduleItems.push({ day: x.day, name: x.name, type: 'income', amount: toMonthly(x.amount, x.freq) });
+  });
+  p.outgoings.forEach(x => {
+    if (x.day) scheduleItems.push({ day: x.day, name: x.name, type: 'outgoing', amount: toMonthly(x.amount, x.freq) });
+  });
+  p.subs.forEach(x => {
+    if (x.freq === 'monthly' && x.billDay) scheduleItems.push({ day: x.billDay, name: x.name, type: 'sub', amount: x.amount });
+  });
+  scheduleItems.sort((a, b) => a.day - b.day);
+
+  const schedBody = document.getElementById('overview-schedule-body');
+  if (!scheduleItems.length) {
+    schedBody.innerHTML = '<tr class="empty-row"><td colspan="5">Add a day of month to your income and outgoings to see the schedule</td></tr>';
   } else {
-    ob.innerHTML = p.subs.map(s => `<tr>
-      <td>${s.name}</td>
-      <td><span class="badge badge-${s.freq}">${s.freq}</span></td>
-      <td class="amount-col">${fmt(toMonthly(s.amount, s.freq))}</td>
-    </tr>`).join('');
+    schedBody.innerHTML = scheduleItems.map(item => {
+      const diff = daysUntilDayOfMonth(item.day);
+      const isIncome = item.type === 'income';
+      const typeLabel = isIncome ? '<span class="badge badge-income">Income</span>' : '<span class="badge badge-expense">Out</span>';
+      const rowClass = diff < 0 ? 'schedule-row-passed' : diff === 0 ? 'schedule-row-today' : diff <= 7 ? 'schedule-row-soon' : (isIncome ? 'schedule-row-income' : '');
+      return `<tr class="${rowClass}">
+        <td><span class="day-num">${item.day}</span><span style="font-size:10px;color:var(--text3);margin-left:2px">${ordinal(item.day).replace(/^\d+/,'')}</span></td>
+        <td>${item.name}</td>
+        <td>${typeLabel}</td>
+        <td class="amount-col" style="color:${isIncome ? 'var(--accent)' : 'var(--danger)'}">${isIncome ? '+' : '-'}${fmt(item.amount)}</td>
+        <td style="text-align:right">${whenLabel(diff)}</td>
+      </tr>`;
+    }).join('');
   }
 
+  // Overview: annual renewals
+  const annualSubs = p.subs.filter(s => s.freq === 'annual' && s.date);
+  const renewBody = document.getElementById('overview-renewals-body');
+  if (!annualSubs.length) {
+    renewBody.innerHTML = '<tr class="empty-row"><td colspan="4">No annual subscriptions with renewal dates</td></tr>';
+  } else {
+    const sorted = [...annualSubs].sort((a,b) => (a.date||'').localeCompare(b.date||''));
+    renewBody.innerHTML = sorted.map(s => {
+      const diff = daysUntilDate(s.date);
+      let badge = '';
+      if (diff !== null) {
+        if (diff < 0) badge = '<span class="badge badge-done">Passed</span>';
+        else if (diff === 0) badge = '<span class="badge badge-today">Today!</span>';
+        else if (diff <= 14) badge = `<span class="badge badge-today">In ${diff} days</span>`;
+        else if (diff <= 30) badge = `<span class="badge badge-soon">In ${diff} days</span>`;
+        else badge = `<span style="font-size:12px;color:var(--text3)">In ${diff} days</span>`;
+      }
+      return `<tr>
+        <td>${s.name}</td>
+        <td style="color:var(--text2);font-size:12px">${new Date(s.date).toLocaleDateString('en-IE')}</td>
+        <td class="amount-col">${fmt(s.amount)}</td>
+        <td style="text-align:right">${badge}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Subscriptions table (sorted by day for monthly, date for annual)
   const sb = document.getElementById('subs-body');
   if (!p.subs.length) {
     sb.innerHTML = '<tr class="empty-row"><td colspan="6">No subscriptions yet</td></tr>';
   } else {
-    sb.innerHTML = p.subs.map((s, i) => `<tr>
-      <td>${s.name}</td>
-      <td><span class="badge badge-${s.freq}">${s.freq}</span></td>
-      <td style="color:var(--text2);font-size:12px">${s.date ? new Date(s.date).toLocaleDateString('en-IE') : '—'}</td>
-      <td class="amount-col">${fmt(s.amount)}</td>
-      <td class="amount-col" style="color:var(--text2);font-size:13px">${fmt(toMonthly(s.amount, s.freq))}/mo</td>
-      <td style="text-align:right"><button class="del-btn" onclick="delItem('${currentProfile}','subs',${i})">&times;</button></td>
-    </tr>`).join('');
+    const sorted = [...p.subs].sort((a,b) => {
+      const aKey = a.freq === 'annual' ? (a.date || '9999') : String(a.billDay || 99).padStart(2,'0');
+      const bKey = b.freq === 'annual' ? (b.date || '9999') : String(b.billDay || 99).padStart(2,'0');
+      return aKey.localeCompare(bKey);
+    });
+    sb.innerHTML = sorted.map(s => {
+      const origIdx = p.subs.indexOf(s);
+      let dateCell = '—';
+      if (s.freq === 'monthly' && s.billDay) {
+        const diff = daysUntilDayOfMonth(s.billDay);
+        dateCell = ordinal(s.billDay) + ' of month ' + (diff >= 0 && diff <= 7 ? whenLabel(diff) : '');
+      } else if (s.freq === 'annual' && s.date) {
+        const diff = daysUntilDate(s.date);
+        const warn = diff !== null && diff <= 30 && diff >= 0 ? ' ' + whenLabel(diff) : '';
+        dateCell = new Date(s.date).toLocaleDateString('en-IE') + warn;
+      }
+      return `<tr>
+        <td>${s.name}</td>
+        <td><span class="badge badge-${s.freq}">${s.freq}</span></td>
+        <td style="color:var(--text2);font-size:12px">${dateCell}</td>
+        <td class="amount-col">${fmt(s.amount)}</td>
+        <td class="amount-col" style="color:var(--text2);font-size:13px">${fmt(toMonthly(s.amount, s.freq))}/mo</td>
+        <td style="text-align:right"><button class="del-btn" onclick="delItem('${currentProfile}','subs',${origIdx})">&times;</button></td>
+      </tr>`;
+    }).join('');
   }
 
+  // Income table (sorted by day)
   const ib = document.getElementById('income-body');
   if (!p.income.length) {
-    ib.innerHTML = '<tr class="empty-row"><td colspan="5">No income added yet</td></tr>';
+    ib.innerHTML = '<tr class="empty-row"><td colspan="6">No income added yet</td></tr>';
   } else {
-    ib.innerHTML = p.income.map((x, i) => `<tr>
-      <td>${x.name}</td>
-      <td><span class="badge badge-income">${x.freq}</span></td>
-      <td class="amount-col">${fmt(x.amount)}</td>
-      <td class="amount-col" style="color:var(--text2);font-size:13px">${fmt(toMonthly(x.amount, x.freq))}/mo</td>
-      <td style="text-align:right"><button class="del-btn" onclick="delItem('${currentProfile}','income',${i})">&times;</button></td>
-    </tr>`).join('');
+    const sorted = [...p.income].sort((a,b) => (a.day||99) - (b.day||99));
+    ib.innerHTML = sorted.map(x => {
+      const origIdx = p.income.indexOf(x);
+      const dayCell = x.day ? ordinal(x.day) : '<span style="color:var(--text3)">—</span>';
+      return `<tr>
+        <td>${x.name}</td>
+        <td><span class="badge badge-income">${x.freq}</span></td>
+        <td style="color:var(--text2);font-size:13px">${dayCell}</td>
+        <td class="amount-col">${fmt(x.amount)}</td>
+        <td class="amount-col" style="color:var(--text2);font-size:13px">${fmt(toMonthly(x.amount, x.freq))}/mo</td>
+        <td style="text-align:right"><button class="del-btn" onclick="delItem('${currentProfile}','income',${origIdx})">&times;</button></td>
+      </tr>`;
+    }).join('');
   }
 
+  // Outgoings table (sorted by day)
   const outb = document.getElementById('outgoings-body');
   if (!p.outgoings.length) {
-    outb.innerHTML = '<tr class="empty-row"><td colspan="6">No outgoings added yet</td></tr>';
+    outb.innerHTML = '<tr class="empty-row"><td colspan="7">No outgoings yet</td></tr>';
   } else {
-    outb.innerHTML = p.outgoings.map((x, i) => `<tr>
-      <td>${x.name}</td>
-      <td style="color:var(--text2);font-size:12px">${x.cat}</td>
-      <td><span class="badge badge-expense">${x.freq}</span></td>
-      <td class="amount-col">${fmt(x.amount)}</td>
-      <td class="amount-col" style="color:var(--text2);font-size:13px">${fmt(toMonthly(x.amount, x.freq))}/mo</td>
-      <td style="text-align:right"><button class="del-btn" onclick="delItem('${currentProfile}','outgoings',${i})">&times;</button></td>
-    </tr>`).join('');
+    const sorted = [...p.outgoings].sort((a,b) => (a.day||99) - (b.day||99));
+    outb.innerHTML = sorted.map(x => {
+      const origIdx = p.outgoings.indexOf(x);
+      const dayCell = x.day ? ordinal(x.day) : '<span style="color:var(--text3)">—</span>';
+      return `<tr>
+        <td>${x.name}</td>
+        <td style="color:var(--text2);font-size:12px">${x.cat}</td>
+        <td><span class="badge badge-expense">${x.freq}</span></td>
+        <td style="color:var(--text2);font-size:13px">${dayCell}</td>
+        <td class="amount-col">${fmt(x.amount)}</td>
+        <td class="amount-col" style="color:var(--text2);font-size:13px">${fmt(toMonthly(x.amount, x.freq))}/mo</td>
+        <td style="text-align:right"><button class="del-btn" onclick="delItem('${currentProfile}','outgoings',${origIdx})">&times;</button></td>
+      </tr>`;
+    }).join('');
   }
 
   renderDebts();
