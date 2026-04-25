@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Household Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --surface2: #f0ede6;
+    --border: #e2ddd4;
+    --border2: #ccc8be;
+    --text: #1a1714;
+    --text2: #6b6560;
+    --text3: #9e9890;
+    --accent: #3d6b4f;
+    --accent-light: #e8f0eb;
+    --danger: #a33020;
+    --danger-light: #faeae7;
+    --warning: #8a5c00;
+    --warning-light: #fef3e0;
+    --info: #1a4b8c;
+    --info-light: #e8eef8;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 18px 28px; display: flex; align-items: center; gap: 14px; }
+  header h1 { font-family: 'DM Serif Display', serif; font-size: 22px; font-weight: 400; color: var(--text); }
+  header span { font-size: 12px; color: var(--text3); background: var(--surface2); padding: 3px 10px; border-radius: 99px; border: 1px solid var(--border); }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 28px 20px; }
+
+  .profile-row { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+  .profile-btn { padding: 8px 20px; border-radius: 99px; border: 1px solid var(--border2); background: var(--surface); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; color: var(--text2); transition: all 0.15s; }
+  .profile-btn.active { background: var(--text); color: var(--surface); border-color: var(--text); }
+  .profile-btn:hover:not(.active) { background: var(--surface2); }
+
+  .nav-row { display: flex; gap: 0; margin-bottom: 24px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+  .nav-btn { flex: 1; padding: 10px 8px; border: none; background: transparent; font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; color: var(--text2); transition: all 0.15s; border-right: 1px solid var(--border); }
+  .nav-btn:last-child { border-right: none; }
+  .nav-btn.active { background: var(--surface2); color: var(--text); font-weight: 500; }
+  .nav-btn:hover:not(.active) { background: var(--surface2); }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 24px; }
+  .metric { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .metric-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .metric-value { font-size: 24px; font-weight: 300; color: var(--text); font-family: 'DM Serif Display', serif; }
+  .metric-value.green { color: var(--accent); }
+  .metric-value.red { color: var(--danger); }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
+  .card-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--border); background: var(--surface2); }
+  .card-title { font-size: 13px; font-weight: 500; color: var(--text); }
+  .add-btn { padding: 5px 14px; border: 1px solid var(--border2); border-radius: var(--radius-sm); background: var(--surface); font-family: 'DM Sans', sans-serif; font-size: 12px; cursor: pointer; color: var(--text2); transition: all 0.15s; }
+  .add-btn:hover { background: var(--text); color: var(--surface); border-color: var(--text); }
+
+  .add-form { padding: 14px 18px; border-bottom: 1px solid var(--border); background: #fdfcfa; display: none; }
+  .add-form.open { display: block; }
+  .form-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+  .fg { display: flex; flex-direction: column; gap: 4px; }
+  .fg label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.04em; }
+  .fg input, .fg select { font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 7px 10px; border: 1px solid var(--border2); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); outline: none; }
+  .fg input:focus, .fg select:focus { border-color: var(--accent); }
+  .fg input { width: 160px; }
+  .fg input.sm { width: 100px; }
+  .fg input.xs { width: 80px; }
+  .save-btn { padding: 7px 18px; border: 1px solid var(--accent); border-radius: var(--radius-sm); background: var(--accent); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; color: #fff; transition: all 0.15s; }
+  .save-btn:hover { background: #2f5239; }
+  .cancel-btn { padding: 7px 14px; border: 1px solid var(--border2); border-radius: var(--radius-sm); background: transparent; font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; color: var(--text2); transition: all 0.15s; }
+  .cancel-btn:hover { background: var(--surface2); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 18px; font-size: 11px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); background: var(--surface2); }
+  td { padding: 11px 18px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fdfcfa; }
+  .empty-row td { color: var(--text3); font-style: italic; text-align: center; padding: 20px; }
+
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: 11px; font-weight: 400; }
+  .badge-monthly { background: var(--info-light); color: var(--info); }
+  .badge-annual { background: var(--warning-light); color: var(--warning); }
+  .badge-weekly { background: var(--accent-light); color: var(--accent); }
+  .badge-income { background: var(--accent-light); color: var(--accent); }
+  .badge-expense { background: var(--danger-light); color: var(--danger); }
+
+  .del-btn { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 16px; padding: 2px 6px; border-radius: 4px; line-height: 1; transition: all 0.15s; }
+  .del-btn:hover { background: var(--danger-light); color: var(--danger); }
+
+  .amount-col { text-align: right; font-weight: 500; font-family: 'DM Serif Display', serif; font-size: 15px; }
+
+  /* Debt tracker */
+  .debt-section { margin-bottom: 20px; }
+  .debt-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 18px; border-bottom: 1px solid var(--border); }
+  .debt-meta h3 { font-family: 'DM Serif Display', serif; font-size: 17px; font-weight: 400; margin-bottom: 2px; }
+  .debt-meta p { font-size: 12px; color: var(--text3); }
+  .debt-totals { text-align: right; }
+  .debt-totals .owed { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--danger); }
+  .debt-totals .paid-label { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .debt-progress { height: 4px; background: var(--border); border-radius: 99px; margin: 0 18px 0; overflow: hidden; }
+  .debt-progress-bar { height: 100%; background: var(--accent); border-radius: 99px; transition: width 0.4s; }
+  .debt-progress-label { display: flex; justify-content: space-between; padding: 6px 18px 14px; font-size: 11px; color: var(--text3); }
+
+  .hidden { display: none; }
+
+  /* Password gate */
+  #lock-screen { position: fixed; inset: 0; background: var(--bg); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+  #lock-screen.gone { display: none; }
+  .lock-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 36px 32px; max-width: 320px; width: 90%; text-align: center; }
+  .lock-box h2 { font-family: 'DM Serif Display', serif; font-size: 20px; font-weight: 400; margin-bottom: 6px; }
+  .lock-box p { font-size: 12px; color: var(--text3); margin-bottom: 20px; }
+  .lock-box input { font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 9px 12px; border: 1px solid var(--border2); border-radius: var(--radius-sm); width: 100%; outline: none; margin-bottom: 10px; text-align: center; letter-spacing: 0.1em; }
+  .lock-box input:focus { border-color: var(--accent); }
+  .lock-box button { width: 100%; padding: 9px; background: var(--accent); border: none; border-radius: var(--radius-sm); color: #fff; font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; }
+  .lock-box button:hover { background: #2f5239; }
+  .lock-error { font-size: 12px; color: var(--danger); margin-top: 8px; min-height: 16px; }
+
+  @media (max-width: 600px) {
+    .form-row { flex-direction: column; }
+    .fg input, .fg input.sm, .fg input.xs { width: 100%; }
+    .fg select { width: 100%; }
+    header { padding: 14px 16px; }
+    .container { padding: 16px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Password gate -->
+<div id="lock-screen">
+  <div class="lock-box">
+    <h2>Household Admin</h2>
+    <p>Enter your password to continue</p>
+    <input type="password" id="lock-input" placeholder="Password" onkeydown="if(event.key==='Enter')unlock()">
+    <button onclick="unlock()">Unlock</button>
+    <div class="lock-error" id="lock-error"></div>
+  </div>
+</div>
+
+<header>
+  <h1>Household Admin</h1>
+  <span id="last-saved">Not saved yet</span>
+</header>
+
+<div class="container">
+
+  <!-- Profile selector -->
+  <div class="profile-row">
+    <button class="profile-btn active" onclick="switchProfile('steph')">Steph</button>
+    <button class="profile-btn" onclick="switchProfile('partner')">Caz</button>
+    <button class="profile-btn" onclick="switchProfile('shared')">Shared / Household</button>
+  </div>
+
+  <!-- Nav -->
+  <div class="nav-row">
+    <button class="nav-btn active" onclick="switchTab('overview')">Overview</button>
+    <button class="nav-btn" onclick="switchTab('subscriptions')">Subscriptions</button>
+    <button class="nav-btn" onclick="switchTab('income')">Income</button>
+    <button class="nav-btn" onclick="switchTab('outgoings')">Outgoings</button>
+    <button class="nav-btn" onclick="switchTab('debts')">Family Debts</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div id="tab-overview">
+    <div class="summary-grid" id="summary-cards"></div>
+    <div class="card" id="overview-subs-card">
+      <div class="card-header"><span class="card-title">Subscriptions this month</span></div>
+      <table><thead><tr><th>Name</th><th>Frequency</th><th style="text-align:right">Monthly cost</th></tr></thead>
+      <tbody id="overview-subs-body"></tbody></table>
+    </div>
+  </div>
+
+  <!-- SUBSCRIPTIONS -->
+  <div id="tab-subscriptions" class="hidden">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Subscriptions</span>
+        <button class="add-btn" onclick="toggleForm('sub-form')">+ Add subscription</button>
+      </div>
+      <div class="add-form" id="sub-form">
+        <div class="form-row">
+          <div class="fg"><label>Name</label><input id="sub-name" placeholder="Netflix, Spotify..."></div>
+          <div class="fg"><label>Amount (€)</label><input id="sub-amount" class="sm" type="number" step="0.01" placeholder="0.00"></div>
+          <div class="fg"><label>Frequency</label>
+            <select id="sub-freq"><option value="monthly">Monthly</option><option value="annual">Annual</option></select>
+          </div>
+          <div class="fg"><label>Renewal date</label><input id="sub-date" type="date"></div>
+          <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px"><button class="save-btn" onclick="addSub()">Save</button><button class="cancel-btn" onclick="toggleForm('sub-form')">Cancel</button></div></div>
+        </div>
+      </div>
+      <table><thead><tr><th>Name</th><th>Frequency</th><th>Renewal</th><th style="text-align:right">Amount</th><th style="text-align:right">Monthly equiv.</th><th></th></tr></thead>
+      <tbody id="subs-body"></tbody></table>
+    </div>
+  </div>
+
+  <!-- INCOME -->
+  <div id="tab-income" class="hidden">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Income</span>
+        <button class="add-btn" onclick="toggleForm('income-form')">+ Add income</button>
+      </div>
+      <div class="add-form" id="income-form">
+        <div class="form-row">
+          <div class="fg"><label>Source</label><input id="inc-name" placeholder="Wages, benefits, sales..."></div>
+          <div class="fg"><label>Amount (€)</label><input id="inc-amount" class="sm" type="number" step="0.01" placeholder="0.00"></div>
+          <div class="fg"><label>Frequency</label>
+            <select id="inc-freq"><option value="monthly">Monthly</option><option value="weekly">Weekly</option><option value="annual">Annual</option></select>
+          </div>
+          <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px"><button class="save-btn" onclick="addIncome()">Save</button><button class="cancel-btn" onclick="toggleForm('income-form')">Cancel</button></div></div>
+        </div>
+      </div>
+      <table><thead><tr><th>Source</th><th>Frequency</th><th style="text-align:right">Amount</th><th style="text-align:right">Monthly equiv.</th><th></th></tr></thead>
+      <tbody id="income-body"></tbody></table>
+    </div>
+  </div>
+
+  <!-- OUTGOINGS -->
+  <div id="tab-outgoings" class="hidden">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Outgoings</span>
+        <button class="add-btn" onclick="toggleForm('out-form')">+ Add outgoing</button>
+      </div>
+      <div class="add-form" id="out-form">
+        <div class="form-row">
+          <div class="fg"><label>Name</label><input id="out-name" placeholder="Rent, fuel, food..."></div>
+          <div class="fg"><label>Amount (€)</label><input id="out-amount" class="sm" type="number" step="0.01" placeholder="0.00"></div>
+          <div class="fg"><label>Category</label>
+            <select id="out-cat"><option>Housing</option><option>Food</option><option>Transport</option><option>Utilities</option><option>Health</option><option>Dogs</option><option>Other</option></select>
+          </div>
+          <div class="fg"><label>Frequency</label>
+            <select id="out-freq"><option value="monthly">Monthly</option><option value="weekly">Weekly</option><option value="annual">Annual</option></select>
+          </div>
+          <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px"><button class="save-btn" onclick="addOutgoing()">Save</button><button class="cancel-btn" onclick="toggleForm('out-form')">Cancel</button></div></div>
+        </div>
+      </div>
+      <table><thead><tr><th>Name</th><th>Category</th><th>Frequency</th><th style="text-align:right">Amount</th><th style="text-align:right">Monthly equiv.</th><th></th></tr></thead>
+      <tbody id="outgoings-body"></tbody></table>
+    </div>
+  </div>
+
+  <!-- FAMILY DEBTS -->
+  <div id="tab-debts" class="hidden">
+    <p style="font-size:13px;color:var(--text3);margin-bottom:16px;">Track what you owe to family members, log payments, and see your running balance.</p>
+
+    <!-- Wendy - Boiler -->
+    <div class="card debt-section">
+      <div class="debt-header">
+        <div class="debt-meta">
+          <h3>Wendy &mdash; Boiler</h3>
+          <p>Amount borrowed: <strong id="wendy-original">€0.00</strong></p>
+        </div>
+        <div class="debt-totals">
+          <div class="owed" id="wendy-owed">€0.00</div>
+          <div class="paid-label">still owed</div>
+        </div>
+      </div>
+      <div class="debt-progress"><div class="debt-progress-bar" id="wendy-bar" style="width:0%"></div></div>
+      <div class="debt-progress-label"><span id="wendy-paid-label">€0.00 paid</span><span id="wendy-pct">0%</span></div>
+
+      <div class="card-header" style="border-top:1px solid var(--border)">
+        <span class="card-title">Payment history</span>
+        <div style="display:flex;gap:8px">
+          <button class="add-btn" onclick="toggleForm('wendy-setup-form')">Set total owed</button>
+          <button class="add-btn" onclick="toggleForm('wendy-pay-form')">+ Log payment</button>
+        </div>
+      </div>
+      <div class="add-form" id="wendy-setup-form">
+        <div class="form-row">
+          <div class="fg"><label>Total amount owed (€)</label><input id="wendy-total-input" class="sm" type="number" step="0.01" placeholder="0.00"></div>
+          <div class="fg"><label>Notes</label><input id="wendy-total-note" placeholder="e.g. Boiler replacement"></div>
+          <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px"><button class="save-btn" onclick="setDebtTotal('wendy')">Save</button><button class="cancel-btn" onclick="toggleForm('wendy-setup-form')">Cancel</button></div></div>
+        </div>
+      </div>
+      <div class="add-form" id="wendy-pay-form">
+        <div class="form-row">
+          <div class="fg"><label>Amount paid (€)</label><input id="wendy-pay-amount" class="sm" type="number" step="0.01" placeholder="0.00"></div>
+          <div class="fg"><label>Date</label><input id="wendy-pay-date" type="date"></div>
+          <div class="fg"><label>Notes</label><input id="wendy-pay-note" placeholder="Optional note"></div>
+          <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px"><button class="save-btn" onclick="addPayment('wendy')">Save</button><button class="cancel-btn" onclick="toggleForm('wendy-pay-form')">Cancel</button></div></div>
+        </div>
+      </div>
+      <table><thead><tr><th>Date</th><th>Notes</th><th style="text-align:right">Amount</th><th></th></tr></thead>
+      <tbody id="wendy-payments"></tbody></table>
+    </div>
+
+    <!-- Parents - Shed -->
+    <div class="card debt-section">
+      <div class="debt-header">
+        <div class="debt-meta">
+          <h3>Mum &amp; Dad &mdash; Shed</h3>
+          <p>Amount borrowed: <strong id="parents-original">€0.00</strong></p>
+        </div>
+        <div class="debt-totals">
+          <div class="owed" id="parents-owed">€0.00</div>
+          <div class="paid-label">still owed</div>
+        </div>
+      </div>
+      <div class="debt-progress"><div class="debt-progress-bar" id="parents-bar" style="width:0%"></div></div>
+      <div class="debt-progress-label"><span id="parents-paid-label">€0.00 paid</span><span id="parents-pct">0%</span></div>
+
+      <div class="card-header" style="border-top:1px solid var(--border)">
+        <span class="card-title">Payment history</span>
+        <div style="display:flex;gap:8px">
+          <button class="add-btn" onclick="toggleForm('parents-setup-form')">Set total owed</button>
+          <button class="add-btn" onclick="toggleForm('parents-pay-form')">+ Log payment</button>
+        </div>
+      </div>
+      <div class="add-form" id="parents-setup-form">
+        <div class="form-row">
+          <div class="fg"><label>Total amount owed (€)</label><input id="parents-total-input" class="sm" type="number" step="0.01" placeholder="0.00"></div>
+          <div class="fg"><label>Notes</label><input id="parents-total-note" placeholder="e.g. Garden shed"></div>
+          <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px"><button class="save-btn" onclick="setDebtTotal('parents')">Save</button><button class="cancel-btn" onclick="toggleForm('parents-setup-form')">Cancel</button></div></div>
+        </div>
+      </div>
+      <div class="add-form" id="parents-pay-form">
+        <div class="form-row">
+          <div class="fg"><label>Amount paid (€)</label><input id="parents-pay-amount" class="sm" type="number" step="0.01" placeholder="0.00"></div>
+          <div class="fg"><label>Date</label><input id="parents-pay-date" type="date"></div>
+          <div class="fg"><label>Notes</label><input id="parents-pay-note" placeholder="Optional note"></div>
+          <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px"><button class="save-btn" onclick="addPayment('parents')">Save</button><button class="cancel-btn" onclick="toggleForm('parents-pay-form')">Cancel</button></div></div>
+        </div>
+      </div>
+      <table><thead><tr><th>Date</th><th>Notes</th><th style="text-align:right">Amount</th><th></th></tr></thead>
+      <tbody id="parents-payments"></tbody></table>
+    </div>
+
+  </div><!-- end debts tab -->
+
+</div><!-- end container -->
+
+<script>
+// Change this to your chosen password
+const PASSWORD = '220677';
+
+function unlock() {
+  const val = document.getElementById('lock-input').value;
+  if (val === PASSWORD) {
+    sessionStorage.setItem('ha_auth', '1');
+    document.getElementById('lock-screen').classList.add('gone');
+    document.getElementById('lock-input').value = '';
+  } else {
+    document.getElementById('lock-error').textContent = 'Incorrect password';
+    document.getElementById('lock-input').value = '';
+    document.getElementById('lock-input').focus();
+  }
+}
+
+// Stay unlocked for the browser session
+if (sessionStorage.getItem('ha_auth') === '1') {
+  document.getElementById('lock-screen').classList.add('gone');
+}
+
+const KEY = 'household_admin_v1';
+
+const defaultData = {
+  steph:   { subs: [], income: [], outgoings: [] },
+  partner: { subs: [], income: [], outgoings: [] },
+  shared:  { subs: [], income: [], outgoings: [] },
+  debts: {
+    wendy:   { total: 0, note: '', payments: [] },
+    parents: { total: 0, note: '', payments: [] }
+  }
+};
+
+let data = JSON.parse(localStorage.getItem(KEY) || JSON.stringify(defaultData));
+if (!data.debts) data.debts = defaultData.debts;
+if (!data.debts.wendy) data.debts.wendy = defaultData.debts.wendy;
+if (!data.debts.parents) data.debts.parents = defaultData.debts.parents;
+
+let currentProfile = 'steph';
+let currentTab = 'overview';
+
+function save() {
+  localStorage.setItem(KEY, JSON.stringify(data));
+  const now = new Date();
+  document.getElementById('last-saved').textContent = 'Saved ' + now.toLocaleTimeString('en-IE', {hour:'2-digit',minute:'2-digit'});
+}
+
+function fmt(n) { return '€' + Number(n).toFixed(2); }
+function toMonthly(amount, freq) {
+  if (freq === 'annual') return amount / 12;
+  if (freq === 'weekly') return amount * 4.333;
+  return Number(amount);
+}
+
+function switchProfile(p) {
+  currentProfile = p;
+  document.querySelectorAll('.profile-btn').forEach(b => {
+    const label = b.textContent.trim();
+    b.classList.toggle('active', (p==='steph'&&label==='Steph')||(p==='partner'&&label==='Caz')||(p==='shared'&&label.includes('Shared')));
+  });
+  render();
+}
+
+function switchTab(t) {
+  currentTab = t;
+  ['overview','subscriptions','income','outgoings','debts'].forEach(id => {
+    document.getElementById('tab-' + id).classList.toggle('hidden', id !== t);
+  });
+  document.querySelectorAll('.nav-btn').forEach((b, i) => {
+    b.classList.toggle('active', ['overview','subscriptions','income','outgoings','debts'][i] === t);
+  });
+  render();
+}
+
+function toggleForm(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+function addSub() {
+  const name = document.getElementById('sub-name').value.trim();
+  const amount = parseFloat(document.getElementById('sub-amount').value);
+  const freq = document.getElementById('sub-freq').value;
+  const date = document.getElementById('sub-date').value;
+  if (!name || isNaN(amount) || amount <= 0) return;
+  data[currentProfile].subs.push({ name, amount, freq, date });
+  save(); render();
+  document.getElementById('sub-name').value = '';
+  document.getElementById('sub-amount').value = '';
+  document.getElementById('sub-date').value = '';
+  document.getElementById('sub-form').classList.remove('open');
+}
+
+function addIncome() {
+  const name = document.getElementById('inc-name').value.trim();
+  const amount = parseFloat(document.getElementById('inc-amount').value);
+  const freq = document.getElementById('inc-freq').value;
+  if (!name || isNaN(amount) || amount <= 0) return;
+  data[currentProfile].income.push({ name, amount, freq });
+  save(); render();
+  document.getElementById('inc-name').value = '';
+  document.getElementById('inc-amount').value = '';
+  document.getElementById('income-form').classList.remove('open');
+}
+
+function addOutgoing() {
+  const name = document.getElementById('out-name').value.trim();
+  const amount = parseFloat(document.getElementById('out-amount').value);
+  const cat = document.getElementById('out-cat').value;
+  const freq = document.getElementById('out-freq').value;
+  if (!name || isNaN(amount) || amount <= 0) return;
+  data[currentProfile].outgoings.push({ name, amount, cat, freq });
+  save(); render();
+  document.getElementById('out-name').value = '';
+  document.getElementById('out-amount').value = '';
+  document.getElementById('out-form').classList.remove('open');
+}
+
+function delItem(profile, type, idx) {
+  data[profile][type].splice(idx, 1);
+  save(); render();
+}
+
+function setDebtTotal(who) {
+  const amount = parseFloat(document.getElementById(who + '-total-input').value);
+  const note = document.getElementById(who + '-total-note').value.trim();
+  if (isNaN(amount) || amount <= 0) return;
+  data.debts[who].total = amount;
+  data.debts[who].note = note;
+  save(); renderDebts();
+  document.getElementById(who + '-total-input').value = '';
+  document.getElementById(who + '-total-note').value = '';
+  document.getElementById(who + '-setup-form').classList.remove('open');
+}
+
+function addPayment(who) {
+  const amount = parseFloat(document.getElementById(who + '-pay-amount').value);
+  const date = document.getElementById(who + '-pay-date').value;
+  const note = document.getElementById(who + '-pay-note').value.trim();
+  if (isNaN(amount) || amount <= 0) return;
+  data.debts[who].payments.push({ amount, date, note });
+  save(); renderDebts();
+  document.getElementById(who + '-pay-amount').value = '';
+  document.getElementById(who + '-pay-date').value = '';
+  document.getElementById(who + '-pay-note').value = '';
+  document.getElementById(who + '-pay-form').classList.remove('open');
+}
+
+function delPayment(who, idx) {
+  data.debts[who].payments.splice(idx, 1);
+  save(); renderDebts();
+}
+
+function renderDebts() {
+  ['wendy', 'parents'].forEach(who => {
+    const d = data.debts[who];
+    const totalPaid = d.payments.reduce((s, p) => s + Number(p.amount), 0);
+    const owed = Math.max(0, d.total - totalPaid);
+    const pct = d.total > 0 ? Math.min(100, Math.round(totalPaid / d.total * 100)) : 0;
+
+    document.getElementById(who + '-original').textContent = fmt(d.total);
+    document.getElementById(who + '-owed').textContent = fmt(owed);
+    document.getElementById(who + '-bar').style.width = pct + '%';
+    document.getElementById(who + '-paid-label').textContent = fmt(totalPaid) + ' paid';
+    document.getElementById(who + '-pct').textContent = pct + '%';
+
+    const tbody = document.getElementById(who + '-payments');
+    if (!d.payments.length) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="4">No payments logged yet</td></tr>';
+    } else {
+      const sorted = [...d.payments].sort((a,b) => (b.date||'').localeCompare(a.date||''));
+      tbody.innerHTML = sorted.map((p, i) => {
+        const origIdx = d.payments.indexOf(p);
+        return `<tr>
+          <td>${p.date ? new Date(p.date).toLocaleDateString('en-IE') : '—'}</td>
+          <td style="color:var(--text2)">${p.note || '—'}</td>
+          <td class="amount-col" style="color:var(--accent)">${fmt(p.amount)}</td>
+          <td style="text-align:right"><button class="del-btn" onclick="delPayment('${who}', ${origIdx})">&times;</button></td>
+        </tr>`;
+      }).join('');
+    }
+  });
+}
+
+function render() {
+  const p = data[currentProfile];
+  const totalSubsM = p.subs.reduce((s, x) => s + toMonthly(x.amount, x.freq), 0);
+  const totalIncM  = p.income.reduce((s, x) => s + toMonthly(x.amount, x.freq), 0);
+  const totalOutM  = p.outgoings.reduce((s, x) => s + toMonthly(x.amount, x.freq), 0);
+  const totalAllOut = totalSubsM + totalOutM;
+  const net = totalIncM - totalAllOut;
+
+  document.getElementById('summary-cards').innerHTML = `
+    <div class="metric"><div class="metric-label">Monthly income</div><div class="metric-value green">${fmt(totalIncM)}</div></div>
+    <div class="metric"><div class="metric-label">Subscriptions</div><div class="metric-value">${fmt(totalSubsM)}</div></div>
+    <div class="metric"><div class="metric-label">Other outgoings</div><div class="metric-value">${fmt(totalOutM)}</div></div>
+    <div class="metric"><div class="metric-label">Net monthly</div><div class="metric-value ${net >= 0 ? 'green' : 'red'}">${fmt(net)}</div></div>
+  `;
+
+  const ob = document.getElementById('overview-subs-body');
+  if (!p.subs.length) {
+    ob.innerHTML = '<tr class="empty-row"><td colspan="3">No subscriptions added yet</td></tr>';
+  } else {
+    ob.innerHTML = p.subs.map(s => `<tr>
+      <td>${s.name}</td>
+      <td><span class="badge badge-${s.freq}">${s.freq}</span></td>
+      <td class="amount-col">${fmt(toMonthly(s.amount, s.freq))}</td>
+    </tr>`).join('');
+  }
+
+  const sb = document.getElementById('subs-body');
+  if (!p.subs.length) {
+    sb.innerHTML = '<tr class="empty-row"><td colspan="6">No subscriptions yet</td></tr>';
+  } else {
+    sb.innerHTML = p.subs.map((s, i) => `<tr>
+      <td>${s.name}</td>
+      <td><span class="badge badge-${s.freq}">${s.freq}</span></td>
+      <td style="color:var(--text2);font-size:12px">${s.date ? new Date(s.date).toLocaleDateString('en-IE') : '—'}</td>
+      <td class="amount-col">${fmt(s.amount)}</td>
+      <td class="amount-col" style="color:var(--text2);font-size:13px">${fmt(toMonthly(s.amount, s.freq))}/mo</td>
+      <td style="text-align:right"><button class="del-btn" onclick="delItem('${currentProfile}','subs',${i})">&times;</button></td>
+    </tr>`).join('');
+  }
+
+  const ib = document.getElementById('income-body');
+  if (!p.income.length) {
+    ib.innerHTML = '<tr class="empty-row"><td colspan="5">No income added yet</td></tr>';
+  } else {
+    ib.innerHTML = p.income.map((x, i) => `<tr>
+      <td>${x.name}</td>
+      <td><span class="badge badge-income">${x.freq}</span></td>
+      <td class="amount-col">${fmt(x.amount)}</td>
+      <td class="amount-col" style="color:var(--text2);font-size:13px">${fmt(toMonthly(x.amount, x.freq))}/mo</td>
+      <td style="text-align:right"><button class="del-btn" onclick="delItem('${currentProfile}','income',${i})">&times;</button></td>
+    </tr>`).join('');
+  }
+
+  const outb = document.getElementById('outgoings-body');
+  if (!p.outgoings.length) {
+    outb.innerHTML = '<tr class="empty-row"><td colspan="6">No outgoings added yet</td></tr>';
+  } else {
+    outb.innerHTML = p.outgoings.map((x, i) => `<tr>
+      <td>${x.name}</td>
+      <td style="color:var(--text2);font-size:12px">${x.cat}</td>
+      <td><span class="badge badge-expense">${x.freq}</span></td>
+      <td class="amount-col">${fmt(x.amount)}</td>
+      <td class="amount-col" style="color:var(--text2);font-size:13px">${fmt(toMonthly(x.amount, x.freq))}/mo</td>
+      <td style="text-align:right"><button class="del-btn" onclick="delItem('${currentProfile}','outgoings',${i})">&times;</button></td>
+    </tr>`).join('');
+  }
+
+  renderDebts();
+}
+
+document.querySelectorAll('input[type="date"]').forEach(el => {
+  if (!el.value) el.value = new Date().toISOString().split('T')[0];
+});
+
+render();
+</script>
+</body>
+</html>
