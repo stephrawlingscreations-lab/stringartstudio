@@ -238,9 +238,12 @@
           <div class="fg"><label>Source</label><input id="inc-name" placeholder="Wages, benefits, sales..."></div>
           <div class="fg"><label>Amount (€)</label><input id="inc-amount" class="sm" type="number" step="0.01" placeholder="0.00"></div>
           <div class="fg"><label>Frequency</label>
-            <select id="inc-freq"><option value="monthly">Monthly</option><option value="weekly">Weekly</option><option value="annual">Annual</option></select>
+            <select id="inc-freq" onchange="toggleIncDayFields()"><option value="monthly">Monthly</option><option value="weekly">Weekly</option><option value="annual">Annual</option></select>
           </div>
-          <div class="fg"><label>Day of month</label><input id="inc-day" class="xs" type="number" min="1" max="31" placeholder="e.g. 28"></div>
+          <div class="fg" id="inc-day-wrap"><label>Day of month</label><input id="inc-day" class="xs" type="number" min="1" max="31" placeholder="e.g. 28"></div>
+          <div class="fg" id="inc-weekday-wrap" style="display:none"><label>Day of week</label>
+            <select id="inc-weekday"><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option><option value="0">Sunday</option></select>
+          </div>
           <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px">
             <button class="save-btn" id="income-save-btn" onclick="saveIncome()">Save</button>
             <button class="cancel-btn" onclick="cancelForm('income')">Cancel</button>
@@ -451,6 +454,21 @@ function whenLabel(diff) {
   return `<span class="badge badge-done">Passed</span>`;
 }
 
+const WEEKDAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+function toggleIncDayFields() {
+  const freq = document.getElementById('inc-freq').value;
+  document.getElementById('inc-day-wrap').style.display = freq === 'weekly' ? 'none' : '';
+  document.getElementById('inc-weekday-wrap').style.display = freq === 'weekly' ? '' : 'none';
+}
+
+function daysUntilWeekday(wd) {
+  const today = new Date().getDay(); // 0=Sun
+  let diff = wd - today;
+  if (diff < 0) diff += 7;
+  return diff;
+}
+
 function toggleSubDateFields() {
   const freq = document.getElementById('sub-freq').value;
   document.getElementById('sub-billday-wrap').style.display = freq === 'monthly' ? '' : 'none';
@@ -510,6 +528,8 @@ function cancelForm(key) {
   } else if (key === 'income') {
     ['inc-name','inc-amount','inc-day'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('inc-freq').value = 'monthly';
+    document.getElementById('inc-weekday').value = '1';
+    toggleIncDayFields();
   } else if (key === 'out') {
     ['out-name','out-amount','out-day'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('out-freq').value = 'monthly';
@@ -541,6 +561,8 @@ function editIncome(idx) {
   document.getElementById('inc-amount').value = x.amount;
   document.getElementById('inc-freq').value = x.freq;
   document.getElementById('inc-day').value = x.day || '';
+  if (x.weekDay !== null && x.weekDay !== undefined) document.getElementById('inc-weekday').value = x.weekDay;
+  toggleIncDayFields();
   document.getElementById('income-save-btn').textContent = 'Update';
   document.getElementById('income-form-title').textContent = 'Edit income';
   const form = document.getElementById('income-form');
@@ -584,9 +606,10 @@ function saveIncome() {
   const name = document.getElementById('inc-name').value.trim();
   const amount = parseFloat(document.getElementById('inc-amount').value);
   const freq = document.getElementById('inc-freq').value;
-  const day = parseInt(document.getElementById('inc-day').value) || null;
+  const day = freq !== 'weekly' ? (parseInt(document.getElementById('inc-day').value) || null) : null;
+  const weekDay = freq === 'weekly' ? parseInt(document.getElementById('inc-weekday').value) : null;
   if (!name || isNaN(amount) || amount <= 0) return;
-  const item = { name, amount, freq, day };
+  const item = { name, amount, freq, day, weekDay };
   if (editState && editState.key === 'income') {
     data[currentProfile].income[editState.idx] = item;
   } else {
@@ -706,7 +729,19 @@ function render() {
 
   // Monthly schedule
   const scheduleItems = [];
-  p.income.forEach(x => { if (x.day) scheduleItems.push({ day: x.day, name: x.name, type: 'income', amount: toMonthly(x.amount, x.freq) }); });
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  p.income.forEach(x => {
+    if (x.freq === 'weekly' && x.weekDay !== null && x.weekDay !== undefined) {
+      for (let d = 1; d <= daysInMonth; d++) {
+        if (new Date(now.getFullYear(), now.getMonth(), d).getDay() === x.weekDay) {
+          scheduleItems.push({ day: d, name: x.name, type: 'income', amount: x.amount, label: 'Every ' + WEEKDAYS[x.weekDay] });
+        }
+      }
+    } else if (x.day) {
+      scheduleItems.push({ day: x.day, name: x.name, type: 'income', amount: toMonthly(x.amount, x.freq) });
+    }
+  });
   p.outgoings.forEach(x => { if (x.day) scheduleItems.push({ day: x.day, name: x.name, type: 'outgoing', amount: toMonthly(x.amount, x.freq) }); });
   p.subs.forEach(x => { if (x.freq === 'monthly' && x.billDay) scheduleItems.push({ day: x.billDay, name: x.name, type: 'sub', amount: x.amount }); });
   scheduleItems.sort((a, b) => a.day - b.day);
@@ -722,7 +757,7 @@ function render() {
       const rowClass = diff < 0 ? 'schedule-row-passed' : diff === 0 ? 'schedule-row-today' : diff <= 7 ? 'schedule-row-soon' : isIncome ? 'schedule-row-income' : '';
       return `<tr class="${rowClass}">
         <td><span class="day-num">${item.day}</span><span style="font-size:10px;color:var(--text3);margin-left:2px">${ordinal(item.day).replace(/^\d+/,'')}</span></td>
-        <td>${item.name}</td>
+        <td>${item.name}${item.label ? `<span style="font-size:11px;color:var(--text3);margin-left:6px">${item.label}</span>` : ''}</td>
         <td>${typeLabel}</td>
         <td class="amount-col" style="color:${isIncome ? 'var(--accent)' : 'var(--danger)'}">${isIncome ? '+' : '-'}${fmt(item.amount)}</td>
         <td style="text-align:right">${whenLabel(diff)}</td>
@@ -784,14 +819,19 @@ function render() {
     ib.innerHTML = '<tr class="empty-row"><td colspan="6">No income added yet</td></tr>';
   } else {
     const indexed = p.income.map((x, i) => ({ ...x, _i: i })).sort((a,b) => (a.day||99)-(b.day||99));
-    ib.innerHTML = indexed.map(x => `<tr>
+    ib.innerHTML = indexed.map(x => {
+      let dayCell = '<span style="color:var(--text3)">—</span>';
+      if (x.freq === 'weekly' && x.weekDay !== null && x.weekDay !== undefined) dayCell = 'Every ' + WEEKDAYS[x.weekDay];
+      else if (x.day) dayCell = ordinal(x.day);
+      return `<tr>
       <td>${x.name}</td>
       <td><span class="badge badge-income">${x.freq}</span></td>
-      <td style="color:var(--text2);font-size:13px">${x.day ? ordinal(x.day) : '<span style="color:var(--text3)">—</span>'}</td>
+      <td style="color:var(--text2);font-size:13px">${dayCell}</td>
       <td class="amount-col">${fmt(x.amount)}</td>
       <td class="amount-col" style="color:var(--text2);font-size:13px">${fmt(toMonthly(x.amount, x.freq))}/mo</td>
       <td><div class="row-actions"><button class="edit-btn" onclick="editIncome(${x._i})" title="Edit">&#9998;</button><button class="del-btn" onclick="delItem('${currentProfile}','income',${x._i})">&times;</button></div></td>
-    </tr>`).join('');
+    </tr>`;
+    }).join('');
   }
 
   // Outgoings table (sorted by day, track original indices)
