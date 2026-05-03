@@ -4,5 +4,6 @@ Disallow: /PPBDesigns.html
 Disallow: /wendys-whims-tracker.html
 Disallow: /tv-portal/
 Disallow: /household-tracker.html
+Disallow: /donaskeigh-grass-cutting.html
 
 Sitemap: https://stephrawlingscreations.ie/sitemap.xml
