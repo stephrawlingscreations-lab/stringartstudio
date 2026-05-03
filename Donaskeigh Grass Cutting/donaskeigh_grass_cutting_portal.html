@@ -1,0 +1,844 @@
+<!doctype html>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Donaskeigh Grass Cutting</title>
+<style>
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --color-text-primary: #111827;
+  --color-text-secondary: #6b7280;
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f9fafb;
+  --color-border-secondary: #d1d5db;
+  --color-border-tertiary: #e5e7eb;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); background: var(--color-background-primary); color: var(--color-text-primary); }
+.portal { padding: 1rem; max-width: 1200px; margin: 0 auto; }
+.tabs { display: flex; gap: 4px; margin-bottom: 1.5rem; border-bottom: 0.5px solid var(--color-border-tertiary); }
+.tab { padding: 8px 16px; font-size: 14px; cursor: pointer; border: none; background: none; color: var(--color-text-secondary); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tab.active { color: var(--color-text-primary); border-bottom-color: var(--color-text-primary); font-weight: 500; }
+.summary-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+.stat { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 1rem; }
+.stat-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; }
+.stat-value { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+.stat-value.green { color: #3B6D11; }
+.stat-value.amber { color: #854F0B; }
+.stat-value.red { color: #A32D2D; }
+.section { display: none; }
+.section.active { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 8px 10px; font-weight: 500; font-size: 12px; color: var(--color-text-secondary); border-bottom: 0.5px solid var(--color-border-tertiary); background: var(--color-background-secondary); }
+td { padding: 9px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); vertical-align: middle; }
+tr:hover td { background: var(--color-background-secondary); }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+.badge-paid { background: #EAF3DE; color: #3B6D11; }
+.badge-part { background: #FAEEDA; color: #854F0B; }
+.badge-unpaid { background: #FCEBEB; color: #A32D2D; }
+.badge-na { background: var(--color-background-secondary); color: var(--color-text-secondary); }
+.toolbar { display: flex; gap: 8px; margin-bottom: 1rem; align-items: center; flex-wrap: wrap; }
+input[type="text"] { padding: 7px 12px; font-size: 13px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-primary); color: var(--color-text-primary); width: 200px; }
+select { padding: 7px 12px; font-size: 13px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-primary); color: var(--color-text-primary); }
+.modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; align-items: center; justify-content: center; }
+.modal-bg.open { display: flex; }
+.modal { background: var(--color-background-primary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary); padding: 1.5rem; width: 420px; max-width: 95vw; }
+.modal h3 { font-size: 16px; font-weight: 500; margin-bottom: 1rem; }
+.form-row { margin-bottom: 12px; }
+.form-row label { display: block; font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; }
+.form-row input, .form-row select { width: 100%; }
+.btn-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1rem; }
+.btn { padding: 7px 16px; font-size: 13px; border-radius: var(--border-radius-md); cursor: pointer; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary); color: var(--color-text-primary); }
+.btn-primary { background: var(--color-text-primary); color: var(--color-background-primary); border-color: var(--color-text-primary); }
+.btn:hover { background: var(--color-background-secondary); }
+.btn-primary:hover { opacity: 0.85; background: var(--color-text-primary); }
+.edit-btn { font-size: 11px; padding: 3px 8px; border-radius: 4px; cursor: pointer; border: 0.5px solid var(--color-border-secondary); background: none; color: var(--color-text-secondary); }
+.edit-btn:hover { background: var(--color-background-secondary); }
+.balance-table td:last-child, .balance-table td:nth-child(3), .balance-table td:nth-child(4) { text-align: right; font-variant-numeric: tabular-nums; }
+.balance-table th:last-child, .balance-table th:nth-child(3), .balance-table th:nth-child(4) { text-align: right; }
+.positive { color: #3B6D11; }
+.negative { color: #A32D2D; }
+#saveStatus { font-size: 12px; }
+#auth-loading { position: fixed; inset: 0; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--color-background-primary); color: var(--color-text-secondary); font-size: 14px; gap: 10px; }
+#login-screen { position: fixed; inset: 0; z-index: 1999; display: none; align-items: center; justify-content: center; padding: 1rem; background: var(--color-background-secondary); }
+.login-card-grass { width: 100%; max-width: 400px; background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 2rem; text-align: center; }
+.login-card-grass h1 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.5rem; }
+.login-card-grass p { font-size: 13px; color: var(--color-text-secondary); line-height: 1.5; margin-bottom: 1.25rem; }
+.login-btn-google { width: 100%; padding: 12px 14px; border-radius: var(--border-radius-md); border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary); color: var(--color-text-primary); font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+#login-error { font-size: 13px; color: #A32D2D; margin-top: 12px; min-height: 18px; font-weight: 500; }
+#main-app { display: none; }
+</style>
+
+<div id="auth-loading">
+  <div style="font-size:28px">&#x1F33F;</div>
+  <div>Loading…</div>
+</div>
+
+<div id="login-screen">
+  <div class="login-card-grass">
+    <h1>Donaskeigh Grass Cutting</h1>
+    <p>Sign in with Google to load and sync residents, payments, and cutting log (same Firebase project as your other private tools).</p>
+    <button type="button" class="login-btn-google" onclick="startGoogleSignInGrass()">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Sign in with Google
+    </button>
+    <div id="login-error"></div>
+  </div>
+</div>
+
+<div id="main-app">
+<div class="portal">
+<div class="summary-grid" id="summaryGrid"></div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('residents')">Residents</button>
+  <button class="tab" onclick="showTab('payments')">Payment log</button>
+  <button class="tab" onclick="showTab('balance')">Balance sheet</button>
+</div>
+
+<div id="residents" class="section active">
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="Search name or house..." oninput="renderResidents()" />
+    <select id="filterStatus" onchange="renderResidents()">
+      <option value="">All residents</option>
+      <option value="paid">Paid in full</option>
+      <option value="partial">Partial payment</option>
+      <option value="unpaid">No payment</option>
+      <option value="na">N/A</option>
+    </select>
+    <button class="btn" onclick="openAddResident()">+ Add resident</button>
+    <button class="btn" onclick="exportData()">Export backup</button>
+    <button class="btn" onclick="document.getElementById('importFile').click()">Import backup</button>
+    <button class="btn" onclick="signOutGrass()">Sign out</button>
+    <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importData(event)" />
+    <span id="saveStatus"></span>
+  </div>
+  <table>
+    <thead><tr>
+      <th style="width:60px">No.</th>
+      <th>Name</th>
+      <th style="text-align:right">Amount owed</th>
+      <th style="text-align:right">Paid</th>
+      <th style="text-align:right">Balance</th>
+      <th>Status</th>
+      <th></th>
+    </tr></thead>
+    <tbody id="residentBody"></tbody>
+  </table>
+</div>
+
+<div id="payments" class="section">
+  <div class="toolbar">
+    <button class="btn" onclick="openAddPayment()">+ Record payment</button>
+    <select id="filterHouse" onchange="renderPayments()"><option value="">All houses</option></select>
+  </div>
+  <table>
+    <thead><tr>
+      <th>Date</th>
+      <th>House</th>
+      <th>Name</th>
+      <th style="text-align:right">Amount (€)</th>
+      <th>Method</th>
+      <th>Notes</th>
+    </tr></thead>
+    <tbody id="paymentBody"></tbody>
+  </table>
+</div>
+
+<div id="balance" class="section">
+  <div class="toolbar">
+    <button class="btn" onclick="openAddCutting()">+ Log grass cutting</button>
+  </div>
+  <table class="balance-table">
+    <thead><tr>
+      <th>Date</th>
+      <th>Description</th>
+      <th style="text-align:right">Cost (€)</th>
+      <th style="text-align:right">Running balance (€)</th>
+    </tr></thead>
+    <tbody id="balanceBody"></tbody>
+    <tfoot id="balanceFoot"></tfoot>
+  </table>
+</div>
+</div><!-- portal -->
+
+<div class="modal-bg" id="residentModal">
+  <div class="modal">
+    <h3 id="residentModalTitle">Add resident</h3>
+    <div class="form-row"><label>House number</label><input id="rHouseNo" type="number" /></div>
+    <div class="form-row"><label>Name</label><input id="rName" type="text" /></div>
+    <div class="form-row"><label>Annual amount owed (€)</label><input id="rOwed" type="number" value="115" /></div>
+    <div class="form-row"><label>Status</label>
+      <select id="rStatus">
+        <option value="normal">Normal</option>
+        <option value="na">N/A (exempt/won't pay)</option>
+      </select>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="closeModal('residentModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveResident()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="paymentModal">
+  <div class="modal">
+    <h3>Record payment</h3>
+    <div class="form-row"><label>House</label><select id="pHouse"></select></div>
+    <div class="form-row"><label>Date</label><input id="pDate" type="date" /></div>
+    <div class="form-row"><label>Amount (€)</label><input id="pAmount" type="number" /></div>
+    <div class="form-row"><label>Method</label>
+      <select id="pMethod">
+        <option value="Cash">Cash</option>
+        <option value="Revolut">Revolut</option>
+        <option value="Bank transfer">Bank transfer</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div class="form-row"><label>Notes</label><input id="pNotes" type="text" /></div>
+    <div class="btn-row">
+      <button class="btn" onclick="closeModal('paymentModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePayment()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="cuttingModal">
+  <div class="modal">
+    <h3>Log grass cutting</h3>
+    <div class="form-row"><label>Date</label><input id="cDate" type="date" /></div>
+    <div class="form-row"><label>Description</label><input id="cDesc" type="text" value="Grass cutting" /></div>
+    <div class="form-row"><label>Amount paid to cutter (€)</label><input id="cCost" type="number" /></div>
+    <div class="btn-row">
+      <button class="btn" onclick="closeModal('cuttingModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCutting()">Save</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- end main-app -->
+
+<script id="app-data" type="application/json">null</script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey: 'AIzaSyAcSc-3ejzUfaiods7fAGAH10EuVvZaL6U',
+  authDomain: 'steph-rawlings-creations.firebaseapp.com',
+  databaseURL: 'https://steph-rawlings-creations-default-rtdb.europe-west1.firebasedatabase.app',
+  projectId: 'steph-rawlings-creations',
+  storageBucket: 'steph-rawlings-creations.firebasestorage.app',
+  messagingSenderId: '271810785275',
+  appId: '1:271810785275:web:b54e80f0e31aea96e4e55e'
+});
+const fbAuth = firebase.auth();
+const fbDb = firebase.database();
+</script>
+<script>
+const ALLOWED_GRASS_EMAILS = [
+  'stephrawlingscreations@gmail.com',
+  'ppbdesigns1@gmail.com',
+  'sdr22ie@gmail.com'
+];
+let currentUser = null;
+let pendingDisallowGrass = '';
+
+const DEFAULT_RESIDENTS = [
+  {houseNo:11,name:"Paula Kenny",owed:115,na:false},
+  {houseNo:12,name:"Sarah Sheridan",owed:115,na:false},
+  {houseNo:13,name:"Tracey Ailis",owed:115,na:false},
+  {houseNo:14,name:"Aileen O'Dwyer",owed:115,na:false},
+  {houseNo:15,name:"Price (vacant)",owed:0,na:true},
+  {houseNo:16,name:"Shauna/Davy Redmond",owed:115,na:false},
+  {houseNo:17,name:"Siobhan O'Sullivan",owed:115,na:false},
+  {houseNo:18,name:"Tommy (won't pay)",owed:0,na:true},
+  {houseNo:19,name:"Reggie",owed:115,na:false},
+  {houseNo:20,name:"Trisha O'Rawe",owed:115,na:false},
+  {houseNo:21,name:"Natasha O'Keeffe",owed:115,na:false},
+  {houseNo:22,name:"Siobhan O'Brien",owed:115,na:false},
+  {houseNo:23,name:"Josephine Duggan",owed:115,na:false},
+  {houseNo:24,name:"Karen/Francis Shiels",owed:115,na:false},
+  {houseNo:25,name:"Lesley Jade",owed:115,na:false},
+  {houseNo:26,name:"Sanu",owed:115,na:false},
+  {houseNo:27,name:"Cheila McGrath",owed:115,na:false},
+  {houseNo:28,name:"Jack/Tracie O'Sullivan",owed:115,na:false},
+  {houseNo:29,name:"Mary Corcoran",owed:115,na:false},
+  {houseNo:30,name:"Ciara Barry",owed:115,na:false},
+  {houseNo:31,name:"Steph Daly",owed:115,na:false},
+  {houseNo:32,name:"Steph Rawlings",owed:0,na:true},
+  {houseNo:33,name:"Mike/Michelle O'Regan",owed:115,na:false},
+  {houseNo:34,name:"Terrie Burke",owed:115,na:false},
+  {houseNo:35,name:"Benson/Tariasi Nkhoma",owed:115,na:false},
+  {houseNo:36,name:"John Donnelly",owed:115,na:false},
+];
+
+const DEFAULT_PAYMENTS = [
+  {date:"2026-03-20",houseNo:14,name:"Aileen O'Dwyer",amount:115,method:"Cash",notes:""},
+  {date:"2026-03-20",houseNo:20,name:"Trisha O'Rawe",amount:115,method:"Cash",notes:""},
+  {date:"2026-03-20",houseNo:25,name:"Lesley Jade",amount:115,method:"Revolut",notes:""},
+  {houseNo:28,name:"Jack/Tracie O'Sullivan",date:"2026-03-20",amount:115,method:"Revolut",notes:""},
+  {date:"2026-03-20",houseNo:33,name:"Mike/Michelle O'Regan",amount:115,method:"Cash",notes:""},
+  {date:"2026-03-25",houseNo:13,name:"Tracey Ailis",amount:10,method:"Cash",notes:""},
+  {date:"2026-04-01",houseNo:24,name:"Karen/Francis Shiels",amount:50,method:"Cash",notes:""},
+  {date:"2026-04-27",houseNo:30,name:"Ciara Barry",amount:100,method:"Cash",notes:""},
+];
+
+const DEFAULT_CUTTINGS = [
+  {date:"2026-03-20",desc:"WE 20/03/26 — grass cutting",cost:0},
+];
+
+// ── Persistent file-based saving ──────────────────────────────────────────────
+
+function idbOpen() {
+  return new Promise((res, rej) => {
+    const r = indexedDB.open('gp1', 1);
+    r.onupgradeneeded = e => e.target.result.createObjectStore('s');
+    r.onsuccess = e => res(e.target.result);
+    r.onerror = () => rej(r.error);
+  });
+}
+async function idbGet(key) {
+  try {
+    const db = await idbOpen();
+    return new Promise(res => {
+      const tx = db.transaction('s', 'readonly');
+      const r = tx.objectStore('s').get(key);
+      r.onsuccess = () => res(r.result ?? null);
+      r.onerror = () => res(null);
+    });
+  } catch(e) { return null; }
+}
+async function idbSet(key, val) {
+  try {
+    const db = await idbOpen();
+    return new Promise(res => {
+      const tx = db.transaction('s', 'readwrite');
+      tx.objectStore('s').put(val, key);
+      tx.oncomplete = () => res();
+      tx.onerror = () => res();
+    });
+  } catch(e) {}
+}
+
+let _fileHandle = null;
+
+async function acquireHandle() {
+  if (_fileHandle) return _fileHandle;
+  const stored = await idbGet('fh');
+  if (stored) {
+    try {
+      let p = await stored.queryPermission({mode:'readwrite'});
+      if (p !== 'granted') p = await stored.requestPermission({mode:'readwrite'});
+      if (p === 'granted') { _fileHandle = stored; return stored; }
+    } catch(e) {}
+  }
+  try {
+    alert('To save your data permanently, select this HTML file in the dialog that opens.');
+    const [h] = await window.showOpenFilePicker({
+      types: [{description: 'Grass Cutting Portal', accept: {'text/html': ['.html']}}]
+    });
+    _fileHandle = h;
+    await idbSet('fh', h);
+    return h;
+  } catch(e) { return null; }
+}
+
+function setSaveStatus(status) {
+  const el = document.getElementById('saveStatus');
+  if (!el) return;
+  clearTimeout(el._t);
+  const map = {saving:['Saving…','#854F0B'], saved:['Saved ✓','#3B6D11'], downloaded:['Downloaded — replace old file with this one','#854F0B'], error:['Save failed — use Export backup','#A32D2D']};
+  const [text, color] = map[status] || ['', ''];
+  el.textContent = text;
+  el.style.color = color;
+  if (status === 'saved') el._t = setTimeout(() => { el.textContent = ''; }, 3000);
+}
+
+async function saveToFile() {
+  setSaveStatus('saving');
+  const data = JSON.stringify({
+    residents: state.residents,
+    payments: state.payments,
+    cuttings: state.cuttings,
+  }).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
+
+  try {
+    if (window.showOpenFilePicker) {
+      const handle = await acquireHandle();
+      if (handle) {
+        const file = await handle.getFile();
+        let html = await file.text();
+        html = html.replace(
+          /(<script\s[^>]*id="app-data"[^>]*>)[\s\S]*?(<\/script>)/,
+          `$1${data}$2`
+        );
+        const w = await handle.createWritable();
+        await w.write(html);
+        await w.close();
+        setSaveStatus('saved');
+        return;
+      }
+    }
+  } catch(e) {
+    console.error('File save error:', e);
+  }
+
+  // Fallback for browsers without File System Access API (e.g. Safari):
+  // download an updated copy of the file
+  try {
+    const resp = await fetch(location.href);
+    let html = await resp.text();
+    html = html.replace(
+      /(<script\s[^>]*id="app-data"[^>]*>)[\s\S]*?(<\/script>)/,
+      `$1${data}$2`
+    );
+    const blob = new Blob([html], {type: 'text/html'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'donaskeigh_grass_cutting_portal.html';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    setSaveStatus('downloaded');
+  } catch(e) {
+    setSaveStatus('error');
+  }
+}
+
+// ── Data loading ──────────────────────────────────────────────────────────────
+
+async function loadGrassPayloadFromDisk() {
+  // 1. Data embedded in this file (set by saveToFile)
+  const el = document.getElementById('app-data');
+  if (el) {
+    const text = el.textContent.trim();
+    if (text && text !== 'null') {
+      try {
+        const p = JSON.parse(text);
+        if (p && Array.isArray(p.residents)) {
+          return {
+            residents: p.residents.length ? p.residents : DEFAULT_RESIDENTS,
+            payments: p.payments || DEFAULT_PAYMENTS,
+            cuttings: p.cuttings || DEFAULT_CUTTINGS,
+          };
+        }
+      } catch(e) {}
+    }
+  }
+  // 2. localStorage (migration path from previous version)
+  try {
+    const r = localStorage.getItem('grassPortal.residents');
+    const p = localStorage.getItem('grassPortal.payments');
+    const c = localStorage.getItem('grassPortal.cuttings');
+    if (r || p || c) {
+      return {
+        residents: r ? JSON.parse(r) : DEFAULT_RESIDENTS,
+        payments: p ? JSON.parse(p) : DEFAULT_PAYMENTS,
+        cuttings: c ? JSON.parse(c) : DEFAULT_CUTTINGS,
+      };
+    }
+  } catch(e) {}
+  // 3. Defaults
+  return {
+    residents: DEFAULT_RESIDENTS,
+    payments: DEFAULT_PAYMENTS,
+    cuttings: DEFAULT_CUTTINGS,
+  };
+}
+
+const FB_GRASS_PATH = 'grassPortal';
+
+function persistGrassLocal() {
+  try {
+    localStorage.setItem('grassPortal.residents', JSON.stringify(state.residents));
+    localStorage.setItem('grassPortal.payments', JSON.stringify(state.payments));
+    localStorage.setItem('grassPortal.cuttings', JSON.stringify(state.cuttings));
+  } catch(e) {}
+}
+
+async function save() {
+  persistGrassLocal();
+  if (!currentUser) return;
+  setSaveStatus('saving');
+  try {
+    await fbDb.ref('users/' + currentUser.uid + '/' + FB_GRASS_PATH).set({
+      residents: state.residents,
+      payments: state.payments,
+      cuttings: state.cuttings,
+    });
+    setSaveStatus('saved');
+  } catch(e) {
+    setSaveStatus('error');
+  }
+}
+
+async function bootstrapGrassFromCloudOrLocal() {
+  if (currentUser) {
+    const snap = await fbDb.ref('users/' + currentUser.uid + '/' + FB_GRASS_PATH).once('value');
+    const cloud = snap.val();
+    if (cloud && Array.isArray(cloud.residents) && cloud.residents.length > 0) {
+      state = {
+        residents: cloud.residents,
+        payments: Array.isArray(cloud.payments) ? cloud.payments : [],
+        cuttings: Array.isArray(cloud.cuttings) ? cloud.cuttings : [],
+      };
+      persistGrassLocal();
+      return;
+    }
+  }
+  state = await loadGrassPayloadFromDisk();
+  if (currentUser) {
+    try {
+      await fbDb.ref('users/' + currentUser.uid + '/' + FB_GRASS_PATH).set({
+        residents: state.residents,
+        payments: state.payments,
+        cuttings: state.cuttings,
+      });
+    } catch(e) {}
+  }
+}
+
+function showGrassAuthPhase(phase) {
+  const load = document.getElementById('auth-loading');
+  const login = document.getElementById('login-screen');
+  const main = document.getElementById('main-app');
+  if (!load || !login || !main) return;
+  if (phase === 'loading') {
+    load.style.display = 'flex';
+    login.style.display = 'none';
+    main.style.display = 'none';
+  } else if (phase === 'login') {
+    load.style.display = 'none';
+    login.style.display = 'flex';
+    main.style.display = 'none';
+  } else {
+    load.style.display = 'none';
+    login.style.display = 'none';
+    main.style.display = 'block';
+  }
+}
+
+function isAllowedGrassEmail(email) {
+  if (!email) return false;
+  const l = email.toLowerCase();
+  return ALLOWED_GRASS_EMAILS.some(a => a.toLowerCase() === l);
+}
+
+function signInErrorGrass(e) {
+  if (!e || !e.code) return 'Sign-in failed — try again';
+  if (e.code === 'auth/unauthorized-domain') return 'Add this site under Firebase → Authentication → Authorized domains.';
+  if (e.code === 'auth/popup-closed-by-user') return 'Sign-in was cancelled.';
+  return e.message || 'Sign-in failed — try again';
+}
+
+function startGoogleSignInGrass() {
+  const le = document.getElementById('login-error');
+  if (le) le.textContent = '';
+  const provider = new firebase.auth.GoogleAuthProvider();
+  fbAuth.signInWithPopup(provider).catch(err => {
+    if (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment') {
+      fbAuth.signInWithRedirect(provider).catch(e2 => { if (le) le.textContent = signInErrorGrass(e2); });
+    } else {
+      if (le) le.textContent = signInErrorGrass(err);
+    }
+  });
+}
+
+function signOutGrass() {
+  if (confirm('Sign out?')) fbAuth.signOut();
+}
+
+// ── App state & rendering ─────────────────────────────────────────────────────
+
+let state = { residents: [], payments: [], cuttings: [] };
+let editingResident = null;
+
+function fmtDate(iso) {
+  if (!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function getPaid(houseNo) {
+  return state.payments.filter(p=>p.houseNo===houseNo).reduce((s,p)=>s+p.amount,0);
+}
+
+function getStatus(r) {
+  if (r.na) return 'na';
+  const paid = getPaid(r.houseNo);
+  if (paid >= r.owed && r.owed > 0) return 'paid';
+  if (paid > 0) return 'partial';
+  return 'unpaid';
+}
+
+function badgeHtml(status) {
+  if (status==='paid') return '<span class="badge badge-paid">Paid</span>';
+  if (status==='partial') return '<span class="badge badge-part">Partial</span>';
+  if (status==='na') return '<span class="badge badge-na">N/A</span>';
+  return '<span class="badge badge-unpaid">Unpaid</span>';
+}
+
+function fmt(n) { return '€' + n.toFixed(2); }
+
+function renderSummary() {
+  const active = state.residents.filter(r=>!r.na);
+  const totalOwed = active.reduce((s,r)=>s+r.owed,0);
+  const totalPaid = state.payments.reduce((s,p)=>s+p.amount,0);
+  const totalCost = state.cuttings.reduce((s,c)=>s+c.cost,0);
+  const balance = totalPaid - totalCost;
+  const paidCount = active.filter(r=>getStatus(r)==='paid').length;
+  const nothingCount = active.filter(r=>getStatus(r)==='unpaid').length;
+  document.getElementById('summaryGrid').innerHTML = `
+    <div class="stat"><div class="stat-label">Total collected</div><div class="stat-value green">€${totalPaid.toFixed(0)}</div></div>
+    <div class="stat"><div class="stat-label">Total owed</div><div class="stat-value">€${totalOwed.toFixed(0)}</div></div>
+    <div class="stat"><div class="stat-label">Bank balance</div><div class="stat-value ${balance>=0?'green':'red'}">€${balance.toFixed(0)}</div></div>
+    <div class="stat"><div class="stat-label">Fully paid</div><div class="stat-value amber">${paidCount} / ${active.length}</div></div>
+    <div class="stat"><div class="stat-label">Paid nothing</div><div class="stat-value red">${nothingCount}</div></div>
+  `;
+}
+
+function renderResidents() {
+  const search = document.getElementById('search').value.toLowerCase();
+  const filter = document.getElementById('filterStatus').value;
+  let rows = state.residents.filter(r => {
+    const status = getStatus(r);
+    if (filter && filter !== status) return false;
+    if (search && !r.name.toLowerCase().includes(search) && !String(r.houseNo).includes(search)) return false;
+    return true;
+  });
+  document.getElementById('residentBody').innerHTML = rows.map(r => {
+    const paid = getPaid(r.houseNo);
+    const balance = r.na ? 0 : r.owed - paid;
+    const status = getStatus(r);
+    return `<tr>
+      <td style="color:var(--color-text-secondary)">${r.houseNo}</td>
+      <td>${r.name}</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">${r.na ? '—' : fmt(r.owed)}</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">${paid > 0 ? fmt(paid) : '—'}</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums${balance > 0 ? ';color:#A32D2D' : balance < 0 ? ';color:#3B6D11' : ''}">${r.na ? '—' : fmt(balance)}</td>
+      <td>${badgeHtml(status)}</td>
+      <td><button class="edit-btn" onclick="openEditResident(${r.houseNo})">Edit</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderPayments() {
+  const filterHouse = document.getElementById('filterHouse').value;
+  let rows = [...state.payments].sort((a,b)=>b.date.localeCompare(a.date));
+  if (filterHouse) rows = rows.filter(p=>String(p.houseNo)===filterHouse);
+  document.getElementById('paymentBody').innerHTML = rows.map(p => `
+    <tr>
+      <td>${fmtDate(p.date)}</td>
+      <td style="color:var(--color-text-secondary)">No. ${p.houseNo}</td>
+      <td>${p.name}</td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums">${fmt(p.amount)}</td>
+      <td>${p.method}</td>
+      <td style="color:var(--color-text-secondary);font-size:12px">${p.notes||''}</td>
+    </tr>`).join('');
+  const sel = document.getElementById('filterHouse');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All houses</option>' + state.residents.map(r=>`<option value="${r.houseNo}" ${cur==r.houseNo?'selected':''}>${r.houseNo} — ${r.name}</option>`).join('');
+}
+
+function renderBalance() {
+  const totalPaid = state.payments.reduce((s,p)=>s+p.amount,0);
+  const events = [];
+  events.push({date:'',desc:'Total payments collected',cost:0,type:'open',amount:totalPaid});
+  state.cuttings.filter(c=>c.cost>0).sort((a,b)=>a.date.localeCompare(b.date)).forEach(c=>{
+    events.push({date:c.date,desc:c.desc,cost:c.cost,type:'cutting'});
+  });
+  let rows = '';
+  let bal = totalPaid;
+  events.forEach(e => {
+    if (e.type === 'open') {
+      rows += `<tr><td style="color:var(--color-text-secondary);font-size:12px">Opening</td><td>${e.desc}</td><td style="text-align:right"></td><td style="text-align:right;font-weight:500" class="positive">${fmt(bal)}</td></tr>`;
+    } else {
+      bal -= e.cost;
+      rows += `<tr><td>${fmtDate(e.date)}</td><td>${e.desc}</td><td style="text-align:right" class="negative">-${fmt(e.cost)}</td><td style="text-align:right;font-weight:500" class="${bal<0?'negative':'positive'}">${fmt(bal)}</td></tr>`;
+    }
+  });
+  document.getElementById('balanceBody').innerHTML = rows;
+  document.getElementById('balanceFoot').innerHTML = `<tr style="border-top:1px solid var(--color-border-secondary)"><td colspan="3" style="font-weight:500;padding:9px 10px">Current balance</td><td style="text-align:right;font-weight:500;padding:9px 10px" class="${bal>=0?'positive':'negative'}">${fmt(bal)}</td></tr>`;
+}
+
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    const names=['residents','payments','balance'];
+    t.classList.toggle('active', names[i]===name);
+  });
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  if (name==='payments') renderPayments();
+  if (name==='balance') renderBalance();
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); editingResident=null; }
+
+function openAddResident() {
+  editingResident = null;
+  document.getElementById('residentModalTitle').textContent = 'Add resident';
+  document.getElementById('rHouseNo').value='';
+  document.getElementById('rName').value='';
+  document.getElementById('rOwed').value=115;
+  document.getElementById('rStatus').value='normal';
+  document.getElementById('residentModal').classList.add('open');
+}
+
+function openEditResident(houseNo) {
+  const r = state.residents.find(x=>x.houseNo===houseNo);
+  if (!r) return;
+  editingResident = houseNo;
+  document.getElementById('residentModalTitle').textContent = 'Edit resident';
+  document.getElementById('rHouseNo').value = r.houseNo;
+  document.getElementById('rName').value = r.name;
+  document.getElementById('rOwed').value = r.owed;
+  document.getElementById('rStatus').value = r.na ? 'na' : 'normal';
+  document.getElementById('residentModal').classList.add('open');
+}
+
+function saveResident() {
+  const houseNo = parseInt(document.getElementById('rHouseNo').value);
+  const name = document.getElementById('rName').value.trim();
+  const owed = parseFloat(document.getElementById('rOwed').value)||0;
+  const na = document.getElementById('rStatus').value==='na';
+  if (!houseNo || !name) return;
+  if (editingResident !== null) {
+    const idx = state.residents.findIndex(r=>r.houseNo===editingResident);
+    if (idx>=0) state.residents[idx] = {houseNo,name,owed,na};
+  } else {
+    state.residents.push({houseNo,name,owed,na});
+    state.residents.sort((a,b)=>a.houseNo-b.houseNo);
+  }
+  save();
+  closeModal('residentModal');
+  renderResidents(); renderSummary();
+}
+
+function openAddPayment() {
+  document.getElementById('pDate').value = new Date().toISOString().split('T')[0];
+  const sel = document.getElementById('pHouse');
+  sel.innerHTML = state.residents.map(r=>`<option value="${r.houseNo}">${r.houseNo} — ${r.name}</option>`).join('');
+  document.getElementById('pAmount').value='';
+  document.getElementById('pNotes').value='';
+  document.getElementById('paymentModal').classList.add('open');
+}
+
+function savePayment() {
+  const houseNo = parseInt(document.getElementById('pHouse').value);
+  const r = state.residents.find(x=>x.houseNo===houseNo);
+  const date = document.getElementById('pDate').value;
+  const amount = parseFloat(document.getElementById('pAmount').value)||0;
+  const method = document.getElementById('pMethod').value;
+  const notes = document.getElementById('pNotes').value.trim();
+  if (!date || !amount) return;
+  state.payments.push({date,houseNo,name:r?r.name:'',amount,method,notes});
+  save();
+  closeModal('paymentModal');
+  renderResidents(); renderSummary(); renderPayments();
+}
+
+function openAddCutting() {
+  document.getElementById('cDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('cDesc').value = 'Grass cutting';
+  document.getElementById('cCost').value = '';
+  document.getElementById('cuttingModal').classList.add('open');
+}
+
+function saveCutting() {
+  const date = document.getElementById('cDate').value;
+  const desc = document.getElementById('cDesc').value.trim();
+  const cost = parseFloat(document.getElementById('cCost').value)||0;
+  if (!date || !desc) return;
+  state.cuttings.push({date,desc,cost});
+  save();
+  closeModal('cuttingModal');
+  renderBalance(); renderSummary();
+}
+
+function exportData() {
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    residents: state.residents,
+    payments: state.payments,
+    cuttings: state.cuttings
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `grass-cutting-portal-backup-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function importData(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      if (!parsed || !Array.isArray(parsed.residents) || !Array.isArray(parsed.payments) || !Array.isArray(parsed.cuttings)) {
+        alert('Invalid backup file format.');
+        return;
+      }
+      state = {
+        residents: parsed.residents,
+        payments: parsed.payments,
+        cuttings: parsed.cuttings
+      };
+      save();
+      renderSummary();
+      renderResidents();
+      renderPayments();
+      renderBalance();
+    } catch (e) {
+      alert('Could not import backup file.');
+    } finally {
+      event.target.value = '';
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+fbAuth.getRedirectResult().catch(err => {
+  const le = document.getElementById('login-error');
+  if (le && err && err.code && err.code !== 'auth/operation-not-supported-in-this-environment')
+    le.textContent = signInErrorGrass(err);
+});
+
+fbAuth.onAuthStateChanged(user => {
+  const le = document.getElementById('login-error');
+  if (user) {
+    if (!isAllowedGrassEmail(user.email)) {
+      pendingDisallowGrass = 'That Google account is not allowed for this app.';
+      fbAuth.signOut();
+      return;
+    }
+    currentUser = user;
+    if (le) le.textContent = '';
+    showGrassAuthPhase('app');
+    bootstrapGrassFromCloudOrLocal().then(() => {
+      renderSummary();
+      renderResidents();
+      renderPayments();
+      renderBalance();
+    });
+  } else {
+    currentUser = null;
+    state = { residents: [], payments: [], cuttings: [] };
+    if (pendingDisallowGrass && le) {
+      le.textContent = pendingDisallowGrass;
+      pendingDisallowGrass = '';
+    } else if (le) le.textContent = '';
+    showGrassAuthPhase('login');
+  }
+});
+</script>
