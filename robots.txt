@@ -3,5 +3,6 @@ Allow: /
 Disallow: /PPBDesigns.html
 Disallow: /wendys-whims-tracker.html
 Disallow: /tv-portal/
+Disallow: /household-tracker.html
 
 Sitemap: https://stephrawlingscreations.ie/sitemap.xml
