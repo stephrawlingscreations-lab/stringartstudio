@@ -108,6 +108,26 @@
     .btn-danger { color: var(--danger); }
     .toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
     .hint { color: var(--muted); font-size: 0.8rem; line-height: 1.4; }
+    .collapse {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      padding: 8px 10px;
+    }
+    .collapse > summary {
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--ink);
+      list-style: none;
+    }
+    .collapse > summary::-webkit-details-marker { display: none; }
+    .collapse > summary::after {
+      content: "▾";
+      float: right;
+      color: var(--muted);
+    }
+    .collapse:not([open]) > summary::after { content: "▸"; }
     .client-list { display: grid; gap: 8px; max-height: 520px; overflow: auto; }
     .client-item {
       border: 1px solid var(--line);
@@ -120,6 +140,8 @@
     .client-item .top { display: flex; justify-content: space-between; gap: 8px; }
     .client-item .name { font-weight: 700; font-size: 0.92rem; }
     .client-item .meta { color: var(--muted); font-size: 0.79rem; margin-top: 4px; }
+    .pipeline-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .pipeline-actions .btn { padding: 6px 10px; font-size: 0.76rem; }
     .pill {
       display: inline-block;
       font-size: 0.72rem;
@@ -224,12 +246,15 @@
         <article class="card">
           <div class="card-h"><h2>Checklist Template</h2></div>
           <div class="card-b">
-            <div class="hint" style="margin-bottom:8px;">Each new client gets these setup tasks.</div>
-            <div class="split">
-              <input id="templateTaskInput" placeholder="e.g. Create GitHub repo" />
-              <button class="btn btn-primary" onclick="addTemplateTask()">+ Add template task</button>
-            </div>
-            <div class="tasks" id="templateTasks"></div>
+            <details class="collapse">
+              <summary>Open onboarding checklist template</summary>
+              <div class="hint" style="margin:8px 0;">Used when you click "Start onboarding" for a client.</div>
+              <div class="split">
+                <input id="templateTaskInput" placeholder="e.g. Create GitHub repo" />
+                <button class="btn btn-primary" onclick="addTemplateTask()">+ Add template task</button>
+              </div>
+              <div class="tasks" id="templateTasks"></div>
+            </details>
           </div>
         </article>
 
@@ -269,7 +294,7 @@
                 <label>Status</label>
                 <select id="clientStatus">
                   <option value="lead">Lead</option>
-                  <option value="onboarding" selected>Onboarding</option>
+                  <option value="onboarding">Onboarding</option>
                   <option value="live">Live</option>
                   <option value="paused">Paused</option>
                 </select>
@@ -280,7 +305,7 @@
               <textarea id="clientNotes" placeholder="Anything important for this client..."></textarea>
             </div>
             <div class="toolbar" style="margin-bottom:12px;">
-              <button class="btn btn-primary" onclick="addClient()">+ Add client with onboarding checklist</button>
+              <button class="btn btn-primary" onclick="addClient()">+ Save contact</button>
             </div>
             <div class="client-list" id="clientList"></div>
           </div>
@@ -416,6 +441,22 @@
 
     function uid(prefix) { return prefix + "_" + Math.random().toString(36).slice(2, 9); }
     function authPath() { return "users/" + currentUser.uid + "/" + FB_PATH; }
+    function normalizeClient(c) {
+      const tasks = Array.isArray(c.tasks) ? c.tasks : [];
+      const onboardingStarted = typeof c.onboardingStarted === "boolean" ? c.onboardingStarted : tasks.length > 0;
+      return {
+        ...c,
+        status: c.status || "lead",
+        brochureSentAt: c.brochureSentAt || "",
+        onboardingStarted,
+        tasks
+      };
+    }
+    function normalizeState() {
+      if (!Array.isArray(state.templateTasks)) state.templateTasks = defaultTemplate.map((t, i) => ({ id: "tpl_" + i, title: t }));
+      if (!Array.isArray(state.clients)) state.clients = [];
+      state.clients = state.clients.map(normalizeClient);
+    }
 
     function showPhase(phase) {
       document.getElementById("auth-loading").style.display = phase === "loading" ? "flex" : "none";
@@ -424,6 +465,7 @@
     }
 
     function save() {
+      normalizeState();
       localStorage.setItem(KEY, JSON.stringify(state));
       if (currentUser) fbDb.ref(authPath()).set(state).catch(() => {});
       renderStats();
@@ -434,6 +476,7 @@
         const parsed = JSON.parse(localStorage.getItem(KEY) || "null");
         if (parsed && Array.isArray(parsed.templateTasks) && Array.isArray(parsed.clients)) state = parsed;
       } catch (e) {}
+      normalizeState();
     }
 
     function isAllowed(email) {
@@ -490,17 +533,40 @@
       const service = document.getElementById("clientService").value.trim();
       const status = document.getElementById("clientStatus").value;
       const notes = document.getElementById("clientNotes").value.trim();
-      const tasks = state.templateTasks.map(t => ({ id: uid("task"), title: t.title, done: false, note: "" }));
       const client = {
         id: uid("client"),
         name, businessName, contact, service, status, notes,
         createdAt: new Date().toISOString(),
-        tasks
+        brochureSentAt: "",
+        onboardingStarted: false,
+        tasks: []
       };
       state.clients.unshift(client);
       selectedClientId = client.id;
       ["clientName","clientBusinessName","clientContact","clientService","clientNotes"].forEach(id => document.getElementById(id).value = "");
-      document.getElementById("clientStatus").value = "onboarding";
+      document.getElementById("clientStatus").value = "lead";
+      save();
+      renderAll();
+    }
+
+    function markBrochureSent(clientId) {
+      const c = state.clients.find(x => x.id === clientId);
+      if (!c) return;
+      c.brochureSentAt = new Date().toISOString();
+      if (c.status === "lead") c.status = "lead";
+      save();
+      renderAll();
+    }
+
+    function startOnboarding(clientId) {
+      const c = state.clients.find(x => x.id === clientId);
+      if (!c) return;
+      c.onboardingStarted = true;
+      if (c.status === "lead") c.status = "onboarding";
+      if (!Array.isArray(c.tasks) || c.tasks.length === 0) {
+        c.tasks = state.templateTasks.map(t => ({ id: uid("task"), title: t.title, done: false, note: "" }));
+      }
+      selectedClientId = c.id;
       save();
       renderAll();
     }
@@ -598,6 +664,8 @@
       }
       list.innerHTML = state.clients.map(c => {
         const done = c.tasks.filter(t => t.done).length;
+        const brochure = c.brochureSentAt ? new Date(c.brochureSentAt).toLocaleDateString("en-IE") : "Not sent";
+        const phase = c.onboardingStarted ? "Onboarding started" : "Contact stage";
         return `
           <div class="client-item ${c.id === selectedClientId ? "active" : ""}" onclick="setSelected('${c.id}')">
             <div class="top">
@@ -605,7 +673,12 @@
               <span class="pill">${c.status}</span>
             </div>
             <div class="meta">${escapeHtml(c.businessName || "No business name set")}</div>
+            <div class="meta">Brochure: ${escapeHtml(brochure)} · ${escapeHtml(phase)}</div>
             <div class="meta">${done}/${c.tasks.length} tasks complete (${pct(c)}%)</div>
+            <div class="pipeline-actions">
+              <button class="btn" onclick="event.stopPropagation(); markBrochureSent('${c.id}')">Send brochure</button>
+              <button class="btn btn-primary" onclick="event.stopPropagation(); startOnboarding('${c.id}')">Start onboarding</button>
+            </div>
           </div>
         `;
       }).join("");
@@ -623,6 +696,10 @@
       document.getElementById("detailContact").value = c.contact || "";
       document.getElementById("detailNotes").value = c.notes || "";
       const tasks = document.getElementById("clientTasks");
+      if (!c.onboardingStarted) {
+        tasks.innerHTML = '<div class="hint">Onboarding not started yet. Click "Start onboarding" in the client card to generate this client\\'s checklist.</div>';
+        return;
+      }
       if (!c.tasks.length) { tasks.innerHTML = '<div class="hint">No tasks yet for this client.</div>'; return; }
       tasks.innerHTML = c.tasks.map(t => `
         <div class="task ${t.done ? "done" : ""}">
@@ -644,11 +721,13 @@
       const total = state.clients.length;
       const live = state.clients.filter(c => c.status === "live").length;
       const onboarding = state.clients.filter(c => c.status === "onboarding").length;
+      const brochureSent = state.clients.filter(c => !!c.brochureSentAt).length;
       const doneTasks = state.clients.reduce((s, c) => s + c.tasks.filter(t => t.done).length, 0);
       const allTasks = state.clients.reduce((s, c) => s + c.tasks.length, 0);
       const progress = allTasks ? Math.round((doneTasks / allTasks) * 100) : 0;
       document.getElementById("stats").innerHTML = `
         <div class="stat"><div class="label">Clients</div><div class="value">${total}</div></div>
+        <div class="stat"><div class="label">Brochure Sent</div><div class="value">${brochureSent}</div></div>
         <div class="stat"><div class="label">Onboarding</div><div class="value">${onboarding}</div></div>
         <div class="stat"><div class="label">Live</div><div class="value">${live}</div></div>
         <div class="stat"><div class="label">Task Completion</div><div class="value">${progress}%</div></div>
