@@ -386,6 +386,7 @@
 
     let currentUser = null;
     let pendingDisallow = "";
+    let authResolved = false;
     let state = {
       templateTasks: defaultTemplate.map((t, i) => ({ id: "tpl_" + i, title: t })),
       clients: []
@@ -765,7 +766,19 @@
       if (le && err && err.code && err.code !== "auth/operation-not-supported-in-this-environment") le.textContent = signInError(err);
     });
 
+    // Fallback: if auth listener hangs, show login instead of indefinite loading.
+    setTimeout(() => {
+      if (!authResolved) {
+        const le = document.getElementById("login-error");
+        if (le && !le.textContent) {
+          le.textContent = "Auth check took too long. Please sign in.";
+        }
+        showPhase("login");
+      }
+    }, 5000);
+
     fbAuth.onAuthStateChanged(user => {
+      authResolved = true;
       const le = document.getElementById("login-error");
       if (user) {
         if (!isAllowed(user.email)) {
@@ -801,6 +814,11 @@
         }
         showPhase("login");
       }
+    }, err => {
+      authResolved = true;
+      const le = document.getElementById("login-error");
+      if (le) le.textContent = signInError(err);
+      showPhase("login");
     });
   </script>
 </body>
