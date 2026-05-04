@@ -697,7 +697,7 @@
       document.getElementById("detailNotes").value = c.notes || "";
       const tasks = document.getElementById("clientTasks");
       if (!c.onboardingStarted) {
-        tasks.innerHTML = '<div class="hint">Onboarding not started yet. Click "Start onboarding" in the client card to generate this client\\'s checklist.</div>';
+        tasks.innerHTML = '<div class="hint">Onboarding not started yet. Click "Start onboarding" in the client card to generate this client\'s checklist.</div>';
         return;
       }
       if (!c.tasks.length) { tasks.innerHTML = '<div class="hint">No tasks yet for this client.</div>'; return; }
