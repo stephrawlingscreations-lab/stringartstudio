@@ -728,8 +728,6 @@
   ${clientSafe ? "" : `<h2>Client Notes</h2><div class="notes">${notesHtml}</div>`}
 
   <div class="foot">Generated from Client Onboarding Tracker</div>
-
-  <script>window.onload = () => { window.print(); };<\/script>
 </body>
 </html>`;
 
@@ -741,6 +739,8 @@
       w.document.open();
       w.document.write(html);
       w.document.close();
+      w.focus();
+      setTimeout(() => { try { w.print(); } catch (e) {} }, 250);
     }
 
     function escapeHtml(str) {
