@@ -291,8 +291,18 @@
             </div>
             <div class="split">
               <div class="row">
-                <label>Contact</label>
-                <input id="clientContact" placeholder="Email / phone" />
+                <label>Mobile</label>
+                <input id="clientMobile" placeholder="e.g. 087..." />
+              </div>
+              <div class="row">
+                <label>Email</label>
+                <input id="clientEmail" type="email" placeholder="Personal/main email" />
+              </div>
+            </div>
+            <div class="split">
+              <div class="row">
+                <label>Business Email</label>
+                <input id="clientBusinessEmail" type="email" placeholder="Business email (optional)" />
               </div>
               <div class="row"></div>
             </div>
@@ -356,8 +366,8 @@
           </div>
           <div class="split">
             <div class="row">
-              <label>Contact</label>
-              <input id="detailContact" oninput="updateClientDetail('contact', this.value)" />
+              <label>Mobile</label>
+              <input id="detailMobile" oninput="updateClientDetail('mobile', this.value)" />
             </div>
             <div class="row">
               <label>Add one-off task</label>
@@ -365,6 +375,16 @@
                 <input id="newTaskInput" placeholder="e.g. Connect custom domain" />
                 <button class="btn" onclick="addClientTask()">Add</button>
               </div>
+            </div>
+          </div>
+          <div class="split">
+            <div class="row">
+              <label>Email</label>
+              <input id="detailEmail" type="email" oninput="updateClientDetail('email', this.value)" />
+            </div>
+            <div class="row">
+              <label>Business Email</label>
+              <input id="detailBusinessEmail" type="email" oninput="updateClientDetail('businessEmail', this.value)" />
             </div>
           </div>
           <div class="row">
@@ -459,6 +479,9 @@
       return {
         ...c,
         status: c.status || "lead",
+        mobile: c.mobile || c.contact || "",
+        email: c.email || "",
+        businessEmail: c.businessEmail || "",
         brochureSentAt: c.brochureSentAt || "",
         onboardingStarted,
         tasks
@@ -540,14 +563,16 @@
     function addClient() {
       const name = document.getElementById("clientName").value.trim();
       if (!name) return;
-      const contact = document.getElementById("clientContact").value.trim();
+      const mobile = document.getElementById("clientMobile").value.trim();
+      const email = document.getElementById("clientEmail").value.trim();
+      const businessEmail = document.getElementById("clientBusinessEmail").value.trim();
       const businessName = document.getElementById("clientBusinessName").value.trim();
       const service = document.getElementById("clientService").value.trim();
       const status = document.getElementById("clientStatus").value;
       const notes = document.getElementById("clientNotes").value.trim();
       const client = {
         id: uid("client"),
-        name, businessName, contact, service, status, notes,
+        name, businessName, mobile, email, businessEmail, service, status, notes,
         createdAt: new Date().toISOString(),
         brochureSentAt: "",
         onboardingStarted: false,
@@ -555,7 +580,7 @@
       };
       state.clients.unshift(client);
       selectedClientId = client.id;
-      ["clientName","clientBusinessName","clientContact","clientService","clientNotes"].forEach(id => document.getElementById(id).value = "");
+      ["clientName","clientBusinessName","clientMobile","clientEmail","clientBusinessEmail","clientService","clientNotes"].forEach(id => document.getElementById(id).value = "");
       document.getElementById("clientStatus").value = "lead";
       save();
       renderAll();
@@ -705,7 +730,9 @@
       document.getElementById("detailService").value = c.service || "";
       document.getElementById("detailBusinessName").value = c.businessName || "";
       document.getElementById("detailStatus").value = c.status || "onboarding";
-      document.getElementById("detailContact").value = c.contact || "";
+      document.getElementById("detailMobile").value = c.mobile || "";
+      document.getElementById("detailEmail").value = c.email || "";
+      document.getElementById("detailBusinessEmail").value = c.businessEmail || "";
       document.getElementById("detailNotes").value = c.notes || "";
       const tasks = document.getElementById("clientTasks");
       if (!c.onboardingStarted) {
@@ -806,7 +833,9 @@
     <div class="box"><div class="label">Client</div><div class="value">${escapeHtml(c.name || "-")}</div></div>
     <div class="box"><div class="label">Status</div><div class="value">${escapeHtml(statusLabel)}</div></div>
     <div class="box"><div class="label">Service</div><div class="value">${escapeHtml(c.service || "-")}</div></div>
-    <div class="box"><div class="label">Contact</div><div class="value">${escapeHtml(c.contact || "-")}</div></div>
+    <div class="box"><div class="label">Mobile</div><div class="value">${escapeHtml(c.mobile || "-")}</div></div>
+    <div class="box"><div class="label">Email</div><div class="value">${escapeHtml(c.email || "-")}</div></div>
+    <div class="box"><div class="label">Business Email</div><div class="value">${escapeHtml(c.businessEmail || "-")}</div></div>
     <div class="box"><div class="label">Business Name</div><div class="value">${escapeHtml(c.businessName || "-")}</div></div>
   </div>
 
