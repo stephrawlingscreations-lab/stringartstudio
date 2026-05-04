@@ -263,6 +263,7 @@
         <div class="card-h">
           <h2 id="detailTitle">Client</h2>
           <div class="toolbar">
+            <button class="btn" onclick="printClientHandover()">Print handover summary</button>
             <button class="btn btn-danger" onclick="deleteClient()">Delete client</button>
           </div>
         </div>
@@ -298,6 +299,12 @@
           <div class="row">
             <label>Notes</label>
             <textarea id="detailNotes" oninput="updateClientDetail('notes', this.value)"></textarea>
+          </div>
+          <div class="row">
+            <label style="text-transform:none; letter-spacing:0; display:flex; align-items:center; gap:8px; font-size:0.86rem; color:var(--ink);">
+              <input id="printClientSafe" type="checkbox" style="width:auto;" />
+              Client-safe print mode (hide remaining items and notes)
+            </label>
           </div>
           <div class="tasks" id="clientTasks"></div>
         </div>
@@ -641,6 +648,80 @@
         }
       };
       reader.readAsText(file, "UTF-8");
+    }
+
+    function printClientHandover() {
+      const c = getClient();
+      if (!c) return;
+      const clientSafe = !!document.getElementById("printClientSafe")?.checked;
+      const completed = c.tasks.filter(t => t.done);
+      const pending = c.tasks.filter(t => !t.done);
+      const now = new Date().toLocaleDateString("en-IE");
+      const statusLabel = c.status ? c.status.toUpperCase() : "N/A";
+      const completedHtml = completed.length
+        ? completed.map(t => `<li>${escapeHtml(t.title)}${t.note ? ` <span style="color:#666">- ${escapeHtml(t.note)}</span>` : ""}</li>`).join("")
+        : "<li>No completed setup items recorded yet.</li>";
+      const pendingHtml = pending.length
+        ? pending.map(t => `<li>${escapeHtml(t.title)}</li>`).join("")
+        : "<li>All onboarding tasks complete.</li>";
+      const notesHtml = escapeHtml(c.notes || "No notes added.");
+
+      const html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Client Handover - ${escapeHtml(c.name)}</title>
+  <style>
+    body { font-family: Arial, sans-serif; color: #111; margin: 0; padding: 24px; }
+    .head { border-bottom: 2px solid #111; margin-bottom: 18px; padding-bottom: 10px; }
+    .head h1 { margin: 0 0 4px; font-size: 24px; }
+    .meta { font-size: 13px; color: #444; line-height: 1.5; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0 18px; }
+    .box { border: 1px solid #ddd; border-radius: 8px; padding: 10px 12px; }
+    .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #666; margin-bottom: 4px; }
+    .value { font-size: 14px; }
+    h2 { font-size: 16px; margin: 14px 0 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+    ul { margin: 0; padding-left: 18px; }
+    li { margin: 6px 0; line-height: 1.4; font-size: 14px; }
+    .notes { border: 1px solid #ddd; border-radius: 8px; padding: 10px 12px; white-space: pre-wrap; font-size: 14px; line-height: 1.45; }
+    .foot { margin-top: 20px; font-size: 12px; color: #666; border-top: 1px solid #ddd; padding-top: 10px; }
+  </style>
+</head>
+<body>
+  <div class="head">
+    <h1>Client Handover Summary</h1>
+    <div class="meta">Prepared on ${escapeHtml(now)}</div>
+  </div>
+
+  <div class="grid">
+    <div class="box"><div class="label">Client</div><div class="value">${escapeHtml(c.name || "-")}</div></div>
+    <div class="box"><div class="label">Status</div><div class="value">${escapeHtml(statusLabel)}</div></div>
+    <div class="box"><div class="label">Service</div><div class="value">${escapeHtml(c.service || "-")}</div></div>
+    <div class="box"><div class="label">Contact</div><div class="value">${escapeHtml(c.contact || "-")}</div></div>
+  </div>
+
+  <h2>Completed Setup Items</h2>
+  <ul>${completedHtml}</ul>
+
+  ${clientSafe ? "" : `<h2>Remaining Items (if any)</h2><ul>${pendingHtml}</ul>`}
+
+  ${clientSafe ? "" : `<h2>Client Notes</h2><div class="notes">${notesHtml}</div>`}
+
+  <div class="foot">Generated from Client Onboarding Tracker</div>
+
+  <script>window.onload = () => { window.print(); };</script>
+</body>
+</html>`;
+
+      const w = window.open("", "_blank", "noopener,noreferrer,width=900,height=700");
+      if (!w) {
+        alert("Pop-up blocked. Please allow pop-ups for this page to print handover summaries.");
+        return;
+      }
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
     }
 
     function escapeHtml(str) {
