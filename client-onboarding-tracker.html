@@ -228,9 +228,16 @@
                 <input id="clientName" placeholder="Business name or person" />
               </div>
               <div class="row">
+                <label>Business Name</label>
+                <input id="clientBusinessName" placeholder="Registered business name (optional)" />
+              </div>
+            </div>
+            <div class="split">
+              <div class="row">
                 <label>Contact</label>
                 <input id="clientContact" placeholder="Email / phone" />
               </div>
+              <div class="row"></div>
             </div>
             <div class="split">
               <div class="row">
@@ -274,6 +281,12 @@
               <input id="detailService" oninput="updateClientDetail('service', this.value)" />
             </div>
             <div class="row">
+              <label>Business Name</label>
+              <input id="detailBusinessName" oninput="updateClientDetail('businessName', this.value)" />
+            </div>
+          </div>
+          <div class="split">
+            <div class="row">
               <label>Status</label>
               <select id="detailStatus" onchange="updateClientDetail('status', this.value)">
                 <option value="lead">Lead</option>
@@ -282,6 +295,7 @@
                 <option value="paused">Paused</option>
               </select>
             </div>
+            <div class="row"></div>
           </div>
           <div class="split">
             <div class="row">
@@ -450,19 +464,20 @@
       const name = document.getElementById("clientName").value.trim();
       if (!name) return;
       const contact = document.getElementById("clientContact").value.trim();
+      const businessName = document.getElementById("clientBusinessName").value.trim();
       const service = document.getElementById("clientService").value.trim();
       const status = document.getElementById("clientStatus").value;
       const notes = document.getElementById("clientNotes").value.trim();
       const tasks = state.templateTasks.map(t => ({ id: uid("task"), title: t.title, done: false, note: "" }));
       const client = {
         id: uid("client"),
-        name, contact, service, status, notes,
+        name, businessName, contact, service, status, notes,
         createdAt: new Date().toISOString(),
         tasks
       };
       state.clients.unshift(client);
       selectedClientId = client.id;
-      ["clientName","clientContact","clientService","clientNotes"].forEach(id => document.getElementById(id).value = "");
+      ["clientName","clientBusinessName","clientContact","clientService","clientNotes"].forEach(id => document.getElementById(id).value = "");
       document.getElementById("clientStatus").value = "onboarding";
       save();
       renderAll();
@@ -567,6 +582,7 @@
               <div class="name">${escapeHtml(c.name)}</div>
               <span class="pill">${c.status}</span>
             </div>
+            <div class="meta">${escapeHtml(c.businessName || "No business name set")}</div>
             <div class="meta">${done}/${c.tasks.length} tasks complete (${pct(c)}%)</div>
           </div>
         `;
@@ -580,6 +596,7 @@
       card.style.display = "block";
       document.getElementById("detailTitle").textContent = c.name;
       document.getElementById("detailService").value = c.service || "";
+      document.getElementById("detailBusinessName").value = c.businessName || "";
       document.getElementById("detailStatus").value = c.status || "onboarding";
       document.getElementById("detailContact").value = c.contact || "";
       document.getElementById("detailNotes").value = c.notes || "";
@@ -699,6 +716,7 @@
     <div class="box"><div class="label">Status</div><div class="value">${escapeHtml(statusLabel)}</div></div>
     <div class="box"><div class="label">Service</div><div class="value">${escapeHtml(c.service || "-")}</div></div>
     <div class="box"><div class="label">Contact</div><div class="value">${escapeHtml(c.contact || "-")}</div></div>
+    <div class="box"><div class="label">Business Name</div><div class="value">${escapeHtml(c.businessName || "-")}</div></div>
   </div>
 
   <h2>Completed Setup Items</h2>
