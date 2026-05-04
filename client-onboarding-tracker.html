@@ -718,8 +718,16 @@
             <div class="meta">Brochure: ${escapeHtml(brochure)} · ${escapeHtml(phase)}</div>
             <div class="meta">${done}/${c.tasks.length} tasks complete (${pct(c)}%)</div>
             <div class="pipeline-actions">
-              <button class="btn" onclick="event.stopPropagation(); markBrochureSent('${c.id}')">Send brochure</button>
-              <button class="btn btn-primary" onclick="event.stopPropagation(); startOnboarding('${c.id}')">Start onboarding</button>
+              ${
+                c.status === "live"
+                  ? ""
+                  : `<button class="btn" onclick="event.stopPropagation(); markBrochureSent('${c.id}')">Send brochure</button>`
+              }
+              ${
+                c.status === "live" || c.onboardingStarted
+                  ? '<button class="btn" disabled style="opacity:.65;cursor:not-allowed">Onboarding started</button>'
+                  : `<button class="btn btn-primary" onclick="event.stopPropagation(); startOnboarding('${c.id}')">Start onboarding</button>`
+              }
             </div>
           </div>
         `;
