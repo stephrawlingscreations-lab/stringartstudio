@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Client Onboarding Tracker</title>
+  <style>
+    :root {
+      --bg: #f3f4fb;
+      --surface: #ffffff;
+      --surface-2: #f7f8ff;
+      --line: rgba(30, 28, 51, 0.12);
+      --ink: #1e1c33;
+      --muted: #605e77;
+      --brand: #4f46e5;
+      --brand-2: #4338ca;
+      --danger: #b42318;
+      --radius: 14px;
+      --radius-sm: 10px;
+      --shadow: 0 10px 30px rgba(22, 21, 35, 0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1000px 500px at 10% -10%, rgba(79, 70, 229, 0.18), transparent 50%),
+        linear-gradient(180deg, #fafbff 0%, var(--bg) 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; display: grid; gap: 14px; }
+    .hero {
+      background: linear-gradient(140deg, #1f1b4a 0%, var(--brand) 65%, #7c3aed 100%);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    .hero h1 { font-size: 1.5rem; margin-bottom: 4px; }
+    .hero p { opacity: 0.9; font-size: 0.92rem; max-width: 70ch; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+    }
+    .stat {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+    }
+    .stat .label { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; }
+    .stat .value { margin-top: 6px; font-size: 1.4rem; font-weight: 700; }
+    .grid { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 18px rgba(22, 21, 35, 0.05);
+      overflow: hidden;
+    }
+    .card-h {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .card-h h2 { font-size: 0.95rem; }
+    .card-b { padding: 12px; }
+    .row { display: grid; gap: 8px; margin-bottom: 10px; }
+    .row:last-child { margin-bottom: 0; }
+    label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 600;
+    }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 0.92rem;
+      padding: 9px 10px;
+    }
+    textarea { min-height: 70px; resize: vertical; }
+    .btn {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fff;
+      color: var(--ink);
+      font-weight: 600;
+      font-size: 0.84rem;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    .btn:hover { background: var(--surface-2); }
+    .btn-primary { border: none; color: #fff; background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%); }
+    .btn-danger { color: var(--danger); }
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+    .hint { color: var(--muted); font-size: 0.8rem; line-height: 1.4; }
+    .client-list { display: grid; gap: 8px; max-height: 520px; overflow: auto; }
+    .client-item {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      cursor: pointer;
+      background: #fff;
+    }
+    .client-item.active { border-color: rgba(79, 70, 229, 0.45); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12); }
+    .client-item .top { display: flex; justify-content: space-between; gap: 8px; }
+    .client-item .name { font-weight: 700; font-size: 0.92rem; }
+    .client-item .meta { color: var(--muted); font-size: 0.79rem; margin-top: 4px; }
+    .pill {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: #ececff;
+      color: var(--brand-2);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .tasks { display: grid; gap: 8px; margin-top: 10px; }
+    .task {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      background: #fff;
+    }
+    .task .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .task .left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .task .title { font-size: 0.9rem; font-weight: 600; word-break: break-word; }
+    .task.done .title { text-decoration: line-through; color: var(--muted); }
+    .task .note { margin-top: 7px; font-size: 0.82rem; color: var(--muted); }
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    #auth-loading {
+      position: fixed; inset: 0; z-index: 10001;
+      background: linear-gradient(180deg, #fafbff 0%, #eceefe 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+      color: var(--muted);
+    }
+    .spin {
+      width: 40px; height: 40px; border-radius: 50%;
+      border: 3px solid rgba(79, 70, 229, 0.16); border-top-color: var(--brand);
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #login-screen {
+      position: fixed; inset: 0; z-index: 10000;
+      display: none; align-items: center; justify-content: center; padding: 16px;
+      background: linear-gradient(180deg, #f5f6ff 0%, #eaecfb 100%);
+    }
+    .login-card {
+      width: 100%; max-width: 430px; background: var(--surface); border: 1px solid var(--line);
+      border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px 22px; text-align: center;
+    }
+    .login-card h2 { font-size: 1.35rem; margin-bottom: 8px; }
+    .login-card p { color: var(--muted); font-size: 0.9rem; line-height: 1.45; margin-bottom: 16px; }
+    #main-app { display: none; }
+    #login-error { color: var(--danger); font-weight: 600; min-height: 20px; font-size: 0.82rem; margin-top: 10px; }
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+      .split { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div id="auth-loading">
+    <div class="spin" aria-hidden="true"></div>
+    <div>Loading client tracker...</div>
+  </div>
+
+  <div id="login-screen">
+    <div class="login-card">
+      <h2>Client Tracker (Private)</h2>
+      <p>Sign in with Google to access your private onboarding tracker. Only allowlisted accounts can open it.</p>
+      <button type="button" class="btn btn-primary" onclick="startGoogleSignIn()">Sign in with Google</button>
+      <div id="login-error"></div>
+    </div>
+  </div>
+
+  <div id="main-app">
+    <div class="wrap">
+      <section class="hero">
+        <h1>Client Onboarding Tracker</h1>
+        <p>Add a client once, then work through your checklist (GitHub, Firebase, hosting, domains, etc.) in a repeatable way. Data syncs to Firebase and keeps a local backup.</p>
+      </section>
+
+      <section class="stats" id="stats"></section>
+
+      <section class="grid">
+        <article class="card">
+          <div class="card-h"><h2>Checklist Template</h2></div>
+          <div class="card-b">
+            <div class="hint" style="margin-bottom:8px;">Each new client gets these setup tasks.</div>
+            <div class="split">
+              <input id="templateTaskInput" placeholder="e.g. Create GitHub repo" />
+              <button class="btn btn-primary" onclick="addTemplateTask()">+ Add template task</button>
+            </div>
+            <div class="tasks" id="templateTasks"></div>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-h"><h2>Clients</h2>
+            <div class="toolbar">
+              <button class="btn" onclick="exportData()">Export backup</button>
+              <button class="btn" onclick="triggerImport()">Import backup</button>
+              <button class="btn" onclick="signOutTracker()">Sign out</button>
+              <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importData(event)" />
+            </div>
+          </div>
+          <div class="card-b">
+            <div class="split">
+              <div class="row">
+                <label>Client Name</label>
+                <input id="clientName" placeholder="Business name or person" />
+              </div>
+              <div class="row">
+                <label>Contact</label>
+                <input id="clientContact" placeholder="Email / phone" />
+              </div>
+            </div>
+            <div class="split">
+              <div class="row">
+                <label>Service Type</label>
+                <input id="clientService" placeholder="e.g. Tracker + Hosting" />
+              </div>
+              <div class="row">
+                <label>Status</label>
+                <select id="clientStatus">
+                  <option value="lead">Lead</option>
+                  <option value="onboarding" selected>Onboarding</option>
+                  <option value="live">Live</option>
+                  <option value="paused">Paused</option>
+                </select>
+              </div>
+            </div>
+            <div class="row">
+              <label>Notes</label>
+              <textarea id="clientNotes" placeholder="Anything important for this client..."></textarea>
+            </div>
+            <div class="toolbar" style="margin-bottom:12px;">
+              <button class="btn btn-primary" onclick="addClient()">+ Add client with onboarding checklist</button>
+            </div>
+            <div class="client-list" id="clientList"></div>
+          </div>
+        </article>
+      </section>
+
+      <section class="card" id="detailCard" style="display:none;">
+        <div class="card-h">
+          <h2 id="detailTitle">Client</h2>
+          <div class="toolbar">
+            <button class="btn btn-danger" onclick="deleteClient()">Delete client</button>
+          </div>
+        </div>
+        <div class="card-b">
+          <div class="split">
+            <div class="row">
+              <label>Service</label>
+              <input id="detailService" oninput="updateClientDetail('service', this.value)" />
+            </div>
+            <div class="row">
+              <label>Status</label>
+              <select id="detailStatus" onchange="updateClientDetail('status', this.value)">
+                <option value="lead">Lead</option>
+                <option value="onboarding">Onboarding</option>
+                <option value="live">Live</option>
+                <option value="paused">Paused</option>
+              </select>
+            </div>
+          </div>
+          <div class="split">
+            <div class="row">
+              <label>Contact</label>
+              <input id="detailContact" oninput="updateClientDetail('contact', this.value)" />
+            </div>
+            <div class="row">
+              <label>Add one-off task</label>
+              <div class="split">
+                <input id="newTaskInput" placeholder="e.g. Connect custom domain" />
+                <button class="btn" onclick="addClientTask()">Add</button>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <label>Notes</label>
+            <textarea id="detailNotes" oninput="updateClientDetail('notes', this.value)"></textarea>
+          </div>
+          <div class="tasks" id="clientTasks"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script>
+    // Replace with your new Firebase app config.
+    firebase.initializeApp({
+      apiKey: "AIzaSyAcSc-3ejzUfaiods7fAGAH10EuVvZaL6U",
+      authDomain: "steph-rawlings-creations.firebaseapp.com",
+      databaseURL: "https://steph-rawlings-creations-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "steph-rawlings-creations",
+      storageBucket: "steph-rawlings-creations.firebasestorage.app",
+      messagingSenderId: "271810785275",
+      appId: "1:271810785275:web:85bf2125a4245a51e4e55e"
+    });
+    const fbAuth = firebase.auth();
+    const fbDb = firebase.database();
+  </script>
+  <script>
+    const KEY = "client_onboarding_tracker_v1";
+    const FB_PATH = "clientOnboardingTracker";
+    const ALLOWED_EMAILS = [
+      "stephrawlingscreations@gmail.com",
+      "sdr22ie@gmail.com",
+      "sdr22uk@gmail.com"
+    ];
+    const defaultTemplate = [
+      "Create client folder + project doc",
+      "Create GitHub repository",
+      "Create Firebase project",
+      "Configure Firebase auth/database rules",
+      "Add domain + DNS records",
+      "Deploy first version",
+      "Send login/details to client",
+      "Confirm backup process"
+    ];
+
+    let currentUser = null;
+    let pendingDisallow = "";
+    let state = {
+      templateTasks: defaultTemplate.map((t, i) => ({ id: "tpl_" + i, title: t })),
+      clients: []
+    };
+    let selectedClientId = null;
+
+    function uid(prefix) { return prefix + "_" + Math.random().toString(36).slice(2, 9); }
+    function authPath() { return "users/" + currentUser.uid + "/" + FB_PATH; }
+
+    function showPhase(phase) {
+      document.getElementById("auth-loading").style.display = phase === "loading" ? "flex" : "none";
+      document.getElementById("login-screen").style.display = phase === "login" ? "flex" : "none";
+      document.getElementById("main-app").style.display = phase === "app" ? "block" : "none";
+    }
+
+    function save() {
+      localStorage.setItem(KEY, JSON.stringify(state));
+      if (currentUser) fbDb.ref(authPath()).set(state).catch(() => {});
+      renderStats();
+    }
+
+    function loadLocal() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(KEY) || "null");
+        if (parsed && Array.isArray(parsed.templateTasks) && Array.isArray(parsed.clients)) state = parsed;
+      } catch (e) {}
+    }
+
+    function isAllowed(email) {
+      if (!email) return false;
+      const e = email.toLowerCase();
+      return ALLOWED_EMAILS.some(x => x.toLowerCase() === e);
+    }
+
+    function signInError(err) {
+      if (!err || !err.code) return "Sign-in failed.";
+      if (err.code === "auth/unauthorized-domain") return "Add this site to Firebase Auth authorized domains.";
+      if (err.code === "auth/popup-closed-by-user") return "Sign-in was cancelled.";
+      return err.message || "Sign-in failed.";
+    }
+
+    function startGoogleSignIn() {
+      const le = document.getElementById("login-error");
+      le.textContent = "";
+      const provider = new firebase.auth.GoogleAuthProvider();
+      fbAuth.signInWithPopup(provider).catch(err => {
+        if (err.code === "auth/popup-blocked" || err.code === "auth/operation-not-supported-in-this-environment") {
+          fbAuth.signInWithRedirect(provider).catch(e2 => { le.textContent = signInError(e2); });
+        } else {
+          le.textContent = signInError(err);
+        }
+      });
+    }
+
+    function signOutTracker() {
+      if (confirm("Sign out?")) fbAuth.signOut();
+    }
+
+    function addTemplateTask() {
+      const input = document.getElementById("templateTaskInput");
+      const title = input.value.trim();
+      if (!title) return;
+      state.templateTasks.push({ id: uid("tpl"), title });
+      input.value = "";
+      save();
+      renderTemplateTasks();
+    }
+
+    function removeTemplateTask(id) {
+      state.templateTasks = state.templateTasks.filter(t => t.id !== id);
+      save();
+      renderTemplateTasks();
+    }
+
+    function addClient() {
+      const name = document.getElementById("clientName").value.trim();
+      if (!name) return;
+      const contact = document.getElementById("clientContact").value.trim();
+      const service = document.getElementById("clientService").value.trim();
+      const status = document.getElementById("clientStatus").value;
+      const notes = document.getElementById("clientNotes").value.trim();
+      const tasks = state.templateTasks.map(t => ({ id: uid("task"), title: t.title, done: false, note: "" }));
+      const client = {
+        id: uid("client"),
+        name, contact, service, status, notes,
+        createdAt: new Date().toISOString(),
+        tasks
+      };
+      state.clients.unshift(client);
+      selectedClientId = client.id;
+      ["clientName","clientContact","clientService","clientNotes"].forEach(id => document.getElementById(id).value = "");
+      document.getElementById("clientStatus").value = "onboarding";
+      save();
+      renderAll();
+    }
+
+    function getClient() { return state.clients.find(c => c.id === selectedClientId) || null; }
+    function setSelected(id) { selectedClientId = id; renderClients(); renderDetail(); }
+
+    function updateClientDetail(key, value) {
+      const c = getClient();
+      if (!c) return;
+      c[key] = value;
+      save();
+      renderClients();
+    }
+
+    function addClientTask() {
+      const c = getClient();
+      if (!c) return;
+      const input = document.getElementById("newTaskInput");
+      const title = input.value.trim();
+      if (!title) return;
+      c.tasks.push({ id: uid("task"), title, done: false, note: "" });
+      input.value = "";
+      save();
+      renderDetail();
+      renderClients();
+    }
+
+    function toggleTask(taskId) {
+      const c = getClient();
+      if (!c) return;
+      const t = c.tasks.find(x => x.id === taskId);
+      if (!t) return;
+      t.done = !t.done;
+      save();
+      renderDetail();
+      renderClients();
+    }
+
+    function updateTaskNote(taskId, note) {
+      const c = getClient();
+      if (!c) return;
+      const t = c.tasks.find(x => x.id === taskId);
+      if (!t) return;
+      t.note = note;
+      save();
+    }
+
+    function removeTask(taskId) {
+      const c = getClient();
+      if (!c) return;
+      c.tasks = c.tasks.filter(t => t.id !== taskId);
+      save();
+      renderDetail();
+      renderClients();
+    }
+
+    function deleteClient() {
+      const c = getClient();
+      if (!c) return;
+      if (!confirm("Delete this client?")) return;
+      state.clients = state.clients.filter(x => x.id !== c.id);
+      selectedClientId = state.clients[0] ? state.clients[0].id : null;
+      save();
+      renderAll();
+    }
+
+    function pct(client) {
+      if (!client.tasks.length) return 0;
+      const done = client.tasks.filter(t => t.done).length;
+      return Math.round((done / client.tasks.length) * 100);
+    }
+
+    function renderTemplateTasks() {
+      const el = document.getElementById("templateTasks");
+      if (!state.templateTasks.length) {
+        el.innerHTML = '<div class="hint">No template tasks yet.</div>';
+        return;
+      }
+      el.innerHTML = state.templateTasks.map(t => `
+        <div class="task">
+          <div class="top">
+            <div class="title">${escapeHtml(t.title)}</div>
+            <button class="btn btn-danger" onclick="removeTemplateTask('${t.id}')">Remove</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderClients() {
+      const list = document.getElementById("clientList");
+      if (!state.clients.length) {
+        list.innerHTML = '<div class="hint">No clients yet. Add your first client above.</div>';
+        return;
+      }
+      list.innerHTML = state.clients.map(c => {
+        const done = c.tasks.filter(t => t.done).length;
+        return `
+          <div class="client-item ${c.id === selectedClientId ? "active" : ""}" onclick="setSelected('${c.id}')">
+            <div class="top">
+              <div class="name">${escapeHtml(c.name)}</div>
+              <span class="pill">${c.status}</span>
+            </div>
+            <div class="meta">${done}/${c.tasks.length} tasks complete (${pct(c)}%)</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderDetail() {
+      const card = document.getElementById("detailCard");
+      const c = getClient();
+      if (!c) { card.style.display = "none"; return; }
+      card.style.display = "block";
+      document.getElementById("detailTitle").textContent = c.name;
+      document.getElementById("detailService").value = c.service || "";
+      document.getElementById("detailStatus").value = c.status || "onboarding";
+      document.getElementById("detailContact").value = c.contact || "";
+      document.getElementById("detailNotes").value = c.notes || "";
+      const tasks = document.getElementById("clientTasks");
+      if (!c.tasks.length) { tasks.innerHTML = '<div class="hint">No tasks yet for this client.</div>'; return; }
+      tasks.innerHTML = c.tasks.map(t => `
+        <div class="task ${t.done ? "done" : ""}">
+          <div class="top">
+            <div class="left">
+              <input type="checkbox" ${t.done ? "checked" : ""} onchange="toggleTask('${t.id}')" />
+              <div class="title">${escapeHtml(t.title)}</div>
+            </div>
+            <button class="btn btn-danger" onclick="removeTask('${t.id}')">Remove</button>
+          </div>
+          <div class="note">
+            <input value="${escapeAttr(t.note || "")}" placeholder="Task note (links, usernames, reminders...)" oninput="updateTaskNote('${t.id}', this.value)" />
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderStats() {
+      const total = state.clients.length;
+      const live = state.clients.filter(c => c.status === "live").length;
+      const onboarding = state.clients.filter(c => c.status === "onboarding").length;
+      const doneTasks = state.clients.reduce((s, c) => s + c.tasks.filter(t => t.done).length, 0);
+      const allTasks = state.clients.reduce((s, c) => s + c.tasks.length, 0);
+      const progress = allTasks ? Math.round((doneTasks / allTasks) * 100) : 0;
+      document.getElementById("stats").innerHTML = `
+        <div class="stat"><div class="label">Clients</div><div class="value">${total}</div></div>
+        <div class="stat"><div class="label">Onboarding</div><div class="value">${onboarding}</div></div>
+        <div class="stat"><div class="label">Live</div><div class="value">${live}</div></div>
+        <div class="stat"><div class="label">Task Completion</div><div class="value">${progress}%</div></div>
+      `;
+    }
+
+    function exportData() {
+      const payload = { exportedAt: new Date().toISOString(), ...state };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "client-onboarding-backup-" + new Date().toISOString().slice(0,10) + ".json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function triggerImport() { document.getElementById("importFile").click(); }
+
+    function importData(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          if (!parsed || !Array.isArray(parsed.templateTasks) || !Array.isArray(parsed.clients)) throw new Error("invalid");
+          state = parsed;
+          selectedClientId = state.clients[0] ? state.clients[0].id : null;
+          save();
+          renderAll();
+        } catch (e) {
+          alert("Invalid backup format.");
+        } finally {
+          event.target.value = "";
+        }
+      };
+      reader.readAsText(file, "UTF-8");
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, s => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[s]));
+    }
+    function escapeAttr(str) { return escapeHtml(str).replace(/"/g, "&quot;"); }
+
+    function renderAll() {
+      renderTemplateTasks();
+      renderClients();
+      renderDetail();
+      renderStats();
+    }
+
+    function initAfterDataLoad() {
+      if (!selectedClientId && state.clients[0]) selectedClientId = state.clients[0].id;
+      renderAll();
+      showPhase("app");
+    }
+
+    fbAuth.getRedirectResult().catch(err => {
+      const le = document.getElementById("login-error");
+      if (le && err && err.code && err.code !== "auth/operation-not-supported-in-this-environment") le.textContent = signInError(err);
+    });
+
+    fbAuth.onAuthStateChanged(user => {
+      const le = document.getElementById("login-error");
+      if (user) {
+        if (!isAllowed(user.email)) {
+          pendingDisallow = "That Google account is not allowed for this tracker.";
+          fbAuth.signOut();
+          return;
+        }
+        currentUser = user;
+        if (le) le.textContent = "";
+        showPhase("loading");
+        fbDb.ref(authPath()).once("value").then(snap => {
+          const cloud = snap.val();
+          if (cloud && Array.isArray(cloud.templateTasks) && Array.isArray(cloud.clients)) {
+            state = cloud;
+            localStorage.setItem(KEY, JSON.stringify(state));
+          } else {
+            loadLocal();
+            fbDb.ref(authPath()).set(state).catch(() => {});
+          }
+          initAfterDataLoad();
+        }).catch(() => {
+          loadLocal();
+          initAfterDataLoad();
+        });
+      } else {
+        currentUser = null;
+        selectedClientId = null;
+        if (pendingDisallow && le) {
+          le.textContent = pendingDisallow;
+          pendingDisallow = "";
+        } else if (le) {
+          le.textContent = "";
+        }
+        showPhase("login");
+      }
+    });
+  </script>
+</body>
+</html>
