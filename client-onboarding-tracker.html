@@ -342,6 +342,7 @@
         <div class="card-h">
           <h2 id="detailTitle">Client</h2>
           <div class="toolbar">
+            <button class="btn" onclick="generateSiteGuide()">Generate site guide</button>
             <button class="btn" onclick="printClientHandover()">Print handover summary</button>
             <button class="btn btn-danger" onclick="deleteClient()">Delete client</button>
           </div>
@@ -392,6 +393,52 @@
               <input id="detailBusinessEmail" type="email" oninput="updateClientDetail('businessEmail', this.value)" />
             </div>
           </div>
+          <details class="collapse" open>
+            <summary>Setup details (for auto-generated site guide)</summary>
+            <div class="split" style="margin-top:10px;">
+              <div class="row">
+                <label>Site URL</label>
+                <input id="detailSiteUrl" placeholder="https://..." oninput="updateClientSetup('siteUrl', this.value)" />
+              </div>
+              <div class="row">
+                <label>GitHub Repo URL</label>
+                <input id="detailRepoUrl" placeholder="https://github.com/..." oninput="updateClientSetup('repoUrl', this.value)" />
+              </div>
+            </div>
+            <div class="split">
+              <div class="row">
+                <label>Firebase Project ID</label>
+                <input id="detailFirebaseProject" placeholder="project-id" oninput="updateClientSetup('firebaseProject', this.value)" />
+              </div>
+              <div class="row">
+                <label>Hosting Provider</label>
+                <select id="detailHostingProvider" onchange="updateClientSetup('hostingProvider', this.value)">
+                  <option value="">Select</option>
+                  <option value="Firebase Hosting">Firebase Hosting</option>
+                  <option value="Netlify">Netlify</option>
+                  <option value="Vercel">Vercel</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="split">
+              <div class="row">
+                <label>Owner Email</label>
+                <input id="detailOwnerEmail" type="email" placeholder="owner@email.com" oninput="updateClientSetup('ownerEmail', this.value)" />
+              </div>
+              <div class="row">
+                <label>Backup Location</label>
+                <input id="detailBackupLocation" placeholder="OneDrive folder / link" oninput="updateClientSetup('backupLocation', this.value)" />
+              </div>
+            </div>
+            <div class="split">
+              <div class="row">
+                <label>Support Email</label>
+                <input id="detailSupportEmail" type="email" placeholder="support@email.com" oninput="updateClientSetup('supportEmail', this.value)" />
+              </div>
+              <div class="row"></div>
+            </div>
+          </details>
           <div class="row">
             <label>Notes</label>
             <textarea id="detailNotes" oninput="updateClientDetail('notes', this.value)"></textarea>
@@ -488,6 +535,15 @@
         email: c.email || "",
         businessEmail: c.businessEmail || "",
         brochureSentAt: c.brochureSentAt || "",
+        setup: {
+          siteUrl: c.setup?.siteUrl || "",
+          repoUrl: c.setup?.repoUrl || "",
+          firebaseProject: c.setup?.firebaseProject || "",
+          hostingProvider: c.setup?.hostingProvider || "",
+          ownerEmail: c.setup?.ownerEmail || "",
+          backupLocation: c.setup?.backupLocation || "",
+          supportEmail: c.setup?.supportEmail || ""
+        },
         onboardingStarted,
         tasks
       };
@@ -623,6 +679,71 @@
       save();
       renderClients();
     }
+    function updateClientSetup(key, value) {
+      const c = getClient();
+      if (!c) return;
+      if (!c.setup || typeof c.setup !== "object") c.setup = {};
+      c.setup[key] = value;
+      save();
+    }
+
+    function slugifyName(value) {
+      return String(value || "client")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 60) || "client";
+    }
+
+    function generateSiteGuide() {
+      const c = getClient();
+      if (!c) return;
+      const s = c.setup || {};
+      const completed = c.tasks.filter(t => t.done).length;
+      const total = c.tasks.length;
+      const today = new Date().toLocaleDateString("en-IE");
+      const guide = `# ${c.businessName || c.name}
+## Site Guide — Website, Data, and Access
+
+Prepared: ${today}
+
+## 1) Website
+- URL: ${s.siteUrl || "[add site URL]"}
+
+## 2) Login
+- Mobile: ${c.mobile || "[add mobile]"}
+- Email: ${c.email || "[add email]"}
+- Business Email: ${c.businessEmail || "[add business email]"}
+
+## 3) Data and Hosting
+- Firebase Project: ${s.firebaseProject || "[add firebase project id]"}
+- Hosting Provider: ${s.hostingProvider || "[add hosting provider]"}
+- GitHub Repo: ${s.repoUrl || "[add github repo URL]"}
+
+## 4) Ownership
+- Owner Email: ${s.ownerEmail || "[add owner email]"}
+- Support Email: ${s.supportEmail || "[add support email]"}
+
+## 5) Backups
+- Backup Location: ${s.backupLocation || "[add backup location]"}
+- Recommendation: export backup monthly and after major updates.
+
+## 6) Onboarding Progress
+- Status: ${c.status || "lead"}
+- Brochure Sent: ${c.brochureSentAt ? new Date(c.brochureSentAt).toLocaleDateString("en-IE") : "No"}
+- Tasks Completed: ${completed}/${total}
+
+## 7) Notes
+${c.notes || "No additional notes yet."}
+`;
+      const blob = new Blob([guide], { type: "text/markdown;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${slugifyName(c.businessName || c.name)}-site-guide.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
 
     function addClientTask() {
       const c = getClient();
@@ -746,6 +867,13 @@
       document.getElementById("detailMobile").value = c.mobile || "";
       document.getElementById("detailEmail").value = c.email || "";
       document.getElementById("detailBusinessEmail").value = c.businessEmail || "";
+      document.getElementById("detailSiteUrl").value = c.setup?.siteUrl || "";
+      document.getElementById("detailRepoUrl").value = c.setup?.repoUrl || "";
+      document.getElementById("detailFirebaseProject").value = c.setup?.firebaseProject || "";
+      document.getElementById("detailHostingProvider").value = c.setup?.hostingProvider || "";
+      document.getElementById("detailOwnerEmail").value = c.setup?.ownerEmail || "";
+      document.getElementById("detailBackupLocation").value = c.setup?.backupLocation || "";
+      document.getElementById("detailSupportEmail").value = c.setup?.supportEmail || "";
       document.getElementById("detailNotes").value = c.notes || "";
       const tasks = document.getElementById("clientTasks");
       if (!c.onboardingStarted) {
