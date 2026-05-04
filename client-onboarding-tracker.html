@@ -220,6 +220,15 @@
       background: #fff;
       padding: 10px;
     }
+    .dash-item.clickable {
+      cursor: pointer;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+    }
+    .dash-item.clickable:hover {
+      border-color: rgba(79, 70, 229, 0.35);
+      box-shadow: 0 8px 16px rgba(79, 70, 229, 0.12);
+      transform: translateY(-1px);
+    }
     .dash-item .title { font-weight: 700; font-size: 0.9rem; }
     .dash-item .sub { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
     .pill {
@@ -893,6 +902,25 @@
       renderClients();
       renderDetail();
     }
+    function openClientsFiltered(options = {}) {
+      const status = options.status || "all";
+      const search = options.search || "";
+      const selectFirst = options.selectFirst !== false;
+      const list = state.clients.filter(c => {
+        const statusOk = status === "all" || c.status === status;
+        if (!statusOk) return false;
+        if (options.predicate && typeof options.predicate === "function") return options.predicate(c);
+        return true;
+      });
+      const statusEl = document.getElementById("clientFilterStatus");
+      const searchEl = document.getElementById("clientSearch");
+      if (statusEl) statusEl.value = status;
+      if (searchEl) searchEl.value = search;
+      if (selectFirst && list.length) selectedClientId = list[0].id;
+      switchView("clients");
+      renderClients();
+      renderDetail();
+    }
 
     function updateClientDetail(key, value) {
       const c = getClient();
@@ -1169,19 +1197,19 @@ ${c.notes || "No additional notes yet."}
         paused: state.clients.filter(c => c.status === "paused").length
       };
       pipeline.innerHTML = `
-        <div class="dash-item"><div class="title">Leads</div><div class="sub">${byStatus.lead} waiting for next step</div></div>
-        <div class="dash-item"><div class="title">Onboarding</div><div class="sub">${byStatus.onboarding} currently in setup</div></div>
-        <div class="dash-item"><div class="title">Live</div><div class="sub">${byStatus.live} completed and delivered</div></div>
-        <div class="dash-item"><div class="title">Paused</div><div class="sub">${byStatus.paused} currently on hold</div></div>
+        <div class="dash-item clickable" onclick="openClientsFiltered({ status: 'lead' })"><div class="title">Leads</div><div class="sub">${byStatus.lead} waiting for next step</div></div>
+        <div class="dash-item clickable" onclick="openClientsFiltered({ status: 'onboarding' })"><div class="title">Onboarding</div><div class="sub">${byStatus.onboarding} currently in setup</div></div>
+        <div class="dash-item clickable" onclick="openClientsFiltered({ status: 'live' })"><div class="title">Live</div><div class="sub">${byStatus.live} completed and delivered</div></div>
+        <div class="dash-item clickable" onclick="openClientsFiltered({ status: 'paused' })"><div class="title">Paused</div><div class="sub">${byStatus.paused} currently on hold</div></div>
       `;
 
       const needsBrochure = state.clients.filter(c => !c.brochureSentAt);
       const needsOnboardingStart = state.clients.filter(c => c.brochureSentAt && !c.onboardingStarted && c.status !== "live");
       const nearComplete = state.clients.filter(c => c.onboardingStarted && c.status !== "live" && c.tasks.length > 0 && pct(c) >= 80);
       priorities.innerHTML = `
-        <div class="dash-item"><div class="title">Send brochure</div><div class="sub">${needsBrochure.length} clients still need brochure sent</div></div>
-        <div class="dash-item"><div class="title">Start onboarding</div><div class="sub">${needsOnboardingStart.length} brochure-ready clients waiting to start</div></div>
-        <div class="dash-item"><div class="title">Near completion</div><div class="sub">${nearComplete.length} clients are 80%+ complete</div></div>
+        <div class="dash-item clickable" onclick="openClientsFiltered({ status: 'all', predicate: c => !c.brochureSentAt })"><div class="title">Send brochure</div><div class="sub">${needsBrochure.length} clients still need brochure sent</div></div>
+        <div class="dash-item clickable" onclick="openClientsFiltered({ status: 'all', predicate: c => c.brochureSentAt && !c.onboardingStarted && c.status !== 'live' })"><div class="title">Start onboarding</div><div class="sub">${needsOnboardingStart.length} brochure-ready clients waiting to start</div></div>
+        <div class="dash-item clickable" onclick="openClientsFiltered({ status: 'all', predicate: c => c.onboardingStarted && c.status !== 'live' && c.tasks.length > 0 && pct(c) >= 80 })"><div class="title">Near completion</div><div class="sub">${nearComplete.length} clients are 80%+ complete</div></div>
       `;
 
       if (!state.clients.length) {
@@ -1194,7 +1222,7 @@ ${c.notes || "No additional notes yet."}
         .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
         .slice(0, 6)
         .map(c => `
-          <div class="dash-item" onclick="setSelected('${c.id}')" style="cursor:pointer;">
+          <div class="dash-item clickable" onclick="setSelected('${c.id}')">
             <div class="title">${escapeHtml(c.name)}</div>
             <div class="sub">${escapeHtml(c.businessName || "No business name")} · ${escapeHtml(c.status || "lead")} · ${pct(c)}% complete</div>
           </div>
@@ -1208,7 +1236,7 @@ ${c.notes || "No additional notes yet."}
         progressBoard.innerHTML = '<div class="hint">No onboarding started yet. Use Start onboarding from the Clients page.</div>';
       } else {
         progressBoard.innerHTML = progressClients.map(c => `
-          <div class="dash-item" onclick="setSelected('${c.id}')" style="cursor:pointer;">
+          <div class="dash-item clickable" onclick="setSelected('${c.id}')">
             <div class="title">${escapeHtml(c.name)} · ${pct(c)}%</div>
             <div class="sub">${c.tasks.filter(t => t.done).length}/${c.tasks.length} tasks complete</div>
           </div>
