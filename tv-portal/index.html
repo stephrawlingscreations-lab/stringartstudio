@@ -44,6 +44,7 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body {
+    overflow-x: hidden;
     font-family: var(--font);
     background: var(--bg);
     color: var(--text);
@@ -353,10 +354,17 @@
   }
   .nav-add:active { transform: scale(0.99); opacity: 0.95; }
 
+  @media (max-width: 640px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .card-actions .btn-sm { flex: 1 1 calc(50% - 8px); min-width: calc(50% - 8px); }
+    .two-col { grid-template-columns: 1fr; }
+  }
+
   @media (max-width: 380px) {
     .stats-row { gap: 8px; }
     .stat-val { font-size: 1.15rem; }
     .stat-lbl { font-size: 8px; }
+    .header-btns { flex-wrap: wrap; justify-content: flex-end; }
   }
 </style>
 </head>

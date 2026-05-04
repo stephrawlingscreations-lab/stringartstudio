@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
 <title>Household Admin</title>
-<link rel="icon" type="image/png" sizes="32x32" href="icons/household-32.png" />
-<link rel="apple-touch-icon" href="icons/household-180.png" sizes="180x180" />
+<link rel="icon" type="image/png" sizes="32x32" href="../icons/household-32.png" />
+<link rel="apple-touch-icon" href="../icons/household-180.png" sizes="180x180" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="Household" />
@@ -48,6 +48,7 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
+    overflow-x: hidden;
     font-family: var(--font-sans);
     color: var(--text);
     min-height: 100vh;
@@ -361,7 +362,11 @@
     .nav-emoji { display: none; }
     .profile-emoji { display: none; }
     .container { padding: 16px 12px 32px; }
-    .nav-btn { font-size: 10px; padding: 9px 5px; }
+    .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .profile-row, .nav-row { flex-wrap: nowrap; overflow-x: auto; }
+    .profile-btn { flex: 0 0 auto; min-width: 110px; }
+    .nav-btn { flex: 0 0 auto; min-width: 86px; font-size: 10px; padding: 9px 8px; }
+    .card table { display: block; overflow-x: auto; white-space: nowrap; }
   }
 </style>
 </head>
