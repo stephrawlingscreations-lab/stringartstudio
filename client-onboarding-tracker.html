@@ -138,9 +138,30 @@
       padding: 10px;
       background: #fff;
     }
-    .task .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    .task .left { display: flex; align-items: center; gap: 8px; min-width: 0; }
-    .task .title { font-size: 0.9rem; font-weight: 600; word-break: break-word; }
+    .task .top {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
+      gap: 8px;
+    }
+    .task .left {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      min-width: 0;
+    }
+    .task .left input[type="checkbox"] {
+      width: auto;
+      margin-top: 3px;
+      flex: 0 0 auto;
+    }
+    .task .title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      line-height: 1.35;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
     .task.done .title { text-decoration: line-through; color: var(--muted); }
     .task .note { margin-top: 7px; font-size: 0.82rem; color: var(--muted); }
     .split { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
