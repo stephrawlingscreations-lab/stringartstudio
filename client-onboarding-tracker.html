@@ -453,54 +453,60 @@
             </div>
           </div>
           <div class="card-b">
-            <div class="split">
-              <div class="row">
-                <label>Client Name</label>
-                <input id="clientName" placeholder="Business name or person" onkeydown="if(event.key==='Enter') addClient()" />
-              </div>
-              <div class="row">
-                <label>Business Name</label>
-                <input id="clientBusinessName" placeholder="Registered business name (optional)" onkeydown="if(event.key==='Enter') addClient()" />
-              </div>
-            </div>
-            <div class="split">
-              <div class="row">
-                <label>Mobile</label>
-                <input id="clientMobile" placeholder="e.g. 087..." onkeydown="if(event.key==='Enter') addClient()" />
-              </div>
-              <div class="row">
-                <label>Email</label>
-                <input id="clientEmail" type="email" placeholder="Personal/main email" onkeydown="if(event.key==='Enter') addClient()" />
-              </div>
-            </div>
-            <div class="split">
-              <div class="row">
-                <label>Business Email</label>
-                <input id="clientBusinessEmail" type="email" placeholder="Business email (optional)" onkeydown="if(event.key==='Enter') addClient()" />
-              </div>
-              <div class="row"></div>
-            </div>
-            <div class="split">
-              <div class="row">
-                <label>Service Type</label>
-                <input id="clientService" placeholder="e.g. Tracker + Hosting" onkeydown="if(event.key==='Enter') addClient()" />
-              </div>
-              <div class="row">
-                <label>Status</label>
-                <select id="clientStatus">
-                  <option value="lead">Lead</option>
-                  <option value="onboarding">Onboarding</option>
-                  <option value="live">Live</option>
-                  <option value="paused">Paused</option>
-                </select>
-              </div>
-            </div>
-            <div class="row">
-              <label>Notes</label>
-              <textarea id="clientNotes" placeholder="Anything important for this client..."></textarea>
-            </div>
             <div class="toolbar" style="margin-bottom:12px;">
-              <button class="btn btn-primary" onclick="addClient()">+ Save contact</button>
+              <button class="btn btn-primary" id="toggleNewClientBtn" onclick="toggleNewClientForm()">+ Add new client</button>
+              <button class="btn" id="cancelNewClientBtn" onclick="toggleNewClientForm(false)" style="display:none;">Cancel</button>
+            </div>
+            <div id="newClientForm" style="display:none;">
+              <div class="split">
+                <div class="row">
+                  <label>Client Name</label>
+                  <input id="clientName" placeholder="Business name or person" onkeydown="if(event.key==='Enter') addClient()" />
+                </div>
+                <div class="row">
+                  <label>Business Name</label>
+                  <input id="clientBusinessName" placeholder="Registered business name (optional)" onkeydown="if(event.key==='Enter') addClient()" />
+                </div>
+              </div>
+              <div class="split">
+                <div class="row">
+                  <label>Mobile</label>
+                  <input id="clientMobile" placeholder="e.g. 087..." onkeydown="if(event.key==='Enter') addClient()" />
+                </div>
+                <div class="row">
+                  <label>Email</label>
+                  <input id="clientEmail" type="email" placeholder="Personal/main email" onkeydown="if(event.key==='Enter') addClient()" />
+                </div>
+              </div>
+              <div class="split">
+                <div class="row">
+                  <label>Business Email</label>
+                  <input id="clientBusinessEmail" type="email" placeholder="Business email (optional)" onkeydown="if(event.key==='Enter') addClient()" />
+                </div>
+                <div class="row"></div>
+              </div>
+              <div class="split">
+                <div class="row">
+                  <label>Service Type</label>
+                  <input id="clientService" placeholder="e.g. Tracker + Hosting" onkeydown="if(event.key==='Enter') addClient()" />
+                </div>
+                <div class="row">
+                  <label>Status</label>
+                  <select id="clientStatus">
+                    <option value="lead">Lead</option>
+                    <option value="onboarding">Onboarding</option>
+                    <option value="live">Live</option>
+                    <option value="paused">Paused</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <label>Notes</label>
+                <textarea id="clientNotes" placeholder="Anything important for this client..."></textarea>
+              </div>
+              <div class="toolbar" style="margin-bottom:12px;">
+                <button class="btn btn-primary" onclick="addClient()">Save client</button>
+              </div>
             </div>
             <div class="portal-section-title">Client Directory</div>
             <div class="clients-toolbar">
@@ -976,6 +982,17 @@
     function signOutTracker() {
       if (confirm("Sign out?")) fbAuth.signOut();
     }
+    function toggleNewClientForm(forceOpen) {
+      const form = document.getElementById("newClientForm");
+      const openBtn = document.getElementById("toggleNewClientBtn");
+      const cancelBtn = document.getElementById("cancelNewClientBtn");
+      if (!form || !openBtn || !cancelBtn) return;
+      const shouldOpen = typeof forceOpen === "boolean" ? forceOpen : form.style.display === "none";
+      form.style.display = shouldOpen ? "block" : "none";
+      cancelBtn.style.display = shouldOpen ? "inline-block" : "none";
+      openBtn.textContent = shouldOpen ? "Client form open" : "+ Add new client";
+      if (shouldOpen) document.getElementById("clientName")?.focus();
+    }
 
     function addTemplateTask() {
       const input = document.getElementById("templateTaskInput");
@@ -1021,6 +1038,7 @@
       selectedClientId = client.id;
       ["clientName","clientBusinessName","clientMobile","clientEmail","clientBusinessEmail","clientService","clientNotes"].forEach(id => document.getElementById(id).value = "");
       document.getElementById("clientStatus").value = "lead";
+      toggleNewClientForm(false);
       save();
       renderAll();
     }
