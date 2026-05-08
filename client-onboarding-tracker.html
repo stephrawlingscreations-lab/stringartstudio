@@ -776,7 +776,7 @@
       clearTimeout(_saveTimer);
       _saveTimer = setTimeout(save, 800);
     }
-    function authPath() { return "users/" + currentUser.uid + "/" + FB_PATH; }
+    function authPath() { return FB_PATH; }
     function touchClient(client) {
       if (!client) return;
       client.lastUpdated = new Date().toISOString();

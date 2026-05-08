@@ -88,8 +88,8 @@ const SEED={
   ],
 };
 
-const saveFB=(uid,k,v)=>{if(!uid)return;fbDb.ref(`users/${uid}/${k}`).set(v).catch(()=>{})};
-const loadFB=(uid)=>fbDb.ref(`users/${uid}`).once("value").then(s=>s.val()||{});
+const saveFB=(uid,k,v)=>{if(!uid)return;fbDb.ref(`ppbDesigns/${k}`).set(v).catch(()=>{})};
+const loadFB=(uid)=>fbDb.ref('ppbDesigns').once("value").then(s=>s.val()||{});
 const genId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 const daysUntil=ds=>{const d=new Date(ds),n=new Date();n.setHours(0,0,0,0);d.setHours(0,0,0,0);return Math.round((d-n)/86400000)};
 const fmt=d=>new Date(d).toLocaleDateString("en-IE");
@@ -164,7 +164,7 @@ function App({user}){
     loadFB(user.uid).then(data=>{
       const hasCloud=Object.keys(data).length>0;
       Object.keys(defs).forEach(k=>setters[k](hasCloud?(data[k]??defs[k]):defs[k]));
-      if(!hasCloud) fbDb.ref(`users/${user.uid}`).set(defs).catch(()=>{});
+      if(!hasCloud) fbDb.ref('ppbDesigns').set(defs).catch(()=>{});
       setFbLoading(false);
     }).catch(()=>setFbLoading(false));
   },[user.uid]);

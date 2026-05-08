@@ -678,7 +678,7 @@ async function save() {
   if (!currentUser) return;
   setSaveStatus('saving');
   try {
-    await fbDb.ref('users/' + currentUser.uid + '/' + FB_GRASS_PATH).set({
+    await fbDb.ref(FB_GRASS_PATH).set({
       residents: state.residents,
       payments: state.payments,
       cuttings: state.cuttings,
@@ -691,7 +691,7 @@ async function save() {
 
 async function bootstrapGrassFromCloudOrLocal() {
   if (currentUser) {
-    const snap = await fbDb.ref('users/' + currentUser.uid + '/' + FB_GRASS_PATH).once('value');
+    const snap = await fbDb.ref(FB_GRASS_PATH).once('value');
     const cloud = snap.val();
     if (cloud && Array.isArray(cloud.residents) && cloud.residents.length > 0) {
       state = {
@@ -706,7 +706,7 @@ async function bootstrapGrassFromCloudOrLocal() {
   state = await loadGrassPayloadFromDisk();
   if (currentUser) {
     try {
-      await fbDb.ref('users/' + currentUser.uid + '/' + FB_GRASS_PATH).set({
+      await fbDb.ref(FB_GRASS_PATH).set({
         residents: state.residents,
         payments: state.payments,
         cuttings: state.cuttings,

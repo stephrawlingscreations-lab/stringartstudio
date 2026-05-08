@@ -1222,10 +1222,10 @@ function toArr(d)       { return !d ? [] : Array.isArray(d) ? d : Object.values(
 function stripPhoto(w)  { if(!w) return null; const {photoData, ...rest} = w; return rest; }
 function loadWorks()    { return []; }
 function saveWorks(a)   {
-  if(currentUser) try { fbDb.ref('users/'+currentUser.uid+'/works').set(a).catch(()=>{}); } catch(e) { console.warn('Firebase works save:', e); }
+  if(currentUser) try { fbDb.ref('stephCreations/works').set(a).catch(()=>{}); } catch(e) { console.warn('Firebase works save:', e); }
 }
 function loadSettings() { return {}; }
-function saveSettings(s){ if(currentUser) fbDb.ref('users/'+currentUser.uid+'/settings').set(s).catch(()=>{}); }
+function saveSettings(s){ if(currentUser) fbDb.ref('stephCreations/settings').set(s).catch(()=>{}); }
 
 let works = loadWorks();
 let commissionRate = loadSettings().commissionRate || 25;
@@ -1787,7 +1787,7 @@ function confirmQuickSell() {
 function stripReceipt(e) { const {receiptData, ...rest} = e; return rest; }
 function loadExpenses()   { return []; }
 function saveExpenses(a)  {
-  if(currentUser) try { fbDb.ref('users/'+currentUser.uid+'/expenses').set(a).catch(()=>{}); } catch(e) { console.warn('Firebase expenses save:', e); }
+  if(currentUser) try { fbDb.ref('stephCreations/expenses').set(a).catch(()=>{}); } catch(e) { console.warn('Firebase expenses save:', e); }
 }
 let expenses = loadExpenses();
 
@@ -1989,7 +1989,7 @@ document.getElementById('modal-expense').addEventListener('click',e=>{ if(e.targ
 // ── Payments ─────────────────────────────────────────────────────────────────
 function loadPayments()   { return []; }
 function savePayments(a)  {
-  if(currentUser) try { fbDb.ref('users/'+currentUser.uid+'/payments').set(a).catch(()=>{}); } catch(e) {}
+  if(currentUser) try { fbDb.ref('stephCreations/payments').set(a).catch(()=>{}); } catch(e) {}
 }
 let payments = loadPayments();
 let editingPayId = null;
@@ -2115,7 +2115,7 @@ document.getElementById('modal-payment').addEventListener('click',e=>{ if(e.targ
 // ── Classes ───────────────────────────────────────────────────────────────────
 function loadClasses()   { return []; }
 function saveClasses(a)  {
-  if(currentUser) try { fbDb.ref('users/'+currentUser.uid+'/classes').set(a).catch(()=>{}); } catch(e) {}
+  if(currentUser) try { fbDb.ref('stephCreations/classes').set(a).catch(()=>{}); } catch(e) {}
 }
 let classes = loadClasses();
 let editingClassId = null;
@@ -2308,12 +2308,12 @@ fbAuth.onAuthStateChanged(user => {
     const av = document.getElementById('user-avatar');
     if (user.photoURL) { av.src = user.photoURL; av.style.display = 'inline-block'; }
 
-    fbDb.ref('users/' + user.uid).once('value').then(snap => {
+    fbDb.ref('stephCreations').once('value').then(snap => {
       const data = snap.val() || {};
       if (data.works != null) {
         works = toArr(data.works);
       } else {
-        fbDb.ref('users/' + user.uid).set({ works: works, settings: loadSettings(), expenses: expenses, payments: payments, classes: classes }).catch(() => {});
+        fbDb.ref('stephCreations').set({ works: works, settings: loadSettings(), expenses: expenses, payments: payments, classes: classes }).catch(() => {});
       }
       if (data.expenses != null) {
         expenses = toArr(data.expenses);

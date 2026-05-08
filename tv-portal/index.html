@@ -608,7 +608,7 @@ let data = [];
 function saveData() {
   localStorage.setItem(STORE_KEY, JSON.stringify(data));
   if (currentUser) {
-    fbDb.ref('users/' + currentUser.uid + '/iptv').set(data).catch(() => { showToast('Could not save to cloud'); });
+    fbDb.ref('iptv').set(data).catch(() => { showToast('Could not save to cloud'); });
   }
 }
 
@@ -620,14 +620,14 @@ function migratePhoneRows(arr) {
 
 function refreshFromCloud() {
   if (!currentUser) return Promise.resolve();
-  return fbDb.ref('users/' + currentUser.uid + '/iptv').once('value').then(snap => {
+  return fbDb.ref('iptv').once('value').then(snap => {
     const cloud = snap.val();
     if (cloud && Array.isArray(cloud) && cloud.length > 0) {
       data = migratePhoneRows(JSON.parse(JSON.stringify(cloud)));
       localStorage.setItem(STORE_KEY, JSON.stringify(data));
     } else {
       data = loadData();
-      return fbDb.ref('users/' + currentUser.uid + '/iptv').set(data).catch(() => {});
+      return fbDb.ref('iptv').set(data).catch(() => {});
     }
   });
 }

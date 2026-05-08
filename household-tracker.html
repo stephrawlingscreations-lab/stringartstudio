@@ -768,7 +768,7 @@ function save() {
   if (!data) return;
   localStorage.setItem(KEY, JSON.stringify(data));
   if (currentUser) {
-    fbDb.ref('users/' + currentUser.uid + '/' + FB_HOUSEHOLD_PATH).set(data).catch(() => {});
+    fbDb.ref(FB_HOUSEHOLD_PATH).set(data).catch(() => {});
   }
   const now = new Date();
   document.getElementById('last-saved').textContent = 'Saved ' + now.toLocaleTimeString('en-IE', {hour:'2-digit',minute:'2-digit'});
@@ -1350,14 +1350,14 @@ function signOutHousehold() {
 
 function refreshHouseholdFromCloud() {
   if (!currentUser) return Promise.resolve();
-  return fbDb.ref('users/' + currentUser.uid + '/' + FB_HOUSEHOLD_PATH).once('value').then(snap => {
+  return fbDb.ref(FB_HOUSEHOLD_PATH).once('value').then(snap => {
     const cloud = snap.val();
     if (cloud && typeof cloud === 'object' && (cloud.steph || cloud.partner || cloud.shared)) {
       data = ensureDataShape(JSON.parse(JSON.stringify(cloud)));
       localStorage.setItem(KEY, JSON.stringify(data));
     } else {
       data = loadDataFromLocalStorage();
-      return fbDb.ref('users/' + currentUser.uid + '/' + FB_HOUSEHOLD_PATH).set(data).catch(() => {});
+      return fbDb.ref(FB_HOUSEHOLD_PATH).set(data).catch(() => {});
     }
   });
 }
