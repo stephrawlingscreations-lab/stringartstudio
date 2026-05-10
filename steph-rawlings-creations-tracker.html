@@ -2308,28 +2308,36 @@ fbAuth.onAuthStateChanged(user => {
     const av = document.getElementById('user-avatar');
     if (user.photoURL) { av.src = user.photoURL; av.style.display = 'inline-block'; }
 
-    fbDb.ref('stephCreations').once('value').then(snap => {
-      const data = snap.val() || {};
-      if (data.works != null) {
-        works = toArr(data.works);
-      } else {
-        fbDb.ref('stephCreations').set({ works: works, settings: loadSettings(), expenses: expenses, payments: payments, classes: classes }).catch(() => {});
-      }
-      if (data.expenses != null) {
-        expenses = toArr(data.expenses);
-      }
-      if (data.payments != null) {
-        payments = toArr(data.payments);
-      }
-      if (data.classes != null) {
-        classes = toArr(data.classes);
-      }
+    function applyData(data) {
+      if (data.works != null) works = toArr(data.works);
+      if (data.expenses != null) expenses = toArr(data.expenses);
+      if (data.payments != null) payments = toArr(data.payments);
+      if (data.classes != null) classes = toArr(data.classes);
       if (data.settings) {
         const s = data.settings;
         commissionRate = s.commissionRate || 25;
         document.getElementById('commission-rate').value = commissionRate;
       }
       refreshAll();
+    }
+
+    fbDb.ref('stephCreations').once('value').then(snap => {
+      const data = snap.val() || {};
+      if (data.works != null) {
+        applyData(data);
+      } else {
+        // Migrate from old per-user path if shared path is empty
+        fbDb.ref('users/' + user.uid + '/stephCreations').once('value').then(oldSnap => {
+          const oldData = oldSnap.val() || {};
+          if (oldData.works != null) {
+            applyData(oldData);
+            fbDb.ref('stephCreations').set(oldData).catch(() => {});
+          } else {
+            fbDb.ref('stephCreations').set({ works: works, settings: loadSettings(), expenses: expenses, payments: payments, classes: classes }).catch(() => {});
+            refreshAll();
+          }
+        }).catch(() => refreshAll());
+      }
     }).catch(() => refreshAll());
   } else {
     currentUser = null;
