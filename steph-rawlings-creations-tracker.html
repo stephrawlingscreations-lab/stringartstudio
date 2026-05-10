@@ -2327,7 +2327,7 @@ fbAuth.onAuthStateChanged(user => {
         applyData(data);
       } else {
         // Migrate from old per-user path if shared path is empty
-        fbDb.ref('users/' + user.uid + '/stephCreations').once('value').then(oldSnap => {
+        fbDb.ref('users/' + user.uid).once('value').then(oldSnap => {
           const oldData = oldSnap.val() || {};
           if (oldData.works != null) {
             applyData(oldData);
