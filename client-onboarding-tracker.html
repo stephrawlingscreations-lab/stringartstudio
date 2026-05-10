@@ -1757,11 +1757,26 @@ ${c.notes || "No additional notes yet."}
           if (cloud && Array.isArray(cloud.templateTasks) && Array.isArray(cloud.clients)) {
             state = cloud;
             localStorage.setItem(KEY, JSON.stringify(state));
+            initAfterDataLoad();
           } else {
-            loadLocal();
-            fbDb.ref(authPath()).set(state).catch(() => {});
+            // Migrate from old per-user path if shared path is empty
+            const oldPath = "users/" + user.uid + "/" + FB_PATH;
+            fbDb.ref(oldPath).once("value").then(oldSnap => {
+              const oldCloud = oldSnap.val();
+              if (oldCloud && Array.isArray(oldCloud.templateTasks) && Array.isArray(oldCloud.clients)) {
+                state = oldCloud;
+                localStorage.setItem(KEY, JSON.stringify(state));
+                fbDb.ref(authPath()).set(state).catch(() => {});
+              } else {
+                loadLocal();
+                fbDb.ref(authPath()).set(state).catch(() => {});
+              }
+              initAfterDataLoad();
+            }).catch(() => {
+              loadLocal();
+              initAfterDataLoad();
+            });
           }
-          initAfterDataLoad();
         }).catch(() => {
           loadLocal();
           initAfterDataLoad();
