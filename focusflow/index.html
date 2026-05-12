@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Focus Flow — Your Personal Control Centre</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+
+  <!-- Firebase Auth (compat SDK — no database needed, data stays in localStorage) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+  <style>
+    /* Auth loading + login screen styles */
+    #auth-loading {
+      position: fixed; inset: 0; z-index: 10001;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+      background: var(--bg, #F7F5F0);
+      font-family: 'Inter', -apple-system, sans-serif;
+      font-size: 0.9rem; color: var(--text-muted, #9099A8);
+    }
+    .auth-spin {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 3px solid var(--border, #E5E2DB);
+      border-top-color: #698F80;
+      animation: auth-spin 0.8s linear infinite;
+    }
+    @keyframes auth-spin { to { transform: rotate(360deg); } }
+
+    #login-screen {
+      position: fixed; inset: 0; z-index: 10000;
+      display: none; align-items: center; justify-content: center; padding: 24px;
+      background: linear-gradient(135deg, #2A3244 0%, #3D4F6E 55%, #698F80 100%);
+    }
+    .login-card {
+      background: rgba(255,255,255,0.12); backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,0.18); border-radius: 28px;
+      padding: 44px 36px; max-width: 380px; width: 100%; text-align: center;
+    }
+    .login-logo { font-size: 2.5rem; color: #A8D5C4; margin-bottom: 8px; line-height: 1; }
+    .login-card h2 {
+      color: #fff; font-family: 'Inter', sans-serif; font-size: 1.5rem; font-weight: 700;
+      letter-spacing: -0.025em; margin: 0 0 6px;
+    }
+    .login-card p { color: rgba(255,255,255,0.6); font-size: 0.875rem; margin: 0 0 28px; line-height: 1.6; }
+    .login-btn-google {
+      width: 100%; padding: 14px 18px; border-radius: 14px;
+      border: 1.5px solid rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.15); color: #fff;
+      font-family: 'Inter', sans-serif; font-size: 0.9375rem; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+      transition: background 0.15s;
+    }
+    .login-btn-google:hover { background: rgba(255,255,255,0.28); }
+    #login-error {
+      font-size: 0.8rem; color: #FCA5A5; margin-top: 14px; min-height: 18px; font-weight: 600;
+    }
+    #app { display: none; }
+  </style>
+</head>
+<body>
+
+<!-- Auth: loading spinner (shown while Firebase checks session) -->
+<div id="auth-loading">
+  <div class="auth-spin"></div>
+  <span>Loading…</span>
+</div>
+
+<!-- Auth: login screen (shown when not signed in) -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">✦</div>
+    <h2>Focus Flow</h2>
+    <p>Sign in with Google to access your personal control centre.</p>
+    <button type="button" class="login-btn-google" onclick="startFocusFlowSignIn()">
+      <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Sign in with Google
+    </button>
+    <div id="login-error"></div>
+  </div>
+</div>
+
+<div id="app" class="app">
+
+  <!-- ═══════════════════════════════════════
+       SIDEBAR — Desktop Navigation
+  ══════════════════════════════════════════ -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="logo-icon">✦</span>
+        <span class="logo-text">Focus Flow</span>
+      </div>
+
+      <!-- Energy level selector in sidebar -->
+      <div class="sidebar-energy">
+        <p class="sidebar-energy-label">Today's energy</p>
+        <div class="energy-pills" id="sidebar-energy-pills">
+          <button class="energy-pill" data-energy="low" title="Low energy — rest mode">😴</button>
+          <button class="energy-pill active" data-energy="medium" title="Some energy — moderate tasks">⚡</button>
+          <button class="energy-pill" data-energy="high" title="High focus — tackle big tasks">🔥</button>
+        </div>
+      </div>
+    </div>
+
+    <ul class="sidebar-nav">
+      <li>
+        <a href="#" class="nav-link active" data-view="dashboard">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+            <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+            <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+            <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+          </svg>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li>
+        <a href="#" class="nav-link" data-view="tasks">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M9 11l3 3L22 4"/>
+            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+          </svg>
+          <span>All Tasks</span>
+          <span class="nav-badge" id="nav-badge-tasks"></span>
+        </a>
+      </li>
+      <li>
+        <a href="#" class="nav-link" data-view="projects">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+          </svg>
+          <span>Projects</span>
+        </a>
+      </li>
+      <li>
+        <a href="#" class="nav-link" data-view="planner">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <span>Weekly Planner</span>
+        </a>
+      </li>
+      <li>
+        <a href="#" class="nav-link" data-view="braindump">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+          <span>Brain Dump</span>
+        </a>
+      </li>
+      <li>
+        <a href="#" class="nav-link" data-view="notes">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <line x1="10" y1="9" x2="8" y2="9"/>
+          </svg>
+          <span>Notes</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <button class="btn-icon" id="btn-theme-toggle" title="Toggle dark mode">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+        </svg>
+      </button>
+      <button class="btn-icon" id="btn-export" title="Export data backup">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      </button>
+      <button class="btn-icon" id="btn-import" title="Import data backup">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </button>
+      <input type="file" id="import-file-input" accept=".json" style="display:none">
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════
+       MAIN CONTENT AREA
+  ══════════════════════════════════════════ -->
+  <main class="main-content" id="main-content">
+
+    <!-- Page header (mobile) -->
+    <div class="mobile-header">
+      <div class="logo">
+        <span class="logo-icon">✦</span>
+        <span class="logo-text">Focus Flow</span>
+      </div>
+      <div class="mobile-header-actions">
+        <div class="energy-pills energy-pills-sm" id="mobile-energy-pills">
+          <button class="energy-pill" data-energy="low">😴</button>
+          <button class="energy-pill active" data-energy="medium">⚡</button>
+          <button class="energy-pill" data-energy="high">🔥</button>
+        </div>
+        <button class="btn-icon" id="btn-theme-toggle-mobile">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="20" height="20">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────
+         VIEW: DASHBOARD
+    ────────────────────────────────────── -->
+    <section class="view is-active" id="view-dashboard">
+      <div class="view-scroll">
+
+        <!-- Greeting -->
+        <div class="greeting-section" id="dashboard-greeting">
+          <div class="greeting-text">
+            <h1 id="greeting-message">Good morning</h1>
+            <p id="greeting-date" class="greeting-date"></p>
+          </div>
+          <div class="greeting-meta">
+            <div id="greeting-quote" class="greeting-quote"></div>
+          </div>
+        </div>
+
+        <!-- What to do NEXT — the most important widget -->
+        <div class="dashboard-section">
+          <div class="section-header">
+            <h2 class="section-title">
+              <span class="section-title-icon">→</span>
+              What to do next
+            </h2>
+            <span class="section-subtitle" id="energy-context-label">based on your energy</span>
+          </div>
+          <div id="next-actions-container" class="next-actions">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Today's Tasks -->
+        <div class="dashboard-section">
+          <div class="section-header">
+            <h2 class="section-title">
+              <span class="section-title-icon today-dot"></span>
+              Today
+            </h2>
+            <button class="section-link" data-view="tasks" data-filter="today">See all</button>
+          </div>
+          <div id="today-tasks-container" class="task-list-compact">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Overdue tasks -->
+        <div class="dashboard-section" id="overdue-section" style="display:none">
+          <div class="section-header">
+            <h2 class="section-title overdue-title">
+              <span class="section-title-icon">!</span>
+              Overdue
+            </h2>
+          </div>
+          <div id="overdue-tasks-container" class="task-list-compact">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Quick Wins -->
+        <div class="dashboard-section">
+          <div class="section-header">
+            <h2 class="section-title">
+              <span class="section-title-icon">✓</span>
+              Quick wins
+            </h2>
+            <span class="section-subtitle">low energy tasks</span>
+          </div>
+          <div id="quick-wins-container" class="task-list-compact">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Two-column grid: Waiting On + Upcoming -->
+        <div class="dashboard-grid">
+          <div class="dashboard-section">
+            <div class="section-header">
+              <h2 class="section-title">
+                <span class="section-title-icon">⏳</span>
+                Waiting on
+              </h2>
+            </div>
+            <div id="waiting-tasks-container" class="task-list-compact">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+          <div class="dashboard-section">
+            <div class="section-header">
+              <h2 class="section-title">
+                <span class="section-title-icon">◷</span>
+                Upcoming
+              </h2>
+              <span class="section-subtitle">next 7 days</span>
+            </div>
+            <div id="upcoming-tasks-container" class="task-list-compact">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress overview -->
+        <div class="dashboard-section">
+          <div class="section-header">
+            <h2 class="section-title">
+              <span class="section-title-icon">◎</span>
+              Progress
+            </h2>
+          </div>
+          <div id="progress-overview" class="progress-overview">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+      </div><!-- end view-scroll -->
+    </section>
+
+
+    <!-- ─────────────────────────────────────
+         VIEW: ALL TASKS
+    ────────────────────────────────────── -->
+    <section class="view" id="view-tasks">
+      <div class="view-scroll">
+        <div class="view-header">
+          <h1 class="view-title">All Tasks</h1>
+          <button class="btn btn-primary btn-sm" id="btn-new-task-tasks">+ New Task</button>
+        </div>
+
+        <!-- Search + filters -->
+        <div class="task-controls">
+          <div class="search-wrapper">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" id="task-search" class="search-input" placeholder="Search tasks…">
+          </div>
+          <div class="filter-row">
+            <select class="filter-select" id="filter-status">
+              <option value="">All statuses</option>
+              <option value="todo">To Do</option>
+              <option value="doing">Doing</option>
+              <option value="waiting">Waiting</option>
+              <option value="done">Done</option>
+            </select>
+            <select class="filter-select" id="filter-priority">
+              <option value="">All priorities</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+            <select class="filter-select" id="filter-energy">
+              <option value="">Any energy</option>
+              <option value="low">Low energy</option>
+              <option value="medium">Medium energy</option>
+              <option value="high">High focus</option>
+            </select>
+            <select class="filter-select" id="filter-project">
+              <option value="">All projects</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Kanban / List toggle -->
+        <div class="view-toggle">
+          <button class="view-toggle-btn active" data-tasks-view="list" title="List view">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+              <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+          </button>
+          <button class="view-toggle-btn" data-tasks-view="kanban" title="Board view">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="18" rx="1"/><rect x="17" y="3" width="5" height="18" rx="1"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- List view -->
+        <div id="tasks-list-view">
+          <div id="tasks-container" class="task-list">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Kanban view -->
+        <div id="tasks-kanban-view" style="display:none">
+          <div class="kanban-board">
+            <div class="kanban-col" data-status="todo">
+              <div class="kanban-col-header">
+                <span class="kanban-col-dot dot-todo"></span>
+                <h3>To Do</h3>
+                <span class="kanban-count" id="kanban-count-todo">0</span>
+              </div>
+              <div class="kanban-tasks" id="kanban-todo" data-status="todo"></div>
+            </div>
+            <div class="kanban-col" data-status="doing">
+              <div class="kanban-col-header">
+                <span class="kanban-col-dot dot-doing"></span>
+                <h3>Doing</h3>
+                <span class="kanban-count" id="kanban-count-doing">0</span>
+              </div>
+              <div class="kanban-tasks" id="kanban-doing" data-status="doing"></div>
+            </div>
+            <div class="kanban-col" data-status="waiting">
+              <div class="kanban-col-header">
+                <span class="kanban-col-dot dot-waiting"></span>
+                <h3>Waiting</h3>
+                <span class="kanban-count" id="kanban-count-waiting">0</span>
+              </div>
+              <div class="kanban-tasks" id="kanban-waiting" data-status="waiting"></div>
+            </div>
+            <div class="kanban-col" data-status="done">
+              <div class="kanban-col-header">
+                <span class="kanban-col-dot dot-done"></span>
+                <h3>Done</h3>
+                <span class="kanban-count" id="kanban-count-done">0</span>
+              </div>
+              <div class="kanban-tasks" id="kanban-done" data-status="done"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ─────────────────────────────────────
+         VIEW: PROJECTS
+    ────────────────────────────────────── -->
+    <section class="view" id="view-projects">
+      <div class="view-scroll">
+        <div class="view-header">
+          <h1 class="view-title">Projects</h1>
+          <button class="btn btn-primary btn-sm" id="btn-new-project">+ New Project</button>
+        </div>
+        <div id="projects-grid" class="projects-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ─────────────────────────────────────
+         VIEW: PROJECT DETAIL
+    ────────────────────────────────────── -->
+    <section class="view" id="view-project-detail">
+      <div class="view-scroll">
+        <div class="view-header">
+          <button class="btn-back" id="btn-back-projects">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+            Projects
+          </button>
+        </div>
+        <div id="project-detail-content">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ─────────────────────────────────────
+         VIEW: WEEKLY PLANNER
+    ────────────────────────────────────── -->
+    <section class="view" id="view-planner">
+      <div class="view-scroll">
+        <div class="view-header planner-header">
+          <h1 class="view-title">Weekly Planner</h1>
+          <div class="planner-nav">
+            <button class="btn-icon" id="planner-prev-week">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </button>
+            <span id="planner-week-label" class="planner-week-label"></span>
+            <button class="btn-icon" id="planner-next-week">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+            <button class="btn btn-sm" id="planner-today-btn">Today</button>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="btn-print-planner" title="Print planner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <polyline points="6 9 6 2 18 2 18 9"/>
+              <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+              <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+            Print
+          </button>
+        </div>
+
+        <div id="planner-grid" class="planner-grid">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Unscheduled tasks pool -->
+        <div class="planner-pool-section">
+          <div class="section-header">
+            <h2 class="section-title">Unscheduled Tasks</h2>
+            <span class="section-subtitle">drag to a day to schedule</span>
+          </div>
+          <div id="planner-unscheduled" class="planner-unscheduled">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- ─────────────────────────────────────
+         VIEW: BRAIN DUMP
+    ────────────────────────────────────── -->
+    <section class="view" id="view-braindump">
+      <div class="view-scroll">
+        <div class="view-header">
+          <h1 class="view-title">Brain Dump</h1>
+          <span class="view-subtitle">Get it out of your head</span>
+        </div>
+
+        <div class="braindump-input-area">
+          <textarea
+            id="braindump-input"
+            class="braindump-textarea"
+            placeholder="Just start typing… thoughts, ideas, tasks, worries — dump it all here. No judgement, no structure needed."
+            rows="4"
+          ></textarea>
+          <div class="braindump-input-footer">
+            <span class="braindump-hint">Press Enter twice or click Save to capture</span>
+            <button class="btn btn-primary" id="btn-braindump-save">Save thought</button>
+          </div>
+        </div>
+
+        <div class="section-header" style="margin-top: 2rem;">
+          <h2 class="section-title">Captured thoughts</h2>
+          <button class="btn btn-ghost btn-sm" id="btn-clear-converted">Clear converted</button>
+        </div>
+        <div id="braindump-list" class="braindump-list">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ─────────────────────────────────────
+         VIEW: NOTES
+    ────────────────────────────────────── -->
+    <section class="view" id="view-notes">
+      <div class="view-scroll">
+        <div class="view-header">
+          <h1 class="view-title">Notes</h1>
+          <button class="btn btn-primary btn-sm" id="btn-new-note">+ New Note</button>
+        </div>
+
+        <div class="notes-search-row">
+          <div class="search-wrapper">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" id="notes-search" class="search-input" placeholder="Search notes…">
+          </div>
+          <select class="filter-select" id="filter-notes-project">
+            <option value="">All projects</option>
+          </select>
+        </div>
+
+        <!-- Pinned notes -->
+        <div id="pinned-notes-section" style="display:none">
+          <div class="section-header">
+            <h2 class="section-title">
+              <span class="section-title-icon">📌</span>
+              Pinned
+            </h2>
+          </div>
+          <div id="pinned-notes-grid" class="notes-grid"></div>
+        </div>
+
+        <!-- All notes -->
+        <div class="section-header">
+          <h2 class="section-title">All Notes</h2>
+        </div>
+        <div id="notes-grid" class="notes-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+  </main><!-- end main-content -->
+
+
+  <!-- ═══════════════════════════════════════
+       BOTTOM NAV — Mobile
+  ══════════════════════════════════════════ -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <a href="#" class="bottom-nav-item active" data-view="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
+        <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>
+        <rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
+      </svg>
+      <span>Home</span>
+    </a>
+    <a href="#" class="bottom-nav-item" data-view="tasks">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
+        <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+      </svg>
+      <span>Tasks</span>
+    </a>
+    <a href="#" class="bottom-nav-item" data-view="projects">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
+        <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+      </svg>
+      <span>Projects</span>
+    </a>
+    <a href="#" class="bottom-nav-item" data-view="planner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      <span>Planner</span>
+    </a>
+    <a href="#" class="bottom-nav-item" data-view="braindump">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
+        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+      </svg>
+      <span>Dump</span>
+    </a>
+  </nav>
+
+
+  <!-- ═══════════════════════════════════════
+       FLOATING ACTION BUTTON — Quick Add
+  ══════════════════════════════════════════ -->
+  <button class="fab" id="fab-quick-add" title="Add new task (N)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="24" height="24">
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+  </button>
+
+
+  <!-- ═══════════════════════════════════════
+       MODAL: QUICK ADD TASK
+  ══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-quick-add" role="dialog" aria-label="Add task">
+    <div class="modal modal-quick-add" id="modal-quick-add-panel">
+      <div class="modal-header">
+        <h2 class="modal-title">Add Task</h2>
+        <button class="modal-close" data-close-modal="modal-quick-add">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <input type="text" id="qa-title" class="form-input form-input-lg" placeholder="What needs to be done?" autocomplete="off" autofocus>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Project</label>
+            <select class="form-select" id="qa-project">
+              <option value="">No project</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Priority</label>
+            <select class="form-select" id="qa-priority">
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Due date</label>
+            <input type="date" id="qa-due-date" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Energy needed</label>
+            <select class="form-select" id="qa-energy">
+              <option value="medium">⚡ Some energy</option>
+              <option value="low">😴 Low energy</option>
+              <option value="high">🔥 High focus</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes (optional)</label>
+          <textarea id="qa-notes" class="form-textarea" placeholder="Any details…" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" data-close-modal="modal-quick-add">Cancel</button>
+        <button class="btn btn-primary" id="btn-qa-save">Save task</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════
+       MODAL: TASK DETAIL / EDIT
+  ══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-task-detail" role="dialog" aria-label="Task detail">
+    <div class="modal modal-task-detail" id="modal-task-detail-panel">
+      <div class="modal-header">
+        <h2 class="modal-title" id="task-detail-title-display">Task Detail</h2>
+        <div class="modal-header-actions">
+          <button class="btn-icon btn-danger-icon" id="btn-delete-task" title="Delete task">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+            </svg>
+          </button>
+          <button class="modal-close" data-close-modal="modal-task-detail">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="modal-body" id="task-detail-body">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════
+       MODAL: NEW / EDIT PROJECT
+  ══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-project-form" role="dialog" aria-label="Project form">
+    <div class="modal" id="modal-project-form-panel">
+      <div class="modal-header">
+        <h2 class="modal-title" id="project-form-title">New Project</h2>
+        <button class="modal-close" data-close-modal="modal-project-form">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="pf-id">
+        <div class="form-group">
+          <label class="form-label">Project name</label>
+          <input type="text" id="pf-name" class="form-input" placeholder="e.g. String Art Business">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea id="pf-description" class="form-textarea" rows="2" placeholder="What is this project about?"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Colour</label>
+            <div class="color-picker" id="pf-color-picker">
+              <button class="color-swatch active" data-color="#698F80" style="background:#698F80"></button>
+              <button class="color-swatch" data-color="#7BA8C8" style="background:#7BA8C8"></button>
+              <button class="color-swatch" data-color="#D4895F" style="background:#D4895F"></button>
+              <button class="color-swatch" data-color="#C07BC4" style="background:#C07BC4"></button>
+              <button class="color-swatch" data-color="#D96B6B" style="background:#D96B6B"></button>
+              <button class="color-swatch" data-color="#F2C05A" style="background:#F2C05A"></button>
+              <button class="color-swatch" data-color="#7BC47F" style="background:#7BC47F"></button>
+              <button class="color-swatch" data-color="#8B8FA8" style="background:#8B8FA8"></button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Deadline (optional)</label>
+            <input type="date" id="pf-deadline" class="form-input">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea id="pf-notes" class="form-textarea" rows="3" placeholder="Project notes, links, context…"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" data-close-modal="modal-project-form">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-project">Save project</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════
+       MODAL: NEW / EDIT NOTE
+  ══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modal-note-form" role="dialog" aria-label="Note form">
+    <div class="modal modal-note-form" id="modal-note-form-panel">
+      <div class="modal-header">
+        <h2 class="modal-title" id="note-form-title">New Note</h2>
+        <div class="modal-header-actions">
+          <button class="btn-icon btn-danger-icon" id="btn-delete-note" style="display:none" title="Delete note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+            </svg>
+          </button>
+          <button class="modal-close" data-close-modal="modal-note-form">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="nf-id">
+        <div class="form-group">
+          <input type="text" id="nf-title" class="form-input" placeholder="Note title">
+        </div>
+        <div class="form-group">
+          <textarea id="nf-content" class="form-textarea form-textarea-lg" rows="10" placeholder="Start writing…"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Project</label>
+            <select class="form-select" id="nf-project">
+              <option value="">General</option>
+            </select>
+          </div>
+          <div class="form-group form-group-inline">
+            <label class="toggle-label">
+              <input type="checkbox" id="nf-pinned" class="toggle-input">
+              <span class="toggle-track"></span>
+              <span>Pin note</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" data-close-modal="modal-note-form">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-note">Save note</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════
+       MODAL: ONBOARDING
+  ══════════════════════════════════════════ -->
+  <div class="modal-overlay is-active" id="modal-onboarding" role="dialog" aria-label="Welcome">
+    <div class="modal modal-onboarding" id="modal-onboarding-panel">
+      <div class="onboarding-hero">
+        <div class="onboarding-logo">✦</div>
+        <h1 class="onboarding-title">Welcome to Focus Flow</h1>
+        <p class="onboarding-subtitle">Your calm personal control centre — designed for real life, not corporate life.</p>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="onboarding-name">What would you like to be called?</label>
+          <input type="text" id="onboarding-name" class="form-input" placeholder="Your name…" autocomplete="off">
+        </div>
+        <div class="onboarding-features">
+          <div class="onboarding-feature">
+            <span class="onboarding-feature-icon">→</span>
+            <div>
+              <strong>Clear next actions</strong>
+              <p>Always know what to do next, based on your energy today.</p>
+            </div>
+          </div>
+          <div class="onboarding-feature">
+            <span class="onboarding-feature-icon">⚡</span>
+            <div>
+              <strong>Energy-aware</strong>
+              <p>Low energy day? The app adjusts and shows gentle tasks.</p>
+            </div>
+          </div>
+          <div class="onboarding-feature">
+            <span class="onboarding-feature-icon">✓</span>
+            <div>
+              <strong>No overwhelm</strong>
+              <p>Calm design that doesn't shout at you or judge your pace.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary btn-full" id="btn-onboarding-start">Let's get started</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════
+       TOAST NOTIFICATIONS
+  ══════════════════════════════════════════ -->
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+</div><!-- end #app -->
+
+
+<!-- Scripts — loaded in dependency order -->
+<script src="js/storage.js"></script>
+<script src="js/data.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/tasks.js"></script>
+<script src="js/projects.js"></script>
+<script src="js/notes.js"></script>
+<script src="js/braindump.js"></script>
+<script src="js/planner.js"></script>
+<script src="js/app.js"></script>
+
+<!-- ═══════════════════════════════════════
+     FIREBASE AUTH — Google Sign-in
+     Same Firebase project + allowed emails as Household Tracker
+══════════════════════════════════════════ -->
+<script>
+  firebase.initializeApp({
+    apiKey:            'AIzaSyAcSc-3ejzUfaiods7fAGAH10EuVvZaL6U',
+    authDomain:        'steph-rawlings-creations.firebaseapp.com',
+    projectId:         'steph-rawlings-creations',
+    storageBucket:     'steph-rawlings-creations.firebasestorage.app',
+    messagingSenderId: '271810785275',
+    appId:             '1:271810785275:web:e44be9608f17386ae4e55e'
+  });
+
+  var ffAuth = firebase.auth();
+
+  var FF_ALLOWED = [
+    'stephrawlingscreations@gmail.com',
+    'ppbdesigns1@gmail.com',
+    'sdr22ie@gmail.com'
+  ];
+
+  var pendingDisallow = '';
+
+  function isAllowed(email) {
+    return FF_ALLOWED.some(function(a) { return a.toLowerCase() === (email || '').toLowerCase(); });
+  }
+
+  function showPhase(phase) {
+    var loading = document.getElementById('auth-loading');
+    var login   = document.getElementById('login-screen');
+    var app     = document.getElementById('app');
+    loading.style.display = phase === 'loading' ? 'flex'  : 'none';
+    login.style.display   = phase === 'login'   ? 'flex'  : 'none';
+    app.style.display     = phase === 'app'      ? ''      : 'none';
+  }
+
+  function startFocusFlowSignIn() {
+    var provider = new firebase.auth.GoogleAuthProvider();
+    var err = document.getElementById('login-error');
+    ffAuth.signInWithPopup(provider).catch(function(e) {
+      /* Popup blocked — fall back to redirect */
+      if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
+        ffAuth.signInWithRedirect(provider).catch(function(e2) {
+          if (err) err.textContent = 'Sign-in failed: ' + e2.message;
+        });
+      } else if (err) {
+        err.textContent = 'Sign-in failed: ' + e.message;
+      }
+    });
+  }
+
+  /* Handle redirect result (for mobile browsers that don't support popups) */
+  ffAuth.getRedirectResult().catch(function(err) {
+    var el = document.getElementById('login-error');
+    if (el && err && err.code && err.code !== 'auth/operation-not-supported-in-this-environment') {
+      el.textContent = 'Sign-in failed: ' + err.message;
+    }
+  });
+
+  /* Auth state listener — the single source of truth for showing/hiding the app */
+  ffAuth.onAuthStateChanged(function(user) {
+    var err = document.getElementById('login-error');
+    if (user) {
+      if (!isAllowed(user.email)) {
+        pendingDisallow = 'That Google account is not allowed to access Focus Flow.';
+        ffAuth.signOut();
+        return;
+      }
+      /* Valid user — show the app */
+      if (err) err.textContent = '';
+      showPhase('app');
+    } else {
+      /* Signed out */
+      if (pendingDisallow && err) {
+        err.textContent = pendingDisallow;
+        pendingDisallow = '';
+      } else if (err) {
+        err.textContent = '';
+      }
+      showPhase('login');
+    }
+  });
+</script>
+
+</body>
+</html>
