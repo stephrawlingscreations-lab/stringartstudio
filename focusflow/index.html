@@ -942,7 +942,8 @@
   var FF_ALLOWED = [
     'stephrawlingscreations@gmail.com',
     'ppbdesigns1@gmail.com',
-    'sdr22ie@gmail.com'
+    'sdr22ie@gmail.com',
+    'sdr22uk@gmail.com'
   ];
 
   var pendingDisallow = '';
@@ -960,22 +961,16 @@
     app.style.display     = phase === 'app'      ? ''      : 'none';
   }
 
+  /* Use redirect sign-in — works on all browsers, never blocked */
   function startFocusFlowSignIn() {
     var provider = new firebase.auth.GoogleAuthProvider();
-    var err = document.getElementById('login-error');
-    ffAuth.signInWithPopup(provider).catch(function(e) {
-      /* Popup blocked — fall back to redirect */
-      if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
-        ffAuth.signInWithRedirect(provider).catch(function(e2) {
-          if (err) err.textContent = 'Sign-in failed: ' + e2.message;
-        });
-      } else if (err) {
-        err.textContent = 'Sign-in failed: ' + e.message;
-      }
+    ffAuth.signInWithRedirect(provider).catch(function(e) {
+      var err = document.getElementById('login-error');
+      if (err) err.textContent = 'Sign-in failed: ' + e.message;
     });
   }
 
-  /* Handle redirect result (for mobile browsers that don't support popups) */
+  /* Pick up the result when Google redirects back to this page */
   ffAuth.getRedirectResult().catch(function(err) {
     var el = document.getElementById('login-error');
     if (el && err && err.code && err.code !== 'auth/operation-not-supported-in-this-environment') {
@@ -983,8 +978,15 @@
     }
   });
 
+  /* Safety net — if Firebase auth doesn't resolve within 4s, show the login screen anyway */
+  var authResolved = false;
+  setTimeout(function() {
+    if (!authResolved) showPhase('login');
+  }, 4000);
+
   /* Auth state listener — the single source of truth for showing/hiding the app */
   ffAuth.onAuthStateChanged(function(user) {
+    authResolved = true;
     var err = document.getElementById('login-error');
     if (user) {
       if (!isAllowed(user.email)) {
@@ -992,11 +994,9 @@
         ffAuth.signOut();
         return;
       }
-      /* Valid user — show the app */
       if (err) err.textContent = '';
       showPhase('app');
     } else {
-      /* Signed out */
       if (pendingDisallow && err) {
         err.textContent = pendingDisallow;
         pendingDisallow = '';
