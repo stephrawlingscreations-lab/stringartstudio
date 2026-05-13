@@ -1034,8 +1034,8 @@
         ffAuth.signOut();
         return;
       }
-      /* Wire up Firebase sync and pull latest data before booting */
-      Storage.setFirebase(ffDb, user.uid);
+      /* All allowed emails belong to the same person — use a shared path */
+      Storage.setFirebase(ffDb, 'steph');
       Storage.pullFromFirebase()
         .then(bootApp)
         .catch(bootApp); /* boot even if Firebase is offline */
