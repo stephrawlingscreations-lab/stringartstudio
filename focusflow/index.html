@@ -11,9 +11,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/main.css">
 
-  <!-- Firebase Auth (compat SDK — no database needed, data stays in localStorage) -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <style>
     /* Login screen — visible by default, hidden once auth confirms a valid session */
@@ -963,6 +964,7 @@
   firebase.initializeApp({
     apiKey:            'AIzaSyAcSc-3ejzUfaiods7fAGAH10EuVvZaL6U',
     authDomain:        'steph-rawlings-creations.firebaseapp.com',
+    databaseURL:       'https://steph-rawlings-creations-default-rtdb.europe-west1.firebasedatabase.app',
     projectId:         'steph-rawlings-creations',
     storageBucket:     'steph-rawlings-creations.firebasestorage.app',
     messagingSenderId: '271810785275',
@@ -970,6 +972,7 @@
   });
 
   var ffAuth = firebase.auth();
+  var ffDb   = firebase.database();
 
   var FF_ALLOWED = [
     'stephrawlingscreations@gmail.com',
@@ -979,16 +982,28 @@
   ];
 
   var pendingDisallow = '';
+  var appBooted = false;
 
   function isAllowed(email) {
     return FF_ALLOWED.some(function(a) { return a.toLowerCase() === (email || '').toLowerCase(); });
   }
 
-  function showPhase(phase) {
-    var login = document.getElementById('login-screen');
-    var app   = document.getElementById('app');
-    login.style.display = phase === 'app' ? 'none' : 'flex';
-    app.style.display   = phase === 'app' ? 'block' : 'none';
+  function showLogin(msg) {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    var err = document.getElementById('login-error');
+    if (err) err.textContent = msg || '';
+  }
+
+  function bootApp() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    if (!appBooted) {
+      appBooted = true;
+      App.init();
+    } else {
+      App.renderDashboard();
+    }
   }
 
   function startFocusFlowSignIn() {
@@ -1011,25 +1026,22 @@
     if (el && err && err.message) el.textContent = 'Sign-in failed: ' + err.message;
   });
 
-  /* Auth state listener — the single source of truth for showing/hiding the app */
+  /* Auth state — pull cloud data first, then start the app */
   ffAuth.onAuthStateChanged(function(user) {
-    var err = document.getElementById('login-error');
     if (user) {
       if (!isAllowed(user.email)) {
         pendingDisallow = 'That Google account is not allowed to access Focus Flow.';
         ffAuth.signOut();
         return;
       }
-      if (err) err.textContent = '';
-      showPhase('app');
+      /* Wire up Firebase sync and pull latest data before booting */
+      Storage.setFirebase(ffDb, user.uid);
+      Storage.pullFromFirebase()
+        .then(bootApp)
+        .catch(bootApp); /* boot even if Firebase is offline */
     } else {
-      if (pendingDisallow && err) {
-        err.textContent = pendingDisallow;
-        pendingDisallow = '';
-      } else if (err) {
-        err.textContent = '';
-      }
-      showPhase('login');
+      showLogin(pendingDisallow || '');
+      pendingDisallow = '';
     }
   });
 </script>

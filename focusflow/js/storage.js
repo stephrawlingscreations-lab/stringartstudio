@@ -1,17 +1,21 @@
 /**
- * Storage — abstraction layer over localStorage.
- * Structured so every method can be swapped for a Firebase/API call
- * without changing any calling code. Each collection maps to a key.
+ * Storage — localStorage cache + Firebase Realtime Database sync.
+ * Every write goes to localStorage first (instant), then syncs to
+ * Firebase in the background so data is the same on all devices.
  *
- * Future Firebase swap: replace get/set methods with Firestore reads/writes.
+ * Call Storage.setFirebase(db, uid) after sign-in, then
+ * Storage.pullFromFirebase() to hydrate from the cloud before rendering.
  */
 
 const Storage = (() => {
 
-  /* ── Namespace prefix to avoid clashes ── */
   const NS = 'focusflow_';
+  const COLS = ['tasks', 'projects', 'notes', 'braindumps', 'reminders'];
 
-  /* ── Low-level helpers ── */
+  let _db  = null;   // firebase.database() instance
+  let _uid = null;   // signed-in user's UID
+
+  /* ── Low-level localStorage helpers ── */
   function raw_get(key) {
     try {
       const val = localStorage.getItem(NS + key);
@@ -24,6 +28,7 @@ const Storage = (() => {
   function raw_set(key, value) {
     try {
       localStorage.setItem(NS + key, JSON.stringify(value));
+      fbPush(key, value);
       return true;
     } catch (e) {
       console.error('Storage write failed:', e);
@@ -35,9 +40,15 @@ const Storage = (() => {
     localStorage.removeItem(NS + key);
   }
 
-  /* ── Collection helpers ── */
-  // Each "collection" is stored as a plain object keyed by id.
+  /* ── Firebase push (background, never blocks UI) ── */
+  function fbPush(key, value) {
+    if (_db && _uid) {
+      _db.ref(`focusflow/${_uid}/${key}`).set(value)
+        .catch(e => console.warn('Firebase sync failed:', e));
+    }
+  }
 
+  /* ── Collection helpers ── */
   function getCollection(name) {
     return raw_get(name) || {};
   }
@@ -47,8 +58,25 @@ const Storage = (() => {
   }
 
   /* ── Public API ── */
-
   return {
+
+    /* ── Firebase sync ── */
+    setFirebase(db, uid) {
+      _db  = db;
+      _uid = uid;
+    },
+
+    pullFromFirebase() {
+      if (!_db || !_uid) return Promise.resolve();
+      return _db.ref(`focusflow/${_uid}`).once('value').then(snapshot => {
+        const data = snapshot.val();
+        if (!data) return;
+        COLS.forEach(key => {
+          if (data[key]) localStorage.setItem(NS + key, JSON.stringify(data[key]));
+        });
+        if (data.settings) localStorage.setItem(NS + 'settings', JSON.stringify(data.settings));
+      });
+    },
 
     /* ── Tasks ── */
     getTasks() {
@@ -188,7 +216,11 @@ const Storage = (() => {
       if (data.settings)   raw_set('settings', data.settings);
     },
     clearAll() {
-      ['tasks', 'projects', 'notes', 'braindumps', 'reminders', 'settings'].forEach(k => raw_del(k));
+      [...COLS, 'settings'].forEach(k => raw_del(k));
+      if (_db && _uid) {
+        _db.ref(`focusflow/${_uid}`).remove()
+          .catch(e => console.warn('Firebase clear failed:', e));
+      }
     },
     isFirstRun() {
       return !raw_get('settings');

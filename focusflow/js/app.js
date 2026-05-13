@@ -559,7 +559,5 @@ const App = (() => {
 })();
 
 
-/* ══════════════════════════════════════════════
-   BOOT — runs when DOM is ready
-══════════════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded', () => App.init());
+/* App.init() is called by the Firebase auth handler in index.html
+   after sign-in and cloud data pull — not on DOMContentLoaded. */
