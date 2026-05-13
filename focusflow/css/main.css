@@ -561,6 +561,71 @@ p { color: var(--text-2); line-height: 1.6; }
   transform: scale(0.97);
 }
 
+.fab.is-open {
+  transform: rotate(45deg);
+}
+.fab.is-open:hover {
+  transform: rotate(45deg) scale(1.08);
+}
+
+/* FAB speed-dial menu */
+.fab-menu {
+  position: fixed;
+  bottom: calc(var(--bottom-nav-h) + 82px);
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+  z-index: 199;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+}
+.fab-menu.is-open {
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateY(0);
+}
+.fab-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.fab-menu-label {
+  background: var(--text);
+  color: var(--surface);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 20px;
+  white-space: nowrap;
+  box-shadow: var(--shadow-sm);
+}
+.fab-menu-btn {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-md);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--accent);
+  transition: background var(--t-fast), transform var(--t-fast);
+}
+.fab-menu-btn:hover { background: var(--accent-light); transform: scale(1.06); }
+.fab-menu-btn-primary {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+.fab-menu-btn-primary:hover { background: var(--accent-hover); }
+
+@media (min-width: 769px) {
+  .fab-menu { bottom: 90px; right: 28px; }
+}
+
 /* On desktop, FAB stays at bottom-right without competing with bottom-nav */
 @media (min-width: 769px) {
   .fab {
@@ -2383,3 +2448,71 @@ p { color: var(--text-2); line-height: 1.6; }
 .badge-overdue  { background: #fce8e8; color: var(--priority-high); }
 .badge-today    { background: var(--accent-light); color: var(--accent); }
 .badge-upcoming { background: var(--bg-alt); color: var(--text-2); }
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   QUICK ADD — expand toggle
+═══════════════════════════════════════════════════════════════════ */
+.qa-details-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 0;
+  margin-bottom: 4px;
+  transition: color var(--t-fast);
+}
+.qa-details-toggle:hover { color: var(--accent); }
+.qa-chevron { transition: transform var(--t-fast) var(--ease); }
+.qa-details-toggle[aria-expanded="true"] .qa-chevron { transform: rotate(180deg); }
+
+.qa-details {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.2s var(--ease);
+  overflow: hidden;
+}
+.qa-details.is-open { grid-template-rows: 1fr; }
+.qa-details > * { min-height: 0; }
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   DASHBOARD MORE — collapsible
+═══════════════════════════════════════════════════════════════════ */
+.dashboard-more { margin-top: var(--sp-2); }
+
+.dashboard-more-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 10px 16px;
+  width: 100%;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: background var(--t-fast), color var(--t-fast);
+  margin-bottom: var(--sp-4);
+}
+.dashboard-more-toggle:hover { background: var(--bg-alt); color: var(--text-2); }
+.more-chevron { transition: transform 0.2s var(--ease); flex-shrink: 0; }
+.dashboard-more-toggle.is-open .more-chevron { transform: rotate(180deg); }
+
+.dashboard-more-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s var(--ease);
+  overflow: hidden;
+}
+.dashboard-more-content.is-open { grid-template-rows: 1fr; }
+.dashboard-more-content > * { min-height: 0; }

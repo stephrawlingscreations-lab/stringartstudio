@@ -470,34 +470,36 @@ const Tasks = (() => {
   /* ══════════════════════════════════════════════
      QUICK ADD FORM
   ══════════════════════════════════════════════ */
+  function openQuickAdd() {
+    document.getElementById('qa-title').value    = '';
+    document.getElementById('qa-notes').value    = '';
+    document.getElementById('qa-priority').value = 'medium';
+    document.getElementById('qa-energy').value   = EnergyManager.get();
+    document.getElementById('qa-due-date').value = '';
+    /* Collapse details panel on each open */
+    const details = document.getElementById('qa-details');
+    const toggle  = document.getElementById('qa-details-toggle');
+    if (details) details.classList.remove('is-open');
+    if (toggle)  toggle.setAttribute('aria-expanded', 'false');
+    populateProjectSelects();
+    Modal.open('modal-quick-add');
+    setTimeout(() => document.getElementById('qa-title').focus(), 50);
+  }
+
   function initQuickAdd() {
-    const fab    = document.getElementById('fab-quick-add');
     const btnNew = document.getElementById('btn-new-task-tasks');
-    const form   = {
-      title:   () => document.getElementById('qa-title'),
-      project: () => document.getElementById('qa-project'),
-      priority:() => document.getElementById('qa-priority'),
-      due:     () => document.getElementById('qa-due-date'),
-      energy:  () => document.getElementById('qa-energy'),
-      notes:   () => document.getElementById('qa-notes'),
-    };
+    if (btnNew) btnNew.addEventListener('click', openQuickAdd);
 
-    function openModal() {
-      form.title().value   = '';
-      form.notes().value   = '';
-      form.priority().value = 'medium';
-      form.energy().value   = EnergyManager.get();
-      form.due().value      = '';
-      populateProjectSelects();
-      Modal.open('modal-quick-add');
-    }
-
-    if (fab)    fab.addEventListener('click', openModal);
-    if (btnNew) btnNew.addEventListener('click', openModal);
+    /* Details expand toggle */
+    document.getElementById('qa-details-toggle').addEventListener('click', () => {
+      const details = document.getElementById('qa-details');
+      const toggle  = document.getElementById('qa-details-toggle');
+      const open    = details.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', String(open));
+    });
 
     document.getElementById('btn-qa-save').addEventListener('click', saveQuickAdd);
 
-    // Enter to save from title field
     document.getElementById('qa-title').addEventListener('keydown', e => {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveQuickAdd(); }
     });
@@ -655,6 +657,7 @@ const Tasks = (() => {
 
   return {
     init,
+    openQuickAdd,
     render: renderTasksView,
     renderCompact: renderTaskCompact,
     applyFilters,

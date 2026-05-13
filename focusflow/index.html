@@ -295,59 +295,64 @@
           </div>
         </div>
 
-        <!-- Quick Wins -->
-        <div class="dashboard-section">
-          <div class="section-header">
-            <h2 class="section-title">
-              <span class="section-title-icon">✓</span>
-              Quick wins
-            </h2>
-            <span class="section-subtitle">low energy tasks</span>
-          </div>
-          <div id="quick-wins-container" class="task-list-compact">
-            <!-- Populated by JS -->
-          </div>
-        </div>
+        <!-- More (collapsible) -->
+        <div class="dashboard-more">
+          <button class="dashboard-more-toggle" id="dashboard-more-toggle" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="more-chevron">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+            <span>More</span>
+          </button>
+          <div class="dashboard-more-content" id="dashboard-more-content">
 
-        <!-- Two-column grid: Waiting On + Upcoming -->
-        <div class="dashboard-grid">
-          <div class="dashboard-section">
-            <div class="section-header">
-              <h2 class="section-title">
-                <span class="section-title-icon">⏳</span>
-                Waiting on
-              </h2>
+            <!-- Quick Wins -->
+            <div class="dashboard-section">
+              <div class="section-header">
+                <h2 class="section-title">
+                  <span class="section-title-icon">✓</span>
+                  Quick wins
+                </h2>
+                <span class="section-subtitle">low energy tasks</span>
+              </div>
+              <div id="quick-wins-container" class="task-list-compact"></div>
             </div>
-            <div id="waiting-tasks-container" class="task-list-compact">
-              <!-- Populated by JS -->
-            </div>
-          </div>
-          <div class="dashboard-section">
-            <div class="section-header">
-              <h2 class="section-title">
-                <span class="section-title-icon">◷</span>
-                Upcoming
-              </h2>
-              <span class="section-subtitle">next 7 days</span>
-            </div>
-            <div id="upcoming-tasks-container" class="task-list-compact">
-              <!-- Populated by JS -->
-            </div>
-          </div>
-        </div>
 
-        <!-- Progress overview -->
-        <div class="dashboard-section">
-          <div class="section-header">
-            <h2 class="section-title">
-              <span class="section-title-icon">◎</span>
-              Progress
-            </h2>
-          </div>
-          <div id="progress-overview" class="progress-overview">
-            <!-- Populated by JS -->
-          </div>
-        </div>
+            <!-- Waiting On + Upcoming -->
+            <div class="dashboard-grid">
+              <div class="dashboard-section">
+                <div class="section-header">
+                  <h2 class="section-title">
+                    <span class="section-title-icon">⏳</span>
+                    Waiting on
+                  </h2>
+                </div>
+                <div id="waiting-tasks-container" class="task-list-compact"></div>
+              </div>
+              <div class="dashboard-section">
+                <div class="section-header">
+                  <h2 class="section-title">
+                    <span class="section-title-icon">◷</span>
+                    Upcoming
+                  </h2>
+                  <span class="section-subtitle">next 7 days</span>
+                </div>
+                <div id="upcoming-tasks-container" class="task-list-compact"></div>
+              </div>
+            </div>
+
+            <!-- Progress -->
+            <div class="dashboard-section">
+              <div class="section-header">
+                <h2 class="section-title">
+                  <span class="section-title-icon">◎</span>
+                  Progress
+                </h2>
+              </div>
+              <div id="progress-overview" class="progress-overview"></div>
+            </div>
+
+          </div><!-- end dashboard-more-content -->
+        </div><!-- end dashboard-more -->
 
       </div><!-- end view-scroll -->
     </section>
@@ -695,8 +700,45 @@
   <!-- ═══════════════════════════════════════
        FLOATING ACTION BUTTON — Quick Add
   ══════════════════════════════════════════ -->
-  <button class="fab" id="fab-quick-add" title="Add new task (N)">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="24" height="24">
+  <!-- FAB speed-dial menu -->
+  <div class="fab-menu" id="fab-menu" aria-hidden="true">
+    <div class="fab-menu-item">
+      <span class="fab-menu-label">Note</span>
+      <button class="fab-menu-btn" id="fab-item-note" aria-label="New note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+      </button>
+    </div>
+    <div class="fab-menu-item">
+      <span class="fab-menu-label">Reminder</span>
+      <button class="fab-menu-btn" id="fab-item-reminder" aria-label="New reminder">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </button>
+    </div>
+    <div class="fab-menu-item">
+      <span class="fab-menu-label">Brain dump</span>
+      <button class="fab-menu-btn" id="fab-item-braindump" aria-label="Brain dump">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+        </svg>
+      </button>
+    </div>
+    <div class="fab-menu-item">
+      <span class="fab-menu-label">Task</span>
+      <button class="fab-menu-btn fab-menu-btn-primary" id="fab-item-task" aria-label="New task">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <button class="fab" id="fab-quick-add" title="Add new (N)" aria-label="Add new item" aria-expanded="false">
+    <svg class="fab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="24" height="24">
       <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
     </svg>
   </button>
@@ -719,39 +761,47 @@
         <div class="form-group">
           <input type="text" id="qa-title" class="form-input form-input-lg" placeholder="What needs to be done?" autocomplete="off" autofocus>
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Project</label>
-            <select class="form-select" id="qa-project">
-              <option value="">No project</option>
-            </select>
+        <button type="button" class="qa-details-toggle" id="qa-details-toggle" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" class="qa-chevron">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+          Add details
+        </button>
+        <div class="qa-details" id="qa-details">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Project</label>
+              <select class="form-select" id="qa-project">
+                <option value="">No project</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Priority</label>
+              <select class="form-select" id="qa-priority">
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Due date</label>
+              <input type="date" id="qa-due-date" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Energy needed</label>
+              <select class="form-select" id="qa-energy">
+                <option value="medium">⚡ Some energy</option>
+                <option value="low">😴 Low energy</option>
+                <option value="high">🔥 High focus</option>
+              </select>
+            </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Priority</label>
-            <select class="form-select" id="qa-priority">
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="low">Low</option>
-            </select>
+            <label class="form-label">Notes (optional)</label>
+            <textarea id="qa-notes" class="form-textarea" placeholder="Any details…" rows="2"></textarea>
           </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Due date</label>
-            <input type="date" id="qa-due-date" class="form-input">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Energy needed</label>
-            <select class="form-select" id="qa-energy">
-              <option value="medium">⚡ Some energy</option>
-              <option value="low">😴 Low energy</option>
-              <option value="high">🔥 High focus</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Notes (optional)</label>
-          <textarea id="qa-notes" class="form-textarea" placeholder="Any details…" rows="2"></textarea>
         </div>
       </div>
       <div class="modal-footer">

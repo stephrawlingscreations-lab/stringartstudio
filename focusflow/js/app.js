@@ -329,6 +329,72 @@ const App = (() => {
   /* ══════════════════════════════════════════════
      KEYBOARD SHORTCUTS
   ══════════════════════════════════════════════ */
+  /* ══════════════════════════════════════════════
+     FAB SPEED-DIAL MENU
+  ══════════════════════════════════════════════ */
+  function initFabMenu() {
+    const fab  = document.getElementById('fab-quick-add');
+    const menu = document.getElementById('fab-menu');
+    if (!fab || !menu) return;
+
+    function closeFab() {
+      menu.classList.remove('is-open');
+      menu.setAttribute('aria-hidden', 'true');
+      fab.classList.remove('is-open');
+      fab.setAttribute('aria-expanded', 'false');
+    }
+
+    fab.addEventListener('click', e => {
+      e.stopPropagation();
+      const open = menu.classList.toggle('is-open');
+      menu.setAttribute('aria-hidden', String(!open));
+      fab.classList.toggle('is-open', open);
+      fab.setAttribute('aria-expanded', String(open));
+    });
+
+    document.getElementById('fab-item-task').addEventListener('click', () => {
+      closeFab();
+      Tasks.openQuickAdd();
+    });
+    document.getElementById('fab-item-braindump').addEventListener('click', () => {
+      closeFab();
+      Router.navigate('braindump');
+      setTimeout(() => document.getElementById('brain-dump-input')?.focus(), 100);
+    });
+    document.getElementById('fab-item-reminder').addEventListener('click', () => {
+      closeFab();
+      Router.navigate('reminders');
+      setTimeout(() => document.getElementById('reminder-new-text')?.focus(), 100);
+    });
+    document.getElementById('fab-item-note').addEventListener('click', () => {
+      closeFab();
+      Router.navigate('notes');
+      setTimeout(() => Notes.openForm(), 100);
+    });
+
+    /* Close menu when clicking outside */
+    document.addEventListener('click', e => {
+      if (!fab.contains(e.target) && !menu.contains(e.target)) closeFab();
+    });
+  }
+
+
+  /* ══════════════════════════════════════════════
+     DASHBOARD MORE TOGGLE
+  ══════════════════════════════════════════════ */
+  function initDashboardMore() {
+    const toggle  = document.getElementById('dashboard-more-toggle');
+    const content = document.getElementById('dashboard-more-content');
+    if (!toggle || !content) return;
+
+    toggle.addEventListener('click', () => {
+      const open = content.classList.toggle('is-open');
+      toggle.classList.toggle('is-open', open);
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+  }
+
+
   function initKeyboardShortcuts() {
     document.addEventListener('keydown', e => {
       // Ignore when typing in inputs/textareas
@@ -338,8 +404,7 @@ const App = (() => {
       switch (e.key) {
         case 'n': case 'N':
           e.preventDefault();
-          populateProjectSelects();
-          Modal.open('modal-quick-add');
+          Tasks.openQuickAdd();
           break;
         case '1': Router.navigate('dashboard'); break;
         case '2': Router.navigate('tasks');     break;
@@ -528,6 +593,8 @@ const App = (() => {
     initRouter();
     initEnergyHook();
     initThemeToggles();
+    initFabMenu();
+    initDashboardMore();
     initKeyboardShortcuts();
     initDataManagement();
     initAutoRefresh();
