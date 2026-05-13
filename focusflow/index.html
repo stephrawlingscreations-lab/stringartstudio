@@ -304,6 +304,7 @@
             <span>More</span>
           </button>
           <div class="dashboard-more-content" id="dashboard-more-content">
+          <div>
 
             <!-- Quick Wins -->
             <div class="dashboard-section">
@@ -351,6 +352,7 @@
               <div id="progress-overview" class="progress-overview"></div>
             </div>
 
+          </div>
           </div><!-- end dashboard-more-content -->
         </div><!-- end dashboard-more -->
 
@@ -768,39 +770,41 @@
           Add details
         </button>
         <div class="qa-details" id="qa-details">
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Project</label>
-              <select class="form-select" id="qa-project">
-                <option value="">No project</option>
-              </select>
+          <div class="qa-details-inner">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Project</label>
+                <select class="form-select" id="qa-project">
+                  <option value="">No project</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Priority</label>
+                <select class="form-select" id="qa-priority">
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Due date</label>
+                <input type="date" id="qa-due-date" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Energy needed</label>
+                <select class="form-select" id="qa-energy">
+                  <option value="medium">⚡ Some energy</option>
+                  <option value="low">😴 Low energy</option>
+                  <option value="high">🔥 High focus</option>
+                </select>
+              </div>
             </div>
             <div class="form-group">
-              <label class="form-label">Priority</label>
-              <select class="form-select" id="qa-priority">
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="low">Low</option>
-              </select>
+              <label class="form-label">Notes (optional)</label>
+              <textarea id="qa-notes" class="form-textarea" placeholder="Any details…" rows="2"></textarea>
             </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Due date</label>
-              <input type="date" id="qa-due-date" class="form-input">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Energy needed</label>
-              <select class="form-select" id="qa-energy">
-                <option value="medium">⚡ Some energy</option>
-                <option value="low">😴 Low energy</option>
-                <option value="high">🔥 High focus</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Notes (optional)</label>
-            <textarea id="qa-notes" class="form-textarea" placeholder="Any details…" rows="2"></textarea>
           </div>
         </div>
       </div>

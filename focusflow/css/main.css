@@ -2475,10 +2475,9 @@ p { color: var(--text-2); line-height: 1.6; }
   display: grid;
   grid-template-rows: 0fr;
   transition: grid-template-rows 0.2s var(--ease);
-  overflow: hidden;
 }
 .qa-details.is-open { grid-template-rows: 1fr; }
-.qa-details > * { min-height: 0; }
+.qa-details-inner { overflow: hidden; min-height: 0; padding-top: 2px; }
 
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -2512,7 +2511,6 @@ p { color: var(--text-2); line-height: 1.6; }
   display: grid;
   grid-template-rows: 0fr;
   transition: grid-template-rows 0.25s var(--ease);
-  overflow: hidden;
 }
 .dashboard-more-content.is-open { grid-template-rows: 1fr; }
-.dashboard-more-content > * { min-height: 0; }
+.dashboard-more-content > div { overflow: hidden; min-height: 0; }
