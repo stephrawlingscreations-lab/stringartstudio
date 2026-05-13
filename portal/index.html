@@ -272,7 +272,7 @@
 
   function showApp(user) {
     document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').style.display = '';
+    document.getElementById('app').style.display = 'block';
     var name = (user.displayName || '').split(' ')[0];
     document.getElementById('greeting').textContent = name ? 'Hi ' + name + ' 👋' : 'Welcome back';
   }
