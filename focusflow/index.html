@@ -937,24 +937,27 @@
     var login = document.getElementById('login-screen');
     var app   = document.getElementById('app');
     login.style.display = phase === 'app' ? 'none' : 'flex';
-    app.style.display   = phase === 'app' ? ''     : 'none';
+    app.style.display   = phase === 'app' ? 'block' : 'none';
   }
 
-  /* Use redirect sign-in — works on all browsers, never blocked */
   function startFocusFlowSignIn() {
     var provider = new firebase.auth.GoogleAuthProvider();
-    ffAuth.signInWithRedirect(provider).catch(function(e) {
-      var err = document.getElementById('login-error');
-      if (err) err.textContent = 'Sign-in failed: ' + e.message;
+    ffAuth.signInWithPopup(provider).catch(function(e) {
+      if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
+        ffAuth.signInWithRedirect(provider).catch(function(e2) {
+          var err = document.getElementById('login-error');
+          if (err) err.textContent = 'Sign-in failed: ' + e2.message;
+        });
+      } else {
+        var err = document.getElementById('login-error');
+        if (err) err.textContent = 'Sign-in failed: ' + e.message;
+      }
     });
   }
 
-  /* Pick up the result when Google redirects back to this page */
   ffAuth.getRedirectResult().catch(function(err) {
     var el = document.getElementById('login-error');
-    if (el && err && err.code && err.code !== 'auth/operation-not-supported-in-this-environment') {
-      el.textContent = 'Sign-in failed: ' + err.message;
-    }
+    if (el && err && err.message) el.textContent = 'Sign-in failed: ' + err.message;
   });
 
   /* Auth state listener — the single source of truth for showing/hiding the app */
