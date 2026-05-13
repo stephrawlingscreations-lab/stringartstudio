@@ -104,6 +104,30 @@ const Storage = (() => {
       return setCollection('notes', col);
     },
 
+    /* ── Reminders ── */
+    getReminders() {
+      return Object.values(getCollection('reminders'))
+        .sort((a, b) => {
+          if (!a.date && !b.date) return new Date(a.createdAt) - new Date(b.createdAt);
+          if (!a.date) return 1;
+          if (!b.date) return -1;
+          return a.date.localeCompare(b.date);
+        });
+    },
+    getReminder(id) {
+      return getCollection('reminders')[id] || null;
+    },
+    saveReminder(reminder) {
+      const col = getCollection('reminders');
+      col[reminder.id] = reminder;
+      return setCollection('reminders', col);
+    },
+    deleteReminder(id) {
+      const col = getCollection('reminders');
+      delete col[id];
+      return setCollection('reminders', col);
+    },
+
     /* ── Brain Dump ── */
     getBrainDumps() {
       return Object.values(getCollection('braindumps'))
@@ -148,9 +172,10 @@ const Storage = (() => {
         projects:   getCollection('projects'),
         notes:      getCollection('notes'),
         braindumps: getCollection('braindumps'),
+        reminders:  getCollection('reminders'),
         settings:   raw_get('settings') || {},
         exportedAt: new Date().toISOString(),
-        version:    '1.0'
+        version:    '1.1'
       };
     },
     importAll(data) {
@@ -159,10 +184,11 @@ const Storage = (() => {
       if (data.projects)   setCollection('projects', data.projects);
       if (data.notes)      setCollection('notes', data.notes);
       if (data.braindumps) setCollection('braindumps', data.braindumps);
+      if (data.reminders)  setCollection('reminders', data.reminders);
       if (data.settings)   raw_set('settings', data.settings);
     },
     clearAll() {
-      ['tasks', 'projects', 'notes', 'braindumps', 'settings'].forEach(k => raw_del(k));
+      ['tasks', 'projects', 'notes', 'braindumps', 'reminders', 'settings'].forEach(k => raw_del(k));
     },
     isFirstRun() {
       return !raw_get('settings');

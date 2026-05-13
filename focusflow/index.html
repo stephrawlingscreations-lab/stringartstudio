@@ -155,6 +155,16 @@
           <span>Notes</span>
         </a>
       </li>
+      <li>
+        <a href="#" class="nav-link" data-view="reminders">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          <span>Reminders</span>
+          <span class="nav-badge" id="nav-badge-reminders"></span>
+        </a>
+      </li>
     </ul>
 
     <div class="sidebar-footer">
@@ -220,6 +230,20 @@
           </div>
           <div class="greeting-meta">
             <div id="greeting-quote" class="greeting-quote"></div>
+          </div>
+        </div>
+
+        <!-- Reminders due today / overdue -->
+        <div class="dashboard-section" id="reminders-widget-section" style="display:none">
+          <div class="section-header">
+            <h2 class="section-title">
+              <span class="section-title-icon">🔔</span>
+              Reminders
+            </h2>
+            <button class="section-link" data-view="reminders">See all</button>
+          </div>
+          <div id="reminders-widget-container" class="reminder-list-compact">
+            <!-- Populated by JS -->
           </div>
         </div>
 
@@ -593,6 +617,31 @@
       </div>
     </section>
 
+    <!-- ─────────────────────────────────────
+         VIEW: REMINDERS
+    ────────────────────────────────────── -->
+    <section class="view" id="view-reminders">
+      <div class="view-scroll">
+        <div class="view-header">
+          <h1 class="view-title">Reminders</h1>
+        </div>
+
+        <!-- Add form -->
+        <div class="reminder-add-form">
+          <div class="reminder-add-inputs">
+            <input type="text" id="reminder-new-text" class="form-input" placeholder="Add a reminder…" autocomplete="off">
+            <input type="date" id="reminder-new-date" class="form-input reminder-date-input" title="Optional date">
+          </div>
+          <button class="btn btn-primary" id="btn-add-reminder">Add</button>
+        </div>
+
+        <!-- List -->
+        <div id="reminders-list">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
   </main><!-- end main-content -->
 
 
@@ -626,11 +675,12 @@
       </svg>
       <span>Planner</span>
     </a>
-    <a href="#" class="bottom-nav-item" data-view="braindump">
+    <a href="#" class="bottom-nav-item" data-view="reminders">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="22" height="22">
-        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
       </svg>
-      <span>Dump</span>
+      <span>Remind</span>
     </a>
   </nav>
 
@@ -902,6 +952,7 @@
 <script src="js/notes.js"></script>
 <script src="js/braindump.js"></script>
 <script src="js/planner.js"></script>
+<script src="js/reminders.js"></script>
 <script src="js/app.js"></script>
 
 <!-- ═══════════════════════════════════════

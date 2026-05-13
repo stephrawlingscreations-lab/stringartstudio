@@ -64,6 +64,7 @@ const App = (() => {
   ══════════════════════════════════════════════ */
   function renderDashboard() {
     updateGreeting();
+    Reminders.renderDashboardWidget();
     renderNextActions();
     renderTodayTasks();
     renderOverdueTasks();
@@ -516,6 +517,7 @@ const App = (() => {
     Notes.init();
     BrainDump.init();
     Planner.init();
+    Reminders.init();
 
     // Wire up app-level concerns
     initRouter();
