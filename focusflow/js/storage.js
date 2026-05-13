@@ -218,9 +218,10 @@ const Storage = (() => {
     clearAll() {
       [...COLS, 'settings'].forEach(k => raw_del(k));
       if (_db && _uid) {
-        _db.ref(`focusflow/${_uid}`).remove()
+        return _db.ref(`focusflow/${_uid}`).remove()
           .catch(e => console.warn('Firebase clear failed:', e));
       }
+      return Promise.resolve();
     },
     isFirstRun() {
       return !raw_get('settings');

@@ -307,9 +307,6 @@ const App = (() => {
       document.getElementById('modal-onboarding').classList.remove('is-active');
       document.body.style.overflow = '';
 
-      // Seed demo data on first run
-      seedDemoData();
-
       // Re-render everything
       populateProjectSelects();
       Tasks.render();
@@ -319,7 +316,7 @@ const App = (() => {
       renderDashboard();
       Tasks.updateNavBadge();
 
-      Toast.success(`Welcome${name ? ', ' + name : ''}! Your demo data is loaded.`);
+      Toast.success(`Welcome${name ? ', ' + name : ''}! Ready when you are.`);
     });
 
     // Allow pressing enter on name field
@@ -379,8 +376,7 @@ const App = (() => {
         'This will delete ALL your Focus Flow data permanently (tasks, projects, notes, reminders). Are you sure?'
       );
       if (!ok) return;
-      Storage.clearAll();
-      Storage.updateSetting('onboardingComplete', false);
+      await Storage.clearAll();
       location.reload();
     });
   }
