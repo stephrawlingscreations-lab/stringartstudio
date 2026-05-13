@@ -62,11 +62,25 @@ def icon_tv() -> Image.Image:
     return base
 
 
+def icon_portal() -> Image.Image:
+    base = vertical_gradient((W, H), (42, 50, 68), (105, 143, 128))
+    d = ImageDraw.Draw(base)
+    # 2x2 grid of rounded squares representing the hub tiles
+    s, r, gap = 52, 10, 14
+    positions = [(34, 34), (34 + s + gap, 34), (34, 34 + s + gap), (34 + s + gap, 34 + s + gap)]
+    for x, y in positions:
+        d.rounded_rectangle((x, y, x + s, y + s), radius=r, fill=(255, 255, 255, 180))
+    # Subtle inner highlight on top-left tile
+    d.rounded_rectangle((38, 38, 38 + 44, 38 + 44), radius=8, fill=(255, 255, 255, 40))
+    return base
+
+
 def main() -> None:
     save_pair("household", icon_household())
     save_pair("grass", icon_grass())
     save_pair("tv", icon_tv())
-    print("Wrote household-180.png, grass-180.png, tv-180.png (+ 32px favicons)")
+    save_pair("portal", icon_portal())
+    print("Wrote household-180.png, grass-180.png, tv-180.png, portal-180.png (+ 32px favicons)")
 
 
 if __name__ == "__main__":
