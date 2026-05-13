@@ -307,6 +307,9 @@ const App = (() => {
       document.getElementById('modal-onboarding').classList.remove('is-active');
       document.body.style.overflow = '';
 
+      // Seed the 7 default projects (no demo tasks)
+      seedProjects();
+
       // Re-render everything
       populateProjectSelects();
       Tasks.render();
@@ -316,7 +319,7 @@ const App = (() => {
       renderDashboard();
       Tasks.updateNavBadge();
 
-      Toast.success(`Welcome${name ? ', ' + name : ''}! Ready when you are.`);
+      Toast.success(`Welcome${name ? ', ' + name : ''}! Your projects are ready.`);
     });
 
     // Allow pressing enter on name field

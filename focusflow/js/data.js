@@ -227,3 +227,15 @@ function seedDemoData() {
   notes.forEach(n => Storage.saveNote(n));
   braindumps.forEach(b => Storage.saveBrainDump(b));
 }
+
+function seedProjects() {
+  [
+    createProject({ id: 'p-string',  name: 'String Art Business',  description: 'Running and growing the string art side business', color: '#D4895F' }),
+    createProject({ id: 'p-web',     name: 'Website / Development', description: 'Building and maintaining the website',             color: '#7BA8C8' }),
+    createProject({ id: 'p-legal',   name: 'Legal / Research',      description: 'Research tasks, legal documents, admin',           color: '#8B8FA8' }),
+    createProject({ id: 'p-health',  name: 'Health / Admin',         description: 'Health appointments, self-care, admin tasks',     color: '#71A882' }),
+    createProject({ id: 'p-home',    name: 'Home Tasks',             description: 'House maintenance, errands, household jobs',      color: '#D4895F' }),
+    createProject({ id: 'p-ideas',   name: 'Ideas & Inspiration',    description: 'Things to explore, future plans, brainstorms',   color: '#F2C05A' }),
+    createProject({ id: 'p-orders',  name: 'Orders / Customers',     description: 'Customer orders, messages, fulfilment',          color: '#698F80' }),
+  ].forEach(p => Storage.saveProject(p));
+}
