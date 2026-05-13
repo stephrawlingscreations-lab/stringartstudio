@@ -285,13 +285,22 @@
 
   function startSignIn() {
     var provider = new firebase.auth.GoogleAuthProvider();
-    portalAuth.signInWithRedirect(provider).catch(function(e) {
-      document.getElementById('login-error').textContent = 'Sign-in failed: ' + e.message;
+    /* Try popup first — works on all modern browsers without redirect state issues */
+    portalAuth.signInWithPopup(provider).catch(function(e) {
+      /* Popup blocked? Fall back to redirect */
+      if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
+        portalAuth.signInWithRedirect(provider).catch(function(e2) {
+          document.getElementById('login-error').textContent = 'Sign-in failed: ' + e2.message;
+        });
+      } else {
+        document.getElementById('login-error').textContent = 'Sign-in failed: ' + e.message;
+      }
     });
   }
 
+  /* Handle any pending redirect result */
   portalAuth.getRedirectResult().catch(function(err) {
-    if (err && err.code && err.code !== 'auth/operation-not-supported-in-this-environment') {
+    if (err && err.message) {
       document.getElementById('login-error').textContent = 'Sign-in failed: ' + err.message;
     }
   });
@@ -300,7 +309,7 @@
   portalAuth.onAuthStateChanged(function(user) {
     if (user) {
       if (!isAllowed(user.email)) {
-        pendingDisallow = 'That Google account is not allowed here.';
+        pendingDisallow = 'That Google account (' + user.email + ') is not on the access list.';
         portalAuth.signOut();
         return;
       }
