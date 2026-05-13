@@ -372,7 +372,16 @@ const App = (() => {
       const file = e.target.files[0];
       if (!file) return;
       importData(file);
-      e.target.value = ''; // reset input
+      e.target.value = '';
+    });
+    document.getElementById('btn-reset-app').addEventListener('click', async () => {
+      const ok = await confirmAction(
+        'This will delete ALL your Focus Flow data permanently (tasks, projects, notes, reminders). Are you sure?'
+      );
+      if (!ok) return;
+      Storage.clearAll();
+      Storage.updateSetting('onboardingComplete', false);
+      location.reload();
     });
   }
 
