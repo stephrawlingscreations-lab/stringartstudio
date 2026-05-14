@@ -353,7 +353,8 @@
       { path: 'householdAdmin',   file: 'household-backup-' + ds + '.json' },
       { path: 'iptv',             file: 'tv-tracker-backup-' + ds + '.json' },
       { path: 'grassPortal',      file: 'grass-cutting-backup-' + ds + '.json' },
-      { path: 'stephCreations',   file: 'steph-rawlings-backup-' + ds + '.json' }
+      { path: 'stephCreations',        file: 'steph-rawlings-backup-' + ds + '.json' },
+      { path: 'focusflow/steph/training', file: 'training-backup-' + ds + '.json' }
     ];
 
     Promise.all(trackers.map(function(t) {
