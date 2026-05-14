@@ -262,13 +262,257 @@ const Training = (() => {
 
 
   /* ══════════════════════════════════════════════
+     RECOMMENDED LEARNING PATH — Phase 1
+  ══════════════════════════════════════════════ */
+  function buildPhase1Program() {
+    return {
+      id: 'recommended_phase1',
+      title: 'Recommended Path — Phase 1: Core Foundations',
+      description: 'Git, Firebase, hosting, and JavaScript. The most important skills for your projects right now.',
+      createdAt: new Date().toISOString(),
+      checks: {}, notes: {}, weeklyChecks: {},
+      sections: [
+        {
+          id: 'p1s1',
+          title: 'Git & GitHub',
+          goal: 'The single biggest confidence boost you can get right now.',
+          content: 'Right now GitHub probably feels like "push code and hope". Once Git clicks, deployments make sense, backups make sense, branches make sense, and experimenting becomes much safer.',
+          bullets: [
+            'What to learn: commit, push, pull, branch, merge.',
+            'Why it matters for you: every project you build lives in GitHub.',
+            'Deployments to Netlify and Firebase connect directly to GitHub.',
+            'Branches let you try things without breaking your live version.',
+            'Recommended resource: Git & GitHub Crash Course by Traversy Media (search YouTube — free, very beginner friendly).',
+            'Also useful: the Git sections inside The Odin Project (free, highly respected).'
+          ],
+          extra: 'Do this first. Everything else builds on it.'
+        },
+        {
+          id: 'p1s2',
+          title: 'Firebase',
+          goal: 'Directly relevant to your sales trackers, Lakeside portal, logins, and cloud data.',
+          content: 'Most Firebase tutorials are awful because they assume too much. Focus only on the four things that matter for your projects.',
+          bullets: [
+            'Auth: how logins work — email/password and Google sign-in.',
+            'Firestore: how data is stored, read, written, and structured.',
+            'Hosting: how to publish a site from Firebase.',
+            'Rules: who is allowed to read or write what data.',
+            'Recommended resource: Firebase Official Learn platform — firebase.google.com/learn.',
+            'Also good: Firebase Full Course by freeCodeCamp on YouTube.',
+            "Don't try to memorise everything. Build something small as you go."
+          ],
+          extra: 'You already use Firebase. This will help you understand what you have built and why it works.'
+        },
+        {
+          id: 'p1s3',
+          title: 'Hosting & Deployment',
+          goal: 'Understand how your code goes from your computer to a live website.',
+          content: 'Deployment is one of those things that feels magical until you understand it — then it becomes routine and reliable.',
+          bullets: [
+            'Netlify: connect your GitHub repo and it auto-deploys on every push.',
+            'Firebase Hosting: best when your app also uses Firestore and Auth.',
+            'Custom domains: how to point your domain name at your hosting.',
+            'Environment variables: keeping secrets (like API keys) out of your code.',
+            'Recommended: The Odin Project — Foundations section covers this well.',
+            'Practice: deploy one of your existing projects from scratch to Netlify.'
+          ],
+          extra: 'Once you have done this once deliberately, it stops being scary.'
+        },
+        {
+          id: 'p1s4',
+          title: 'JavaScript Properly',
+          goal: 'Understand the language that powers almost all of your projects.',
+          content: "You already use JavaScript without fully understanding it yet. That's actually fine as a starting point. Now it's time to fill the gaps so the code you write makes more sense to you.",
+          bullets: [
+            'Focus on: variables, functions, arrays, objects, events, and async basics.',
+            'You do NOT need to master everything — just the parts you use.',
+            'Recommended resource: JavaScript.info — genuinely one of the best free resources online.',
+            'Read slowly. Try the examples. Do not rush.',
+            'The Odin Project also has a good JavaScript foundations section.',
+            'Tip: when you see a piece of code you do not understand, paste it into Claude or ChatGPT and ask it to explain line by line.'
+          ],
+          extra: "Don't try to do a full JavaScript course start to finish. Use it alongside building — look things up as you need them."
+        }
+      ]
+    };
+  }
+
+
+  /* ══════════════════════════════════════════════
+     RECOMMENDED LEARNING PATH — Phase 2
+  ══════════════════════════════════════════════ */
+  function buildPhase2Program() {
+    return {
+      id: 'recommended_phase2',
+      title: 'Recommended Path — Phase 2: Data & Architecture',
+      description: 'Database design, APIs, and system architecture. The thinking skills that separate hobby coders from app designers.',
+      createdAt: new Date().toISOString(),
+      checks: {}, notes: {}, weeklyChecks: {},
+      sections: [
+        {
+          id: 'p2s1',
+          title: 'Database Design',
+          goal: 'Learn to think "how should I structure information?" before you start building.',
+          content: 'This is one of the biggest level-up skills for the kind of tools you are building. Better database design means better trackers, better portals, and fewer painful rewrites later.',
+          bullets: [
+            'Learn about: collections, documents, relationships, and data normalisation.',
+            'Practice thinking: what fields does a customer record need? What about a job? An invoice?',
+            'Firestore is a NoSQL database — structure matters more than you might think.',
+            'Recommended resource: Database Design Course by freeCodeCamp on YouTube (free, beginner friendly).',
+            'Exercise: draw out the data structure for your Lakeside portal on paper before touching code.'
+          ],
+          extra: 'This will massively help your trackers, portals, customer systems, and any future SaaS ideas.'
+        },
+        {
+          id: 'p2s2',
+          title: 'Understanding APIs',
+          goal: 'Understand how software talks to other software — and how to use it in your projects.',
+          content: "An API is a controlled way for one system to communicate with another. You are already using APIs every time you call Firebase — you just might not have thought of it that way.",
+          bullets: [
+            'REST APIs: how most web services share data (requests and responses).',
+            'JSON: the format data travels in — you have already seen this in Firebase.',
+            'Fetch: how JavaScript requests data from an API.',
+            'When you might need an API: payment processing, maps, email, SMS, weather, etc.',
+            'Recommended: JavaScript.info has a good section on Fetch and async.',
+            'Practice: find a free API (like an open weather or quote API) and display its data on a page.'
+          ],
+          extra: 'Knowing how APIs work unlocks connecting your apps to almost any external service.'
+        },
+        {
+          id: 'p2s3',
+          title: 'System Architecture',
+          goal: 'See how hosting, APIs, databases, and frontend/backend all connect as one picture.',
+          content: 'Architecture is the thing that separates hobby coders from app and systems designers. It is not about writing more code — it is about understanding the whole system before you build any part of it.',
+          bullets: [
+            'Key concepts: client/server, request/response, stateless vs stateful, caching.',
+            'Draw diagrams: get in the habit of sketching how your systems work before coding.',
+            'Recommended resource: ByteByteGo YouTube Channel — very visual, excellent explanations.',
+            'Also useful: the architecture sections inside The Odin Project.',
+            "You don't need to memorise everything — exposure is enough at this stage.",
+            'Start asking: where does this data come from? Where does it go? Who can see it?'
+          ],
+          extra: "This is where hosting, APIs, databases, and frontend/backend start connecting mentally. Once it clicks, you can't unsee it."
+        }
+      ]
+    };
+  }
+
+
+  /* ══════════════════════════════════════════════
+     RECOMMENDED LEARNING PATH — Phase 3
+  ══════════════════════════════════════════════ */
+  function buildPhase3Program() {
+    return {
+      id: 'recommended_phase3',
+      title: 'Recommended Path — Phase 3: Advanced Skills',
+      description: 'React, UX/UI design, AI-assisted development, and SaaS thinking. Do not rush here — build on Phase 1 and 2 first.',
+      createdAt: new Date().toISOString(),
+      checks: {}, notes: {}, weeklyChecks: {},
+      sections: [
+        {
+          id: 'p3s1',
+          title: 'React',
+          goal: 'Learn the tool that makes complex frontend apps much more manageable.',
+          content: "React is where modern app development starts becoming cleaner. But don't jump too early. You first need Git, hosting, architecture, and frontend/backend understanding — then React becomes much easier.",
+          bullets: [
+            'React lets you build UIs from reusable components instead of one big HTML file.',
+            'State management: React handles data changes and re-renders automatically.',
+            'Recommended resource: Scrimba React Course — very visual and interactive, likely suits your learning style well.',
+            'Also good: the official React documentation at react.dev — well written and example-led.',
+            'Do NOT start here. Come back once Phase 1 and 2 feel comfortable.',
+            'You will know you are ready when Git, Firebase, and deployment feel routine.'
+          ],
+          extra: 'React is the right next step after the foundations. Not before.'
+        },
+        {
+          id: 'p3s2',
+          title: 'UX/UI Design',
+          goal: 'Formalise a strength you already naturally have.',
+          content: "Honestly, this is one of your strongest potential areas. You naturally think about usability, workflow, visuals, and real-world user problems. That's genuinely valuable — and rare.",
+          bullets: [
+            'UX = User Experience: how something feels to use.',
+            'UI = User Interface: how something looks.',
+            'You already do this intuitively. Formalising it gives you vocabulary and methods.',
+            'Recommended resource: Google UX Design Certificate on Coursera.',
+            'You do NOT need the certificate itself — but the thinking and process it teaches is excellent.',
+            'Focus on: user research, wireframing, prototyping, and usability testing.'
+          ],
+          extra: "You're already halfway there. This just gives you the framework to do it more deliberately."
+        },
+        {
+          id: 'p3s3',
+          title: 'AI-Assisted Development',
+          goal: 'Use AI tools properly, safely, and more effectively than most people currently do.',
+          content: "You are already naturally using ChatGPT, Claude, and similar tools better than many beginners. Now it's worth being more deliberate about how you use them.",
+          bullets: [
+            'Prompting for architecture: describe the system you want to build, not just individual pieces.',
+            'Debugging with AI: paste the error, paste the relevant code, explain what you expected.',
+            'Reviewing AI code: never paste AI code into a live project without reading and understanding it.',
+            'Using AI safely: AI makes mistakes. It is a capable assistant, not an authority.',
+            'Recommended: Cursor Documentation — cursor.sh/docs.',
+            'Also: Claude Code Documentation — how to get the most out of AI coding tools.',
+            'Key skill: knowing what questions to ask, not just accepting the first answer.'
+          ],
+          extra: "You're already doing this well. A bit of intentional practice will make you much more effective."
+        },
+        {
+          id: 'p3s4',
+          title: 'SaaS & Product Thinking',
+          goal: 'Think like a systems designer and product builder, not just a website creator.',
+          content: "You're starting to think like a systems designer, workflow organiser, and product builder. That's more valuable than most people realise. This is the mindset behind every successful online tool.",
+          bullets: [
+            'SaaS = Software as a Service: people pay to access your tool online, usually monthly.',
+            'Product thinking: what problem does this solve? For who? Why would they pay for it?',
+            'Recommended resource: Y Combinator Startup School — free, not coding-focused.',
+            'More about: product thinking, identifying user problems, and SaaS mindset.',
+            'Your portals and trackers are already moving in this direction.',
+            'Exercise: write a one-paragraph description of who would use your Lakeside portal and why.'
+          ],
+          extra: "You learned by building. That's how many very successful developers and product designers learned. You're already further along than you think."
+        }
+      ]
+    };
+  }
+
+
+  /* ══════════════════════════════════════════════
+     BUILT-IN PROGRAMS (merged in automatically)
+  ══════════════════════════════════════════════ */
+  const BUILT_IN_IDS = [
+    'software_dev',
+    'recommended_phase1',
+    'recommended_phase2',
+    'recommended_phase3'
+  ];
+
+  function getBuiltInProgram(id) {
+    switch (id) {
+      case 'software_dev':        return buildDefaultProgram();
+      case 'recommended_phase1':  return buildPhase1Program();
+      case 'recommended_phase2':  return buildPhase2Program();
+      case 'recommended_phase3':  return buildPhase3Program();
+    }
+  }
+
+
+  /* ══════════════════════════════════════════════
      DATA HELPERS
   ══════════════════════════════════════════════ */
   function getData() {
     let data = Storage.getTrainingData();
     if (!data) {
-      data = { programs: [buildDefaultProgram()] };
+      data = { programs: BUILT_IN_IDS.map(id => getBuiltInProgram(id)) };
       Storage.saveTrainingData(data);
+    } else {
+      // Merge in any built-in programs added since the user last loaded
+      let changed = false;
+      BUILT_IN_IDS.forEach(id => {
+        if (!data.programs.find(p => p.id === id)) {
+          data.programs.push(getBuiltInProgram(id));
+          changed = true;
+        }
+      });
+      if (changed) Storage.saveTrainingData(data);
     }
     return data;
   }
