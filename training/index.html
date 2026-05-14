@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Training Portal — Steph</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Training" />
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --sage:      #698F80;
+      --sage-dk:   #4e6e61;
+      --sage-lt:   #e8f0ec;
+      --bg:        #F7F5F0;
+      --card:      #ffffff;
+      --text:      #2C3E35;
+      --muted:     #7a8a84;
+      --border:    #e2ddd6;
+      --complete:  #16a34a;
+      --danger:    #c0392b;
+      --radius:    14px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── LOGIN ── */
+    #login-screen {
+      position: fixed; inset: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: center; padding: 24px;
+      background: linear-gradient(135deg, #2A3244 0%, #3D4F6E 55%, #698F80 100%);
+    }
+    .login-card {
+      background: #fff; border-radius: 20px; padding: 40px 32px;
+      max-width: 360px; width: 100%; text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+    .login-logo {
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, var(--sage), var(--sage-dk));
+      border-radius: 18px; margin: 0 auto 20px;
+      display: flex; align-items: center; justify-content: center; font-size: 28px;
+    }
+    .login-card h1 { font-size: 1.5rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .login-card p  { font-size: 0.9rem; color: var(--muted); margin-bottom: 28px; }
+    .btn-google {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; padding: 14px 20px; background: #fff;
+      border: 2px solid var(--border); border-radius: 12px; cursor: pointer;
+      font-size: 0.95rem; font-weight: 600; color: var(--text);
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .btn-google:hover { background: var(--bg); border-color: var(--sage); }
+    #login-error { margin-top: 14px; font-size: 0.85rem; color: var(--danger); min-height: 20px; }
+
+    /* ── APP SHELL ── */
+    #app { display: none; }
+
+    header {
+      background: var(--card); border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      display: flex; align-items: center; gap: 14px;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .hub-link {
+      font-size: 0.82rem; font-weight: 600; color: var(--muted);
+      text-decoration: none; white-space: nowrap;
+      padding: 6px 12px; border: 1px solid var(--border);
+      border-radius: 8px; transition: background 0.15s, color 0.15s;
+    }
+    .hub-link:hover { background: var(--sage-lt); color: var(--sage-dk); }
+    .header-title {
+      font-size: 1.05rem; font-weight: 700; flex: 1;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .header-back {
+      display: none; /* shown in program view */
+      font-size: 0.82rem; font-weight: 600; color: var(--muted);
+      padding: 6px 12px; border: 1px solid var(--border);
+      border-radius: 8px; background: none; cursor: pointer;
+      transition: background 0.15s; white-space: nowrap;
+    }
+    .header-back:hover { background: var(--sage-lt); color: var(--sage-dk); }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 24px 16px 60px; }
+
+    /* ── STATS ── */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 10px; margin-bottom: 20px;
+    }
+    .stat {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 8px; text-align: center;
+    }
+    .stat-num { font-size: 1.7rem; font-weight: 700; color: var(--sage); line-height: 1.1; }
+    .stat-lbl { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── PROGRAM GRID ── */
+    .programs-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px; margin-bottom: 10px;
+    }
+    .program-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px;
+      cursor: pointer; position: relative;
+      transition: box-shadow 0.18s, transform 0.12s;
+    }
+    .program-card:hover { box-shadow: 0 6px 20px rgba(105,143,128,0.15); transform: translateY(-2px); }
+    .program-card-del {
+      position: absolute; top: 12px; right: 12px; background: none;
+      border: 1px solid var(--border); color: var(--muted);
+      border-radius: 6px; padding: 2px 7px; font-size: 0.72rem; cursor: pointer;
+    }
+    .program-card-del:hover { background: #fce8ec; border-color: #f0b0b8; color: var(--danger); }
+    .program-card-title { font-weight: 700; font-size: 0.97rem; padding-right: 30px; margin-bottom: 4px; }
+    .program-card-desc  { font-size: 0.83rem; color: var(--muted); margin-bottom: 12px; min-height: 2em; }
+    .prog-wrap { background: #dde8e4; border-radius: 999px; overflow: hidden; height: 9px; }
+    .prog-bar  { height: 100%; background: var(--complete); border-radius: 999px; transition: width 0.35s; }
+    .prog-lbl  { font-size: 0.77rem; color: var(--muted); margin-top: 4px; }
+
+    .add-program-btn {
+      background: var(--card); border: 2px dashed var(--sage);
+      color: var(--sage); border-radius: var(--radius); padding: 28px 16px;
+      cursor: pointer; font-weight: 700; font-size: 0.95rem;
+      font-family: inherit; width: 100%; transition: background 0.15s;
+    }
+    .add-program-btn:hover { background: var(--sage-lt); }
+
+    /* ── PROGRESS BAR (program detail) ── */
+    .progress-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
+    }
+    .progress-card-bar { background: #dde8e4; border-radius: 999px; overflow: hidden; height: 12px; }
+    .progress-card-fill { height: 100%; background: var(--complete); border-radius: 999px; transition: width 0.4s; }
+    .progress-card-text { font-size: 0.82rem; color: var(--muted); margin-top: 5px; }
+
+    /* ── CONTROLS ── */
+    .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .btn {
+      border: none; border-radius: 9px; padding: 8px 14px;
+      cursor: pointer; font-weight: 600; font-size: 0.85rem; font-family: inherit;
+    }
+    .btn-primary  { background: var(--sage); color: #fff; }
+    .btn-primary:hover  { background: var(--sage-dk); }
+    .btn-ghost    { background: #fff; border: 1px solid var(--border); color: var(--text); }
+    .btn-ghost:hover    { background: var(--sage-lt); border-color: var(--sage); }
+    .btn-danger   { background: #fff; border: 1px solid #f0b0b8; color: var(--danger); }
+    .btn-danger:hover   { background: #fce8ec; }
+
+    /* ── SECTIONS ── */
+    .section-details {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); margin: 10px 0; overflow: hidden;
+    }
+    .section-summary {
+      cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: 0.92rem;
+      display: flex; align-items: center; gap: 10px; list-style: none; user-select: none;
+    }
+    .section-summary::-webkit-details-marker { display: none; }
+    .sum-title  { flex: 1; }
+    .sum-chev   { flex-shrink: 0; color: var(--muted); transition: transform 0.2s; }
+    .section-details[open] .sum-chev { transform: rotate(180deg); }
+    .section-body { padding: 4px 16px 16px; border-top: 1px solid var(--border); }
+    .callout {
+      background: var(--sage-lt); border-left: 3px solid var(--sage);
+      padding: 9px 12px; border-radius: 8px; margin: 12px 0 8px; font-size: 0.88rem;
+    }
+    .section-content { font-size: 0.9rem; }
+    .section-content p  { margin: 7px 0; }
+    .section-content ul { padding-left: 18px; margin: 7px 0; }
+    .section-content li { margin: 4px 0; }
+    .code-block {
+      background: #1f2937; color: #f9fafb; border-radius: 10px;
+      padding: 12px; overflow-x: auto; font-family: Consolas, Monaco, monospace;
+      font-size: 0.83rem; white-space: pre; margin: 10px 0; line-height: 1.5;
+    }
+    .notes-lbl { font-weight: 600; font-size: 0.84rem; margin: 12px 0 4px; }
+    .notes-area {
+      width: 100%; min-height: 90px; resize: vertical;
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px 10px; font-family: inherit; font-size: 0.88rem;
+      background: var(--bg); color: var(--text);
+    }
+    .notes-area:focus { border-color: var(--sage); outline: none; }
+    .sec-footer { display: flex; justify-content: flex-end; margin-top: 8px; }
+    .del-sec-btn {
+      background: none; border: 1px solid var(--border); color: var(--muted);
+      border-radius: 6px; padding: 3px 10px; font-size: 0.76rem; cursor: pointer; font-family: inherit;
+    }
+    .del-sec-btn:hover { background: #fce8ec; color: var(--danger); border-color: #f0b0b8; }
+
+    input[type="checkbox"] { transform: scale(1.25); accent-color: var(--complete); cursor: pointer; flex-shrink: 0; }
+
+    /* ── ADD SECTION + WEEKLY ── */
+    .panel {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px; margin-top: 18px;
+    }
+    .panel h3 { font-size: 0.97rem; font-weight: 700; margin-bottom: 12px; }
+    .form-label { display: block; font-weight: 600; font-size: 0.83rem; margin-bottom: 4px; }
+    .form-input {
+      width: 100%; padding: 9px 11px; border: 1px solid var(--border);
+      border-radius: 8px; font-family: inherit; font-size: 0.88rem;
+      background: var(--bg); color: var(--text); margin-bottom: 10px;
+    }
+    .form-input:focus { border-color: var(--sage); outline: none; }
+    textarea.form-input { min-height: 80px; resize: vertical; }
+
+    .tick-row {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 9px 12px; margin: 6px 0;
+      font-size: 0.9rem; cursor: pointer;
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align: center; padding: 32px 16px; color: var(--muted);
+      border: 2px dashed var(--border); border-radius: 12px; margin: 8px 0;
+    }
+    .empty-state p { margin-top: 6px; font-size: 0.86rem; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.4); z-index: 200;
+      align-items: flex-start; justify-content: center;
+      padding: 80px 20px 20px; overflow-y: auto;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--card); border-radius: 20px; padding: 28px;
+      width: 100%; max-width: 500px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    }
+    .modal h2 { font-size: 1.1rem; margin-bottom: 16px; }
+    .modal-footer { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+    /* ── TOAST ── */
+    .toast-wrap {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      z-index: 300; display: flex; flex-direction: column; gap: 8px;
+      pointer-events: none; align-items: center;
+    }
+    .toast {
+      background: #1f2937; color: #fff; padding: 10px 18px;
+      border-radius: 10px; font-size: 0.88rem; font-weight: 600;
+      animation: toastIn 0.2s ease;
+    }
+    .toast.success { background: #166534; }
+    .toast.warning { background: #92400e; }
+    @keyframes toastIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .programs-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── PRINT ── */
+    @media print {
+      #login-screen, header .hub-link, header .header-back,
+      .controls, .panel, .sec-footer { display: none !important; }
+      .section-details { page-break-inside: avoid; }
+      .section-details:not([open]) .section-body { display: block; }
+      .sum-chev { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Login screen -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">📚</div>
+    <h1>Training Portal</h1>
+    <p>Sign in to access your learning programs</p>
+    <button class="btn-google" onclick="startSignIn()">
+      <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Continue with Google
+    </button>
+    <div id="login-error"></div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <header>
+    <a class="hub-link" href="/portal/">&#8592; My Hub</a>
+    <button class="header-back" id="hdr-back" onclick="showHome()">&#8592; All Programs</button>
+    <div class="header-title" id="hdr-title">Training Portal</div>
+    <button class="btn btn-primary" id="hdr-new-btn" onclick="openModal()" style="flex-shrink:0;">+ New</button>
+  </header>
+
+  <div class="container">
+
+    <!-- HOME VIEW -->
+    <div id="view-home">
+      <div id="stats-row" class="stats-row"></div>
+      <div id="programs-grid" class="programs-grid"></div>
+    </div>
+
+    <!-- PROGRAM DETAIL VIEW -->
+    <div id="view-program" style="display:none">
+
+      <div class="progress-card">
+        <div class="progress-card-bar"><div class="progress-card-fill" id="prog-fill" style="width:0%"></div></div>
+        <div class="progress-card-text" id="prog-text">0% complete</div>
+      </div>
+
+      <div class="controls">
+        <button class="btn btn-ghost" onclick="openAll()">Open all</button>
+        <button class="btn btn-ghost" onclick="closeAll()">Close all</button>
+        <button class="btn btn-ghost" onclick="window.print()">Print / PDF</button>
+        <button class="btn btn-ghost" onclick="resetProgram()">Reset progress</button>
+        <button class="btn btn-danger" onclick="deleteCurrentProgram()">Delete program</button>
+      </div>
+
+      <div id="sections-container"></div>
+
+      <!-- Add section -->
+      <div class="panel">
+        <h3>Add a Section</h3>
+        <label class="form-label" for="new-sec-title">Section title</label>
+        <input type="text" class="form-input" id="new-sec-title" placeholder="e.g. Firebase backups" />
+        <label class="form-label" for="new-sec-content">Content / notes</label>
+        <textarea class="form-input" id="new-sec-content" placeholder="Add your learning points, links, or notes here..."></textarea>
+        <button class="btn btn-primary" onclick="addSection()" style="margin-top:4px;">Add section</button>
+      </div>
+
+      <!-- Weekly checklist -->
+      <div class="panel">
+        <h3>Weekly Learning Checklist</h3>
+        <label class="tick-row"><input type="checkbox" data-weekly="w1"> Read at least one section</label>
+        <label class="tick-row"><input type="checkbox" data-weekly="w2"> Write notes in my own words</label>
+        <label class="tick-row"><input type="checkbox" data-weekly="w3"> Apply one idea to a real project</label>
+        <label class="tick-row"><input type="checkbox" data-weekly="w4"> Save or commit any project changes</label>
+        <label class="tick-row"><input type="checkbox" data-weekly="w5"> Write down what confused me</label>
+      </div>
+    </div>
+
+  </div><!-- end container -->
+</div><!-- end app -->
+
+<!-- New program modal -->
+<div class="modal-overlay" id="new-prog-modal">
+  <div class="modal">
+    <h2>New Training Program</h2>
+    <label class="form-label" for="modal-prog-title">Program title *</label>
+    <input type="text" class="form-input" id="modal-prog-title" placeholder="e.g. Firebase Deep Dive" />
+    <label class="form-label" for="modal-prog-desc">Description (optional)</label>
+    <textarea class="form-input" id="modal-prog-desc" placeholder="What will this program cover?"></textarea>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="createProgram()">Create Program</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+/* ════════════════════════════════════════════════════
+   FIREBASE SETUP
+════════════════════════════════════════════════════ */
+firebase.initializeApp({
+  apiKey:            'AIzaSyAcSc-3ejzUfaiods7fAGAH10EuVvZaL6U',
+  authDomain:        'steph-rawlings-creations.firebaseapp.com',
+  databaseURL:       'https://steph-rawlings-creations-default-rtdb.europe-west1.firebasedatabase.app',
+  projectId:         'steph-rawlings-creations',
+  storageBucket:     'steph-rawlings-creations.firebasestorage.app',
+  messagingSenderId: '271810785275',
+  appId:             '1:271810785275:web:e44be9608f17386ae4e55e'
+});
+
+var auth  = firebase.auth();
+var db    = firebase.database();
+
+var ALLOWED = [
+  'stephrawlingscreations@gmail.com',
+  'ppbdesigns1@gmail.com',
+  'sdr22ie@gmail.com',
+  'sdr22uk@gmail.com'
+];
+
+var LS_KEY   = 'steph_training_v2';
+var FB_PATH  = 'focusflow/steph/training';
+
+/* ── localStorage helpers ── */
+function lsGet()      { try { var r = localStorage.getItem(LS_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; } }
+function lsSet(data)  { try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch(e) {} }
+
+/* ── Firebase push (background) ── */
+function fbPush(data) { db.ref(FB_PATH).set(data).catch(function(e) { console.warn('Firebase sync:', e); }); }
+
+function saveData(data) { lsSet(data); fbPush(data); }
+
+function pullFromFirebase(cb) {
+  db.ref(FB_PATH).once('value').then(function(snap) {
+    var remote = snap.val();
+    if (remote) lsSet(remote);
+    cb();
+  }).catch(function() { cb(); });
+}
+
+/* ════════════════════════════════════════════════════
+   AUTH
+════════════════════════════════════════════════════ */
+var pendingMsg = '';
+
+function startSignIn() {
+  var provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(function(e) {
+    if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
+      auth.signInWithRedirect(provider);
+    } else {
+      document.getElementById('login-error').textContent = 'Sign-in failed: ' + e.message;
+    }
+  });
+}
+
+auth.getRedirectResult().catch(function(e) {
+  if (e && e.message) document.getElementById('login-error').textContent = 'Sign-in failed: ' + e.message;
+});
+
+auth.onAuthStateChanged(function(user) {
+  if (user) {
+    if (!ALLOWED.some(function(a) { return a.toLowerCase() === user.email.toLowerCase(); })) {
+      pendingMsg = 'That Google account is not on the access list.';
+      auth.signOut();
+      return;
+    }
+    pullFromFirebase(bootApp);
+  } else {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    if (pendingMsg) { document.getElementById('login-error').textContent = pendingMsg; pendingMsg = ''; }
+  }
+});
+
+function bootApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  initData();
+  showHome();
+}
+
+/* ════════════════════════════════════════════════════
+   DATA — built-in programs
+════════════════════════════════════════════════════ */
+var BUILT_IN_IDS = [
+  'software_dev','recommended_phase1','recommended_phase2','recommended_phase3',
+  'lakeside_golive','everyday_dev_tools','business_client_skills','professional_standards'
+];
+
+function getBuiltIn(id) {
+  switch(id) {
+    case 'software_dev':           return prog_softwareDev();
+    case 'recommended_phase1':     return prog_phase1();
+    case 'recommended_phase2':     return prog_phase2();
+    case 'recommended_phase3':     return prog_phase3();
+    case 'lakeside_golive':        return prog_lakeside();
+    case 'everyday_dev_tools':     return prog_devtools();
+    case 'business_client_skills': return prog_business();
+    case 'professional_standards': return prog_professional();
+  }
+}
+
+function initData() {
+  var data = lsGet();
+  if (!data) {
+    data = { programs: BUILT_IN_IDS.map(getBuiltIn) };
+    saveData(data);
+  } else {
+    var changed = false;
+    BUILT_IN_IDS.forEach(function(id) {
+      if (!data.programs.find(function(p) { return p.id === id; })) {
+        data.programs.push(getBuiltIn(id));
+        changed = true;
+      }
+    });
+    if (changed) saveData(data);
+  }
+}
+
+function getData() {
+  var data = lsGet();
+  if (!data) { initData(); data = lsGet(); }
+  return data;
+}
+
+/* ════════════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════════════ */
+var currentProgramId = null;
+
+/* ════════════════════════════════════════════════════
+   VIEWS
+════════════════════════════════════════════════════ */
+function showHome() {
+  currentProgramId = null;
+  document.getElementById('view-home').style.display = '';
+  document.getElementById('view-program').style.display = 'none';
+  document.getElementById('hdr-title').textContent = 'Training Portal';
+  document.getElementById('hdr-back').style.display = 'none';
+  document.getElementById('hdr-new-btn').style.display = '';
+  window.scrollTo(0, 0);
+  renderHome();
+}
+
+function showProgram(id) {
+  currentProgramId = id;
+  var data    = getData();
+  var program = data.programs.find(function(p) { return p.id === id; });
+  if (!program) { showHome(); return; }
+  document.getElementById('view-home').style.display = 'none';
+  document.getElementById('view-program').style.display = '';
+  document.getElementById('hdr-title').textContent = program.title;
+  document.getElementById('hdr-back').style.display = '';
+  document.getElementById('hdr-new-btn').style.display = 'none';
+  window.scrollTo(0, 0);
+  renderProgram(program);
+}
+
+/* ════════════════════════════════════════════════════
+   HOME RENDERING
+════════════════════════════════════════════════════ */
+function renderHome() {
+  var data = getData();
+  var totalSec = 0, totalDone = 0;
+  data.programs.forEach(function(p) {
+    (p.sections || []).forEach(function(s) {
+      totalSec++;
+      if (p.checks && p.checks[s.id]) totalDone++;
+    });
+  });
+  var pct = totalSec > 0 ? Math.round(totalDone / totalSec * 100) : 0;
+
+  document.getElementById('stats-row').innerHTML =
+    stat(data.programs.length, 'Programs') +
+    stat(totalSec, 'Sections') +
+    stat(totalDone, 'Done') +
+    stat(pct + '%', 'Overall');
+
+  var html = '';
+  data.programs.forEach(function(p) {
+    var secs    = p.sections || [];
+    var total   = secs.length;
+    var checked = secs.filter(function(s) { return p.checks && p.checks[s.id]; }).length;
+    var pct2    = total > 0 ? Math.round(checked / total * 100) : 0;
+    html += '<div class="program-card" onclick="showProgram(\'' + esc(p.id) + '\')">'
+      + '<button class="program-card-del" onclick="event.stopPropagation();confirmDeleteProgram(\'' + esc(p.id) + '\')">&#x2715;</button>'
+      + '<div class="program-card-title">' + eh(p.title) + '</div>'
+      + '<div class="program-card-desc">' + eh(p.description || '') + '</div>'
+      + '<div class="prog-wrap"><div class="prog-bar" style="width:' + pct2 + '%"></div></div>'
+      + '<div class="prog-lbl">' + pct2 + '% &bull; ' + checked + ' of ' + total + ' sections</div>'
+      + '</div>';
+  });
+  html += '<button class="add-program-btn" onclick="openModal()">+ New Training Program</button>';
+  document.getElementById('programs-grid').innerHTML = html;
+}
+
+function stat(num, lbl) {
+  return '<div class="stat"><div class="stat-num">' + num + '</div><div class="stat-lbl">' + lbl + '</div></div>';
+}
+
+/* ════════════════════════════════════════════════════
+   PROGRAM DETAIL RENDERING
+════════════════════════════════════════════════════ */
+function renderProgram(program) {
+  updateProgress(program);
+  renderSections(program);
+  loadWeeklyChecks(program);
+}
+
+function updateProgress(program) {
+  var secs    = program.sections || [];
+  var total   = secs.length;
+  var checked = secs.filter(function(s) { return program.checks && program.checks[s.id]; }).length;
+  var pct     = total > 0 ? Math.round(checked / total * 100) : 0;
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-text').textContent = pct + '% complete (' + checked + ' of ' + total + ' sections)';
+}
+
+function renderSections(program) {
+  var container = document.getElementById('sections-container');
+  var secs = program.sections || [];
+  if (!secs.length) {
+    container.innerHTML = '<div class="empty-state"><strong>No sections yet.</strong><p>Use the form below to add your first section.</p></div>';
+    return;
+  }
+  container.innerHTML = secs.map(function(s, i) {
+    var checked = program.checks && program.checks[s.id] ? 'checked' : '';
+    var noteVal = (program.notes && program.notes[s.id]) || '';
+    var body    = '';
+    if (s.goal)    body += '<div class="callout">' + eh(s.goal) + '</div>';
+    if (s.content) body += '<p>' + eh(s.content) + '</p>';
+    if (s.bullets && s.bullets.length) body += '<ul>' + s.bullets.map(function(b) { return '<li>' + eh(b) + '</li>'; }).join('') + '</ul>';
+    if (s.code)    body += '<pre class="code-block">' + eh(s.code) + '</pre>';
+    if (s.extra)   body += '<p><em>' + eh(s.extra) + '</em></p>';
+    return '<details class="section-details" id="det-' + esc(s.id) + '">'
+      + '<summary class="section-summary">'
+      + '<input type="checkbox" ' + checked + ' onclick="event.stopPropagation()" onchange="toggleSection(\'' + esc(s.id) + '\',this.checked)">'
+      + '<span class="sum-title">Section ' + (i+1) + ' &ndash; ' + eh(s.title) + '</span>'
+      + '<svg class="sum-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>'
+      + '</summary>'
+      + '<div class="section-body">'
+      + '<div class="section-content">' + body + '</div>'
+      + '<div class="notes-lbl">Your notes</div>'
+      + '<textarea class="notes-area" placeholder="Write your notes here..." oninput="saveNote(\'' + esc(s.id) + '\',this.value)">' + eh(noteVal) + '</textarea>'
+      + '<div class="sec-footer"><button class="del-sec-btn" onclick="deleteSection(\'' + esc(s.id) + '\')">Remove section</button></div>'
+      + '</div></details>';
+  }).join('');
+}
+
+/* ════════════════════════════════════════════════════
+   SECTION ACTIONS
+════════════════════════════════════════════════════ */
+function toggleSection(id, checked) {
+  var data = getData();
+  var p    = data.programs.find(function(p) { return p.id === currentProgramId; });
+  if (!p) return;
+  if (!p.checks) p.checks = {};
+  p.checks[id] = checked;
+  saveData(data);
+  updateProgress(p);
+}
+
+function saveNote(id, val) {
+  var data = getData();
+  var p    = data.programs.find(function(p) { return p.id === currentProgramId; });
+  if (!p) return;
+  if (!p.notes) p.notes = {};
+  p.notes[id] = val;
+  saveData(data);
+}
+
+function deleteSection(id) {
+  if (!confirm('Remove this section? Notes for it will also be deleted.')) return;
+  var data = getData();
+  var p    = data.programs.find(function(p) { return p.id === currentProgramId; });
+  if (!p) return;
+  p.sections = p.sections.filter(function(s) { return s.id !== id; });
+  if (p.checks) delete p.checks[id];
+  if (p.notes)  delete p.notes[id];
+  saveData(data);
+  renderProgram(p);
+  toast('Section removed.');
+}
+
+function addSection() {
+  var titleEl = document.getElementById('new-sec-title');
+  var contEl  = document.getElementById('new-sec-content');
+  var title   = titleEl.value.trim();
+  if (!title) { toast('Please enter a section title.', 'warning'); titleEl.focus(); return; }
+  var data    = getData();
+  var p       = data.programs.find(function(p) { return p.id === currentProgramId; });
+  if (!p) return;
+  var newSec  = { id: 'sec_' + Date.now(), title: title, content: contEl.value.trim() };
+  if (!p.sections) p.sections = [];
+  p.sections.push(newSec);
+  saveData(data);
+  titleEl.value = ''; contEl.value = '';
+  renderProgram(p);
+  toast('Section added.', 'success');
+  setTimeout(function() {
+    var el = document.getElementById('det-' + newSec.id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 80);
+}
+
+/* ════════════════════════════════════════════════════
+   WEEKLY CHECKLIST
+════════════════════════════════════════════════════ */
+function loadWeeklyChecks(program) {
+  var checks = program.weeklyChecks || {};
+  document.querySelectorAll('[data-weekly]').forEach(function(cb) {
+    cb.checked  = !!checks[cb.dataset.weekly];
+    cb.onchange = function() {
+      var data = getData();
+      var p    = data.programs.find(function(p) { return p.id === currentProgramId; });
+      if (!p) return;
+      if (!p.weeklyChecks) p.weeklyChecks = {};
+      p.weeklyChecks[cb.dataset.weekly] = cb.checked;
+      saveData(data);
+    };
+  });
+}
+
+/* ════════════════════════════════════════════════════
+   PROGRAM MANAGEMENT
+════════════════════════════════════════════════════ */
+function openModal() {
+  document.getElementById('modal-prog-title').value = '';
+  document.getElementById('modal-prog-desc').value  = '';
+  document.getElementById('new-prog-modal').classList.add('open');
+  setTimeout(function() { document.getElementById('modal-prog-title').focus(); }, 60);
+}
+function closeModal() { document.getElementById('new-prog-modal').classList.remove('open'); }
+
+document.getElementById('new-prog-modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+
+function createProgram() {
+  var title = document.getElementById('modal-prog-title').value.trim();
+  var desc  = document.getElementById('modal-prog-desc').value.trim();
+  if (!title) { toast('Please enter a program title.', 'warning'); document.getElementById('modal-prog-title').focus(); return; }
+  var data  = getData();
+  var prog  = { id: 'prog_' + Date.now(), title: title, description: desc,
+                createdAt: new Date().toISOString(), sections: [], checks: {}, notes: {}, weeklyChecks: {} };
+  data.programs.push(prog);
+  saveData(data);
+  closeModal();
+  toast('"' + title + '" created.', 'success');
+  showProgram(prog.id);
+}
+
+function confirmDeleteProgram(id) {
+  var data = getData();
+  var p    = data.programs.find(function(p) { return p.id === id; });
+  if (!p) return;
+  if (data.programs.length <= 1) { toast('You need at least one program.', 'warning'); return; }
+  if (!confirm('Delete "' + p.title + '"? This cannot be undone.')) return;
+  data.programs = data.programs.filter(function(p) { return p.id !== id; });
+  saveData(data);
+  renderHome();
+}
+
+function deleteCurrentProgram() {
+  if (!currentProgramId) return;
+  var data = getData();
+  if (data.programs.length <= 1) { toast('You need at least one program.', 'warning'); return; }
+  var p = data.programs.find(function(p) { return p.id === currentProgramId; });
+  if (!p || !confirm('Delete "' + p.title + '"? This cannot be undone.')) return;
+  data.programs = data.programs.filter(function(p) { return p.id !== currentProgramId; });
+  saveData(data);
+  showHome();
+}
+
+function resetProgram() {
+  if (!currentProgramId || !confirm('Reset all ticks and notes for this program?')) return;
+  var data = getData();
+  var p    = data.programs.find(function(p) { return p.id === currentProgramId; });
+  if (!p) return;
+  p.checks = {}; p.notes = {}; p.weeklyChecks = {};
+  saveData(data);
+  renderProgram(p);
+  toast('Progress reset.', 'success');
+}
+
+function openAll()  { document.querySelectorAll('#sections-container details').forEach(function(d) { d.open = true;  }); }
+function closeAll() { document.querySelectorAll('#sections-container details').forEach(function(d) { d.open = false; }); }
+
+/* ════════════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════════════ */
+function toast(msg, type) {
+  var el = document.createElement('div');
+  el.className = 'toast' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(function() { el.remove(); }, 2800);
+}
+
+/* ════════════════════════════════════════════════════
+   UTILS
+════════════════════════════════════════════════════ */
+function eh(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function esc(s) { return String(s).replace(/'/g,"\\'"); }
+
+/* ════════════════════════════════════════════════════
+   PROGRAM DATA
+════════════════════════════════════════════════════ */
+function makeProgram(id, title, description, sections) {
+  return { id: id, title: title, description: description,
+           createdAt: new Date().toISOString(), checks: {}, notes: {}, weeklyChecks: {}, sections: sections };
+}
+function sec(id, title, goal, content, bullets, code, extra) {
+  var s = { id: id, title: title };
+  if (goal)    s.goal    = goal;
+  if (content) s.content = content;
+  if (bullets) s.bullets = bullets;
+  if (code)    s.code    = code;
+  if (extra)   s.extra   = extra;
+  return s;
+}
+
+function prog_softwareDev() {
+  return makeProgram('software_dev','Software Development Training',
+    'Web development, Firebase, GitHub, hosting, and your real projects.', [
+    sec('s1','How the Internet Actually Works','Understand what happens when someone types your domain into a browser.',
+      'When someone visits a site like stephrawlingscreations.ie, the browser has to find where that website lives.',
+      ['Domain: the web address people type.','DNS: the internet phonebook — translates the domain to an IP address.',
+       'Hosting: where the website files actually live on a server.',
+       'Browser: downloads those files and builds the page using HTML, CSS, and JavaScript.'],
+      null,"Your domain points to a host. The host sends your website files. The visitor's browser displays them."),
+    sec('s2','Static Websites vs Web Apps','Know why your projects do not all run the same way.',
+      'A static website is mostly files — it looks the same for every visitor. A web app has moving parts like logins, databases, and user-specific data.',
+      ['Static site: business site, landing page, portfolio, simple tools.',
+       'Web app: tracker, portal, dashboard, booking system.',
+       'Your string art designer is closer to a static/browser-based app.',
+       'Your sales trackers and Lakeside portal are more like web apps — they need data and logins.']),
+    sec('s3','Frontend, Backend and Database','Understand the three main layers of most apps.',
+      'Most modern apps have three layers that work together.',
+      ['Frontend: what the user sees in their browser.','Backend: logic, rules, processing — runs on a server.',
+       'Database: where information is stored and retrieved.'],
+      'Browser (Frontend)\n       |\nBackend / Cloud Services\n       |\nDatabase'),
+    sec('s4','What Firebase Actually Is','Understand why Firebase feels like lots of things at once.',
+      "Firebase is Google's cloud platform. It bundles the backend services most apps need so you don't have to manage a traditional server.",
+      ['Firebase Hosting: serves your website or app files.','Firestore / Realtime Database: stores your app data.',
+       'Firebase Auth: ready-made login system.','Storage: for uploaded files and images.','Security Rules: control who can read or write data.']),
+    sec('s5','GitHub and Version Control','Understand GitHub as your project history and safety net.',
+      'GitHub stores your code online and tracks every change. Each commit is a labelled checkpoint.',
+      ['Repository: your project folder stored online.','Commit: a saved checkpoint with a description of what changed.',
+       'Push: upload local changes to GitHub.','Pull: download the latest version from GitHub.',
+       'Branch: a separate copy for testing new features safely.']),
+    sec('s6','Hosting Types','Know what to use for different kinds of projects.',null,
+      ['Netlify / GitHub Pages / Vercel: great for static sites and frontend apps.',
+       'Firebase Hosting: best when your app also uses Firestore and Auth.',
+       'Wix: easy drag-and-drop, less flexible for custom code.',
+       'Traditional server: powerful but more advanced — not needed for your current projects.']),
+    sec('s7','Deployment','Understand how changes go live.',
+      'Deployment means publishing your latest version. Some hosts auto-deploy when you push to GitHub.',
+      null,'VS Code (edit code)\n       |\nGitHub (save & version)\n       |\nNetlify / Firebase (publish)\n       |\nLive Website'),
+    sec('s8','Development, Staging and Production','Avoid breaking live apps while learning.',
+      'Professional developers work across multiple environments to reduce risk.',
+      ['Development: your local or private testing version — only you can see it.',
+       'Staging: a test version that mirrors the live site.',
+       'Production: the actual live site that real users see.'],
+      null,'The rule of thumb: never experiment directly on the live app if you can avoid it.'),
+    sec('s9','Database Thinking','Learn to think like an app designer.',
+      'Instead of just thinking "I need a form", think about what data the form creates and how it will be stored.',
+      null,'Customer\n  |-- Name\n  |-- Email\n  |-- Jobs[]\n  |   |-- Description\n  |   |-- Status\n  +-- Notes',
+      'This kind of thinking helps you design better trackers, portals, and dashboards from the start.'),
+    sec('s10','Authentication and Permissions','Understand logins and access control.',
+      'Authentication identifies who the user is. Permissions decide what they are allowed to do.',
+      ['Admin users: see and edit everything.','Staff users: see only assigned jobs or their area.',
+       'Customers: see only their own records.'],null,
+      'Getting permissions right is especially important for business portals and multi-user systems.'),
+    sec('s11','Firebase Security Rules','Know why database rules matter.',
+      'Firebase security rules control who can read, write, or update data.',
+      ['Rules are written in Firebase syntax and deployed separately.',
+       'A common beginner mistake: leaving the database open to everyone.',
+       'For any app with customer or business data, rules are not optional.',
+       'Test rules in the Firebase console Rules Playground before deploying.']),
+    sec('s12','APIs Explained Simply','Understand how software talks to software.',
+      'An API is a controlled, structured way for one system to communicate with another.',
+      null,'Frontend\n   | (makes a request)\nAPI\n   | (fetches/saves data)\nBackend\n   | (returns a response)\nFrontend (updates the page)',
+      "Think of an API like a waiter — you don't go into the kitchen yourself, you order through a clear process."),
+    sec('s13','Your String Art Site Architecture','Understand your own site as a real software system.',
+      'Your string art designer mostly runs entirely in the browser — no server needed for core features.',
+      ['User opens the site.','JavaScript downloads and runs.','Canvas element draws the design.',
+       'Export / PDF logic also runs in the browser.','Static hosting like Netlify works well for this.']),
+    sec('s14','Your Lakeside Portal Architecture','Understand why the portal is more complex than a normal website.',
+      'The Lakeside portal is more like a SaaS-style web app — persistent data, user accounts, access control.',
+      ['Users log in with Firebase Auth.','Jobs and quotes stored in Firestore.',
+       'Different roles (admin, staff, client) need different permissions.',
+       'Data can update in real time without a page refresh.'],
+      'Browser (Dashboard)\n       |\nFirebase Auth\n       |\nFirestore (Jobs / Quotes)\n       |\nSecurity Rules'),
+    sec('s15','SaaS Basics','Understand the business model behind portals and online tools.',
+      'SaaS = Software as a Service. Users access it online, usually on a subscription.',
+      ['Examples: Canva, Gmail, Trello, Monday.com, QuickBooks.',
+       'Key features: login, user data, always up to date, accessible anywhere.',
+       'Your portals and trackers are moving in this direction.']),
+    sec('s16','Project Organisation','Stop projects becoming chaotic as they grow.',
+      'Good folder structure and clear file names become important as a project grows.',
+      null,'project/\n  |-- frontend/\n  |-- backend/\n  |-- assets/\n  |-- docs/\n  +-- config/',
+      'Even small projects benefit from clear names and a basic README.'),
+    sec('s17','Debugging Basics','Learn how to calmly find what is broken.',
+      "Debugging gets easier with practice. Good developers know how to find what went wrong, not just avoid breaking things.",
+      ['1. Reproduce the issue — can you make it happen reliably?',
+       '2. Check browser console errors (F12).','3. Look at recent changes — what did you just edit?',
+       '4. Test one fix at a time.','5. Commit once fixed.']),
+    sec('s18','Managing Live Apps','Know what needs checking after launch.',
+      'Once an app is live, it needs occasional care to stay healthy and secure.',
+      ['Backups: make sure important data is backed up.','Security rules: review periodically.',
+       'Error logs: Firebase and Netlify both have logs to check.',
+       'Storage usage: watch for unexpected growth.','Domain renewals: set a calendar reminder.']),
+    sec('s19','GDPR and Data Responsibility','Be aware of data protection basics for Irish and EU projects.',
+      "If you store customer or staff data, GDPR applies.",
+      ['Only collect data you actually need.','Protect access with authentication and security rules.',
+       'Keep backups secure and not publicly accessible.',
+       'Have a process if someone asks what data you hold about them.']),
+    sec('s20','React, Node.js and Next Steps','Know what to learn next without feeling overwhelmed.',
+      'There is always more to learn. Build skills in the order most useful for your actual projects.',
+      ['React: better, more organised frontends for complex UIs.',
+       'Node.js: runs JavaScript on a server — useful for custom backend logic.',
+       'APIs: knowing how to use and build them opens up a lot.',
+       'Architecture: planning before building saves a lot of rework.'],
+      null,"You don't need to rush. Focus on: GitHub workflow, Firebase basics, database thinking, safe deployment.")
+  ]);
+}
+
+function prog_phase1() {
+  return makeProgram('recommended_phase1','Recommended Path — Phase 1: Core Foundations',
+    'Git, Firebase, hosting, and JavaScript. The most important skills for your projects right now.', [
+    sec('p1s1','Git & GitHub','The single biggest confidence boost you can get right now.',
+      'Right now GitHub probably feels like "push code and hope". Once Git clicks, deployments make sense, backups make sense, branches make sense, and experimenting becomes much safer.',
+      ['Learn: commit, push, pull, branch, merge.',
+       'Every project you build lives in GitHub — knowing it well changes everything.',
+       'Branches let you try things without breaking your live version.',
+       'Recommended: Git & GitHub Crash Course by Traversy Media (free, YouTube).',
+       'Also useful: the Git sections inside The Odin Project (free, highly respected).'],
+      null,'Do this first. Everything else builds on it.'),
+    sec('p1s2','Firebase','Directly relevant to your sales trackers, Lakeside portal, logins, and cloud data.',
+      'Most Firebase tutorials are awful because they assume too much. Focus only on the four things that matter for your projects.',
+      ['Auth: how logins work — email/password and Google sign-in.',
+       'Firestore: how data is stored, read, written, and structured.',
+       'Hosting: how to publish a site from Firebase.',
+       'Rules: who is allowed to read or write what data.',
+       'Recommended: Firebase Official Learn — firebase.google.com/learn.',
+       'Also good: Firebase Full Course by freeCodeCamp on YouTube.',
+       "Don't try to memorise everything — build something small as you go."],
+      null,'You already use Firebase. This will help you understand what you have built and why it works.'),
+    sec('p1s3','Hosting & Deployment','Understand how your code goes from your computer to a live website.',
+      'Deployment feels magical until you understand it — then it becomes routine and reliable.',
+      ['Netlify: connect your GitHub repo and it auto-deploys on every push.',
+       'Firebase Hosting: best when your app also uses Firestore and Auth.',
+       'Custom domains: how to point your domain name at your hosting.',
+       'The Odin Project — Foundations section covers this well.',
+       'Practice: deploy one of your existing projects to Netlify from scratch.'],
+      null,'Once you have done this once deliberately, it stops being scary.'),
+    sec('p1s4','JavaScript Properly','Understand the language that powers almost all of your projects.',
+      "You already use JavaScript without fully understanding it yet. That's fine as a starting point. Now fill the gaps so the code you write makes more sense.",
+      ['Focus on: variables, functions, arrays, objects, events, and async basics.',
+       'You do NOT need to master everything — just the parts you use.',
+       'Recommended: JavaScript.info — one of the best free resources online.',
+       'Read slowly. Try the examples. Do not rush.',
+       'Tip: paste code you do not understand into Claude and ask it to explain line by line.'],
+      null,"Don't try to do a full JavaScript course start to finish. Use it alongside building.")
+  ]);
+}
+
+function prog_phase2() {
+  return makeProgram('recommended_phase2','Recommended Path — Phase 2: Data & Architecture',
+    'Database design, APIs, and system architecture. The thinking skills that separate hobby coders from app designers.', [
+    sec('p2s1','Database Design','Learn to think "how should I structure information?" before you start building.',
+      'This is one of the biggest level-up skills for the kind of tools you are building.',
+      ['Collections, documents, relationships, and data normalisation.',
+       'Firestore is NoSQL — structure matters more than you might think.',
+       'Practice thinking: what fields does a customer record need? A job? An invoice?',
+       'Recommended: Database Design Course by freeCodeCamp on YouTube (free, beginner friendly).',
+       'Exercise: draw out the Lakeside portal data structure on paper before touching code.'],
+      null,'This will massively help your trackers, portals, customer systems, and future SaaS ideas.'),
+    sec('p2s2','Understanding APIs','Understand how software talks to other software.',
+      "An API is a controlled way for one system to communicate with another. You already use APIs every time you call Firebase.",
+      ['REST APIs: how most web services share data (requests and responses).',
+       'JSON: the format data travels in — you have already seen this in Firebase.',
+       'Fetch: how JavaScript requests data from an API.',
+       'When you need an API: payment processing, maps, email, SMS, weather, etc.',
+       'JavaScript.info has a good section on Fetch and async.',
+       'Practice: find a free API and display its data on a page.'],
+      null,'Knowing how APIs work unlocks connecting your apps to almost any external service.'),
+    sec('p2s3','System Architecture','See how hosting, APIs, databases, and frontend/backend all connect as one picture.',
+      "Architecture is what separates hobby coders from app designers. It's about understanding the whole system before you build any part of it.",
+      ['Key concepts: client/server, request/response, stateless vs stateful.',
+       'Get in the habit of sketching how your systems work before coding.',
+       'Recommended: ByteByteGo YouTube Channel — very visual, excellent explanations.',
+       "You don't need to memorise everything — exposure is enough at this stage.",
+       'Ask: where does this data come from? Where does it go? Who can see it?'],
+      null,"Once this clicks, you can't unsee it.")
+  ]);
+}
+
+function prog_phase3() {
+  return makeProgram('recommended_phase3','Recommended Path — Phase 3: Advanced Skills',
+    'React, UX/UI design, AI-assisted development, and SaaS thinking. Build on Phase 1 and 2 first.', [
+    sec('p3s1','React','Learn the tool that makes complex frontend apps much more manageable.',
+      "React is where modern app development starts becoming cleaner. But don't jump too early — you first need Git, hosting, architecture, and frontend/backend understanding.",
+      ['React lets you build UIs from reusable components instead of one big HTML file.',
+       'State management: React handles data changes and re-renders automatically.',
+       'Recommended: Scrimba React Course — very visual and interactive.',
+       'Also: the official React docs at react.dev — well written and example-led.',
+       'You will know you are ready when Git, Firebase, and deployment feel routine.'],
+      null,'React is the right next step after the foundations. Not before.'),
+    sec('p3s2','UX/UI Design','Formalise a strength you already naturally have.',
+      "You naturally think about usability, workflow, visuals, and real-world user problems. That's genuinely valuable.",
+      ['UX = User Experience: how something feels to use.',
+       'UI = User Interface: how something looks.',
+       'Recommended: Google UX Design Certificate on Coursera.',
+       "You do NOT need the certificate — but the thinking it teaches is excellent.",
+       'Focus on: user research, wireframing, prototyping, and usability testing.'],
+      null,"You're already halfway there. This just gives you the framework to do it more deliberately."),
+    sec('p3s3','AI-Assisted Development','Use AI tools properly, safely, and more effectively.',
+      "You already use ChatGPT and Claude better than many beginners. Now be more deliberate about how.",
+      ['Prompting for architecture: describe the system you want, not just individual pieces.',
+       'Debugging with AI: paste the error, the relevant code, and what you expected.',
+       'Reviewing AI code: never paste AI code into a live project without reading it.',
+       'Using AI safely: AI makes mistakes. It is a capable assistant, not an authority.',
+       'Recommended: Cursor Documentation — cursor.sh/docs.'],
+      null,"You're already doing this well. A bit of intentional practice will make you much more effective."),
+    sec('p3s4','SaaS & Product Thinking','Think like a systems designer and product builder.',
+      "You're starting to think like a systems designer, workflow organiser, and product builder.",
+      ['SaaS = Software as a Service: people pay to access your tool online, usually monthly.',
+       'Product thinking: what problem does this solve? For who? Why would they pay for it?',
+       'Recommended: Y Combinator Startup School — free, not coding-focused.',
+       'Exercise: write one paragraph about who would use your Lakeside portal and why.'],
+      null,"You learned by building. That's how many successful developers and product designers learned.")
+  ]);
+}
+
+function prog_lakeside() {
+  return makeProgram('lakeside_golive','⚡ Lakeside Portal — Going Live Checklist',
+    'Everything to check and do before Lakeside goes live with real users. Work through this before launch.', [
+    sec('lk1','Firebase Security Rules — Final Check','Make sure no data is publicly readable or writable before real users log in.',
+      'The most common pre-launch mistake with Firebase is leaving rules too open. The single most important technical thing to get right.',
+      ['Go to Firebase Console > Firestore > Rules.',
+       'Rules should NOT allow read/write if request.auth == null (not logged in).',
+       'Check every collection: jobs, quotes, invoices, customers.',
+       'Admin vs staff vs client: are the right people seeing the right data?',
+       'Use the Rules Playground in Firebase Console to test before deploying.',
+       'Check Storage rules too if you store any files or images.'],
+      null,'Run through the Rules Playground with a test user account before launch. 10 minutes, catches most problems.'),
+    sec('lk2','End-to-End Testing Before Launch','Walk through every user journey as if you are the client — before they do.',
+      "Testing doesn't need to be complicated. Go through the whole app as each type of user.",
+      ['Create a fresh test account and go through the full login flow.',
+       'Add a job, edit it, update its status — does everything save correctly?',
+       'Test on mobile: does it work on your phone? Is anything cut off or hard to tap?',
+       'Test on a different browser (Chrome, Safari, Firefox).',
+       'Check every form: what happens if you leave a required field empty?',
+       'Walk through the client view: what can they see and do?',
+       'Write down anything that felt confusing — that is your snag list.'],
+      null,'Ask someone else to use it without you explaining it. Watch where they get confused.'),
+    sec('lk3','GDPR & Data Responsibilities for Client Portals','Know what you are legally responsible for when storing real customer data.',
+      "Lakeside will hold real business data. GDPR applies. You don't need a solicitor — but you need a few basics in place.",
+      ['Privacy Policy: there should be one linked on the portal. It can be simple.',
+       'Data minimisation: only collect fields you actually use.',
+       'Access control: Firebase Rules handle most of this.',
+       'Hosting location: Firebase europe-west keeps your data in the EU — correct for GDPR.',
+       'The DPC (Data Protection Commission Ireland) has a free SME checklist at dataprotection.ie.'],
+      null,"You are not building a healthcare system — the bar is manageable. The main thing is being able to show you thought about it."),
+    sec('lk4','Email Notifications for Job Updates','Send automatic emails when a job status changes.',
+      "For a grounds maintenance portal, email notifications are a huge quality-of-life feature for clients and staff.",
+      ['Easiest approach: EmailJS — sends emails from JavaScript without a server. Free tier: 200/month. emailjs.com.',
+       'Connect your email, set up a template, then call emailjs.send() in your code.',
+       'What emails are worth sending: new job created, job status changed, quote approved.',
+       'Keep emails simple: job reference, what changed, a link back to the portal.',
+       'Test with your own email address first before connecting client accounts.'],
+      null,'Start with EmailJS — quickest path to working emails with your current Firebase setup.'),
+    sec('lk5','Emergency Plan — What To Do When Something Breaks','Have a calm plan ready so a live incident does not become a panic.',
+      "Things will go wrong at some point. Having a plan means you stay calm and fix things methodically.",
+      ['Know where the logs are: Firebase Console > Functions > Logs.',
+       'Version control is your safety net: if a bad deploy happens, git revert gets you back.',
+       'Firebase Console bookmarked: check Auth users, Firestore data, Rules quickly.',
+       "Client communication template: 'We are aware of an issue and working on it — we will update you by [time].'",
+       "Don't make multiple changes at once when something is broken — one change, then check."],
+      null,'When something breaks in production, slow down. Panic fixes cause more problems than the original issue.'),
+    sec('lk6','Client Handover & Training','Make sure the Lakeside team can use the portal confidently without you there.',
+      "A great portal that people don't know how to use is a failed portal. A short, clear handover goes a long way.",
+      ['Write a one-page "how to use this" guide — screenshots help enormously.',
+       'Record a short walkthrough video — Loom is free and easy at loom.com.',
+       'Cover: logging in, adding a job, updating a status, finding a customer.',
+       'Make sure they know how to contact you if something goes wrong.',
+       'Set expectations: what you will support, what you will charge for future changes.',
+       'Leave them with login URLs, support contact, and what browser works best.'],
+      null,"The handover is also where you find out what they actually wanted vs what you built. Better to find out now.")
+  ]);
+}
+
+function prog_devtools() {
+  return makeProgram('everyday_dev_tools','Everyday Developer Tools',
+    'CSS layout, Chrome DevTools, and DNS. Practical skills you will use constantly.', [
+    sec('dt1','CSS Flexbox','Stop guessing at layout and understand how to align things properly.',
+      'Flexbox makes putting things side by side, centring them, and making them wrap on mobile actually make sense.',
+      ['display: flex — turns a container into a flexbox.',
+       'flex-direction: row or column — which way items flow.',
+       'justify-content — aligns items along the main axis.',
+       'align-items — aligns items on the cross axis.',
+       'flex-wrap: wrap — lets items wrap to the next line.',
+       'gap — space between items, much easier than margins.',
+       'Best resource: Flexbox Froggy at flexboxfroggy.com — a free game that teaches Flexbox visually.',
+       'Also: CSS Tricks Complete Guide to Flexbox at css-tricks.com.'],
+      null,'Play Flexbox Froggy first. Then open one of your projects and recreate a layout using Flexbox.'),
+    sec('dt2','CSS Grid','Build two-dimensional layouts (rows AND columns) without fighting the browser.',
+      "Grid handles both rows and columns at once. It powers the card grids and dashboard layouts in your projects.",
+      ['display: grid — turns a container into a grid.',
+       'grid-template-columns — defines columns, e.g. repeat(3, 1fr) for three equal columns.',
+       'gap — space between rows and columns.',
+       'auto-fill vs auto-fit — responsive grids that adjust without media queries.',
+       'Best resource: Grid Garden at cssgridgarden.com — same format as Flexbox Froggy.',
+       'Also: CSS Tricks Complete Guide to Grid at css-tricks.com.'],
+      null,'Your training portal uses CSS Grid for the program cards. Inspect it in DevTools to see it in action.'),
+    sec('dt3','Chrome DevTools','Use your browser as a development tool, not just a browser.',
+      "DevTools is built into Chrome. Most developers have it open almost constantly.",
+      ['Open it: F12, or right-click anything and choose Inspect.',
+       'Elements tab: see and edit HTML and CSS live (changes are not saved — just for testing).',
+       'Console tab: run JavaScript, see errors, and see console.log() output.',
+       'Network tab: see every request your page makes — API calls, images, scripts.',
+       'Application tab: see localStorage, cookies, and cached files.',
+       'Mobile view: click the device icon to preview at phone screen sizes.',
+       'Tip: when something is not styled correctly, try CSS changes in Elements before editing your file.',
+       'Recommended: Google Chrome DevTools documentation — developers.google.com/web/tools/chrome-devtools.'],
+      null,'Right-click > Inspect on your own projects and have a look around.'),
+    sec('dt4','DNS & Domain Management','Understand what happens between buying a domain and it working on your hosting.',
+      "You already manage domains. Understanding what the records mean removes the mystery.",
+      ['A Record: points your domain to an IP address.',
+       'CNAME Record: points a subdomain (like www) to another domain name.',
+       'MX Record: controls where email for your domain goes.',
+       'TXT Record: used for verification (proving you own the domain).',
+       'TTL (Time to Live): how long DNS changes take to spread — usually 24-48 hours.',
+       'Free tool: dnschecker.org — shows what records are set and if changes have propagated.'],
+      null,'When a site is not loading after a deploy, DNS is usually the culprit. Knowing what to check saves a lot of anxious waiting.')
+  ]);
+}
+
+function prog_business() {
+  return makeProgram('business_client_skills','Business & Client Skills',
+    'SEO for your website, pricing your tools, and managing client projects. The non-coding skills that make your work sustainable.', [
+    sec('bs1','SEO Basics for Your Business Website','Help Google find and recommend stephrawlingscreations.ie to the right people.',
+      "SEO is not magic — it is mostly making sure Google can read your site, understands what it is about, and sees it as trustworthy.",
+      ['Page titles: every page should have a clear, specific title (not just "Home").',
+       'Headings: use H1 for the main title, H2 for sections. Only one H1 per page.',
+       'Alt text on images: describe what is in each image.',
+       'Page speed: slow pages rank lower. Test at pagespeed.web.dev.',
+       'Mobile-friendly: Google ranks mobile-first. Test at search.google.com/test/mobile-friendly.',
+       'Local SEO: set up a free Google Business Profile at business.google.com.',
+       'Free tool: Google Search Console — shows how your site appears in search results.',
+       'Recommended: Google Search Central documentation — developers.google.com/search/docs.'],
+      null,'Local SEO (Google Business Profile) is the highest-impact thing for an Irish craft business. Do that first.'),
+    sec('bs2','Pricing Your Portals & Digital Tools','Know how to charge for the SaaS-style tools you are building.',
+      "You are building real business tools for real clients. Knowing how to price them is as important as building them.",
+      ['Project fee: charge once for building it. Simple, but nothing for ongoing support.',
+       'Retainer: monthly fee for hosting, updates, and support. Recurring income, more sustainable.',
+       'Hybrid: lower upfront fee + monthly retainer. Often the most attractive to clients.',
+       'Include in a retainer: hosting costs, minor updates, bug fixes, Firebase fees.',
+       'Charge extra for: new features, major redesigns, adding new users or roles.',
+       'How to estimate: hours x rate + 30% for unknowns.'],
+      null,"Most first-time builders undercharge significantly. Your tools save clients real time and money — price them accordingly."),
+    sec('bs3','Scoping & Delivering Client Projects','Turn a vague client request into a clear, agreed plan — and deliver without scope creep.',
+      "The biggest source of stress in client projects is unclear expectations at the start.",
+      ['Discovery questions: what problem are you solving? Who uses it? What does success look like?',
+       'Write it down: a one-page brief stating what is and is not included. Get it agreed.',
+       'Scope creep: when clients ask for extras mid-project. Always fine to say "that is new work."',
+       'Milestones: break the project into checkpoints. Client approves each stage before you build the next.',
+       'Feedback rounds: agree how many rounds of changes are included.',
+       'Change requests: "Happy to add that. It will take X hours at Y rate."'],
+      null,"The clients who cause the most stress are usually the ones who were never properly scoped at the start.")
+  ]);
+}
+
+function prog_professional() {
+  return makeProgram('professional_standards','Professional Standards',
+    'Web security, accessibility, testing, PWAs, and email APIs. The things that separate a good app from a professional one.', [
+    sec('ps1','Web Security Basics','Know the most common ways apps get attacked — and how to avoid them.',
+      "You are building apps with real user data. You don't need to be a security expert, but knowing the basics protects your users.",
+      ['XSS (Cross-Site Scripting): never use innerHTML with user-supplied content — use textContent instead.',
+       'HTTPS: always use it. Netlify and Firebase Hosting provide it free.',
+       'API keys: never put keys in public JavaScript without restricting them in Google Cloud Console.',
+       'Authentication tokens: Firebase Auth handles this securely — use it, do not roll your own.',
+       'Dependencies: keep packages updated. Outdated packages are a common attack vector.',
+       'Recommended: OWASP Top 10 at owasp.org — the ten most common web security risks.'],
+      null,'The biggest risk for your projects is an open Firebase database and XSS from user inputs. Check both first.'),
+    sec('ps2','Accessibility (a11y) Basics','Make your sites usable by everyone — and meet EU legal requirements.',
+      "The EU Web Accessibility Directive applies in Ireland. Accessible sites are also just better — they work better for everyone.",
+      ['Alt text: every meaningful image needs descriptive alt text.',
+       'Colour contrast: test at webaim.org/resources/contrastchecker.',
+       'Keyboard navigation: can you use your site with only Tab and Enter?',
+       'Headings: use them in logical order — screen readers use them to navigate.',
+       'Labels on forms: every input needs a visible label, not just placeholder text.',
+       'Free audit tool: WAVE at wave.webaim.org — paste your URL and it highlights issues.',
+       'Recommended: WebAIM at webaim.org — free, practical, beginner-friendly.'],
+      null,'Run WAVE on your string art site and your Lakeside portal. Fix the red errors first.'),
+    sec('ps3','Testing Basics','Check that your app works before users find out it does not.',
+      "Testing doesn't have to mean automated test code. For your projects right now, it mostly means being deliberate about checking things.",
+      ['Manual testing: go through every user journey before every deploy.',
+       'Happy path: does it work when everything goes right?',
+       'Edge cases: what if a field is empty? The name is very long? There is no data yet?',
+       'Cross-browser testing: test in Chrome, Safari, and Firefox.',
+       'Console errors: open DevTools > Console tab — red errors need fixing before launch.',
+       'Firebase emulator: test Firestore and Auth locally without affecting your live database.'],
+      null,'Build a simple pre-launch checklist for each project. Even five items is better than nothing.'),
+    sec('ps4','Progressive Web Apps (PWA)','Understand the technology behind apps like Focus Flow that install on your home screen.',
+      'Focus Flow is already a PWA. Understanding what that means lets you build them intentionally and debug them.',
+      ['What makes a PWA: a manifest.json file, a service worker, and HTTPS.',
+       'manifest.json: tells the browser the app name, icon, colours, and display mode.',
+       'Service worker: a background script that caches files so the app works offline.',
+       'Debugging: Chrome DevTools > Application tab > Service Workers and Manifest.',
+       "Recommended: web.dev/progressive-web-apps — Google's own PWA guide, free and well written."],
+      null,'Open Focus Flow in DevTools > Application and look at the Manifest and Service Workers tabs.'),
+    sec('ps5','Email & Notification APIs','Send automated emails from your apps without needing a backend server.',
+      "Automated emails make portals feel professional. A client notified when their job updates is a huge quality-of-life improvement.",
+      ['EmailJS: send emails from JavaScript without a server. Free tier: 200 emails/month. emailjs.com.',
+       'Setup: create account, connect email, build a template, call emailjs.send() in your code.',
+       'Use cases: job status changed, new quote sent, invoice ready, new user registered.',
+       'Resend: newer alternative — resend.com. Generous free tier, clean API.',
+       'Keep emails short: job reference, what changed, a link back to the portal.',
+       'Always test with your own email first before connecting client accounts.'],
+      null,'Start with EmailJS for Lakeside — it works directly with Firebase and takes about an hour to get working.')
+  ]);
+}
+</script>
+</body>
+</html>
