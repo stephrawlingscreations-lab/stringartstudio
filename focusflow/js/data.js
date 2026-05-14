@@ -112,6 +112,7 @@ function createProject(overrides = {}) {
     color:       '#698F80',
     notes:       '',
     deadline:    null,
+    parentId:    null,
     quickLinks:  [],
     isArchived:  false,
     createdAt:   new Date().toISOString(),

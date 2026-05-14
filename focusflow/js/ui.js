@@ -280,19 +280,39 @@ function escHtml(str) {
    PROJECT SELECT POPULATION
   (populates all <select> dropdowns with project options)
 ══════════════════════════════════════════════ */
-function populateProjectSelects() {
-  const projects = Storage.getProjects().filter(p => !p.isArchived);
 
+/* Returns hierarchical <option> HTML — sub-projects indented under parents */
+function getProjectOptions(selectedId = null, emptyLabel = 'No project') {
+  const all      = Storage.getProjects().filter(p => !p.isArchived);
+  const topLevel = all.filter(p => !p.parentId);
+  const subs     = all.filter(p =>  p.parentId);
+  const parentIds = new Set(topLevel.map(p => p.id));
+
+  const ordered = [];
+  topLevel.forEach(p => {
+    ordered.push({ p, indent: false });
+    subs.filter(s => s.parentId === p.id)
+        .forEach(s => ordered.push({ p: s, indent: true }));
+  });
+  // orphaned sub-projects (parent deleted) shown flat
+  subs.filter(s => !parentIds.has(s.parentId))
+      .forEach(s => ordered.push({ p: s, indent: false }));
+
+  const emptyOpt = `<option value="">${escHtml(emptyLabel)}</option>`;
+  return emptyOpt + ordered.map(({ p, indent }) => {
+    const prefix = indent ? '  ↳ ' : '';
+    const sel    = p.id === selectedId ? ' selected' : '';
+    return `<option value="${p.id}"${sel}>${prefix}${escHtml(p.name)}</option>`;
+  }).join('');
+}
+
+function populateProjectSelects() {
   const selects = document.querySelectorAll(
     '#qa-project, #filter-project, #nf-project, #filter-notes-project'
   );
-
   selects.forEach(sel => {
-    const isFilter = sel.id.startsWith('filter');
-    const firstOpt = isFilter ? '<option value="">All projects</option>' : '<option value="">No project</option>';
-    sel.innerHTML = firstOpt + projects
-      .map(p => `<option value="${p.id}">${escHtml(p.name)}</option>`)
-      .join('');
+    const label = sel.id.startsWith('filter') ? 'All projects' : 'No project';
+    sel.innerHTML = getProjectOptions(sel.value || null, label);
   });
 }
 

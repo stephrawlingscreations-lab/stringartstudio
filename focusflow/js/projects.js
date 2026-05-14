@@ -28,9 +28,9 @@ const Projects = (() => {
   ══════════════════════════════════════════════ */
   function renderProjectsView() {
     const grid = document.getElementById('projects-grid');
-    const projects = Storage.getProjects().filter(p => !p.isArchived);
+    const all  = Storage.getProjects().filter(p => !p.isArchived);
 
-    if (!projects.length) {
+    if (!all.length) {
       grid.innerHTML = `
         <div class="empty-state" style="grid-column:1/-1">
           <div class="empty-state-icon">📁</div>
@@ -42,10 +42,33 @@ const Projects = (() => {
       return;
     }
 
-    grid.innerHTML = projects.map(renderProjectCard).join('');
+    const topLevel  = all.filter(p => !p.parentId);
+    const subs      = all.filter(p =>  p.parentId);
+    const parentIds = new Set(topLevel.map(p => p.id));
+
+    // orphaned sub-projects whose parent was deleted → treat as top-level
+    subs.filter(s => !parentIds.has(s.parentId)).forEach(s => topLevel.push(s));
+
+    grid.innerHTML = topLevel.map(project => {
+      const children = subs.filter(c => c.parentId === project.id);
+      if (children.length) {
+        return `
+          <div class="project-parent-group">
+            ${renderProjectCard(project, children.length)}
+            <div class="project-children-row">
+              ${children.map(renderChildCard).join('')}
+              <button class="project-add-child-btn" data-add-child="${project.id}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add sub-project
+              </button>
+            </div>
+          </div>`;
+      }
+      return renderProjectCard(project);
+    }).join('');
   }
 
-  function renderProjectCard(project) {
+  function renderProjectCard(project, childCount = 0) {
     const stats = getProjectStats(project.id);
     const deadlineHtml = project.deadline
       ? `<span class="badge ${DateUtil.isOverdue(project.deadline) ? 'badge-overdue' : 'badge-status'}">${DateUtil.formatDisplay(project.deadline)}</span>`
@@ -79,11 +102,34 @@ const Projects = (() => {
             </svg>
             ${stats.done}/${stats.total} tasks
           </span>
-          <span class="project-card-stat" style="font-weight:600;color:${project.color}">
-            ${stats.progress}%
-          </span>
+          <span class="project-card-stat" style="font-weight:600;color:${project.color}">${stats.progress}%</span>
+          ${childCount ? `<span class="badge badge-status">📁 ${childCount} sub-${childCount === 1 ? 'project' : 'projects'}</span>` : ''}
           ${stats.overdue > 0 ? `<span class="badge badge-overdue">${stats.overdue} overdue</span>` : ''}
           ${deadlineHtml}
+        </div>
+      </div>`;
+  }
+
+  function renderChildCard(project) {
+    const stats = getProjectStats(project.id);
+    return `
+      <div class="project-child-card" data-project-id="${project.id}" style="border-top:3px solid ${project.color}">
+        <div class="project-child-name">${escHtml(project.name)}</div>
+        ${project.description ? `<div class="project-child-desc">${escHtml(project.description)}</div>` : ''}
+        <div class="progress-bar-wrap" style="height:4px;">
+          <div class="progress-bar-fill" style="width:${stats.progress}%;background:${project.color}"></div>
+        </div>
+        <div class="project-child-meta">
+          <span>${stats.done}/${stats.total} tasks</span>
+          ${stats.overdue > 0 ? `<span class="badge badge-overdue">${stats.overdue} overdue</span>` : ''}
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:4px;">
+          <button class="btn-icon" data-edit-project="${project.id}" title="Edit" style="width:24px;height:24px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+          </button>
         </div>
       </div>`;
   }
@@ -96,7 +142,9 @@ const Projects = (() => {
     const project = Storage.getProject(projectId);
     if (!project) return;
 
-    const stats = getProjectStats(projectId);
+    const parent   = project.parentId ? Storage.getProject(project.parentId) : null;
+    const children = Storage.getProjects().filter(p => !p.isArchived && p.parentId === projectId);
+    const stats    = getProjectStats(projectId);
     const allTasks = Storage.getTasks()
       .filter(t => t.projectId === projectId && !t.isArchived)
       .sort((a, b) => {
@@ -111,6 +159,13 @@ const Projects = (() => {
 
     const content = document.getElementById('project-detail-content');
     content.innerHTML = `
+      ${parent ? `
+        <div class="project-breadcrumb">
+          <button data-project-detail="${parent.id}">${escHtml(parent.name)}</button>
+          <span>›</span>
+          <span>${escHtml(project.name)}</span>
+        </div>` : ''}
+
       <!-- Hero -->
       <div class="project-detail-hero">
         <div class="project-detail-color-bar" style="background:${project.color}"></div>
@@ -142,6 +197,18 @@ const Projects = (() => {
             <h2 class="section-title">Notes</h2>
           </div>
           <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;font-size:0.9rem;color:var(--text-2);white-space:pre-wrap;line-height:1.7;">${escHtml(project.notes)}</div>
+        </div>` : ''}
+
+      <!-- Sub-projects (if this is a parent) -->
+      ${children.length ? `
+        <div class="dashboard-section">
+          <div class="section-header">
+            <h2 class="section-title">Sub-projects</h2>
+            <button class="btn btn-ghost btn-sm" data-add-child="${projectId}">+ Add sub-project</button>
+          </div>
+          <div class="project-children-row" style="border:none;border-radius:0;background:none;padding:0;margin-bottom:var(--sp-4);">
+            ${children.map(renderChildCard).join('')}
+          </div>
         </div>` : ''}
 
       <!-- Active tasks -->
@@ -188,11 +255,16 @@ const Projects = (() => {
   /* ══════════════════════════════════════════════
      PROJECT FORM (create / edit)
   ══════════════════════════════════════════════ */
-  function openProjectForm(projectId = null) {
+  function openProjectForm(projectId = null, defaultParentId = null) {
     editingProjectId = projectId;
 
-    const modal = document.getElementById('modal-project-form');
     document.getElementById('project-form-title').textContent = projectId ? 'Edit Project' : 'New Project';
+
+    // Populate parent select — only top-level projects, excluding self
+    const parentSel = document.getElementById('pf-parent');
+    const topLevel  = Storage.getProjects().filter(p => !p.isArchived && !p.parentId && p.id !== projectId);
+    parentSel.innerHTML = '<option value="">None — top-level project</option>' +
+      topLevel.map(p => `<option value="${p.id}">${escHtml(p.name)}</option>`).join('');
 
     if (projectId) {
       const p = Storage.getProject(projectId);
@@ -202,8 +274,8 @@ const Projects = (() => {
       document.getElementById('pf-description').value = p.description || '';
       document.getElementById('pf-deadline').value    = p.deadline || '';
       document.getElementById('pf-notes').value       = p.notes || '';
+      parentSel.value = p.parentId || '';
 
-      // Set active color swatch
       document.querySelectorAll('#pf-color-picker .color-swatch').forEach(sw => {
         sw.classList.toggle('active', sw.dataset.color === p.color);
       });
@@ -213,6 +285,7 @@ const Projects = (() => {
       document.getElementById('pf-description').value = '';
       document.getElementById('pf-deadline').value    = '';
       document.getElementById('pf-notes').value       = '';
+      parentSel.value = defaultParentId || '';
 
       document.querySelectorAll('#pf-color-picker .color-swatch').forEach((sw, i) => {
         sw.classList.toggle('active', i === 0);
@@ -242,10 +315,11 @@ const Projects = (() => {
       notes:       document.getElementById('pf-notes').value.trim(),
     });
 
+    project.parentId = document.getElementById('pf-parent').value || null;
+
     if (existingId) {
-      // Preserve existing fields not in form
       const existing = Storage.getProject(existingId);
-      project.id = existingId;
+      project.id        = existingId;
       project.createdAt = existing?.createdAt || project.createdAt;
     }
 
@@ -277,6 +351,7 @@ const Projects = (() => {
 
     // Event delegation for project card clicks + edit buttons
     document.addEventListener('click', e => {
+      // Edit button
       const editBtn = e.target.closest('[data-edit-project]');
       if (editBtn) {
         e.stopPropagation();
@@ -284,7 +359,23 @@ const Projects = (() => {
         return;
       }
 
-      const card = e.target.closest('.project-card');
+      // Add sub-project button
+      const addChildBtn = e.target.closest('[data-add-child]');
+      if (addChildBtn) {
+        e.stopPropagation();
+        openProjectForm(null, addChildBtn.dataset.addChild);
+        return;
+      }
+
+      // Breadcrumb → parent detail
+      const detailBtn = e.target.closest('[data-project-detail]');
+      if (detailBtn) {
+        renderProjectDetail(detailBtn.dataset.projectDetail);
+        return;
+      }
+
+      // Click on child card or parent card → detail
+      const card = e.target.closest('.project-card, .project-child-card');
       if (card && card.dataset.projectId && !e.target.closest('button')) {
         renderProjectDetail(card.dataset.projectId);
       }

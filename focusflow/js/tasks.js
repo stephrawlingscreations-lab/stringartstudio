@@ -277,10 +277,7 @@ const Tasks = (() => {
     if (!task) return;
     currentDetailId = taskId;
 
-    const projects = Storage.getProjects().filter(p => !p.isArchived);
-    const projectOptions = projects.map(p =>
-      `<option value="${p.id}" ${task.projectId === p.id ? 'selected' : ''}>${escHtml(p.name)}</option>`
-    ).join('');
+    const projectOptions = getProjectOptions(task.projectId);
 
     const body = document.getElementById('task-detail-body');
     body.innerHTML = `
@@ -325,7 +322,6 @@ const Tasks = (() => {
         <div class="task-detail-field">
           <label class="task-detail-label">Project</label>
           <select class="form-select" id="td-project">
-            <option value="">No project</option>
             ${projectOptions}
           </select>
         </div>
