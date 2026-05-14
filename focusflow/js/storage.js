@@ -48,6 +48,47 @@ const Storage = (() => {
     }
   }
 
+  /* ── Per-item Firebase writes (prevents race conditions on collections) ── */
+  function fbPushItem(col, id, value) {
+    if (_db && _uid) {
+      _db.ref(`focusflow/${_uid}/${col}/${id}`).set(value)
+        .catch(e => console.warn('Firebase sync failed:', e));
+    }
+  }
+
+  function fbDeleteItem(col, id) {
+    if (_db && _uid) {
+      _db.ref(`focusflow/${_uid}/${col}/${id}`).remove()
+        .catch(e => console.warn('Firebase sync failed:', e));
+    }
+  }
+
+  function saveItem(colName, id, item) {
+    const col = getCollection(colName);
+    col[id] = item;
+    try {
+      localStorage.setItem(NS + colName, JSON.stringify(col));
+      fbPushItem(colName, id, item);
+      return true;
+    } catch (e) {
+      console.error('Storage write failed:', e);
+      return false;
+    }
+  }
+
+  function deleteItem(colName, id) {
+    const col = getCollection(colName);
+    delete col[id];
+    try {
+      localStorage.setItem(NS + colName, JSON.stringify(col));
+      fbDeleteItem(colName, id);
+      return true;
+    } catch (e) {
+      console.error('Storage delete failed:', e);
+      return false;
+    }
+  }
+
   /* ── Collection helpers ── */
   function getCollection(name) {
     return raw_get(name) || {};
@@ -86,14 +127,11 @@ const Storage = (() => {
       return getCollection('tasks')[id] || null;
     },
     saveTask(task) {
-      const col = getCollection('tasks');
-      col[task.id] = { ...task, updatedAt: new Date().toISOString() };
-      return setCollection('tasks', col);
+      const item = { ...task, updatedAt: new Date().toISOString() };
+      return saveItem('tasks', task.id, item);
     },
     deleteTask(id) {
-      const col = getCollection('tasks');
-      delete col[id];
-      return setCollection('tasks', col);
+      return deleteItem('tasks', id);
     },
 
     /* ── Projects ── */
@@ -104,14 +142,11 @@ const Storage = (() => {
       return getCollection('projects')[id] || null;
     },
     saveProject(project) {
-      const col = getCollection('projects');
-      col[project.id] = { ...project, updatedAt: new Date().toISOString() };
-      return setCollection('projects', col);
+      const item = { ...project, updatedAt: new Date().toISOString() };
+      return saveItem('projects', project.id, item);
     },
     deleteProject(id) {
-      const col = getCollection('projects');
-      delete col[id];
-      return setCollection('projects', col);
+      return deleteItem('projects', id);
     },
 
     /* ── Notes ── */
@@ -122,14 +157,11 @@ const Storage = (() => {
       return getCollection('notes')[id] || null;
     },
     saveNote(note) {
-      const col = getCollection('notes');
-      col[note.id] = { ...note, updatedAt: new Date().toISOString() };
-      return setCollection('notes', col);
+      const item = { ...note, updatedAt: new Date().toISOString() };
+      return saveItem('notes', note.id, item);
     },
     deleteNote(id) {
-      const col = getCollection('notes');
-      delete col[id];
-      return setCollection('notes', col);
+      return deleteItem('notes', id);
     },
 
     /* ── Reminders ── */
@@ -146,14 +178,10 @@ const Storage = (() => {
       return getCollection('reminders')[id] || null;
     },
     saveReminder(reminder) {
-      const col = getCollection('reminders');
-      col[reminder.id] = reminder;
-      return setCollection('reminders', col);
+      return saveItem('reminders', reminder.id, reminder);
     },
     deleteReminder(id) {
-      const col = getCollection('reminders');
-      delete col[id];
-      return setCollection('reminders', col);
+      return deleteItem('reminders', id);
     },
 
     /* ── Brain Dump ── */
@@ -162,14 +190,10 @@ const Storage = (() => {
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     },
     saveBrainDump(item) {
-      const col = getCollection('braindumps');
-      col[item.id] = item;
-      return setCollection('braindumps', col);
+      return saveItem('braindumps', item.id, item);
     },
     deleteBrainDump(id) {
-      const col = getCollection('braindumps');
-      delete col[id];
-      return setCollection('braindumps', col);
+      return deleteItem('braindumps', id);
     },
 
     /* ── App Settings ── */
