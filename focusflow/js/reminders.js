@@ -161,6 +161,10 @@ const Reminders = (() => {
 
     render();
     renderDashboardWidget();
+
+    // Register service worker + fire notifications for due reminders
+    Notifications.init();
+    Notifications.checkDue();
   }
 
   return { init, render, renderDashboardWidget };

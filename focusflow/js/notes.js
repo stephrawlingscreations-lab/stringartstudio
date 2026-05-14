@@ -78,7 +78,7 @@ const Notes = (() => {
         </div>
         ${note.content ? `<div class="note-card-content">${escHtml(note.content)}</div>` : ''}
         <div class="note-card-footer">
-          <span class="note-card-date">${DateUtil.formatDisplay(note.updatedAt?.split('T')[0]) || ''}</span>
+          <span class="note-card-date">${DateUtil.formatDisplay((note.updatedAt || note.createdAt)?.split('T')[0]) || ''}</span>
           ${project ? `<span class="project-badge" style="background:${project.color}22;color:${project.color};font-size:0.7rem;padding:1px 6px;">
             <span class="project-dot" style="background:${project.color}"></span>
             ${escHtml(project.name)}

@@ -588,12 +588,16 @@ const Tasks = (() => {
       case 'fortnightly': return DateUtil.addDays(base, 14);
       case 'monthly': {
         const d = new Date(base + 'T12:00:00');
+        const targetDay = d.getDate();
         d.setMonth(d.getMonth() + 1);
+        if (d.getDate() < targetDay) d.setDate(0); // clamp Jan 31 → Feb 28, not Mar 1
         return d.toISOString().split('T')[0];
       }
       case 'yearly': {
         const d = new Date(base + 'T12:00:00');
+        const targetDay = d.getDate();
         d.setFullYear(d.getFullYear() + 1);
+        if (d.getDate() < targetDay) d.setDate(0); // clamp Feb 29 → Feb 28 on non-leap years
         return d.toISOString().split('T')[0];
       }
       default: return task.dueDate;
@@ -728,12 +732,14 @@ const Tasks = (() => {
 
   function setDateFilter(f) {
     filters.dateFilter = f;
-    document.getElementById('filter-status').value   = '';
-    document.getElementById('filter-priority').value = '';
-    document.getElementById('filter-energy').value   = '';
+    filters.search   = '';
     filters.status   = '';
     filters.priority = '';
     filters.energy   = '';
+    document.getElementById('task-search').value     = '';
+    document.getElementById('filter-status').value   = '';
+    document.getElementById('filter-priority').value = '';
+    document.getElementById('filter-energy').value   = '';
   }
 
   function clearFilters() {

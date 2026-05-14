@@ -83,15 +83,33 @@ const BrainDump = (() => {
 
     Modal.open('modal-quick-add');
 
-    // After the modal saves, mark brain dump as converted
-    const origSave = document.getElementById('btn-qa-save');
+    // Mark brain dump as converted when saved — clean up if modal closes without saving
+    const saveBtn   = document.getElementById('btn-qa-save');
+    const cancelBtn = document.getElementById('modal-quick-add').querySelector('[data-close-modal]');
+    let handled = false;
+
     const handleSave = () => {
+      if (handled) return;
+      handled = true;
+      cleanup();
       item.isConverted = true;
       Storage.saveBrainDump(item);
       render();
-      origSave.removeEventListener('click', handleSave);
     };
-    origSave.addEventListener('click', handleSave, { once: true });
+
+    const handleCancel = () => {
+      if (handled) return;
+      handled = true;
+      cleanup();
+    };
+
+    function cleanup() {
+      saveBtn.removeEventListener('click', handleSave);
+      if (cancelBtn) cancelBtn.removeEventListener('click', handleCancel);
+    }
+
+    saveBtn.addEventListener('click', handleSave);
+    if (cancelBtn) cancelBtn.addEventListener('click', handleCancel);
   }
 
 
