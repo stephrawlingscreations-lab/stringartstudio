@@ -629,7 +629,15 @@ const Tasks = (() => {
       task.dueDate     = nextDate;
       task.status      = 'todo';
       task.completedAt = null;
-      Storage.saveTask(task);
+      // Auto-advance linked reminder to the new due date
+      if (task.reminderDate) {
+        const oldReminderDate = task.reminderDate;
+        task.reminderDate = nextDate;
+        Storage.saveTask(task);
+        syncTaskReminder(task, oldReminderDate);
+      } else {
+        Storage.saveTask(task);
+      }
       renderTasksView();
       refreshDashboard();
       Toast.success(`↻ Done! Next due ${nextDate ? DateUtil.formatDisplay(nextDate) : 'soon'}`);
