@@ -619,7 +619,7 @@ const Tasks = (() => {
       }
 
       // Click on task card → open detail
-      const card = e.target.closest('.task-card, .task-compact');
+      const card = e.target.closest('.task-card, .task-compact, .next-action-card');
       if (card && card.dataset.taskId && !e.target.closest('[data-drag-handle]')) {
         openTaskDetail(card.dataset.taskId);
       }
