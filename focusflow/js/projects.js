@@ -235,7 +235,6 @@ const Projects = (() => {
     const existingId = document.getElementById('pf-id').value;
 
     const project = createProject({
-      id:          existingId || undefined,
       name,
       description: document.getElementById('pf-description').value.trim(),
       color,

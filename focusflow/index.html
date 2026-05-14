@@ -1095,9 +1095,15 @@
       }
       /* All allowed emails belong to the same person — use a shared path */
       Storage.setFirebase(ffDb, 'steph');
-      Storage.pullFromFirebase()
-        .then(bootApp)
-        .catch(bootApp); /* boot even if Firebase is offline */
+      if (appBooted) {
+        /* App already running (auth fired again mid-session) — skip the Firebase
+           pull so it doesn't overwrite local changes that haven't synced yet. */
+        bootApp();
+      } else {
+        Storage.pullFromFirebase()
+          .then(bootApp)
+          .catch(bootApp); /* boot even if Firebase is offline */
+      }
     } else {
       showLogin(pendingDisallow || '');
       pendingDisallow = '';
