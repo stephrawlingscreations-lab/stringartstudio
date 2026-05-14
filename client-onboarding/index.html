@@ -1,0 +1,1811 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Client Onboarding Tracker</title>
+  <link rel="icon" href="/images/logo.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/logo.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Client Tracker" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <style>
+    :root {
+      --bg: #f3f4fb;
+      --surface: #ffffff;
+      --surface-2: #f7f8ff;
+      --line: rgba(30, 28, 51, 0.12);
+      --ink: #1e1c33;
+      --muted: #605e77;
+      --brand: #4f46e5;
+      --brand-2: #4338ca;
+      --danger: #b42318;
+      --radius: 14px;
+      --radius-sm: 10px;
+      --shadow: 0 10px 30px rgba(22, 21, 35, 0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1000px 500px at 10% -10%, rgba(79, 70, 229, 0.18), transparent 50%),
+        linear-gradient(180deg, #fafbff 0%, var(--bg) 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; display: grid; gap: 14px; }
+    .hero {
+      background: linear-gradient(140deg, #1f1b4a 0%, var(--brand) 65%, #7c3aed 100%);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    .hero h1 { font-size: 1.5rem; margin-bottom: 4px; }
+    .hero p { opacity: 0.9; font-size: 0.92rem; max-width: 70ch; }
+    .sync-bar {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .sync-pill {
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+    .sync-pill.ok { background: rgba(34, 197, 94, 0.25); }
+    .sync-pill.warn { background: rgba(245, 158, 11, 0.25); }
+    .sync-pill.bad { background: rgba(239, 68, 68, 0.25); }
+    .sync-text {
+      font-size: 0.82rem;
+      opacity: 0.95;
+    }
+    .btn-sync {
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 9px;
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.78rem;
+      padding: 7px 10px;
+      cursor: pointer;
+    }
+    .btn-sync:hover { background: rgba(255,255,255,0.22); }
+    .view-nav {
+      display: flex;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 6px;
+      box-shadow: 0 4px 16px rgba(22,21,35,.05);
+    }
+    .view-btn {
+      border: none;
+      border-radius: 9px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 9px 14px;
+      cursor: pointer;
+    }
+    .view-btn.active {
+      background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(79,70,229,.28);
+    }
+    .view { display: none; }
+    .view.active { display: grid; gap: 12px; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+    }
+    .stat {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+    }
+    .stat .label { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.07em; }
+    .stat .value { margin-top: 6px; font-size: 1.4rem; font-weight: 700; }
+    .grid { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 18px rgba(22, 21, 35, 0.05);
+      overflow: hidden;
+    }
+    .card-h {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface-2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .card-h h2 { font-size: 0.95rem; }
+    .card-b { padding: 12px; }
+    .row { display: grid; gap: 8px; margin-bottom: 10px; }
+    .row:last-child { margin-bottom: 0; }
+    label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 600;
+    }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-size: 0.92rem;
+      padding: 9px 10px;
+    }
+    textarea { min-height: 70px; resize: vertical; }
+    .btn {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: #fff;
+      color: var(--ink);
+      font-weight: 600;
+      font-size: 0.84rem;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    .btn:hover { background: var(--surface-2); }
+    .btn-primary { border: none; color: #fff; background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%); }
+    .btn-danger { color: var(--danger); }
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+    .hint { color: var(--muted); font-size: 0.8rem; line-height: 1.4; }
+    .collapse {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      padding: 8px 10px;
+    }
+    .collapse > summary {
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--ink);
+      list-style: none;
+    }
+    .collapse > summary::-webkit-details-marker { display: none; }
+    .collapse > summary::after {
+      content: "▾";
+      float: right;
+      color: var(--muted);
+    }
+    .collapse:not([open]) > summary::after { content: "▸"; }
+    .client-list { display: grid; gap: 8px; max-height: 520px; overflow: auto; }
+    .client-item {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      cursor: pointer;
+      background: #fff;
+    }
+    .client-item.active { border-color: rgba(79, 70, 229, 0.45); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12); }
+    .client-item .top { display: flex; justify-content: space-between; gap: 8px; }
+    .client-item .name { font-weight: 700; font-size: 0.92rem; }
+    .client-item .meta { color: var(--muted); font-size: 0.79rem; margin-top: 4px; }
+    .pipeline-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .pipeline-actions .btn { padding: 6px 10px; font-size: 0.76rem; }
+    .dash-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .dash-list { display: grid; gap: 8px; }
+    .dash-item {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      padding: 10px;
+    }
+    .dash-item.clickable {
+      cursor: pointer;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+    }
+    .dash-item.clickable:hover {
+      border-color: rgba(79, 70, 229, 0.35);
+      box-shadow: 0 8px 16px rgba(79, 70, 229, 0.12);
+      transform: translateY(-1px);
+    }
+    .dash-item .title { font-weight: 700; font-size: 0.9rem; }
+    .dash-item .sub { color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
+    .pill {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 3px 8px;
+      background: #ececff;
+      color: var(--brand-2);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .pill.lead { background: #fff4dc; color: #a16207; }
+    .pill.onboarding { background: #e6eeff; color: #1d4ed8; }
+    .pill.live { background: #e8f9ef; color: #047857; }
+    .pill.paused { background: #efeff8; color: #52525b; }
+    .pill.priority-low { background: #edf7ff; color: #075985; }
+    .pill.priority-normal { background: #ececff; color: #4338ca; }
+    .pill.priority-high { background: #fee2e2; color: #991b1b; }
+    .clients-toolbar {
+      display: grid;
+      grid-template-columns: 1fr 180px;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .portal-section-title {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .tasks { display: grid; gap: 8px; margin-top: 10px; }
+    .task {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      background: #fff;
+    }
+    .task .top {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
+      gap: 8px;
+    }
+    .task .left {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      min-width: 0;
+    }
+    .task .left input[type="checkbox"] {
+      width: auto;
+      margin-top: 3px;
+      flex: 0 0 auto;
+    }
+    .task .title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      line-height: 1.35;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+    .task.done .title { text-decoration: line-through; color: var(--muted); }
+    .task .note { margin-top: 7px; font-size: 0.82rem; color: var(--muted); }
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    #auth-loading {
+      position: fixed; inset: 0; z-index: 10001;
+      background: linear-gradient(180deg, #fafbff 0%, #eceefe 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+      color: var(--muted);
+    }
+    .spin {
+      width: 40px; height: 40px; border-radius: 50%;
+      border: 3px solid rgba(79, 70, 229, 0.16); border-top-color: var(--brand);
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #login-screen {
+      position: fixed; inset: 0; z-index: 10000;
+      display: none; align-items: center; justify-content: center; padding: 16px;
+      background: linear-gradient(180deg, #f5f6ff 0%, #eaecfb 100%);
+    }
+    .login-card {
+      width: 100%; max-width: 430px; background: var(--surface); border: 1px solid var(--line);
+      border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px 22px; text-align: center;
+    }
+    .login-card h2 { font-size: 1.35rem; margin-bottom: 8px; }
+    .login-card p { color: var(--muted); font-size: 0.9rem; line-height: 1.45; margin-bottom: 16px; }
+    #main-app { display: none; }
+    #login-error { color: var(--danger); font-weight: 600; min-height: 20px; font-size: 0.82rem; margin-top: 10px; }
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+      .split { grid-template-columns: 1fr; }
+      .dash-grid { grid-template-columns: 1fr; }
+      .clients-toolbar { grid-template-columns: 1fr; }
+    }
+    #print-area { display: none; }
+    @media print {
+      body > *:not(#print-area) { display: none !important; }
+      #print-area {
+        display: block !important;
+        background: #fff;
+        color: #111;
+        padding: 0;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="auth-loading">
+    <div class="spin" aria-hidden="true"></div>
+    <div>Loading client tracker...</div>
+  </div>
+
+  <div id="login-screen">
+    <div class="login-card">
+      <h2>Client Tracker (Private)</h2>
+      <p>Sign in with Google to access your private onboarding tracker. Only allowlisted accounts can open it.</p>
+      <button type="button" class="btn btn-primary" onclick="startGoogleSignIn()">Sign in with Google</button>
+      <div id="login-error"></div>
+    </div>
+  </div>
+
+  <div id="main-app">
+    <div class="wrap">
+      <section class="hero">
+        <h1>Client Onboarding Tracker</h1>
+        <p>Add a client once, then work through your checklist (GitHub, Firebase, hosting, domains, etc.) in a repeatable way. Data syncs to Firebase and keeps a local backup.</p>
+        <div class="sync-bar">
+          <span class="sync-pill warn" id="syncStatePill">Checking sync...</span>
+          <span class="sync-text" id="syncInfoText">Waiting for cloud connection.</span>
+          <button class="btn-sync" type="button" onclick="forceCloudSync()">Force sync now</button>
+        </div>
+      </section>
+
+      <section class="view-nav">
+        <button class="view-btn active" data-view="dashboard" onclick="switchView('dashboard')">Dashboard</button>
+        <button class="view-btn" data-view="clients" onclick="switchView('clients')">Clients</button>
+      </section>
+
+      <section id="dashboard-view" class="view active">
+        <section class="stats" id="stats"></section>
+        <section class="dash-grid">
+          <article class="card">
+            <div class="card-h"><h2>Pipeline overview</h2></div>
+            <div class="card-b dash-list" id="pipelineOverview"></div>
+          </article>
+          <article class="card">
+            <div class="card-h"><h2>Priority actions</h2></div>
+            <div class="card-b dash-list" id="priorityActions"></div>
+          </article>
+        </section>
+        <section class="dash-grid">
+          <article class="card">
+            <div class="card-h"><h2>Recent clients</h2></div>
+            <div class="card-b dash-list" id="recentClients"></div>
+          </article>
+          <article class="card">
+            <div class="card-h"><h2>Setup progress board</h2></div>
+            <div class="card-b dash-list" id="progressBoard"></div>
+          </article>
+        </section>
+        <section class="dash-grid">
+          <article class="card">
+            <div class="card-h"><h2>Follow-ups due or overdue</h2></div>
+            <div class="card-b dash-list" id="followupsDue"></div>
+          </article>
+          <article class="card">
+            <div class="card-h"><h2>Waiting on client</h2></div>
+            <div class="card-b dash-list" id="waitingOnClientList"></div>
+          </article>
+        </section>
+        <section class="dash-grid">
+          <article class="card">
+            <div class="card-h"><h2>High priority</h2></div>
+            <div class="card-b dash-list" id="highPriorityList"></div>
+          </article>
+          <article class="card">
+            <div class="card-h"><h2>Near completion / ready to go live</h2></div>
+            <div class="card-b dash-list" id="nearCompletionList"></div>
+          </article>
+        </section>
+      </section>
+
+      <section id="clients-view" class="view">
+      <section class="grid">
+        <article class="card">
+          <div class="card-h"><h2>Checklist Template</h2></div>
+          <div class="card-b">
+            <details class="collapse">
+              <summary>Open onboarding checklist template</summary>
+              <div class="hint" style="margin:8px 0;">Used when you click "Start onboarding" for a client.</div>
+              <div class="split">
+                <input id="templateTaskInput" placeholder="e.g. Create GitHub repo" onkeydown="if(event.key==='Enter') addTemplateTask()" />
+                <select id="templateTaskStage">
+                  <option value="Client Decisions">Client Decisions</option>
+                  <option value="Project Setup">Project Setup</option>
+                  <option value="Firebase Setup">Firebase Setup</option>
+                  <option value="Build & Customise">Build & Customise</option>
+                  <option value="Hosting & Go-Live">Hosting & Go-Live</option>
+                  <option value="Handover">Handover</option>
+                  <option value="General / Old Checklist">General / Old Checklist</option>
+                </select>
+                <button class="btn btn-primary" onclick="addTemplateTask()">+ Add template task</button>
+              </div>
+              <div class="tasks" id="templateTasks"></div>
+            </details>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-h"><h2>Clients</h2>
+            <div class="toolbar">
+              <button class="btn" onclick="exportData()">Export backup</button>
+              <button class="btn" onclick="triggerImport()">Import backup</button>
+              <button class="btn" onclick="signOutTracker()">Sign out</button>
+              <input id="importFile" type="file" accept="application/json" style="display:none" onchange="importData(event)" />
+            </div>
+          </div>
+          <div class="card-b">
+            <div class="toolbar" style="margin-bottom:12px;">
+              <button class="btn btn-primary" id="toggleNewClientBtn" onclick="toggleNewClientForm()">+ Add new client</button>
+              <button class="btn" id="cancelNewClientBtn" onclick="toggleNewClientForm(false)" style="display:none;">Cancel</button>
+            </div>
+            <div id="newClientForm" style="display:none;">
+              <div class="split">
+                <div class="row">
+                  <label>Client Name</label>
+                  <input id="clientName" placeholder="Business name or person" onkeydown="if(event.key==='Enter') addClient()" />
+                </div>
+                <div class="row">
+                  <label>Business Name</label>
+                  <input id="clientBusinessName" placeholder="Registered business name (optional)" onkeydown="if(event.key==='Enter') addClient()" />
+                </div>
+              </div>
+              <div class="split">
+                <div class="row">
+                  <label>Mobile</label>
+                  <input id="clientMobile" placeholder="e.g. 087..." onkeydown="if(event.key==='Enter') addClient()" />
+                </div>
+                <div class="row">
+                  <label>Email</label>
+                  <input id="clientEmail" type="email" placeholder="Personal/main email" onkeydown="if(event.key==='Enter') addClient()" />
+                </div>
+              </div>
+              <div class="split">
+                <div class="row">
+                  <label>Business Email</label>
+                  <input id="clientBusinessEmail" type="email" placeholder="Business email (optional)" onkeydown="if(event.key==='Enter') addClient()" />
+                </div>
+                <div class="row"></div>
+              </div>
+              <div class="split">
+                <div class="row">
+                  <label>Service Type</label>
+                  <input id="clientService" placeholder="e.g. Tracker + Hosting" onkeydown="if(event.key==='Enter') addClient()" />
+                </div>
+                <div class="row">
+                  <label>Status</label>
+                  <select id="clientStatus">
+                    <option value="lead">Lead</option>
+                    <option value="onboarding">Onboarding</option>
+                    <option value="live">Live</option>
+                    <option value="paused">Paused</option>
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <label>Notes</label>
+                <textarea id="clientNotes" placeholder="Anything important for this client..."></textarea>
+              </div>
+              <div class="toolbar" style="margin-bottom:12px;">
+                <button class="btn btn-primary" onclick="addClient()">Save client</button>
+              </div>
+            </div>
+            <div class="portal-section-title">Client Directory</div>
+            <div class="clients-toolbar">
+              <input id="clientSearch" placeholder="Search name, business, email..." oninput="renderClients()" />
+              <select id="clientFilterStatus" onchange="renderClients()">
+                <option value="all">All statuses</option>
+                <option value="lead">Lead</option>
+                <option value="onboarding">Onboarding</option>
+                <option value="live">Live</option>
+                <option value="paused">Paused</option>
+              </select>
+            </div>
+            <div class="client-list" id="clientList"></div>
+          </div>
+        </article>
+      </section>
+
+      <section class="card" id="detailCard" style="display:none;">
+        <div class="card-h">
+          <h2 id="detailTitle">Client</h2>
+          <div class="toolbar">
+            <button class="btn" onclick="generateSiteGuide()">Generate site guide</button>
+            <button class="btn" onclick="printClientHandover()">Print handover summary</button>
+            <button class="btn btn-danger" onclick="deleteClient()">Delete client</button>
+          </div>
+        </div>
+        <div class="card-b">
+          <div class="split">
+            <div class="row">
+              <label>Client Name</label>
+              <input id="detailName" oninput="updateClientDetail('name', this.value)" />
+            </div>
+            <div class="row">
+              <label>Priority</label>
+              <select id="detailPriority" onchange="updateClientDetail('priority', this.value)">
+                <option value="low">Low</option>
+                <option value="normal">Normal</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+          </div>
+          <div class="split">
+            <div class="row">
+              <label>Service</label>
+              <input id="detailService" oninput="updateClientDetail('service', this.value)" />
+            </div>
+            <div class="row">
+              <label>Business Name</label>
+              <input id="detailBusinessName" oninput="updateClientDetail('businessName', this.value)" />
+            </div>
+          </div>
+          <div class="split">
+            <div class="row">
+              <label>Status</label>
+              <select id="detailStatus" onchange="updateClientDetail('status', this.value)">
+                <option value="lead">Lead</option>
+                <option value="onboarding">Onboarding</option>
+                <option value="live">Live</option>
+                <option value="paused">Paused</option>
+              </select>
+            </div>
+            <div class="row">
+              <label style="text-transform:none; letter-spacing:0; display:flex; align-items:center; gap:8px; font-size:0.86rem; color:var(--ink); margin-top:24px;">
+                <input id="detailWaitingOnClient" type="checkbox" style="width:auto;" onchange="updateClientDetail('waitingOnClient', this.checked)" />
+                Waiting on client
+              </label>
+            </div>
+          </div>
+          <div class="split">
+            <div class="row">
+              <label>Mobile</label>
+              <input id="detailMobile" oninput="updateClientDetail('mobile', this.value)" />
+            </div>
+            <div class="row">
+              <label>Add one-off task</label>
+              <div class="split">
+                <input id="newTaskInput" placeholder="e.g. Connect custom domain" onkeydown="if(event.key==='Enter') addClientTask()" />
+                <select id="newTaskStage">
+                  <option value="Client Decisions">Client Decisions</option>
+                  <option value="Project Setup">Project Setup</option>
+                  <option value="Firebase Setup">Firebase Setup</option>
+                  <option value="Build & Customise">Build & Customise</option>
+                  <option value="Hosting & Go-Live">Hosting & Go-Live</option>
+                  <option value="Handover">Handover</option>
+                  <option value="General / Old Checklist">General / Old Checklist</option>
+                </select>
+                <button class="btn" onclick="addClientTask()">Add</button>
+              </div>
+            </div>
+          </div>
+          <div class="split">
+            <div class="row">
+              <label>Email</label>
+              <input id="detailEmail" type="email" oninput="updateClientDetail('email', this.value)" />
+            </div>
+            <div class="row">
+              <label>Business Email</label>
+              <input id="detailBusinessEmail" type="email" oninput="updateClientDetail('businessEmail', this.value)" />
+            </div>
+          </div>
+          <div class="split">
+            <div class="row">
+              <label>Next Action</label>
+              <input id="detailNextAction" placeholder="What should happen next?" oninput="updateClientDetail('nextAction', this.value)" />
+            </div>
+            <div class="row">
+              <label>Follow-up Date</label>
+              <input id="detailFollowUpDate" type="date" onchange="updateClientDetail('followUpDate', this.value)" />
+            </div>
+          </div>
+          <div class="row">
+            <label>Last Updated</label>
+            <input id="detailLastUpdated" disabled />
+          </div>
+          <details class="collapse" open>
+            <summary>Setup details (for auto-generated site guide)</summary>
+            <div class="split" style="margin-top:10px;">
+              <div class="row">
+                <label>Site URL</label>
+                <input id="detailSiteUrl" placeholder="https://..." oninput="updateClientSetup('siteUrl', this.value)" />
+              </div>
+              <div class="row">
+                <label>GitHub Repo URL</label>
+                <input id="detailRepoUrl" placeholder="https://github.com/..." oninput="updateClientSetup('repoUrl', this.value)" />
+              </div>
+            </div>
+            <div class="split">
+              <div class="row">
+                <label>Firebase Project ID</label>
+                <input id="detailFirebaseProject" placeholder="project-id" oninput="updateClientSetup('firebaseProject', this.value)" />
+              </div>
+              <div class="row">
+                <label>Hosting Provider</label>
+                <select id="detailHostingProvider" onchange="updateClientSetup('hostingProvider', this.value)">
+                  <option value="">Select</option>
+                  <option value="Firebase Hosting">Firebase Hosting</option>
+                  <option value="Netlify">Netlify</option>
+                  <option value="Vercel">Vercel</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="split">
+              <div class="row">
+                <label>Owner Email</label>
+                <input id="detailOwnerEmail" type="email" placeholder="owner@email.com" oninput="updateClientSetup('ownerEmail', this.value)" />
+              </div>
+              <div class="row">
+                <label>Backup Location</label>
+                <input id="detailBackupLocation" placeholder="OneDrive folder / link" oninput="updateClientSetup('backupLocation', this.value)" />
+              </div>
+            </div>
+            <div class="split">
+              <div class="row">
+                <label>Support Email</label>
+                <input id="detailSupportEmail" type="email" placeholder="support@email.com" oninput="updateClientSetup('supportEmail', this.value)" />
+              </div>
+              <div class="row"></div>
+            </div>
+          </details>
+          <div class="row">
+            <label>Notes</label>
+            <textarea id="detailNotes" oninput="updateClientDetail('notes', this.value)"></textarea>
+          </div>
+          <div class="row">
+            <label style="text-transform:none; letter-spacing:0; display:flex; align-items:center; gap:8px; font-size:0.86rem; color:var(--ink);">
+              <input id="printClientSafe" type="checkbox" style="width:auto;" />
+              Client-safe print mode (hide remaining items and notes)
+            </label>
+          </div>
+          <div class="tasks" id="clientTasks"></div>
+        </div>
+      </section>
+      </section>
+    </div>
+  </div>
+  <div id="print-area"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script>
+    // Replace with your new Firebase app config.
+    firebase.initializeApp({
+      apiKey: "AIzaSyAcSc-3ejzUfaiods7fAGAH10EuVvZaL6U",
+      authDomain: "steph-rawlings-creations.firebaseapp.com",
+      databaseURL: "https://steph-rawlings-creations-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "steph-rawlings-creations",
+      storageBucket: "steph-rawlings-creations.firebasestorage.app",
+      messagingSenderId: "271810785275",
+      appId: "1:271810785275:web:85bf2125a4245a51e4e55e"
+    });
+    const fbAuth = firebase.auth();
+    const fbDb = firebase.database();
+  </script>
+  <script>
+    const KEY = "client_onboarding_tracker_v1";
+    const FB_PATH = "clientOnboardingTracker";
+    const ALLOWED_EMAILS = [
+      "stephrawlingscreations@gmail.com",
+      "sdr22ie@gmail.com",
+      "sdr22uk@gmail.com"
+    ];
+    const GENERAL_OLD_STAGE = "General / Old Checklist";
+    const CHECKLIST_STAGES = [
+      "Client Decisions",
+      "Project Setup",
+      "Firebase Setup",
+      "Build & Customise",
+      "Hosting & Go-Live",
+      "Handover"
+    ];
+    const STAGE_ORDER = [...CHECKLIST_STAGES, GENERAL_OLD_STAGE];
+    const defaultTemplate = [
+      { stage: "Client Decisions", title: "Confirm what the client needs" },
+      { stage: "Client Decisions", title: "Confirm price/payment" },
+      { stage: "Client Decisions", title: "Confirm who owns the system" },
+      { stage: "Client Decisions", title: "Confirm who needs access" },
+      { stage: "Client Decisions", title: "Confirm where backups will be kept" },
+      { stage: "Project Setup", title: "Create client folder" },
+      { stage: "Project Setup", title: "Create project notes document" },
+      { stage: "Project Setup", title: "Create GitHub repository" },
+      { stage: "Project Setup", title: "Add starter files" },
+      { stage: "Project Setup", title: "Save important links" },
+      { stage: "Firebase Setup", title: "Create Firebase project" },
+      { stage: "Firebase Setup", title: "Enable Google sign-in" },
+      { stage: "Firebase Setup", title: "Add authorised domains" },
+      { stage: "Firebase Setup", title: "Create Realtime Database" },
+      { stage: "Firebase Setup", title: "Add database security rules" },
+      { stage: "Firebase Setup", title: "Add client-specific database path" },
+      { stage: "Build & Customise", title: "Add client branding/logo" },
+      { stage: "Build & Customise", title: "Add client-specific fields/forms" },
+      { stage: "Build & Customise", title: "Add user roles/access rules" },
+      { stage: "Build & Customise", title: "Test saving data" },
+      { stage: "Build & Customise", title: "Test mobile view" },
+      { stage: "Build & Customise", title: "Test export/import backup" },
+      { stage: "Hosting & Go-Live", title: "Deploy site" },
+      { stage: "Hosting & Go-Live", title: "Test live URL" },
+      { stage: "Hosting & Go-Live", title: "Connect custom domain if needed" },
+      { stage: "Hosting & Go-Live", title: "Test login on live site" },
+      { stage: "Hosting & Go-Live", title: "Check cloud sync works" },
+      { stage: "Handover", title: "Create final backup" },
+      { stage: "Handover", title: "Generate site guide" },
+      { stage: "Handover", title: "Send client URL and access instructions" },
+      { stage: "Handover", title: "Explain how to use the system" },
+      { stage: "Handover", title: "Confirm client can log in" },
+      { stage: "Handover", title: "Mark client as Live" }
+    ];
+
+    let currentUser = null;
+    let pendingDisallow = "";
+    let authResolved = false;
+    let syncState = "checking";
+    let lastCloudSyncAt = "";
+    let lastSyncError = "";
+    let state = {
+      templateTasks: defaultTemplate.map((t, i) => ({ id: "tpl_" + i, title: t.title, stage: t.stage })),
+      clients: []
+    };
+    let selectedClientId = null;
+    let currentView = "dashboard";
+
+    function uid(prefix) { return prefix + "_" + Math.random().toString(36).slice(2, 9); }
+
+    let _saveTimer = null;
+    function debouncedSave() {
+      clearTimeout(_saveTimer);
+      _saveTimer = setTimeout(save, 800);
+    }
+    function authPath() { return FB_PATH; }
+    function touchClient(client) {
+      if (!client) return;
+      client.lastUpdated = new Date().toISOString();
+    }
+    function formatDate(value) {
+      if (!value) return "Not set";
+      const dt = new Date(value);
+      if (isNaN(dt.getTime())) return "Not set";
+      return dt.toLocaleDateString("en-IE");
+    }
+    function normalizeTask(taskLike, prefix = "task") {
+      const title = typeof taskLike === "string" ? taskLike : (taskLike?.title || "");
+      const stageCandidate = typeof taskLike === "object" ? taskLike?.stage : "";
+      const stage = STAGE_ORDER.includes(stageCandidate) ? stageCandidate : GENERAL_OLD_STAGE;
+      return {
+        id: (typeof taskLike === "object" && taskLike?.id) ? taskLike.id : uid(prefix),
+        title,
+        done: typeof taskLike === "object" ? !!taskLike.done : false,
+        note: typeof taskLike === "object" ? (taskLike.note || "") : "",
+        stage
+      };
+    }
+    function normalizeTemplateTask(taskLike, index = 0) {
+      const title = typeof taskLike === "string" ? taskLike : (taskLike?.title || "");
+      const stageCandidate = typeof taskLike === "object" ? taskLike?.stage : "";
+      const stage = STAGE_ORDER.includes(stageCandidate)
+        ? stageCandidate
+        : GENERAL_OLD_STAGE;
+      return {
+        id: (typeof taskLike === "object" && taskLike?.id) ? taskLike.id : "tpl_" + index,
+        title,
+        stage
+      };
+    }
+    function tasksByStage(tasks) {
+      const groups = {};
+      STAGE_ORDER.forEach(stage => { groups[stage] = []; });
+      (tasks || []).forEach(task => {
+        const stage = STAGE_ORDER.includes(task.stage) ? task.stage : GENERAL_OLD_STAGE;
+        groups[stage].push(task);
+      });
+      return groups;
+    }
+    function stageProgress(tasks, stage) {
+      const stageTasks = (tasks || []).filter(t => (STAGE_ORDER.includes(t.stage) ? t.stage : GENERAL_OLD_STAGE) === stage);
+      const done = stageTasks.filter(t => t.done).length;
+      return { done, total: stageTasks.length };
+    }
+    function getCurrentStage(client) {
+      const firstIncomplete = (client.tasks || []).find(t => !t.done);
+      if (!firstIncomplete) return client.tasks?.length ? "Complete" : "Not started";
+      return STAGE_ORDER.includes(firstIncomplete.stage) ? firstIncomplete.stage : GENERAL_OLD_STAGE;
+    }
+    function normalizeClient(c) {
+      const tasks = Array.isArray(c.tasks) ? c.tasks.map(t => normalizeTask(t, "task")) : [];
+      const onboardingStarted = typeof c.onboardingStarted === "boolean" ? c.onboardingStarted : tasks.length > 0;
+      const normalizedPriority = ["low", "normal", "high"].includes(c.priority) ? c.priority : "normal";
+      return {
+        ...c,
+        status: c.status || "lead",
+        mobile: c.mobile || c.contact || "",
+        email: c.email || "",
+        businessEmail: c.businessEmail || "",
+        nextAction: c.nextAction || "",
+        followUpDate: c.followUpDate || "",
+        priority: normalizedPriority,
+        waitingOnClient: !!c.waitingOnClient,
+        lastUpdated: c.lastUpdated || c.createdAt || new Date().toISOString(),
+        brochureSentAt: c.brochureSentAt || "",
+        setup: {
+          siteUrl: c.setup?.siteUrl || "",
+          repoUrl: c.setup?.repoUrl || "",
+          firebaseProject: c.setup?.firebaseProject || "",
+          hostingProvider: c.setup?.hostingProvider || "",
+          ownerEmail: c.setup?.ownerEmail || "",
+          backupLocation: c.setup?.backupLocation || "",
+          supportEmail: c.setup?.supportEmail || ""
+        },
+        onboardingStarted,
+        tasks
+      };
+    }
+    function normalizeState() {
+      if (!Array.isArray(state.templateTasks)) {
+        state.templateTasks = defaultTemplate.map((t, i) => ({ id: "tpl_" + i, title: t.title, stage: t.stage }));
+      }
+      state.templateTasks = state.templateTasks.map((t, i) => normalizeTemplateTask(t, i));
+      if (!Array.isArray(state.clients)) state.clients = [];
+      state.clients = state.clients.map(normalizeClient);
+    }
+
+    function showPhase(phase) {
+      document.getElementById("auth-loading").style.display = phase === "loading" ? "flex" : "none";
+      document.getElementById("login-screen").style.display = phase === "login" ? "flex" : "none";
+      document.getElementById("main-app").style.display = phase === "app" ? "block" : "none";
+    }
+
+    function save() {
+      normalizeState();
+      localStorage.setItem(KEY, JSON.stringify(state));
+      if (currentUser) {
+        fbDb.ref(authPath()).set(state).then(() => {
+          markCloudSyncOk();
+        }).catch(err => {
+          markCloudSyncError(err);
+        });
+      }
+      renderStats();
+      renderDashboard();
+    }
+
+    function formatSyncTime(value) {
+      if (!value) return "Never";
+      const dt = new Date(value);
+      if (isNaN(dt.getTime())) return "Unknown";
+      return dt.toLocaleString("en-IE");
+    }
+
+    function renderSyncStatus() {
+      const pill = document.getElementById("syncStatePill");
+      const info = document.getElementById("syncInfoText");
+      if (!pill || !info) return;
+      pill.className = "sync-pill";
+      if (syncState === "ok") {
+        pill.classList.add("ok");
+        pill.textContent = navigator.onLine ? "Cloud synced" : "Offline (saved local)";
+      } else if (syncState === "error") {
+        pill.classList.add("bad");
+        pill.textContent = "Cloud sync error";
+      } else {
+        pill.classList.add("warn");
+        pill.textContent = "Checking sync...";
+      }
+      const who = currentUser?.email ? `Signed in as ${currentUser.email}. ` : "";
+      const when = `Last cloud sync: ${formatSyncTime(lastCloudSyncAt)}.`;
+      const why = syncState === "error" && lastSyncError ? ` ${lastSyncError}` : "";
+      info.textContent = `${who}${when}${why}`.trim();
+    }
+
+    function markCloudSyncOk() {
+      syncState = "ok";
+      lastCloudSyncAt = new Date().toISOString();
+      lastSyncError = "";
+      renderSyncStatus();
+    }
+
+    function markCloudSyncError(err) {
+      syncState = "error";
+      lastSyncError = err?.message ? `(${err.message})` : "";
+      renderSyncStatus();
+    }
+
+    function forceCloudSync() {
+      if (!currentUser) {
+        alert("Sign in first to sync with Firebase.");
+        return;
+      }
+      syncState = "checking";
+      renderSyncStatus();
+      fbDb.ref(authPath()).set(state).then(() => {
+        markCloudSyncOk();
+        alert("Cloud sync complete.");
+      }).catch(err => {
+        markCloudSyncError(err);
+        alert("Cloud sync failed. Check internet and sign-in.");
+      });
+    }
+
+    function loadLocal() {
+      try {
+        const parsed = JSON.parse(localStorage.getItem(KEY) || "null");
+        if (parsed && Array.isArray(parsed.templateTasks) && Array.isArray(parsed.clients)) state = parsed;
+      } catch (e) {}
+      normalizeState();
+    }
+
+    function isAllowed(email) {
+      if (!email) return false;
+      const e = email.toLowerCase();
+      return ALLOWED_EMAILS.some(x => x.toLowerCase() === e);
+    }
+
+    function signInError(err) {
+      if (!err || !err.code) return "Sign-in failed.";
+      if (err.code === "auth/unauthorized-domain") return "Add this site to Firebase Auth authorized domains.";
+      if (err.code === "auth/popup-closed-by-user") return "Sign-in was cancelled.";
+      return err.message || "Sign-in failed.";
+    }
+
+    function startGoogleSignIn() {
+      const le = document.getElementById("login-error");
+      le.textContent = "";
+      const provider = new firebase.auth.GoogleAuthProvider();
+      fbAuth.signInWithPopup(provider).catch(err => {
+        if (err.code === "auth/popup-blocked" || err.code === "auth/operation-not-supported-in-this-environment") {
+          fbAuth.signInWithRedirect(provider).catch(e2 => { le.textContent = signInError(e2); });
+        } else {
+          le.textContent = signInError(err);
+        }
+      });
+    }
+
+    function signOutTracker() {
+      if (confirm("Sign out?")) fbAuth.signOut();
+    }
+    function toggleNewClientForm(forceOpen) {
+      const form = document.getElementById("newClientForm");
+      const openBtn = document.getElementById("toggleNewClientBtn");
+      const cancelBtn = document.getElementById("cancelNewClientBtn");
+      if (!form || !openBtn || !cancelBtn) return;
+      const shouldOpen = typeof forceOpen === "boolean" ? forceOpen : form.style.display === "none";
+      form.style.display = shouldOpen ? "block" : "none";
+      cancelBtn.style.display = shouldOpen ? "inline-block" : "none";
+      openBtn.textContent = shouldOpen ? "Client form open" : "+ Add new client";
+      if (shouldOpen) document.getElementById("clientName")?.focus();
+    }
+
+    function addTemplateTask() {
+      const input = document.getElementById("templateTaskInput");
+      const stage = document.getElementById("templateTaskStage")?.value || CHECKLIST_STAGES[0];
+      const title = input.value.trim();
+      if (!title) return;
+      state.templateTasks.push({ id: uid("tpl"), title, stage });
+      input.value = "";
+      save();
+      renderTemplateTasks();
+    }
+
+    function removeTemplateTask(id) {
+      state.templateTasks = state.templateTasks.filter(t => t.id !== id);
+      save();
+      renderTemplateTasks();
+    }
+
+    function addClient() {
+      const name = document.getElementById("clientName").value.trim();
+      if (!name) return;
+      const mobile = document.getElementById("clientMobile").value.trim();
+      const email = document.getElementById("clientEmail").value.trim();
+      const businessEmail = document.getElementById("clientBusinessEmail").value.trim();
+      const businessName = document.getElementById("clientBusinessName").value.trim();
+      const service = document.getElementById("clientService").value.trim();
+      const status = document.getElementById("clientStatus").value;
+      const notes = document.getElementById("clientNotes").value.trim();
+      const client = {
+        id: uid("client"),
+        name, businessName, mobile, email, businessEmail, service, status, notes,
+        createdAt: new Date().toISOString(),
+        nextAction: "",
+        followUpDate: "",
+        priority: "normal",
+        waitingOnClient: false,
+        lastUpdated: new Date().toISOString(),
+        brochureSentAt: "",
+        onboardingStarted: false,
+        tasks: []
+      };
+      state.clients.unshift(client);
+      selectedClientId = client.id;
+      ["clientName","clientBusinessName","clientMobile","clientEmail","clientBusinessEmail","clientService","clientNotes"].forEach(id => document.getElementById(id).value = "");
+      document.getElementById("clientStatus").value = "lead";
+      toggleNewClientForm(false);
+      save();
+      renderAll();
+    }
+
+    function markBrochureSent(clientId) {
+      const c = state.clients.find(x => x.id === clientId);
+      if (!c) return;
+      c.brochureSentAt = new Date().toISOString();
+      if (c.status === "lead") c.status = "onboarding";
+      touchClient(c);
+      save();
+      renderAll();
+    }
+
+    function startOnboarding(clientId) {
+      const c = state.clients.find(x => x.id === clientId);
+      if (!c) return;
+      c.onboardingStarted = true;
+      if (c.status === "lead") c.status = "onboarding";
+      if (!Array.isArray(c.tasks) || c.tasks.length === 0) {
+        c.tasks = state.templateTasks.map(t => normalizeTask({ title: t.title, stage: t.stage, done: false, note: "" }, "task"));
+      }
+      touchClient(c);
+      selectedClientId = c.id;
+      save();
+      renderAll();
+    }
+
+    function getClient() { return state.clients.find(c => c.id === selectedClientId) || null; }
+    function switchView(view) {
+      currentView = view === "clients" ? "clients" : "dashboard";
+      document.querySelectorAll(".view").forEach(el => {
+        el.classList.toggle("active", el.id === `${currentView}-view`);
+      });
+      document.querySelectorAll(".view-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.view === currentView);
+      });
+    }
+    function setSelected(id) {
+      selectedClientId = id;
+      switchView("clients");
+      renderClients();
+      renderDetail();
+    }
+    function openClientsFiltered(options = {}) {
+      const status = options.status || "all";
+      const search = options.search || "";
+      const selectFirst = options.selectFirst !== false;
+      const list = state.clients.filter(c => {
+        const statusOk = status === "all" || c.status === status;
+        if (!statusOk) return false;
+        if (options.predicate && typeof options.predicate === "function") return options.predicate(c);
+        return true;
+      });
+      const statusEl = document.getElementById("clientFilterStatus");
+      const searchEl = document.getElementById("clientSearch");
+      if (statusEl) statusEl.value = status;
+      if (searchEl) searchEl.value = search;
+      if (selectFirst && list.length) selectedClientId = list[0].id;
+      switchView("clients");
+      renderClients();
+      renderDetail();
+    }
+
+    function updateClientDetail(key, value) {
+      const c = getClient();
+      if (!c) return;
+      c[key] = value;
+      touchClient(c);
+      debouncedSave();
+      renderClients();
+      renderDashboard();
+      if (key === "name") document.getElementById("detailTitle").textContent = c.name || "Client";
+      if (["followUpDate", "priority", "waitingOnClient", "nextAction", "status"].includes(key)) renderDetail();
+    }
+    function updateClientSetup(key, value) {
+      const c = getClient();
+      if (!c) return;
+      if (!c.setup || typeof c.setup !== "object") c.setup = {};
+      c.setup[key] = value;
+      touchClient(c);
+      debouncedSave();
+      renderClients();
+      renderDashboard();
+      renderDetail();
+    }
+
+    function slugifyName(value) {
+      return String(value || "client")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 60) || "client";
+    }
+
+    function generateSiteGuide() {
+      const c = getClient();
+      if (!c) return;
+      const s = c.setup || {};
+      const completed = c.tasks.filter(t => t.done).length;
+      const total = c.tasks.length;
+      const pending = c.tasks.filter(t => !t.done);
+      const completionPct = total ? Math.round((completed / total) * 100) : 0;
+      const today = new Date().toLocaleDateString("en-IE");
+      const guide = `# ${c.businessName || c.name} - Website Operations Guide
+
+Prepared: ${today}
+Client Record Last Updated: ${formatDate(c.lastUpdated)}
+
+## 1) Client and Business Details
+- Client Name: ${c.name || "[add client name]"}
+- Business Name: ${c.businessName || "[add business name]"}
+- Service Type: ${c.service || "[add service type]"}
+- Primary Mobile: ${c.mobile || "[add mobile]"}
+- Primary Email: ${c.email || "[add email]"}
+- Business Email: ${c.businessEmail || "[add business email]"}
+
+## 2) Website and Access Information
+- Website URL: ${s.siteUrl || "[add site URL]"}
+- GitHub Repository: ${s.repoUrl || "[add github repo URL]"}
+- Brochure Marked Sent: ${c.brochureSentAt ? formatDate(c.brochureSentAt) : "No"}
+
+## 3) Hosting and Database Details
+- Hosting Provider: ${s.hostingProvider || "[add hosting provider]"}
+- Firebase Project ID: ${s.firebaseProject || "[add firebase project id]"}
+
+## 4) Ownership and Support
+- Owner Email: ${s.ownerEmail || "[add owner email]"}
+- Support Email: ${s.supportEmail || "[add support email]"}
+
+## 5) Backup Instructions
+- Backup Location: ${s.backupLocation || "[add backup location]"}
+- Recommended cadence: export a backup monthly and after major content or setup changes.
+
+## 6) Current Status and Next Steps
+- Current Status: ${c.status || "lead"}
+- Priority: ${c.priority || "normal"}
+- Waiting on Client: ${c.waitingOnClient ? "Yes" : "No"}
+- Next Action: ${c.nextAction || "No next action set"}
+- Follow-up Date: ${c.followUpDate ? formatDate(c.followUpDate) : "Not set"}
+
+## 7) Onboarding Progress
+- Completion: ${completed}/${total} tasks (${completionPct}%)
+
+### Completed Setup Items
+${c.tasks.filter(t => t.done).length ? c.tasks.filter(t => t.done).map(t => `- ${t.title}${t.note ? ` (${t.note})` : ""}`).join("\n") : "- No completed setup items yet."}
+
+### Remaining Setup Items
+${pending.length ? pending.map(t => `- ${t.title}`).join("\n") : "- All setup items complete."}
+
+## 8) Notes
+${c.notes || "No additional notes yet."}
+`;
+      const blob = new Blob([guide], { type: "text/markdown;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${slugifyName(c.businessName || c.name)}-site-guide.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function addClientTask() {
+      const c = getClient();
+      if (!c) return;
+      const input = document.getElementById("newTaskInput");
+      const stage = document.getElementById("newTaskStage")?.value || CHECKLIST_STAGES[0];
+      const title = input.value.trim();
+      if (!title) return;
+      c.tasks.push(normalizeTask({ title, stage, done: false, note: "" }, "task"));
+      touchClient(c);
+      input.value = "";
+      save();
+      renderDetail();
+      renderClients();
+    }
+
+    function toggleTask(taskId) {
+      const c = getClient();
+      if (!c) return;
+      const t = c.tasks.find(x => x.id === taskId);
+      if (!t) return;
+      t.done = !t.done;
+      touchClient(c);
+      save();
+      renderDetail();
+      renderClients();
+    }
+
+    function updateTaskNote(taskId, note) {
+      const c = getClient();
+      if (!c) return;
+      const t = c.tasks.find(x => x.id === taskId);
+      if (!t) return;
+      t.note = note;
+      touchClient(c);
+      debouncedSave();
+      renderClients();
+      renderDashboard();
+      renderDetail();
+    }
+
+    function removeTask(taskId) {
+      const c = getClient();
+      if (!c) return;
+      c.tasks = c.tasks.filter(t => t.id !== taskId);
+      touchClient(c);
+      save();
+      renderDetail();
+      renderClients();
+    }
+
+    function deleteClient() {
+      const c = getClient();
+      if (!c) return;
+      if (!confirm("Delete this client?")) return;
+      state.clients = state.clients.filter(x => x.id !== c.id);
+      selectedClientId = state.clients[0] ? state.clients[0].id : null;
+      save();
+      renderAll();
+    }
+
+    function pct(client) {
+      if (!client.tasks.length) return 0;
+      const done = client.tasks.filter(t => t.done).length;
+      return Math.round((done / client.tasks.length) * 100);
+    }
+
+    function renderTemplateTasks() {
+      const el = document.getElementById("templateTasks");
+      if (!state.templateTasks.length) {
+        el.innerHTML = '<div class="hint">No template tasks yet.</div>';
+        return;
+      }
+      const grouped = tasksByStage(state.templateTasks.map(t => ({ ...t, done: false })));
+      el.innerHTML = STAGE_ORDER
+        .filter(stage => grouped[stage] && grouped[stage].length)
+        .map(stage => `
+          <details class="collapse" open>
+            <summary>${escapeHtml(stage)} (${grouped[stage].length})</summary>
+            <div class="tasks">
+              ${grouped[stage].map(t => `
+                <div class="task">
+                  <div class="top">
+                    <div class="title">${escapeHtml(t.title)}</div>
+                    <button class="btn btn-danger" onclick="removeTemplateTask('${t.id}')">Remove</button>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          </details>
+        `).join("");
+    }
+
+    function renderClients() {
+      const list = document.getElementById("clientList");
+      const search = (document.getElementById("clientSearch")?.value || "").trim().toLowerCase();
+      const filterStatus = document.getElementById("clientFilterStatus")?.value || "all";
+      const filtered = state.clients.filter(c => {
+        const statusOk = filterStatus === "all" || c.status === filterStatus;
+        if (!statusOk) return false;
+        if (!search) return true;
+        const hay = [
+          c.name,
+          c.businessName,
+          c.email,
+          c.businessEmail,
+          c.mobile,
+          c.service
+        ].join(" ").toLowerCase();
+        return hay.includes(search);
+      });
+      if (!filtered.length) {
+        list.innerHTML = state.clients.length
+          ? '<div class="hint">No clients match your current search/filter.</div>'
+          : '<div class="hint">No clients yet. Add your first client above.</div>';
+        return;
+      }
+      list.innerHTML = filtered.map(c => {
+        const done = c.tasks.filter(t => t.done).length;
+        const brochure = c.brochureSentAt ? new Date(c.brochureSentAt).toLocaleDateString("en-IE") : "Not marked";
+        const phase = c.onboardingStarted ? "Onboarding started" : "Contact stage";
+        const currentStage = getCurrentStage(c);
+        const statusClass = ["lead", "onboarding", "live", "paused"].includes(c.status) ? c.status : "lead";
+        const priority = c.priority || "normal";
+        const priorityClass = ["low", "normal", "high"].includes(priority) ? priority : "normal";
+        const nextActionLine = c.nextAction ? `<div class="meta">Next action: ${escapeHtml(c.nextAction)}</div>` : "";
+        const followUpLine = c.followUpDate ? `<div class="meta">Follow-up: ${escapeHtml(formatDate(c.followUpDate))}</div>` : "";
+        const waitingLine = c.waitingOnClient ? `<div class="meta">Waiting on client</div>` : "";
+        const updatedLine = `<div class="meta">Last updated: ${escapeHtml(formatDate(c.lastUpdated))}</div>`;
+        return `
+          <div class="client-item ${c.id === selectedClientId ? "active" : ""}" onclick="setSelected('${c.id}')">
+            <div class="top">
+              <div class="name">${escapeHtml(c.name)}</div>
+              <span class="pill ${statusClass}">${c.status}</span>
+            </div>
+            <div class="meta">${escapeHtml(c.businessName || "No business name set")}</div>
+            <div class="meta">Brochure marked: ${escapeHtml(brochure)} · ${escapeHtml(phase)}</div>
+            <div class="meta">Priority: <span class="pill priority-${priorityClass}">${escapeHtml(priority)}</span></div>
+            <div class="meta">Current stage: ${escapeHtml(currentStage)}</div>
+            <div class="meta">${done}/${c.tasks.length} tasks complete (${pct(c)}%)</div>
+            ${nextActionLine}
+            ${followUpLine}
+            ${waitingLine}
+            ${updatedLine}
+            <div class="pipeline-actions">
+              ${
+                c.status === "live"
+                  ? ""
+                  : `<button class="btn" onclick="event.stopPropagation(); markBrochureSent('${c.id}')">Mark brochure sent</button>`
+              }
+              ${
+                c.status === "live"
+                  ? '<button class="btn" disabled style="opacity:.65;cursor:not-allowed">Client is live</button>'
+                  : c.onboardingStarted
+                    ? '<button class="btn" disabled style="opacity:.65;cursor:not-allowed">Onboarding started</button>'
+                    : `<button class="btn btn-primary" onclick="event.stopPropagation(); startOnboarding('${c.id}')">Start onboarding</button>`
+              }
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderDetail() {
+      const card = document.getElementById("detailCard");
+      const c = getClient();
+      if (!c) { card.style.display = "none"; return; }
+      card.style.display = "block";
+      document.getElementById("detailTitle").textContent = c.name;
+      document.getElementById("detailName").value = c.name || "";
+      document.getElementById("detailService").value = c.service || "";
+      document.getElementById("detailBusinessName").value = c.businessName || "";
+      document.getElementById("detailStatus").value = c.status || "lead";
+      document.getElementById("detailPriority").value = c.priority || "normal";
+      document.getElementById("detailWaitingOnClient").checked = !!c.waitingOnClient;
+      document.getElementById("detailMobile").value = c.mobile || "";
+      document.getElementById("detailEmail").value = c.email || "";
+      document.getElementById("detailBusinessEmail").value = c.businessEmail || "";
+      document.getElementById("detailNextAction").value = c.nextAction || "";
+      document.getElementById("detailFollowUpDate").value = c.followUpDate || "";
+      document.getElementById("detailLastUpdated").value = formatDate(c.lastUpdated);
+      document.getElementById("detailSiteUrl").value = c.setup?.siteUrl || "";
+      document.getElementById("detailRepoUrl").value = c.setup?.repoUrl || "";
+      document.getElementById("detailFirebaseProject").value = c.setup?.firebaseProject || "";
+      document.getElementById("detailHostingProvider").value = c.setup?.hostingProvider || "";
+      document.getElementById("detailOwnerEmail").value = c.setup?.ownerEmail || "";
+      document.getElementById("detailBackupLocation").value = c.setup?.backupLocation || "";
+      document.getElementById("detailSupportEmail").value = c.setup?.supportEmail || "";
+      document.getElementById("detailNotes").value = c.notes || "";
+      const tasks = document.getElementById("clientTasks");
+      if (!c.onboardingStarted) {
+        tasks.innerHTML = '<div class="hint">Onboarding not started yet. Click "Start onboarding" in the client card to generate this client\'s checklist.</div>';
+        return;
+      }
+      if (!c.tasks.length) { tasks.innerHTML = '<div class="hint">No tasks yet for this client.</div>'; return; }
+      const groupedTasks = tasksByStage(c.tasks);
+      tasks.innerHTML = STAGE_ORDER
+        .filter(stage => groupedTasks[stage] && groupedTasks[stage].length)
+        .map(stage => {
+          const progress = stageProgress(c.tasks, stage);
+          return `
+            <details class="collapse" open>
+              <summary>${escapeHtml(stage)}: ${progress.done}/${progress.total} complete</summary>
+              <div class="tasks">
+                ${groupedTasks[stage].map(t => `
+                  <div class="task ${t.done ? "done" : ""}">
+                    <div class="top">
+                      <div class="left">
+                        <input type="checkbox" ${t.done ? "checked" : ""} onchange="toggleTask('${t.id}')" />
+                        <div class="title">${escapeHtml(t.title)}</div>
+                      </div>
+                      <button class="btn btn-danger" onclick="removeTask('${t.id}')">Remove</button>
+                    </div>
+                    <div class="note">
+                      <input value="${escapeAttr(t.note || "")}" placeholder="Task note (links, usernames, reminders...)" oninput="updateTaskNote('${t.id}', this.value)" />
+                    </div>
+                  </div>
+                `).join("")}
+              </div>
+            </details>
+          `;
+        }).join("");
+    }
+
+    function renderStats() {
+      const total = state.clients.length;
+      const live = state.clients.filter(c => c.status === "live").length;
+      const onboarding = state.clients.filter(c => c.status === "onboarding").length;
+      const brochureSent = state.clients.filter(c => !!c.brochureSentAt).length;
+      const dueFollowUps = state.clients.filter(c => c.followUpDate && new Date(c.followUpDate) <= new Date(new Date().toDateString())).length;
+      const waitingOnClient = state.clients.filter(c => !!c.waitingOnClient).length;
+      const highPriority = state.clients.filter(c => c.priority === "high").length;
+      const doneTasks = state.clients.reduce((s, c) => s + c.tasks.filter(t => t.done).length, 0);
+      const allTasks = state.clients.reduce((s, c) => s + c.tasks.length, 0);
+      const progress = allTasks ? Math.round((doneTasks / allTasks) * 100) : 0;
+      document.getElementById("stats").innerHTML = `
+        <div class="stat"><div class="label">Clients</div><div class="value">${total}</div></div>
+        <div class="stat"><div class="label">Brochure Marked Sent</div><div class="value">${brochureSent}</div></div>
+        <div class="stat"><div class="label">Follow-ups Due</div><div class="value">${dueFollowUps}</div></div>
+        <div class="stat"><div class="label">Waiting on Client</div><div class="value">${waitingOnClient}</div></div>
+        <div class="stat"><div class="label">High Priority</div><div class="value">${highPriority}</div></div>
+        <div class="stat"><div class="label">Onboarding</div><div class="value">${onboarding}</div></div>
+        <div class="stat"><div class="label">Live</div><div class="value">${live}</div></div>
+        <div class="stat"><div class="label">Task Completion</div><div class="value">${progress}%</div></div>
+      `;
+    }
+
+    function renderDashboard() {
+      const pipeline = document.getElementById("pipelineOverview");
+      const priorities = document.getElementById("priorityActions");
+      const recent = document.getElementById("recentClients");
+      const progressBoard = document.getElementById("progressBoard");
+      const followupsDueList = document.getElementById("followupsDue");
+      const waitingList = document.getElementById("waitingOnClientList");
+      const highPriorityList = document.getElementById("highPriorityList");
+      const nearCompletionList = document.getElementById("nearCompletionList");
+      if (!pipeline || !priorities || !recent || !progressBoard || !followupsDueList || !waitingList || !highPriorityList || !nearCompletionList) return;
+
+      const byStatus = {
+        lead: state.clients.filter(c => c.status === "lead").length,
+        onboarding: state.clients.filter(c => c.status === "onboarding").length,
+        live: state.clients.filter(c => c.status === "live").length,
+        paused: state.clients.filter(c => c.status === "paused").length
+      };
+      pipeline.innerHTML = `
+        <div class="dash-item clickable" onclick="openClientsFiltered({ status: 'lead' })"><div class="title">Leads</div><div class="sub">${byStatus.lead} waiting for next step</div></div>
+        <div class="dash-item clickable" onclick="openClientsFiltered({ status: 'onboarding' })"><div class="title">Onboarding</div><div class="sub">${byStatus.onboarding} currently in setup</div></div>
+        <div class="dash-item clickable" onclick="openClientsFiltered({ status: 'live' })"><div class="title">Live</div><div class="sub">${byStatus.live} completed and delivered</div></div>
+        <div class="dash-item clickable" onclick="openClientsFiltered({ status: 'paused' })"><div class="title">Paused</div><div class="sub">${byStatus.paused} currently on hold</div></div>
+      `;
+
+      const needsBrochure = state.clients.filter(c => !c.brochureSentAt && c.status !== "live" && c.status !== "paused");
+      const needsOnboardingStart = state.clients.filter(c => c.brochureSentAt && !c.onboardingStarted && c.status !== "live");
+      const nearComplete = state.clients.filter(c => c.onboardingStarted && c.status !== "live" && c.tasks.length > 0 && pct(c) >= 80);
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const followupsDue = state.clients.filter(c => c.followUpDate && new Date(c.followUpDate) <= todayStart);
+      const waitingOnClient = state.clients.filter(c => !!c.waitingOnClient);
+      const highPriority = state.clients.filter(c => c.priority === "high");
+      priorities.innerHTML = `
+        <div class="dash-item clickable" onclick="openClientsFiltered({ status: 'all', predicate: c => !c.brochureSentAt })"><div class="title">Mark brochure sent</div><div class="sub">${needsBrochure.length} clients still need brochure marked as sent</div></div>
+        <div class="dash-item clickable" onclick="openClientsFiltered({ status: 'all', predicate: c => c.brochureSentAt && !c.onboardingStarted && c.status !== 'live' })"><div class="title">Start onboarding</div><div class="sub">${needsOnboardingStart.length} brochure-ready clients waiting to start</div></div>
+        <div class="dash-item clickable" onclick="openClientsFiltered({ status: 'all', predicate: c => c.onboardingStarted && c.status !== 'live' && c.tasks.length > 0 && pct(c) >= 80 })"><div class="title">Near completion</div><div class="sub">${nearComplete.length} clients are 80%+ complete</div></div>
+      `;
+
+      if (!state.clients.length) {
+        recent.innerHTML = '<div class="hint">No clients yet. Add your first client on the Clients page.</div>';
+        progressBoard.innerHTML = '<div class="hint">No onboarding activity yet.</div>';
+        return;
+      }
+      recent.innerHTML = state.clients
+        .slice()
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+        .slice(0, 6)
+        .map(c => `
+          <div class="dash-item clickable" onclick="setSelected('${c.id}')">
+            <div class="title">${escapeHtml(c.name)}</div>
+            <div class="sub">${escapeHtml(c.businessName || "No business name")} · ${escapeHtml(c.status || "lead")} · ${pct(c)}% complete</div>
+          </div>
+        `).join("");
+
+      const stageBuckets = {};
+      [...STAGE_ORDER, "Complete", "Not started"].forEach(stage => { stageBuckets[stage] = []; });
+      state.clients.forEach(client => {
+        const stage = getCurrentStage(client);
+        if (!stageBuckets[stage]) stageBuckets[stage] = [];
+        stageBuckets[stage].push(client);
+      });
+      const stageBoardStages = [...CHECKLIST_STAGES, "Complete", GENERAL_OLD_STAGE, "Not started"].filter(stage => stageBuckets[stage]?.length);
+      if (!stageBoardStages.length) {
+        progressBoard.innerHTML = '<div class="hint">No onboarding started yet. Use Start onboarding from the Clients page.</div>';
+      } else {
+        progressBoard.innerHTML = stageBoardStages.map(stage => `
+          <div class="dash-item clickable" onclick='openClientsFiltered({ status: "all", predicate: c => getCurrentStage(c) === ${JSON.stringify(stage)} })'>
+            <div class="title">${escapeHtml(stage)}</div>
+            <div class="sub">${stageBuckets[stage].length} client(s) currently in this stage</div>
+          </div>
+        `).join("");
+      }
+
+      followupsDueList.innerHTML = followupsDue.length
+        ? followupsDue
+            .sort((a, b) => new Date(a.followUpDate) - new Date(b.followUpDate))
+            .slice(0, 8)
+            .map(c => `<div class="dash-item clickable" onclick="setSelected('${c.id}')"><div class="title">${escapeHtml(c.name)}</div><div class="sub">Follow-up ${escapeHtml(formatDate(c.followUpDate))}${c.nextAction ? ` · ${escapeHtml(c.nextAction)}` : ""}</div></div>`)
+            .join("")
+        : '<div class="hint">No follow-ups due today or overdue.</div>';
+
+      waitingList.innerHTML = waitingOnClient.length
+        ? waitingOnClient
+            .slice(0, 8)
+            .map(c => `<div class="dash-item clickable" onclick="setSelected('${c.id}')"><div class="title">${escapeHtml(c.name)}</div><div class="sub">${escapeHtml(c.status || "lead")} · ${c.nextAction ? escapeHtml(c.nextAction) : "No next action set"}</div></div>`)
+            .join("")
+        : '<div class="hint">No clients are marked as waiting on client.</div>';
+
+      highPriorityList.innerHTML = highPriority.length
+        ? highPriority
+            .slice(0, 8)
+            .map(c => `<div class="dash-item clickable" onclick="setSelected('${c.id}')"><div class="title">${escapeHtml(c.name)}</div><div class="sub">${escapeHtml(c.status || "lead")} · Updated ${escapeHtml(formatDate(c.lastUpdated))}</div></div>`)
+            .join("")
+        : '<div class="hint">No high-priority clients right now.</div>';
+
+      nearCompletionList.innerHTML = nearComplete.length
+        ? nearComplete
+            .sort((a, b) => pct(b) - pct(a))
+            .slice(0, 8)
+            .map(c => `<div class="dash-item clickable" onclick="setSelected('${c.id}')"><div class="title">${escapeHtml(c.name)} · ${pct(c)}%</div><div class="sub">${c.tasks.filter(t => t.done).length}/${c.tasks.length} tasks complete${c.followUpDate ? ` · Follow-up ${escapeHtml(formatDate(c.followUpDate))}` : ""}</div></div>`)
+            .join("")
+        : '<div class="hint">No clients near completion yet.</div>';
+    }
+
+    function exportData() {
+      const payload = { exportedAt: new Date().toISOString(), ...state };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "client-onboarding-backup-" + new Date().toISOString().slice(0,10) + ".json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function triggerImport() { document.getElementById("importFile").click(); }
+
+    function importData(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(reader.result);
+          if (!parsed || !Array.isArray(parsed.templateTasks) || !Array.isArray(parsed.clients)) throw new Error("invalid");
+          if (!confirm(`This will replace all your current client data (${state.clients.length} clients) with the backup. Are you sure?`)) {
+            event.target.value = "";
+            return;
+          }
+          state = parsed;
+          selectedClientId = state.clients[0] ? state.clients[0].id : null;
+          save();
+          renderAll();
+        } catch (e) {
+          alert("Invalid backup format.");
+        } finally {
+          event.target.value = "";
+        }
+      };
+      reader.readAsText(file, "UTF-8");
+    }
+
+    function printClientHandover() {
+      const c = getClient();
+      if (!c) return;
+      const clientSafe = !!document.getElementById("printClientSafe")?.checked;
+      const completed = c.tasks.filter(t => t.done);
+      const pending = c.tasks.filter(t => !t.done);
+      const now = new Date().toLocaleDateString("en-IE");
+      const statusLabel = c.status ? c.status.toUpperCase() : "N/A";
+      const s = c.setup || {};
+      const completedHtml = completed.length
+        ? completed.map(t => `<li>${escapeHtml(t.title)}${t.note ? ` <span style="color:#666">- ${escapeHtml(t.note)}</span>` : ""}</li>`).join("")
+        : "<li>No completed setup items recorded yet.</li>";
+      const pendingHtml = pending.length
+        ? pending.map(t => `<li>${escapeHtml(t.title)}</li>`).join("")
+        : "<li>All onboarding tasks complete.</li>";
+      const notesHtml = escapeHtml(c.notes || "No notes added.");
+
+      const innerHtml = `
+  <div class="head">
+    <h1>Client Handover Summary</h1>
+    <div class="meta">Prepared on ${escapeHtml(now)}</div>
+  </div>
+
+  <div class="grid">
+    <div class="box"><div class="label">Client</div><div class="value">${escapeHtml(c.name || "-")}</div></div>
+    <div class="box"><div class="label">Status</div><div class="value">${escapeHtml(statusLabel)}</div></div>
+    <div class="box"><div class="label">Priority</div><div class="value">${escapeHtml(c.priority || "normal")}</div></div>
+    <div class="box"><div class="label">Waiting on Client</div><div class="value">${c.waitingOnClient ? "Yes" : "No"}</div></div>
+    <div class="box"><div class="label">Service</div><div class="value">${escapeHtml(c.service || "-")}</div></div>
+    <div class="box"><div class="label">Mobile</div><div class="value">${escapeHtml(c.mobile || "-")}</div></div>
+    <div class="box"><div class="label">Email</div><div class="value">${escapeHtml(c.email || "-")}</div></div>
+    <div class="box"><div class="label">Business Email</div><div class="value">${escapeHtml(c.businessEmail || "-")}</div></div>
+    <div class="box"><div class="label">Business Name</div><div class="value">${escapeHtml(c.businessName || "-")}</div></div>
+    <div class="box"><div class="label">Website URL</div><div class="value">${escapeHtml(s.siteUrl || "-")}</div></div>
+    <div class="box"><div class="label">Hosting Provider</div><div class="value">${escapeHtml(s.hostingProvider || "-")}</div></div>
+    <div class="box"><div class="label">GitHub Repo URL</div><div class="value">${escapeHtml(s.repoUrl || "-")}</div></div>
+    <div class="box"><div class="label">Firebase Project ID</div><div class="value">${escapeHtml(s.firebaseProject || "-")}</div></div>
+    <div class="box"><div class="label">Owner Email</div><div class="value">${escapeHtml(s.ownerEmail || "-")}</div></div>
+    <div class="box"><div class="label">Support Email</div><div class="value">${escapeHtml(s.supportEmail || "-")}</div></div>
+    <div class="box"><div class="label">Backup Location</div><div class="value">${escapeHtml(s.backupLocation || "-")}</div></div>
+    <div class="box"><div class="label">Next Action</div><div class="value">${escapeHtml(c.nextAction || "-")}</div></div>
+    <div class="box"><div class="label">Follow-up Date</div><div class="value">${escapeHtml(c.followUpDate ? formatDate(c.followUpDate) : "-")}</div></div>
+  </div>
+
+  <h2>Completed Setup Items</h2>
+  <ul>${completedHtml}</ul>
+
+  ${clientSafe ? "" : `<h2>Remaining Items (if any)</h2><ul>${pendingHtml}</ul>`}
+
+  ${clientSafe ? "" : `<h2>Client Notes</h2><div class="notes">${notesHtml}</div>`}
+
+  <div class="foot">Generated from Client Onboarding Tracker</div>`;
+
+      const html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Client Handover - ${escapeHtml(c.name)}</title>
+  <style>
+    body { font-family: Arial, sans-serif; color: #111; margin: 0; padding: 24px; }
+    .head { border-bottom: 2px solid #111; margin-bottom: 18px; padding-bottom: 10px; }
+    .head h1 { margin: 0 0 4px; font-size: 24px; }
+    .meta { font-size: 13px; color: #444; line-height: 1.5; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0 18px; }
+    .box { border: 1px solid #ddd; border-radius: 8px; padding: 10px 12px; }
+    .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #666; margin-bottom: 4px; }
+    .value { font-size: 14px; }
+    h2 { font-size: 16px; margin: 14px 0 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+    ul { margin: 0; padding-left: 18px; }
+    li { margin: 6px 0; line-height: 1.4; font-size: 14px; }
+    .notes { border: 1px solid #ddd; border-radius: 8px; padding: 10px 12px; white-space: pre-wrap; font-size: 14px; line-height: 1.45; }
+    .foot { margin-top: 20px; font-size: 12px; color: #666; border-top: 1px solid #ddd; padding-top: 10px; }
+  </style>
+</head>
+<body>
+  ${innerHtml}
+</body>
+</html>`;
+
+      const w = window.open("", "_blank", "noopener,noreferrer,width=900,height=700");
+      if (!w) {
+        // Fallback for popup blockers: print in current window.
+        const printArea = document.getElementById("print-area");
+        printArea.innerHTML = `
+          <style>
+            #print-area { font-family: Arial, sans-serif; color: #111; }
+            #print-area .head { border-bottom: 2px solid #111; margin-bottom: 18px; padding-bottom: 10px; }
+            #print-area .head h1 { margin: 0 0 4px; font-size: 24px; }
+            #print-area .meta { font-size: 13px; color: #444; line-height: 1.5; }
+            #print-area .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0 18px; }
+            #print-area .box { border: 1px solid #ddd; border-radius: 8px; padding: 10px 12px; }
+            #print-area .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #666; margin-bottom: 4px; }
+            #print-area .value { font-size: 14px; }
+            #print-area h2 { font-size: 16px; margin: 14px 0 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+            #print-area ul { margin: 0; padding-left: 18px; }
+            #print-area li { margin: 6px 0; line-height: 1.4; font-size: 14px; }
+            #print-area .notes { border: 1px solid #ddd; border-radius: 8px; padding: 10px 12px; white-space: pre-wrap; font-size: 14px; line-height: 1.45; }
+            #print-area .foot { margin-top: 20px; font-size: 12px; color: #666; border-top: 1px solid #ddd; padding-top: 10px; }
+          </style>
+          ${innerHtml}
+        `;
+        setTimeout(() => { window.print(); }, 100);
+        return;
+      }
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+      w.focus();
+      setTimeout(() => { try { w.print(); } catch (e) {} }, 250);
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, s => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[s]));
+    }
+    function escapeAttr(str) { return escapeHtml(str).replace(/"/g, "&quot;"); }
+
+    function renderAll() {
+      renderTemplateTasks();
+      renderClients();
+      renderDetail();
+      renderStats();
+      renderDashboard();
+      switchView(currentView);
+    }
+
+    function initAfterDataLoad() {
+      if (!selectedClientId && state.clients[0]) selectedClientId = state.clients[0].id;
+      renderAll();
+      markCloudSyncOk();
+      showPhase("app");
+    }
+
+    fbAuth.getRedirectResult().catch(err => {
+      const le = document.getElementById("login-error");
+      if (le && err && err.code && err.code !== "auth/operation-not-supported-in-this-environment") le.textContent = signInError(err);
+    });
+
+    // Fallback: if auth listener hangs, show login instead of indefinite loading.
+    setTimeout(() => {
+      if (!authResolved) {
+        const le = document.getElementById("login-error");
+        if (le && !le.textContent) {
+          le.textContent = "Auth check took too long. Please sign in.";
+        }
+        showPhase("login");
+      }
+    }, 5000);
+
+    fbAuth.onAuthStateChanged(user => {
+      authResolved = true;
+      const le = document.getElementById("login-error");
+      if (user) {
+        if (!isAllowed(user.email)) {
+          pendingDisallow = "That Google account is not allowed for this tracker.";
+          fbAuth.signOut();
+          return;
+        }
+        currentUser = user;
+        syncState = "checking";
+        renderSyncStatus();
+        if (le) le.textContent = "";
+        showPhase("loading");
+        fbDb.ref(authPath()).once("value").then(snap => {
+          const cloud = snap.val();
+          if (cloud && Array.isArray(cloud.templateTasks) && Array.isArray(cloud.clients)) {
+            state = cloud;
+            localStorage.setItem(KEY, JSON.stringify(state));
+            initAfterDataLoad();
+          } else {
+            // Migrate from old per-user path if shared path is empty
+            const oldPath = "users/" + user.uid + "/" + FB_PATH;
+            fbDb.ref(oldPath).once("value").then(oldSnap => {
+              const oldCloud = oldSnap.val();
+              if (oldCloud && Array.isArray(oldCloud.templateTasks) && Array.isArray(oldCloud.clients)) {
+                state = oldCloud;
+                localStorage.setItem(KEY, JSON.stringify(state));
+                fbDb.ref(authPath()).set(state).catch(() => {});
+              } else {
+                loadLocal();
+                fbDb.ref(authPath()).set(state).catch(() => {});
+              }
+              initAfterDataLoad();
+            }).catch(() => {
+              loadLocal();
+              initAfterDataLoad();
+            });
+          }
+        }).catch(() => {
+          loadLocal();
+          initAfterDataLoad();
+        });
+      } else {
+        currentUser = null;
+        selectedClientId = null;
+        syncState = "checking";
+        lastCloudSyncAt = "";
+        lastSyncError = "";
+        renderSyncStatus();
+        if (pendingDisallow && le) {
+          le.textContent = pendingDisallow;
+          pendingDisallow = "";
+        } else if (le) {
+          le.textContent = "";
+        }
+        showPhase("login");
+      }
+    }, err => {
+      authResolved = true;
+      const le = document.getElementById("login-error");
+      if (le) le.textContent = signInError(err);
+      markCloudSyncError(err);
+      showPhase("login");
+    });
+
+    window.addEventListener("online", renderSyncStatus);
+    window.addEventListener("offline", renderSyncStatus);
+  </script>
+</body>
+</html>
