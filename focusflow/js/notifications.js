@@ -2,7 +2,8 @@
  * Notifications — PWA service worker registration + reminder alerts.
  */
 const Notifications = (() => {
-  const NOTIFIED_PREFIX = 'ff_notified_';
+  const NOTIFIED_PREFIX  = 'ff_notified_';
+  const BANNER_DISMISSED = 'ff_notif_dismissed';
 
   function iconUrl() {
     return new URL('icon.svg', window.location.href).href;
@@ -32,7 +33,7 @@ const Notifications = (() => {
   async function checkDue() {
     if (!('Notification' in window) || Notification.permission !== 'granted') return;
 
-    const today      = DateUtil.today();
+    const today       = DateUtil.today();
     const notifiedIds = getNotifiedIds();
     const due = Storage.getReminders().filter(r =>
       !r.done && r.date && r.date <= today && !notifiedIds.includes(r.id)
@@ -67,24 +68,42 @@ const Notifications = (() => {
     }
   }
 
-  async function requestPermission() {
-    if (!('Notification' in window)) return false;
-    if (Notification.permission === 'granted') return true;
-    if (Notification.permission === 'denied')  return false;
-    const result = await Notification.requestPermission();
-    return result === 'granted';
+  function showBanner() {
+    if (localStorage.getItem(BANNER_DISMISSED)) return;
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'default') return;
+
+    const banner = document.createElement('div');
+    banner.id = 'notif-banner';
+    banner.innerHTML = `
+      <span class="notif-banner-text">🔔 Get reminder alerts on this device</span>
+      <div class="notif-banner-actions">
+        <button class="notif-banner-btn-yes">Enable</button>
+        <button class="notif-banner-btn-no">Not now</button>
+      </div>`;
+    document.body.appendChild(banner);
+
+    banner.querySelector('.notif-banner-btn-yes').addEventListener('click', async () => {
+      banner.remove();
+      const result = await Notification.requestPermission();
+      if (result === 'granted') {
+        Toast.success('Notifications enabled!');
+        checkDue();
+      }
+    });
+
+    banner.querySelector('.notif-banner-btn-no').addEventListener('click', () => {
+      banner.remove();
+      localStorage.setItem(BANNER_DISMISSED, '1');
+    });
   }
 
   function init() {
-    // Register service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('./sw.js').catch(() => {});
     }
-
-    // Ask for permission after a short delay so the app finishes loading first
-    if ('Notification' in window && Notification.permission === 'default') {
-      setTimeout(requestPermission, 4000);
-    }
+    // Show opt-in banner after app loads — iOS requires a tap to grant permission
+    setTimeout(showBanner, 2000);
   }
 
   return { init, checkDue };
