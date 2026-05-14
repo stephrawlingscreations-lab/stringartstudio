@@ -311,6 +311,10 @@
     <a class="hub-link" href="/portal/">&#8592; My Hub</a>
     <button class="header-back" id="hdr-back" onclick="showHome()">&#8592; All Programs</button>
     <div class="header-title" id="hdr-title">Training Portal</div>
+    <button class="btn btn-ghost" onclick="exportBackup()" title="Download backup" style="flex-shrink:0;font-size:0.82rem;padding:7px 11px;">⬇ Backup</button>
+    <label class="btn btn-ghost" title="Restore from backup" style="flex-shrink:0;font-size:0.82rem;padding:7px 11px;cursor:pointer;display:inline-flex;align-items:center;">
+      ⬆ Restore<input type="file" accept=".json" onchange="importBackup(this)" style="display:none">
+    </label>
     <button class="btn btn-primary" id="hdr-new-btn" onclick="openModal()" style="flex-shrink:0;">+ New</button>
   </header>
 
@@ -417,6 +421,38 @@ function lsSet(data)  { try { localStorage.setItem(LS_KEY, JSON.stringify(data))
 function fbPush(data) { db.ref(FB_PATH).set(data).catch(function(e) { console.warn('Firebase sync:', e); }); }
 
 function saveData(data) { lsSet(data); fbPush(data); }
+
+function exportBackup() {
+  var data = lsGet();
+  if (!data) { toast('Nothing to back up yet.'); return; }
+  var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  var d    = new Date();
+  var ds   = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  a.href = url; a.download = 'training-backup-' + ds + '.json'; a.click();
+  URL.revokeObjectURL(url);
+  toast('Backup downloaded.');
+}
+
+function importBackup(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = JSON.parse(e.target.result);
+      if (!data || !Array.isArray(data.programs)) { toast('Invalid backup file — not restored.'); return; }
+      saveData(data);
+      renderHome();
+      toast('Backup restored.');
+    } catch(err) {
+      toast('Could not read file.');
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
+}
 
 function pullFromFirebase(cb) {
   db.ref(FB_PATH).once('value').then(function(snap) {
