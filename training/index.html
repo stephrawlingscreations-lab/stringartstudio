@@ -199,7 +199,7 @@
       background: var(--bg); color: var(--text);
     }
     .notes-area:focus { border-color: var(--sage); outline: none; }
-    .sec-footer { display: flex; justify-content: flex-end; margin-top: 8px; }
+    .sec-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; gap: 8px; }
     .del-sec-btn {
       background: none; border: 1px solid var(--border); color: var(--muted);
       border-radius: 6px; padding: 3px 10px; font-size: 0.76rem; cursor: pointer; font-family: inherit;
@@ -207,6 +207,73 @@
     .del-sec-btn:hover { background: #fce8ec; color: var(--danger); border-color: #f0b0b8; }
 
     input[type="checkbox"] { transform: scale(1.25); accent-color: var(--complete); cursor: pointer; flex-shrink: 0; }
+
+    /* ── QUESTIONS ── */
+    .questions-panel {
+      background: #fffbeb; border: 1px solid #fcd34d;
+      border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px;
+    }
+    .q-panel-header {
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; gap: 10px; user-select: none;
+    }
+    .q-panel-title {
+      font-weight: 700; font-size: 0.95rem; color: #92400e;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .q-open-badge {
+      background: #f59e0b; color: #fff;
+      border-radius: 999px; padding: 1px 8px; font-size: 0.73rem; font-weight: 700;
+    }
+    .q-list { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .q-item {
+      background: #fff; border: 1px solid #fcd34d; border-radius: 9px;
+      padding: 10px 12px; display: flex; align-items: flex-start; gap: 10px;
+    }
+    .q-item.resolved { opacity: 0.45; }
+    .q-item-body { flex: 1; min-width: 0; }
+    .q-item-sec { font-size: 0.73rem; font-weight: 700; color: #92400e; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .q-item-text { font-size: 0.9rem; color: var(--text); }
+    .q-item-text.done { text-decoration: line-through; }
+    .q-actions { display: flex; gap: 6px; flex-shrink: 0; padding-top: 2px; }
+    .q-gotit {
+      background: #ecfdf5; border: 1px solid #6ee7b7; color: #065f46;
+      border-radius: 6px; padding: 3px 9px; font-size: 0.75rem; font-weight: 600;
+      cursor: pointer; font-family: inherit; white-space: nowrap;
+    }
+    .q-gotit:hover { background: #d1fae5; }
+    .q-del {
+      background: none; border: 1px solid var(--border); color: var(--muted);
+      border-radius: 6px; padding: 3px 8px; font-size: 0.75rem; cursor: pointer; font-family: inherit;
+    }
+    .q-del:hover { background: #fce8ec; color: var(--danger); border-color: #f0b0b8; }
+    .q-badge {
+      background: #f59e0b; color: #fff; border-radius: 999px;
+      padding: 1px 6px; font-size: 0.68rem; font-weight: 700; margin-left: 4px; vertical-align: middle;
+    }
+    .sec-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+    .q-add-btn {
+      background: #fffbeb; border: 1px solid #fcd34d; color: #92400e;
+      border-radius: 6px; padding: 3px 10px; font-size: 0.76rem;
+      cursor: pointer; font-family: inherit; font-weight: 600;
+    }
+    .q-add-btn:hover { background: #fef3c7; }
+    .q-input-wrap {
+      display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);
+    }
+    .q-input-wrap textarea {
+      width: 100%; min-height: 60px; resize: vertical;
+      border: 1px solid #fcd34d; border-radius: 8px;
+      padding: 7px 10px; font-family: inherit; font-size: 0.88rem;
+      background: #fffbeb; color: var(--text);
+    }
+    .q-input-wrap textarea:focus { border-color: #f59e0b; outline: none; }
+    .q-save-btn {
+      margin-top: 6px; background: #f59e0b; color: #fff; border: none;
+      border-radius: 7px; padding: 6px 14px; font-size: 0.84rem;
+      font-weight: 600; cursor: pointer; font-family: inherit;
+    }
+    .q-save-btn:hover { background: #d97706; }
 
     /* ── ADD SECTION + WEEKLY ── */
     .panel {
@@ -328,6 +395,8 @@
 
     <!-- PROGRAM DETAIL VIEW -->
     <div id="view-program" style="display:none">
+
+      <div id="questions-panel"></div>
 
       <div class="progress-card">
         <div class="progress-card-bar"><div class="progress-card-fill" id="prog-fill" style="width:0%"></div></div>
@@ -627,6 +696,7 @@ function stat(num, lbl) {
 ════════════════════════════════════════════════════ */
 function renderProgram(program) {
   updateProgress(program);
+  renderQuestionsPanel(program);
   renderSections(program);
   loadWeeklyChecks(program);
 }
@@ -648,9 +718,11 @@ function renderSections(program) {
     return;
   }
   container.innerHTML = secs.map(function(s, i) {
-    var checked = program.checks && program.checks[s.id] ? 'checked' : '';
-    var noteVal = (program.notes && program.notes[s.id]) || '';
-    var body    = '';
+    var checked  = program.checks && program.checks[s.id] ? 'checked' : '';
+    var noteVal  = (program.notes && program.notes[s.id]) || '';
+    var openQs   = (program.questions && program.questions[s.id] || []).filter(function(q) { return !q.resolved; }).length;
+    var qBadge   = openQs > 0 ? '<span class="q-badge">❓ ' + openQs + '</span>' : '';
+    var body     = '';
     if (s.goal)    body += '<div class="callout">' + eh(s.goal) + '</div>';
     if (s.content) body += '<p>' + eh(s.content) + '</p>';
     if (s.bullets && s.bullets.length) body += '<ul>' + s.bullets.map(function(b) { return '<li>' + eh(b) + '</li>'; }).join('') + '</ul>';
@@ -659,14 +731,21 @@ function renderSections(program) {
     return '<details class="section-details" id="det-' + esc(s.id) + '">'
       + '<summary class="section-summary">'
       + '<input type="checkbox" ' + checked + ' onclick="event.stopPropagation()" onchange="toggleSection(\'' + esc(s.id) + '\',this.checked)">'
-      + '<span class="sum-title">Section ' + (i+1) + ' &ndash; ' + eh(s.title) + '</span>'
+      + '<span class="sum-title">Section ' + (i+1) + ' &ndash; ' + eh(s.title) + qBadge + '</span>'
       + '<svg class="sum-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>'
       + '</summary>'
       + '<div class="section-body">'
       + '<div class="section-content">' + body + '</div>'
       + '<div class="notes-lbl">Your notes</div>'
       + '<textarea class="notes-area" placeholder="Write your notes here..." oninput="saveNote(\'' + esc(s.id) + '\',this.value)">' + eh(noteVal) + '</textarea>'
-      + '<div class="sec-footer"><button class="del-sec-btn" onclick="deleteSection(\'' + esc(s.id) + '\')">Remove section</button></div>'
+      + '<div class="sec-footer">'
+      + '<button class="q-add-btn" onclick="toggleQInput(\'' + esc(s.id) + '\')">❓ Add question</button>'
+      + '<button class="del-sec-btn" onclick="deleteSection(\'' + esc(s.id) + '\')">Remove section</button>'
+      + '</div>'
+      + '<div class="q-input-wrap" id="q-input-' + esc(s.id) + '">'
+      + '<textarea placeholder="What do you want to look up about this section?"></textarea>'
+      + '<button class="q-save-btn" onclick="saveQuestion(\'' + esc(s.id) + '\')">Save question</button>'
+      + '</div>'
       + '</div></details>';
   }).join('');
 }
@@ -693,14 +772,113 @@ function saveNote(id, val) {
   saveData(data);
 }
 
+/* ════════════════════════════════════════════════════
+   QUESTIONS
+════════════════════════════════════════════════════ */
+var qPanelOpen = true;
+
+function renderQuestionsPanel(program) {
+  var panel = document.getElementById('questions-panel');
+  var qs    = program.questions || {};
+  var secs  = program.sections  || [];
+  var all   = [];
+  secs.forEach(function(s) {
+    (qs[s.id] || []).forEach(function(q) { all.push({ q: q, sec: s }); });
+  });
+  if (!all.length) { panel.innerHTML = ''; return; }
+  var open = all.filter(function(x) { return !x.q.resolved; }).length;
+  var listHtml = all.map(function(x) {
+    return '<div class="q-item' + (x.q.resolved ? ' resolved' : '') + '">'
+      + '<div class="q-item-body">'
+      + '<div class="q-item-sec">' + eh(x.sec.title) + '</div>'
+      + '<div class="q-item-text' + (x.q.resolved ? ' done' : '') + '">' + eh(x.q.text) + '</div>'
+      + '</div>'
+      + '<div class="q-actions">'
+      + (!x.q.resolved
+          ? '<button class="q-gotit" onclick="resolveQuestion(\'' + esc(x.sec.id) + '\',\'' + esc(x.q.id) + '\')">✓ Got it</button>'
+          : '<span style="font-size:0.73rem;color:var(--muted);">Done</span>')
+      + '<button class="q-del" onclick="deleteQuestion(\'' + esc(x.sec.id) + '\',\'' + esc(x.q.id) + '\')">✕</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+  panel.innerHTML = '<div class="questions-panel">'
+    + '<div class="q-panel-header" onclick="toggleQPanel()">'
+    + '<div class="q-panel-title">❓ My Questions'
+    + (open ? '<span class="q-open-badge">' + open + ' open</span>' : '')
+    + '</div>'
+    + '<svg id="q-chev" style="transition:transform 0.2s;' + (qPanelOpen ? '' : 'transform:rotate(-90deg)') + '" viewBox="0 0 24 24" fill="none" stroke="#92400e" stroke-width="2" width="14" height="14"><polyline points="6 9 12 15 18 9"/></svg>'
+    + '</div>'
+    + '<div id="q-list" class="q-list" style="' + (qPanelOpen ? '' : 'display:none') + '">' + listHtml + '</div>'
+    + '</div>';
+}
+
+function toggleQPanel() {
+  qPanelOpen = !qPanelOpen;
+  var list = document.getElementById('q-list');
+  var chev = document.getElementById('q-chev');
+  if (list) list.style.display = qPanelOpen ? '' : 'none';
+  if (chev) chev.style.transform = qPanelOpen ? '' : 'rotate(-90deg)';
+}
+
+function toggleQInput(secId) {
+  var wrap = document.getElementById('q-input-' + secId);
+  if (!wrap) return;
+  var opening = wrap.style.display === 'none' || wrap.style.display === '';
+  wrap.style.display = opening ? 'block' : 'none';
+  if (opening) wrap.querySelector('textarea').focus();
+}
+
+function saveQuestion(secId) {
+  var wrap = document.getElementById('q-input-' + secId);
+  var ta   = wrap ? wrap.querySelector('textarea') : null;
+  if (!ta) return;
+  var text = ta.value.trim();
+  if (!text) { ta.focus(); return; }
+  var data = getData();
+  var p    = data.programs.find(function(p) { return p.id === currentProgramId; });
+  if (!p) return;
+  if (!p.questions)        p.questions = {};
+  if (!p.questions[secId]) p.questions[secId] = [];
+  p.questions[secId].push({ id: 'q_' + Date.now(), text: text, resolved: false });
+  saveData(data);
+  ta.value = '';
+  wrap.style.display = 'none';
+  renderQuestionsPanel(p);
+  renderSections(p);
+  toast('Question saved.');
+}
+
+function resolveQuestion(secId, qId) {
+  var data = getData();
+  var p    = data.programs.find(function(p) { return p.id === currentProgramId; });
+  if (!p || !p.questions || !p.questions[secId]) return;
+  var q = p.questions[secId].find(function(q) { return q.id === qId; });
+  if (q) q.resolved = true;
+  saveData(data);
+  renderQuestionsPanel(p);
+  renderSections(p);
+  toast('Got it — question resolved!');
+}
+
+function deleteQuestion(secId, qId) {
+  var data = getData();
+  var p    = data.programs.find(function(p) { return p.id === currentProgramId; });
+  if (!p || !p.questions || !p.questions[secId]) return;
+  p.questions[secId] = p.questions[secId].filter(function(q) { return q.id !== qId; });
+  saveData(data);
+  renderQuestionsPanel(p);
+  renderSections(p);
+}
+
 function deleteSection(id) {
   if (!confirm('Remove this section? Notes for it will also be deleted.')) return;
   var data = getData();
   var p    = data.programs.find(function(p) { return p.id === currentProgramId; });
   if (!p) return;
   p.sections = p.sections.filter(function(s) { return s.id !== id; });
-  if (p.checks) delete p.checks[id];
-  if (p.notes)  delete p.notes[id];
+  if (p.checks)    delete p.checks[id];
+  if (p.notes)     delete p.notes[id];
+  if (p.questions) delete p.questions[id];
   saveData(data);
   renderProgram(p);
   toast('Section removed.');
