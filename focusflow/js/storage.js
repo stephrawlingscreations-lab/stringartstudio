@@ -10,7 +10,7 @@
 const Storage = (() => {
 
   const NS = 'focusflow_';
-  const COLS = ['tasks', 'projects', 'notes', 'braindumps', 'reminders'];
+  const COLS = ['tasks', 'projects', 'notes', 'braindumps', 'reminders', 'training'];
 
   let _db  = null;   // firebase.database() instance
   let _uid = null;   // signed-in user's UID
@@ -116,6 +116,7 @@ const Storage = (() => {
           if (data[key]) localStorage.setItem(NS + key, JSON.stringify(data[key]));
         });
         if (data.settings) localStorage.setItem(NS + 'settings', JSON.stringify(data.settings));
+        if (data.training) localStorage.setItem(NS + 'training', JSON.stringify(data.training));
       });
     },
 
@@ -194,6 +195,14 @@ const Storage = (() => {
     },
     deleteBrainDump(id) {
       return deleteItem('braindumps', id);
+    },
+
+    /* ── Training Portal ── */
+    getTrainingData() {
+      return raw_get('training') || null;
+    },
+    saveTrainingData(data) {
+      return raw_set('training', data);
     },
 
     /* ── App Settings ── */

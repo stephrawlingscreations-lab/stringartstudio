@@ -526,6 +526,9 @@ const App = (() => {
           populateProjectSelects();
           Notes.render();
           break;
+        case 'training':
+          Training.render();
+          break;
       }
     });
   }
@@ -591,6 +594,7 @@ const App = (() => {
     BrainDump.init();
     Planner.init();
     Reminders.init();
+    Training.init();
 
     // Wire up app-level concerns
     initRouter();
