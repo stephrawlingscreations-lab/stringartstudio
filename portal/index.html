@@ -10,9 +10,10 @@
   <meta name="apple-mobile-web-app-title" content="My Hub">
   <link rel="apple-touch-icon" href="/icons/portal-180.png">
 
-  <!-- Firebase Auth -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -103,6 +104,14 @@
       transition: background 0.15s, color 0.15s;
     }
     .btn-signout:hover { background: #fff0f0; color: #c0392b; border-color: #f0d0d0; }
+    .btn-backup {
+      background: var(--sage); color: #fff;
+      border: none; border-radius: 8px; padding: 7px 14px;
+      font-size: 0.8rem; font-weight: 600; cursor: pointer;
+      transition: background 0.15s; white-space: nowrap;
+    }
+    .btn-backup:hover { background: var(--sage-dk); }
+    .btn-backup:disabled { opacity: 0.6; cursor: default; }
 
     main {
       max-width: 700px;
@@ -196,7 +205,10 @@
         <div class="header-greeting" id="greeting">Welcome back</div>
       </div>
     </div>
-    <button class="btn-signout" onclick="portalAuth.signOut()">Sign out</button>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button class="btn-backup" id="btn-backup-all" onclick="backupAll()">⬇ Backup All</button>
+      <button class="btn-signout" onclick="portalAuth.signOut()">Sign out</button>
+    </div>
   </header>
 
   <main>
@@ -274,6 +286,7 @@
   firebase.initializeApp({
     apiKey:            'AIzaSyAcSc-3ejzUfaiods7fAGAH10EuVvZaL6U',
     authDomain:        'steph-rawlings-creations.firebaseapp.com',
+    databaseURL:       'https://steph-rawlings-creations-default-rtdb.europe-west1.firebasedatabase.app',
     projectId:         'steph-rawlings-creations',
     storageBucket:     'steph-rawlings-creations.firebasestorage.app',
     messagingSenderId: '271810785275',
@@ -281,6 +294,7 @@
   });
 
   var portalAuth = firebase.auth();
+  var portalDb   = firebase.database();
   var ALLOWED = [
     'stephrawlingscreations@gmail.com',
     'ppbdesigns1@gmail.com',
@@ -324,6 +338,50 @@
           + '</div>';
       }).join('');
     } catch(e) { /* silently skip if no data */ }
+  }
+
+  function backupAll() {
+    var btn = document.getElementById('btn-backup-all');
+    btn.disabled = true;
+    btn.textContent = 'Backing up…';
+
+    var d  = new Date();
+    var ds = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+
+    var trackers = [
+      { path: 'focusflow/steph',  file: 'focusflow-backup-' + ds + '.json' },
+      { path: 'householdAdmin',   file: 'household-backup-' + ds + '.json' },
+      { path: 'iptv',             file: 'tv-tracker-backup-' + ds + '.json' },
+      { path: 'grassPortal',      file: 'grass-cutting-backup-' + ds + '.json' },
+      { path: 'stephCreations',   file: 'steph-rawlings-backup-' + ds + '.json' }
+    ];
+
+    Promise.all(trackers.map(function(t) {
+      return portalDb.ref(t.path).once('value').then(function(snap) {
+        return { file: t.file, data: snap.val() };
+      });
+    })).then(function(results) {
+      var count = 0;
+      results.forEach(function(r, i) {
+        if (!r.data) return;
+        count++;
+        setTimeout(function() {
+          var blob = new Blob([JSON.stringify(r.data, null, 2)], { type: 'application/json' });
+          var url  = URL.createObjectURL(blob);
+          var a    = document.createElement('a');
+          a.href = url; a.download = r.file; a.click();
+          URL.revokeObjectURL(url);
+        }, i * 400);
+      });
+      setTimeout(function() {
+        btn.disabled = false;
+        btn.textContent = '⬇ Backup All';
+      }, results.length * 400 + 300);
+    }).catch(function(e) {
+      console.error('Backup failed:', e);
+      btn.disabled = false;
+      btn.textContent = '⬇ Backup All';
+    });
   }
 
   function showLogin(msg) {
