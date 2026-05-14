@@ -41,11 +41,16 @@ const Reminders = (() => {
         </svg>
       </button>`;
 
+    const taskTag = r.taskId
+      ? `<span style="font-size:0.7rem;color:var(--text-muted);white-space:nowrap">📋 task</span>`
+      : '';
+
     return `<div class="${classes}" data-id="${r.id}">
       <button class="reminder-cb${r.done ? ' is-checked' : ''}" data-action="toggle" data-id="${r.id}" title="${r.done ? 'Mark undone' : 'Mark done'}">
         ${r.done ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
       </button>
       <span class="reminder-text">${escHtml(r.text)}</span>
+      ${taskTag}
       ${dateBadge(r.date)}
       ${deleteBtn}
     </div>`;

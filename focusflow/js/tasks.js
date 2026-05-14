@@ -98,6 +98,8 @@ const Tasks = (() => {
             ${Badges.energy(task.energy)}
             ${project ? `<span class="project-badge" style="background:${project.color}22;color:${project.color}"><span class="project-dot" style="background:${project.color}"></span>${escHtml(project.name)}</span>` : ''}
             ${subtaskCount > 0 ? `<span class="badge badge-status">${subtaskDone}/${subtaskCount} steps</span>` : ''}
+            ${task.recurringType ? `<span class="badge badge-status">↻ ${task.recurringType}</span>` : ''}
+            ${task.reminderDate  ? `<span class="badge badge-upcoming">🔔 ${DateUtil.formatDisplay(task.reminderDate)}</span>` : ''}
           </div>
         </div>
 
@@ -122,6 +124,8 @@ const Tasks = (() => {
              data-check-task="${task.id}"></div>
         <span class="task-compact-title">${escHtml(task.title)}</span>
         <div class="task-compact-right">
+          ${task.recurringType ? '<span style="font-size:0.75rem;color:var(--text-muted)" title="Recurring">↻</span>' : ''}
+          ${task.reminderDate  ? '<span style="font-size:0.75rem;color:var(--text-muted)" title="Has reminder">🔔</span>' : ''}
           ${isOver ? '<span class="badge badge-overdue">⚠</span>' : ''}
           ${task.dueDate && !isOver ? Badges.dueDate(task.dueDate) : ''}
           ${project ? `<span class="project-dot" style="background:${project.color}" title="${escHtml(project.name)}"></span>` : ''}
@@ -331,6 +335,24 @@ const Tasks = (() => {
         </div>
       </div>
 
+      <div class="task-detail-row">
+        <div class="task-detail-field">
+          <label class="task-detail-label">↻ Repeat</label>
+          <select class="form-select" id="td-recurring">
+            <option value="">Does not repeat</option>
+            <option value="daily"       ${task.recurringType==='daily'       ? 'selected':''}>Daily</option>
+            <option value="weekly"      ${task.recurringType==='weekly'      ? 'selected':''}>Weekly</option>
+            <option value="fortnightly" ${task.recurringType==='fortnightly' ? 'selected':''}>Every 2 weeks</option>
+            <option value="monthly"     ${task.recurringType==='monthly'     ? 'selected':''}>Monthly</option>
+            <option value="yearly"      ${task.recurringType==='yearly'      ? 'selected':''}>Yearly</option>
+          </select>
+        </div>
+        <div class="task-detail-field">
+          <label class="task-detail-label">🔔 Reminder</label>
+          <input type="date" class="form-input" id="td-reminder-date" value="${task.reminderDate || ''}">
+        </div>
+      </div>
+
       <div class="form-group" style="margin-top:16px;">
         <label class="task-detail-label">Notes</label>
         <textarea class="form-textarea" id="td-notes" rows="3" placeholder="Any details, context, links…">${escHtml(task.notes || '')}</textarea>
@@ -408,10 +430,12 @@ const Tasks = (() => {
     delBtn.onclick = async () => {
       const ok = await confirmAction('Delete this task? This cannot be undone.');
       if (ok) {
+        Storage.deleteReminder('rem_task_' + taskId); // clean up linked reminder if any
         Storage.deleteTask(taskId);
         Modal.close('modal-task-detail');
         renderTasksView();
         refreshDashboard();
+        if (typeof Reminders !== 'undefined') { Reminders.render(); Reminders.renderDashboardWidget(); }
         Toast.success('Task deleted');
       }
     };
@@ -445,6 +469,8 @@ const Tasks = (() => {
     const task = Storage.getTask(originalTask.id);
     if (!task) return;
 
+    const oldReminderDate = task.reminderDate;
+
     task.title    = document.getElementById('td-title').value.trim() || task.title;
     task.status   = document.getElementById('td-status').value;
     task.priority = document.getElementById('td-priority').value;
@@ -455,15 +481,38 @@ const Tasks = (() => {
     task.estimatedMins = parseInt(document.getElementById('td-time').value) || null;
     task.tags     = document.getElementById('td-tags').value
       .split(',').map(t => t.trim()).filter(Boolean);
+    task.recurringType = document.getElementById('td-recurring').value || null;
+    task.reminderDate  = document.getElementById('td-reminder-date').value || null;
 
     if (task.status === 'done' && !task.completedAt) task.completedAt = new Date().toISOString();
     if (task.status !== 'done') task.completedAt = null;
 
     Storage.saveTask(task);
+    syncTaskReminder(task, oldReminderDate);
     Modal.close('modal-task-detail');
     renderTasksView();
     refreshDashboard();
     Toast.success('Task saved');
+  }
+
+  function syncTaskReminder(task, oldReminderDate) {
+    const remId = 'rem_task_' + task.id;
+    if (task.reminderDate) {
+      Storage.saveReminder({
+        id:        remId,
+        text:      task.title,
+        date:      task.reminderDate,
+        done:      false,
+        createdAt: new Date().toISOString(),
+        taskId:    task.id
+      });
+    } else if (oldReminderDate) {
+      Storage.deleteReminder(remId);
+    }
+    if (typeof Reminders !== 'undefined') {
+      Reminders.render();
+      Reminders.renderDashboardWidget();
+    }
   }
 
 
@@ -532,22 +581,67 @@ const Tasks = (() => {
 
 
   /* ══════════════════════════════════════════════
+     RECURRING — next due date calculator
+  ══════════════════════════════════════════════ */
+  function getNextRecurringDate(task) {
+    const today = DateUtil.today();
+    const base  = task.dueDate && task.dueDate >= today ? task.dueDate : today;
+    switch (task.recurringType) {
+      case 'daily':       return DateUtil.addDays(base, 1);
+      case 'weekly':      return DateUtil.addDays(base, 7);
+      case 'fortnightly': return DateUtil.addDays(base, 14);
+      case 'monthly': {
+        const d = new Date(base + 'T12:00:00');
+        d.setMonth(d.getMonth() + 1);
+        return d.toISOString().split('T')[0];
+      }
+      case 'yearly': {
+        const d = new Date(base + 'T12:00:00');
+        d.setFullYear(d.getFullYear() + 1);
+        return d.toISOString().split('T')[0];
+      }
+      default: return task.dueDate;
+    }
+  }
+
+
+  /* ══════════════════════════════════════════════
      QUICK TOGGLE DONE
   ══════════════════════════════════════════════ */
   function toggleDone(taskId) {
     const task = Storage.getTask(taskId);
     if (!task) return;
+
     if (task.status === 'done') {
+      // Un-checking a done task
       task.status = 'todo';
       task.completedAt = null;
-    } else {
-      task.status = 'done';
-      task.completedAt = new Date().toISOString();
+      Storage.saveTask(task);
+      renderTasksView();
+      refreshDashboard();
+      Toast.success('Moved back to to-do');
+      return;
     }
+
+    if (task.recurringType) {
+      // Recurring: reset with next due date instead of staying done
+      const nextDate = getNextRecurringDate(task);
+      task.dueDate     = nextDate;
+      task.status      = 'todo';
+      task.completedAt = null;
+      Storage.saveTask(task);
+      renderTasksView();
+      refreshDashboard();
+      Toast.success(`↻ Done! Next due ${nextDate ? DateUtil.formatDisplay(nextDate) : 'soon'}`);
+      return;
+    }
+
+    task.status      = 'done';
+    task.completedAt = new Date().toISOString();
     Storage.saveTask(task);
     renderTasksView();
     refreshDashboard();
-    Toast.success(task.status === 'done' ? '✓ Marked as done!' : 'Moved back to to-do');
+    Toast.success('✓ Marked as done!');
   }
 
 

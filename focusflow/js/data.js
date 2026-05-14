@@ -94,7 +94,8 @@ function createTask(overrides = {}) {
     subtasks:      [],              // [{id, title, done}]
     estimatedMins: null,
     isArchived:    false,
-    isRecurring:   false,
+    recurringType: null,        // null | 'daily' | 'weekly' | 'fortnightly' | 'monthly' | 'yearly'
+    reminderDate:  null,        // ISO date — creates a linked reminder entry
     completedAt:   null,
     createdAt:     new Date().toISOString(),
     updatedAt:     new Date().toISOString(),
