@@ -43,6 +43,12 @@
       padding: 18px;
       box-shadow: var(--shadow);
     }
+    .hub-link {
+      display: inline-block; margin-bottom: 10px;
+      font-size: 0.78rem; font-weight: 600; color: rgba(255,255,255,0.7);
+      text-decoration: none; letter-spacing: 0.03em;
+    }
+    .hub-link:hover { color: #fff; }
     .hero h1 { font-size: 1.5rem; margin-bottom: 4px; }
     .hero p { opacity: 0.9; font-size: 0.92rem; max-width: 70ch; }
     .sync-bar {
@@ -359,6 +365,7 @@
   <div id="main-app">
     <div class="wrap">
       <section class="hero">
+        <a class="hub-link" href="/portal/">&#8592; My Hub</a>
         <h1>Client Onboarding Tracker</h1>
         <p>Add a client once, then work through your checklist (GitHub, Firebase, hosting, domains, etc.) in a repeatable way. Data syncs to Firebase and keeps a local backup.</p>
         <div class="sync-bar">

@@ -2298,7 +2298,7 @@ document.getElementById('modal-class').addEventListener('click',e=>{ if(e.target
 // ── Auth state ────────────────────────────────────────────────────────────────
 fbAuth.onAuthStateChanged(user => {
   if (user) {
-    const ALLOWED = ['stephrawlingscreations@gmail.com', 'stephrawlingscreations@gmail.com'];
+    const ALLOWED = ['stephrawlingscreations@gmail.com', 'sdr22uk@gmail.com', 'sdr22ie@gmail.com'];
     if (!ALLOWED.includes(user.email)) {
       fbAuth.signOut();
       const err = document.getElementById('login-error');
