@@ -269,6 +269,15 @@
         <div class="tile-arrow">›</div>
       </a>
 
+      <a class="tile" href="/client-onboarding-tracker.html">
+        <div class="tile-icon c-teal">📋</div>
+        <div class="tile-body">
+          <div class="tile-name">Client Onboarding</div>
+          <div class="tile-desc">Onboarding checklist &amp; client setup tracker</div>
+        </div>
+        <div class="tile-arrow">›</div>
+      </a>
+
     </div>
 
     <!-- Reminders widget — reads from Focus Flow's localStorage -->
@@ -354,7 +363,8 @@
       { path: 'iptv',             file: 'tv-tracker-backup-' + ds + '.json' },
       { path: 'grassPortal',      file: 'grass-cutting-backup-' + ds + '.json' },
       { path: 'stephCreations',        file: 'steph-rawlings-backup-' + ds + '.json' },
-      { path: 'focusflow/steph/training', file: 'training-backup-' + ds + '.json' }
+      { path: 'focusflow/steph/training',  file: 'training-backup-' + ds + '.json' },
+      { path: 'clientOnboardingTracker',   file: 'client-onboarding-backup-' + ds + '.json' }
     ];
 
     Promise.all(trackers.map(function(t) {
