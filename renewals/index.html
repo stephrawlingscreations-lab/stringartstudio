@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Renewals Tracker</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Renewals">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --sage:    #698F80;
+      --sage-dk: #4e6e61;
+      --bg:      #F7F5F0;
+      --card:    #ffffff;
+      --text:    #2C3E35;
+      --muted:   #7a8a84;
+      --border:  #e2ddd6;
+      --radius:  14px;
+      --danger:  #c0392b;
+      --amber:   #b45309;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-logo {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #698F80, #4e6e61);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .header-title  { font-size: 1.1rem; font-weight: 700; }
+    .header-sub    { font-size: 0.78rem; color: var(--muted); }
+    .back-link {
+      font-size: 0.8rem; color: var(--muted);
+      text-decoration: none;
+      padding: 7px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: background 0.15s;
+    }
+    .back-link:hover { background: #f0f0ec; }
+    main { max-width: 760px; margin: 0 auto; padding: 28px 20px 60px; }
+
+    /* Stats */
+    .stats { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 18px;
+      flex: 1; min-width: 90px; text-align: center;
+    }
+    .stat .val { font-size: 1.6rem; font-weight: 700; }
+    .stat .lbl { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+    .stat.warn .val { color: var(--amber); }
+    .stat.bad  .val { color: var(--danger); }
+
+    /* Add form */
+    .add-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .add-card h2 { font-size: 0.95rem; font-weight: 700; margin-bottom: 14px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .form-grid .span2 { grid-column: span 2; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: 0.78rem; font-weight: 600; color: var(--muted); }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 0.88rem;
+      background: var(--bg);
+      color: var(--text);
+      width: 100%;
+    }
+    .form-group input:focus,
+    .form-group select:focus { outline: none; border-color: var(--sage); }
+    .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+
+    /* Buttons */
+    .btn {
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--card);
+      color: var(--text);
+      font-size: 0.85rem; font-weight: 600;
+      padding: 9px 16px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn:hover { background: var(--bg); }
+    .btn-primary { background: var(--sage); color: #fff; border-color: var(--sage); }
+    .btn-primary:hover { background: var(--sage-dk); border-color: var(--sage-dk); }
+    .btn-danger { color: var(--danger); border-color: #f0d0d0; }
+    .btn-danger:hover { background: #fff0f0; }
+    .btn-sm { font-size: 0.78rem; padding: 6px 12px; }
+
+    /* Filters */
+    .filter-row {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 16px; align-items: center;
+    }
+    .filter-row select,
+    .filter-row input {
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 6px 10px; font-size: 0.83rem;
+      background: var(--card); color: var(--text);
+    }
+    .filter-row select:focus,
+    .filter-row input:focus { outline: none; border-color: var(--sage); }
+
+    /* Item cards */
+    .items-list { display: flex; flex-direction: column; gap: 12px; }
+    .item-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .item-card.expiring { border-left: 4px solid #fbbf24; }
+    .item-card.expired  { border-left: 4px solid #f87171; }
+
+    .item-main { padding: 16px 18px; }
+    .item-top {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 10px; margin-bottom: 8px;
+    }
+    .item-name  { font-size: 1rem; font-weight: 700; }
+    .item-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+    .badge {
+      font-size: 0.7rem; font-weight: 600;
+      padding: 2px 8px; border-radius: 999px;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .badge-category { background: #e8eef6; color: #3d5a80; }
+    .badge-client   { background: #ece8f6; color: #4c1d95; }
+    .badge-ok       { background: #d1fae5; color: #065f46; }
+    .badge-warn     { background: #fef9c3; color: #854d0e; }
+    .badge-urgent   { background: #fef3c7; color: var(--amber); }
+    .badge-expired  { background: #fee2e2; color: var(--danger); }
+    .badge-noexpiry { background: #f3f4f6; color: #6b7280; }
+
+    .item-meta { font-size: 0.83rem; color: var(--muted); line-height: 1.6; }
+    .item-actions {
+      display: flex; gap: 6px;
+      padding: 10px 18px;
+      border-top: 1px solid var(--border);
+      justify-content: flex-end;
+    }
+    .edit-section {
+      padding: 16px 18px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .empty { text-align: center; color: var(--muted); font-size: 0.9rem; padding: 40px 20px; }
+
+    @media (max-width: 560px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid .span2 { grid-column: span 1; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="header-logo">🗓️</div>
+    <div>
+      <div class="header-title">Renewals Tracker</div>
+      <div class="header-sub">Domains, hosting &amp; services — never let anything lapse</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <button class="btn btn-sm" onclick="exportData()">Export backup</button>
+    <a class="back-link" href="/portal/">← My Hub</a>
+  </div>
+</header>
+
+<main>
+  <div class="stats" id="stats"></div>
+
+  <div class="add-card">
+    <h2>+ Add entry</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Service / domain name *</label>
+        <input type="text" id="f-name" placeholder="e.g. stephrawlingscreations.com" />
+      </div>
+      <div class="form-group">
+        <label>Client (leave blank if personal)</label>
+        <input type="text" id="f-client" placeholder="PPB Designs, Lakeside…" list="client-list" />
+        <datalist id="client-list"></datalist>
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="f-category">
+          <option value="domain">Domain</option>
+          <option value="hosting">Hosting</option>
+          <option value="database">Database / Firebase</option>
+          <option value="email">Email</option>
+          <option value="ssl">SSL Certificate</option>
+          <option value="software">Software / SaaS</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Provider</label>
+        <input type="text" id="f-provider" placeholder="Netlify, Namecheap, Google…" />
+      </div>
+      <div class="form-group">
+        <label>Renewal / expiry date</label>
+        <input type="date" id="f-expiry" />
+      </div>
+      <div class="form-group">
+        <label>Annual cost</label>
+        <input type="text" id="f-cost" placeholder="£12.99" />
+      </div>
+      <div class="form-group span2">
+        <label>Notes</label>
+        <input type="text" id="f-notes" placeholder="e.g. auto-renews, free tier, card on file…" />
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="addItem()">Save entry</button>
+    </div>
+  </div>
+
+  <div class="filter-row">
+    <input type="text" id="search" placeholder="Search…" oninput="render()" style="flex:1;min-width:120px;" />
+    <select id="filter-client" onchange="render()">
+      <option value="">All clients</option>
+    </select>
+    <select id="filter-cat" onchange="render()">
+      <option value="">All categories</option>
+      <option value="domain">Domains</option>
+      <option value="hosting">Hosting</option>
+      <option value="database">Database</option>
+      <option value="email">Email</option>
+      <option value="ssl">SSL</option>
+      <option value="software">Software</option>
+      <option value="other">Other</option>
+    </select>
+  </div>
+
+  <div id="items-list"></div>
+</main>
+
+<script>
+  const STORAGE_KEY = 'renewals_items';
+  let items = {};
+  let editingId = null;
+
+  function uid() { return 'rn_' + Math.random().toString(36).slice(2, 10); }
+
+  function load() {
+    try { items = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+    catch { items = {}; }
+  }
+
+  function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); }
+
+  function getAll() { return Object.values(items); }
+
+  function daysUntil(dateStr) {
+    if (!dateStr) return null;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const exp   = new Date(dateStr); exp.setHours(0,0,0,0);
+    return Math.round((exp - today) / 86400000);
+  }
+
+  function statusInfo(dateStr) {
+    const d = daysUntil(dateStr);
+    if (d === null) return { label: 'No expiry set', cls: 'badge-noexpiry', cardCls: '' };
+    if (d < 0)     return { label: 'Expired ' + Math.abs(d) + 'd ago', cls: 'badge-expired', cardCls: 'expired' };
+    if (d === 0)   return { label: 'Expires today!',      cls: 'badge-urgent',  cardCls: 'expiring' };
+    if (d <= 30)   return { label: 'Expires in ' + d + 'd', cls: 'badge-urgent',  cardCls: 'expiring' };
+    if (d <= 60)   return { label: 'Expires in ' + d + 'd', cls: 'badge-warn',    cardCls: 'expiring' };
+    return              { label: 'Expires in ' + d + 'd', cls: 'badge-ok',      cardCls: '' };
+  }
+
+  const CAT_LABELS = { domain:'Domain', hosting:'Hosting', database:'Database', email:'Email', ssl:'SSL', software:'Software', other:'Other' };
+  function catLabel(c) { return CAT_LABELS[c] || c; }
+
+  function esc(str) {
+    return String(str || '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function addItem() {
+    const name = document.getElementById('f-name').value.trim();
+    if (!name) { document.getElementById('f-name').focus(); return; }
+    const id = uid();
+    items[id] = {
+      id,
+      name,
+      client:     document.getElementById('f-client').value.trim(),
+      category:   document.getElementById('f-category').value,
+      provider:   document.getElementById('f-provider').value.trim(),
+      expiryDate: document.getElementById('f-expiry').value,
+      cost:       document.getElementById('f-cost').value.trim(),
+      notes:      document.getElementById('f-notes').value.trim(),
+      createdAt:  new Date().toISOString()
+    };
+    save();
+    clearAddForm();
+    render();
+  }
+
+  function clearAddForm() {
+    ['f-name','f-client','f-provider','f-expiry','f-cost','f-notes'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('f-category').value = 'domain';
+  }
+
+  function deleteItem(id) {
+    if (!confirm('Delete this entry?')) return;
+    delete items[id]; save(); render();
+  }
+
+  function startEdit(id) { editingId = id; render(); }
+  function cancelEdit()  { editingId = null; render(); }
+
+  function saveEdit(id) {
+    const it = items[id]; if (!it) return;
+    it.name       = document.getElementById('e-name-'     + id).value.trim() || it.name;
+    it.client     = document.getElementById('e-client-'   + id).value.trim();
+    it.category   = document.getElementById('e-cat-'      + id).value;
+    it.provider   = document.getElementById('e-provider-' + id).value.trim();
+    it.expiryDate = document.getElementById('e-expiry-'   + id).value;
+    it.cost       = document.getElementById('e-cost-'     + id).value.trim();
+    it.notes      = document.getElementById('e-notes-'    + id).value.trim();
+    it.updatedAt  = new Date().toISOString();
+    save(); editingId = null; render();
+  }
+
+  function renderEditForm(it) {
+    return `
+      <div class="edit-section">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Name *</label>
+            <input type="text" id="e-name-${it.id}" value="${esc(it.name)}" />
+          </div>
+          <div class="form-group">
+            <label>Client</label>
+            <input type="text" id="e-client-${it.id}" value="${esc(it.client)}" list="client-list" />
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select id="e-cat-${it.id}">
+              ${Object.keys(CAT_LABELS).map(c =>
+                `<option value="${c}" ${it.category===c?'selected':''}>${catLabel(c)}</option>`
+              ).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Provider</label>
+            <input type="text" id="e-provider-${it.id}" value="${esc(it.provider)}" />
+          </div>
+          <div class="form-group">
+            <label>Expiry date</label>
+            <input type="date" id="e-expiry-${it.id}" value="${esc(it.expiryDate)}" />
+          </div>
+          <div class="form-group">
+            <label>Cost</label>
+            <input type="text" id="e-cost-${it.id}" value="${esc(it.cost)}" />
+          </div>
+          <div class="form-group span2">
+            <label>Notes</label>
+            <input type="text" id="e-notes-${it.id}" value="${esc(it.notes)}" />
+          </div>
+        </div>
+        <div class="form-actions" style="margin-top:12px;">
+          <button class="btn" onclick="cancelEdit()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveEdit('${it.id}')">Save changes</button>
+        </div>
+      </div>`;
+  }
+
+  function renderItemCard(it) {
+    const status   = statusInfo(it.expiryDate);
+    const isEditing = editingId === it.id;
+    const metaParts = [];
+    if (it.provider) metaParts.push(esc(it.provider));
+    if (it.cost)     metaParts.push(esc(it.cost) + '/yr');
+    if (it.notes)    metaParts.push(esc(it.notes));
+    return `
+      <div class="item-card ${status.cardCls}">
+        <div class="item-main">
+          <div class="item-top">
+            <div class="item-name">${esc(it.name)}</div>
+            <span class="badge ${status.cls}">${status.label}</span>
+          </div>
+          <div class="item-badges">
+            <span class="badge badge-category">${catLabel(it.category)}</span>
+            ${it.client ? `<span class="badge badge-client">${esc(it.client)}</span>` : ''}
+          </div>
+          ${metaParts.length ? `<div class="item-meta">${metaParts.join(' · ')}</div>` : ''}
+        </div>
+        ${isEditing ? renderEditForm(it) : ''}
+        <div class="item-actions">
+          ${isEditing ? '' : `<button class="btn btn-sm" onclick="startEdit('${it.id}')">Edit</button>`}
+          <button class="btn btn-sm btn-danger" onclick="deleteItem('${it.id}')">Delete</button>
+        </div>
+      </div>`;
+  }
+
+  function updateClientFilter(all) {
+    const clients = [...new Set(all.map(i => i.client).filter(Boolean))].sort();
+    const sel = document.getElementById('filter-client');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">All clients</option>' +
+      clients.map(c => `<option value="${esc(c)}" ${c===cur?'selected':''}>${esc(c)}</option>`).join('');
+    const dl = document.getElementById('client-list');
+    if (dl) dl.innerHTML = clients.map(c => `<option value="${esc(c)}">`).join('');
+  }
+
+  function renderStats(all) {
+    const expiringSoon = all.filter(i => { const d = daysUntil(i.expiryDate); return d !== null && d >= 0 && d <= 30; }).length;
+    const expired      = all.filter(i => { const d = daysUntil(i.expiryDate); return d !== null && d < 0; }).length;
+    document.getElementById('stats').innerHTML = `
+      <div class="stat"><div class="val">${all.length}</div><div class="lbl">Total tracked</div></div>
+      <div class="stat ${expiringSoon > 0 ? 'warn' : ''}"><div class="val">${expiringSoon}</div><div class="lbl">Expiring within 30 days</div></div>
+      <div class="stat ${expired > 0 ? 'bad' : ''}"><div class="val">${expired}</div><div class="lbl">Expired</div></div>`;
+  }
+
+  function render() {
+    const all          = getAll();
+    const search       = (document.getElementById('search')?.value || '').toLowerCase().trim();
+    const filterClient = document.getElementById('filter-client')?.value || '';
+    const filterCat    = document.getElementById('filter-cat')?.value    || '';
+
+    updateClientFilter(all);
+    renderStats(all);
+
+    let filtered = all.filter(i => {
+      if (filterClient && i.client !== filterClient) return false;
+      if (filterCat    && i.category !== filterCat)  return false;
+      if (search) {
+        const hay = [i.name, i.client, i.provider, i.notes].join(' ').toLowerCase();
+        if (!hay.includes(search)) return false;
+      }
+      return true;
+    });
+
+    filtered.sort((a, b) => {
+      const da = daysUntil(a.expiryDate);
+      const db = daysUntil(b.expiryDate);
+      if (da === null && db === null) return a.name.localeCompare(b.name);
+      if (da === null) return 1;
+      if (db === null) return -1;
+      return da - db;
+    });
+
+    const list = document.getElementById('items-list');
+    if (!filtered.length) {
+      list.innerHTML = `<div class="empty">${all.length ? 'No entries match your filters.' : 'No entries yet — add your first domain or service above.'}</div>`;
+      return;
+    }
+    list.innerHTML = filtered.map(renderItemCard).join('');
+  }
+
+  function exportData() {
+    const d    = new Date().toISOString().split('T')[0];
+    const blob = new Blob([JSON.stringify(items, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = 'renewals-backup-' + d + '.json'; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  load();
+  render();
+</script>
+</body>
+</html>

@@ -171,6 +171,51 @@
       main   { padding: 24px 12px 60px; }
       .tiles { grid-template-columns: 1fr; }
     }
+
+    /* ── Morning digest ── */
+    .digest-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin-bottom: 28px;
+    }
+    .digest-date {
+      font-size: 0.72rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      color: var(--sage);
+      margin-bottom: 12px;
+    }
+    .digest-section { margin-bottom: 14px; }
+    .digest-section:last-child { margin-bottom: 0; }
+    .digest-section-label {
+      font-size: 0.7rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .digest-item {
+      font-size: 0.85rem; color: var(--text);
+      padding: 5px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+    }
+    .digest-item:last-of-type { border-bottom: none; }
+    .digest-item-dot { color: var(--sage); flex-shrink: 0; }
+    .digest-pill {
+      font-size: 0.68rem; font-weight: 700;
+      padding: 2px 7px; border-radius: 999px;
+      flex-shrink: 0;
+    }
+    .digest-pill-warn   { background: #fef3c7; color: #b45309; }
+    .digest-pill-urgent { background: #fee2e2; color: #c0392b; }
+    .digest-clear { font-size: 0.9rem; color: var(--sage-dk); font-weight: 600; }
+    .digest-link {
+      display: inline-block; margin-top: 8px;
+      font-size: 0.77rem; color: var(--muted);
+      text-decoration: none;
+    }
+    .digest-link:hover { color: var(--sage-dk); }
   </style>
 </head>
 <body>
@@ -212,6 +257,14 @@
   </header>
 
   <main>
+    <!-- Morning digest — populated by renderMorningDigest() -->
+    <div id="morning-digest" style="display:none;">
+      <div class="digest-card">
+        <div class="digest-date" id="digest-date"></div>
+        <div id="digest-body"></div>
+      </div>
+    </div>
+
     <div class="section-label">Your tools</div>
     <div class="tiles">
 
@@ -278,6 +331,15 @@
         <div class="tile-arrow">›</div>
       </a>
 
+      <a class="tile" href="/renewals/">
+        <div class="tile-icon c-amber">🗓️</div>
+        <div class="tile-body">
+          <div class="tile-name">Renewals Tracker</div>
+          <div class="tile-desc">Domains, hosting &amp; services — never let anything lapse</div>
+        </div>
+        <div class="tile-arrow">›</div>
+      </a>
+
     </div>
 
     <!-- Reminders widget — reads from Focus Flow's localStorage -->
@@ -319,7 +381,109 @@
     document.getElementById('app').style.display = 'block';
     var name = (user.displayName || '').split(' ')[0];
     document.getElementById('greeting').textContent = name ? 'Hi ' + name + ' 👋' : 'Welcome back';
+    renderMorningDigest();
     renderPortalReminders();
+  }
+
+  function renderMorningDigest() {
+    try {
+      var today    = new Date().toISOString().split('T')[0];
+      var sections = [];
+
+      /* ── Focus Flow tasks due today / overdue ── */
+      var ffRaw = localStorage.getItem('focusflow_tasks');
+      if (ffRaw) {
+        var ffTasks = Object.values(JSON.parse(ffRaw));
+        var dueToday = ffTasks.filter(function(t) {
+          return !t.isArchived && t.status !== 'done' && t.dueDate === today;
+        });
+        var overdue = ffTasks.filter(function(t) {
+          return !t.isArchived && t.status !== 'done' && t.dueDate && t.dueDate < today;
+        });
+        if (dueToday.length || overdue.length) {
+          var rows = dueToday.slice(0, 4).map(function(t) {
+            return '<div class="digest-item"><span class="digest-item-dot">·</span><span>' + t.title.replace(/</g,'&lt;') + '</span></div>';
+          });
+          if (overdue.length) {
+            rows.push('<div class="digest-item"><span class="digest-item-dot">·</span><span style="color:var(--muted)">' + overdue.length + ' overdue task' + (overdue.length > 1 ? 's' : '') + '</span><span class="digest-pill digest-pill-urgent">Overdue</span></div>');
+          }
+          sections.push({
+            label: 'Focus Flow — due today',
+            html: rows.join('') + '<a class="digest-link" href="/focusflow/">Open Focus Flow →</a>'
+          });
+        }
+      }
+
+      /* ── Client follow-ups due ── */
+      var clientRaw = localStorage.getItem('client_onboarding_tracker_v1');
+      if (clientRaw) {
+        var clientState = JSON.parse(clientRaw);
+        var clients     = Array.isArray(clientState.clients) ? clientState.clients : [];
+        var followups   = clients.filter(function(c) {
+          return c.followUpDate && c.followUpDate <= today && c.status !== 'live';
+        });
+        if (followups.length) {
+          var rows = followups.slice(0, 4).map(function(c) {
+            var late = c.followUpDate < today;
+            return '<div class="digest-item"><span class="digest-item-dot">·</span><span>' +
+              (c.name || 'Client').replace(/</g,'&lt;') +
+              (c.nextAction ? ' — ' + c.nextAction.replace(/</g,'&lt;') : '') +
+              '</span>' +
+              (late ? '<span class="digest-pill digest-pill-urgent">Overdue</span>' : '<span class="digest-pill digest-pill-warn">Today</span>') +
+              '</div>';
+          }).join('');
+          sections.push({
+            label: 'Client follow-ups due',
+            html: rows + '<a class="digest-link" href="/client-onboarding/">Open Client Tracker →</a>'
+          });
+        }
+      }
+
+      /* ── Renewals expiring within 30 days ── */
+      var renewRaw = localStorage.getItem('renewals_items');
+      if (renewRaw) {
+        var renewItems = Object.values(JSON.parse(renewRaw));
+        var soon = renewItems.filter(function(r) {
+          if (!r.expiryDate) return false;
+          var d = new Date(r.expiryDate); d.setHours(0,0,0,0);
+          var t = new Date(); t.setHours(0,0,0,0);
+          var days = Math.round((d - t) / 86400000);
+          return days >= 0 && days <= 30;
+        }).sort(function(a, b) { return a.expiryDate.localeCompare(b.expiryDate); });
+        if (soon.length) {
+          var rows = soon.slice(0, 4).map(function(r) {
+            var d    = new Date(r.expiryDate); d.setHours(0,0,0,0);
+            var t    = new Date(); t.setHours(0,0,0,0);
+            var days = Math.round((d - t) / 86400000);
+            var lbl  = days === 0 ? 'Today!' : 'in ' + days + 'd';
+            var pilCls = days <= 7 ? 'digest-pill-urgent' : 'digest-pill-warn';
+            return '<div class="digest-item"><span class="digest-item-dot">·</span>' +
+              '<span>' + r.name.replace(/</g,'&lt;') +
+              (r.client ? ' <span style="color:var(--muted);font-size:0.78rem">(' + r.client.replace(/</g,'&lt;') + ')</span>' : '') +
+              '</span><span class="digest-pill ' + pilCls + '">Expires ' + lbl + '</span></div>';
+          }).join('');
+          sections.push({
+            label: 'Renewals coming up',
+            html: rows + '<a class="digest-link" href="/renewals/">Open Renewals →</a>'
+          });
+        }
+      }
+
+      var card = document.getElementById('morning-digest');
+      var body = document.getElementById('digest-body');
+      if (!card || !body) return;
+
+      var dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+      document.getElementById('digest-date').textContent = dateStr;
+
+      body.innerHTML = sections.length
+        ? sections.map(function(s) {
+            return '<div class="digest-section"><div class="digest-section-label">' + s.label + '</div>' + s.html + '</div>';
+          }).join('')
+        : '<div class="digest-clear">All clear — nothing due today.</div>';
+
+      card.style.display = '';
+    } catch(e) { /* silently skip */ }
   }
 
   function renderPortalReminders() {
