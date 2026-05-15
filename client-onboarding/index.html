@@ -178,6 +178,9 @@
     .btn:hover { background: var(--surface-2); }
     .btn-primary { border: none; color: #fff; background: linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%); }
     .btn-danger { color: var(--danger); }
+    .btn-ff { background: rgba(79,70,229,0.08); color: var(--brand); border-color: rgba(79,70,229,0.3); font-size: 0.78rem; padding: 5px 8px; white-space: nowrap; }
+    .btn-ff:hover { background: rgba(79,70,229,0.18); }
+    .stage-ff-bar { display: flex; justify-content: flex-end; padding: 4px 0 2px; }
     .toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
     .hint { color: var(--muted); font-size: 0.8rem; line-height: 1.4; }
     .collapse {
@@ -1407,9 +1410,13 @@ ${c.notes || "No additional notes yet."}
         .filter(stage => groupedTasks[stage] && groupedTasks[stage].length)
         .map(stage => {
           const progress = stageProgress(c.tasks, stage);
+          const stageAttr = escapeAttr(stage);
           return `
             <details class="collapse" open>
               <summary>${escapeHtml(stage)}: ${progress.done}/${progress.total} complete</summary>
+              <div class="stage-ff-bar">
+                <button class="btn btn-ff" data-ff-stage="${stageAttr}" onclick="sendStageToFocusFlow('${stageAttr}')">Send incomplete → Focus Flow</button>
+              </div>
               <div class="tasks">
                 ${groupedTasks[stage].map(t => `
                   <div class="task ${t.done ? "done" : ""}">
@@ -1418,7 +1425,10 @@ ${c.notes || "No additional notes yet."}
                         <input type="checkbox" ${t.done ? "checked" : ""} onchange="toggleTask('${t.id}')" />
                         <div class="title">${escapeHtml(t.title)}</div>
                       </div>
-                      <button class="btn btn-danger" onclick="removeTask('${t.id}')">Remove</button>
+                      <div style="display:flex;gap:6px;flex-shrink:0">
+                        <button class="btn btn-ff" data-ff-task="${t.id}" onclick="sendToFocusFlow('${t.id}')">→ FF</button>
+                        <button class="btn btn-danger" onclick="removeTask('${t.id}')">Remove</button>
+                      </div>
                     </div>
                     <div class="note">
                       <input value="${escapeAttr(t.note || "")}" placeholder="Task note (links, usernames, reminders...)" oninput="updateTaskNote('${t.id}', this.value)" />
@@ -1810,6 +1820,70 @@ ${c.notes || "No additional notes yet."}
       markCloudSyncError(err);
       showPhase("login");
     });
+
+    function buildFocusFlowTask(t, clientName) {
+      const id = "ff_onb_" + Math.random().toString(36).slice(2, 9);
+      return {
+        id,
+        title: t.title,
+        notes: "Client: " + clientName + (t.note ? "\n" + t.note : "") + "\nStage: " + t.stage,
+        status: "todo",
+        priority: "medium",
+        energy: "low",
+        projectId: null,
+        dueDate: null,
+        dayPlanned: null,
+        tags: ["onboarding"],
+        subtasks: [],
+        estimatedMins: null,
+        isArchived: false,
+        isRecurring: false,
+        completedAt: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    function sendToFocusFlow(taskId) {
+      const c = getClient();
+      if (!c) return;
+      const t = c.tasks.find(x => x.id === taskId);
+      if (!t) return;
+      const existing = JSON.parse(localStorage.getItem("focusflow_tasks") || "{}");
+      const ffTask = buildFocusFlowTask(t, c.name || "Unknown client");
+      existing[ffTask.id] = ffTask;
+      localStorage.setItem("focusflow_tasks", JSON.stringify(existing));
+      const btn = document.querySelector(`[data-ff-task="${taskId}"]`);
+      if (btn) {
+        const orig = btn.textContent;
+        btn.textContent = "Sent!";
+        btn.disabled = true;
+        setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2000);
+      }
+    }
+
+    function sendStageToFocusFlow(stage) {
+      const c = getClient();
+      if (!c) return;
+      const incomplete = c.tasks.filter(t => t.stage === stage && !t.done);
+      if (!incomplete.length) {
+        alert("No incomplete tasks in this stage to send.");
+        return;
+      }
+      const existing = JSON.parse(localStorage.getItem("focusflow_tasks") || "{}");
+      incomplete.forEach(t => {
+        const ffTask = buildFocusFlowTask(t, c.name || "Unknown client");
+        existing[ffTask.id] = ffTask;
+      });
+      localStorage.setItem("focusflow_tasks", JSON.stringify(existing));
+      const btn = document.querySelector(`[data-ff-stage="${stage}"]`);
+      if (btn) {
+        const orig = btn.textContent;
+        btn.textContent = "Sent " + incomplete.length + "!";
+        btn.disabled = true;
+        setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2500);
+      }
+    }
 
     window.addEventListener("online", renderSyncStatus);
     window.addEventListener("offline", renderSyncStatus);
