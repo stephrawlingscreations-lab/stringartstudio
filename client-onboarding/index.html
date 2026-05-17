@@ -1524,72 +1524,109 @@
       const completed = c.tasks.filter(t => t.done);
       const pending = c.tasks.filter(t => !t.done);
       const now = new Date().toLocaleDateString("en-IE");
-      const statusLabel = c.status ? c.status.toUpperCase() : "N/A";
       const s = c.setup || {};
+      const eh = escapeHtml;
+
+      function row(label, value) {
+        if (!value || value === "-") return "";
+        return `<tr><td class="rl">${eh(label)}</td><td class="rv">${eh(value)}</td></tr>`;
+      }
+
       const completedHtml = completed.length
-        ? completed.map(t => `<li>${escapeHtml(t.title)}${t.note ? ` <span style="color:#666">- ${escapeHtml(t.note)}</span>` : ""}</li>`).join("")
-        : "<li>No completed setup items recorded yet.</li>";
+        ? completed.map(t => `<li>${eh(t.title)}${t.note ? ` <span class="note">— ${eh(t.note)}</span>` : ""}</li>`).join("")
+        : "<li class='none'>No completed setup items recorded yet.</li>";
       const pendingHtml = pending.length
-        ? pending.map(t => `<li>${escapeHtml(t.title)}</li>`).join("")
-        : "<li>All onboarding tasks complete.</li>";
-      const notesHtml = escapeHtml(c.notes || "No notes added.");
+        ? pending.map(t => `<li>${eh(t.title)}</li>`).join("")
+        : "<li class='none'>All onboarding tasks complete.</li>";
 
       const innerHtml = `
-  <div class="head">
-    <h1>Client Handover Summary</h1>
-    <div class="meta">Prepared on ${escapeHtml(now)}</div>
+  <div class="banner">
+    <div class="banner-name">${eh(c.businessName || c.name)}</div>
+    <div class="banner-sub">Client Handover Summary &nbsp;·&nbsp; ${eh(now)}</div>
   </div>
 
-  <div class="grid">
-    <div class="box"><div class="label">Client</div><div class="value">${escapeHtml(c.name || "-")}</div></div>
-    <div class="box"><div class="label">Status</div><div class="value">${escapeHtml(statusLabel)}</div></div>
-    <div class="box"><div class="label">Priority</div><div class="value">${escapeHtml(c.priority || "normal")}</div></div>
-    <div class="box"><div class="label">Waiting on Client</div><div class="value">${c.waitingOnClient ? "Yes" : "No"}</div></div>
-    <div class="box"><div class="label">Service</div><div class="value">${escapeHtml(c.service || "-")}</div></div>
-    <div class="box"><div class="label">Mobile</div><div class="value">${escapeHtml(c.mobile || "-")}</div></div>
-    <div class="box"><div class="label">Email</div><div class="value">${escapeHtml(c.email || "-")}</div></div>
-    <div class="box"><div class="label">Business Email</div><div class="value">${escapeHtml(c.businessEmail || "-")}</div></div>
-    <div class="box"><div class="label">Business Name</div><div class="value">${escapeHtml(c.businessName || "-")}</div></div>
-    <div class="box"><div class="label">Website URL</div><div class="value">${escapeHtml(s.siteUrl || "-")}</div></div>
-    <div class="box"><div class="label">Hosting Provider</div><div class="value">${escapeHtml(s.hostingProvider || "-")}</div></div>
-    <div class="box"><div class="label">GitHub Repo URL</div><div class="value">${escapeHtml(s.repoUrl || "-")}</div></div>
-    <div class="box"><div class="label">Firebase Project ID</div><div class="value">${escapeHtml(s.firebaseProject || "-")}</div></div>
-    <div class="box"><div class="label">Owner Email</div><div class="value">${escapeHtml(s.ownerEmail || "-")}</div></div>
-    <div class="box"><div class="label">Support Email</div><div class="value">${escapeHtml(s.supportEmail || "-")}</div></div>
-    <div class="box"><div class="label">Backup Location</div><div class="value">${escapeHtml(s.backupLocation || "-")}</div></div>
-    <div class="box"><div class="label">Next Action</div><div class="value">${escapeHtml(c.nextAction || "-")}</div></div>
-    <div class="box"><div class="label">Follow-up Date</div><div class="value">${escapeHtml(c.followUpDate ? formatDate(c.followUpDate) : "-")}</div></div>
+  <div class="sections">
+    <div class="section">
+      <div class="section-title">Client &amp; Contact</div>
+      <table class="rows">
+        ${row("Contact name", c.name)}
+        ${row("Business name", c.businessName)}
+        ${row("Service", c.service)}
+        ${row("Mobile", c.mobile)}
+        ${row("Email", c.email)}
+        ${row("Business email", c.businessEmail)}
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Technical Setup</div>
+      <table class="rows">
+        ${row("Website URL", s.siteUrl)}
+        ${row("Hosting provider", s.hostingProvider)}
+        ${row("GitHub repo", s.repoUrl)}
+        ${row("Firebase project", s.firebaseProject)}
+        ${row("Owner email", s.ownerEmail)}
+        ${row("Support email", s.supportEmail)}
+        ${row("Backup location", s.backupLocation)}
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Current Status</div>
+      <table class="rows">
+        ${row("Status", c.status)}
+        ${row("Priority", c.priority)}
+        ${c.waitingOnClient ? row("Waiting on client", "Yes") : ""}
+        ${row("Next action", c.nextAction)}
+        ${row("Follow-up date", c.followUpDate ? formatDate(c.followUpDate) : "")}
+      </table>
+    </div>
   </div>
 
-  <h2>Completed Setup Items</h2>
-  <ul>${completedHtml}</ul>
+  <div class="section-title tasks-title">Completed Setup Items</div>
+  <ul class="task-list">${completedHtml}</ul>
 
-  ${clientSafe ? "" : `<h2>Remaining Items (if any)</h2><ul>${pendingHtml}</ul>`}
+  ${clientSafe ? "" : `
+  <div class="section-title tasks-title">Remaining Items</div>
+  <ul class="task-list">${pendingHtml}</ul>
 
-  ${clientSafe ? "" : `<h2>Client Notes</h2><div class="notes">${notesHtml}</div>`}
+  <div class="section-title tasks-title">Notes</div>
+  <div class="notes">${eh(c.notes || "No notes added.").replace(/\n/g, "<br>")}</div>
+  `}
 
-  <div class="foot">Generated from Client Onboarding Tracker</div>`;
+  <div class="foot">Generated from Client Onboarding Tracker &nbsp;·&nbsp; ${eh(now)}</div>`;
 
       const html = `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Client Handover - ${escapeHtml(c.name)}</title>
+  <title>Handover — ${eh(c.businessName || c.name)}</title>
   <style>
-    body { font-family: Arial, sans-serif; color: #111; margin: 0; padding: 24px; }
-    .head { border-bottom: 2px solid #111; margin-bottom: 18px; padding-bottom: 10px; }
-    .head h1 { margin: 0 0 4px; font-size: 24px; }
-    .meta { font-size: 13px; color: #444; line-height: 1.5; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0 18px; }
-    .box { border: 1px solid #ddd; border-radius: 8px; padding: 10px 12px; }
-    .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #666; margin-bottom: 4px; }
-    .value { font-size: 14px; }
-    h2 { font-size: 16px; margin: 14px 0 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
-    ul { margin: 0; padding-left: 18px; }
-    li { margin: 6px 0; line-height: 1.4; font-size: 14px; }
-    .notes { border: 1px solid #ddd; border-radius: 8px; padding: 10px 12px; white-space: pre-wrap; font-size: 14px; line-height: 1.45; }
-    .foot { margin-top: 20px; font-size: 12px; color: #666; border-top: 1px solid #ddd; padding-top: 10px; }
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: Georgia, serif; color: #1a1a1a; margin: 0; padding: 32px 40px; max-width: 860px; line-height: 1.5; }
+    .banner { border-bottom: 3px solid #1a1a1a; padding-bottom: 14px; margin-bottom: 28px; }
+    .banner-name { font-size: 28px; font-weight: 700; letter-spacing: -0.01em; }
+    .banner-sub { font-size: 13px; color: #555; margin-top: 4px; font-family: Arial, sans-serif; }
+    .sections { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+    .section { }
+    .section-title { font-family: Arial, sans-serif; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #777; margin-bottom: 8px; }
+    .tasks-title { margin-top: 24px; margin-bottom: 8px; }
+    .rows { width: 100%; border-collapse: collapse; }
+    .rows tr { border-top: 1px solid #eee; }
+    .rows tr:first-child { border-top: none; }
+    .rl { font-family: Arial, sans-serif; font-size: 11px; color: #666; padding: 5px 10px 5px 0; white-space: nowrap; vertical-align: top; }
+    .rv { font-size: 13px; padding: 5px 0; word-break: break-word; }
+    .task-list { margin: 0 0 4px; padding-left: 18px; }
+    .task-list li { font-size: 13px; margin: 5px 0; }
+    .task-list .note { color: #666; font-size: 12px; font-style: italic; }
+    .task-list .none { color: #888; font-style: italic; list-style: none; margin-left: -18px; }
+    .notes { font-size: 13px; white-space: pre-wrap; color: #333; border-left: 3px solid #ddd; padding: 8px 12px; margin-bottom: 4px; }
+    .foot { margin-top: 32px; font-family: Arial, sans-serif; font-size: 11px; color: #aaa; border-top: 1px solid #eee; padding-top: 10px; }
+    @media print {
+      body { padding: 20px; }
+      .sections { grid-template-columns: 1fr 1fr 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -1603,19 +1640,24 @@
         const printArea = document.getElementById("print-area");
         printArea.innerHTML = `
           <style>
-            #print-area { font-family: Arial, sans-serif; color: #111; }
-            #print-area .head { border-bottom: 2px solid #111; margin-bottom: 18px; padding-bottom: 10px; }
-            #print-area .head h1 { margin: 0 0 4px; font-size: 24px; }
-            #print-area .meta { font-size: 13px; color: #444; line-height: 1.5; }
-            #print-area .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0 18px; }
-            #print-area .box { border: 1px solid #ddd; border-radius: 8px; padding: 10px 12px; }
-            #print-area .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #666; margin-bottom: 4px; }
-            #print-area .value { font-size: 14px; }
-            #print-area h2 { font-size: 16px; margin: 14px 0 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
-            #print-area ul { margin: 0; padding-left: 18px; }
-            #print-area li { margin: 6px 0; line-height: 1.4; font-size: 14px; }
-            #print-area .notes { border: 1px solid #ddd; border-radius: 8px; padding: 10px 12px; white-space: pre-wrap; font-size: 14px; line-height: 1.45; }
-            #print-area .foot { margin-top: 20px; font-size: 12px; color: #666; border-top: 1px solid #ddd; padding-top: 10px; }
+            #print-area { font-family: Georgia, serif; color: #1a1a1a; line-height: 1.5; }
+            #print-area .banner { border-bottom: 3px solid #1a1a1a; padding-bottom: 14px; margin-bottom: 28px; }
+            #print-area .banner-name { font-size: 24px; font-weight: 700; }
+            #print-area .banner-sub { font-size: 12px; color: #555; margin-top: 4px; font-family: Arial, sans-serif; }
+            #print-area .sections { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+            #print-area .section-title { font-family: Arial, sans-serif; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #777; margin-bottom: 8px; }
+            #print-area .tasks-title { margin-top: 24px; margin-bottom: 8px; }
+            #print-area .rows { width: 100%; border-collapse: collapse; }
+            #print-area .rows tr { border-top: 1px solid #eee; }
+            #print-area .rows tr:first-child { border-top: none; }
+            #print-area .rl { font-family: Arial, sans-serif; font-size: 11px; color: #666; padding: 5px 10px 5px 0; white-space: nowrap; vertical-align: top; }
+            #print-area .rv { font-size: 13px; padding: 5px 0; word-break: break-word; }
+            #print-area .task-list { margin: 0 0 4px; padding-left: 18px; }
+            #print-area .task-list li { font-size: 13px; margin: 5px 0; }
+            #print-area .task-list .note { color: #666; font-size: 12px; font-style: italic; }
+            #print-area .task-list .none { color: #888; font-style: italic; list-style: none; margin-left: -18px; }
+            #print-area .notes { font-size: 13px; white-space: pre-wrap; color: #333; border-left: 3px solid #ddd; padding: 8px 12px; margin-bottom: 4px; }
+            #print-area .foot { margin-top: 32px; font-family: Arial, sans-serif; font-size: 11px; color: #aaa; border-top: 1px solid #eee; padding-top: 10px; }
           </style>
           ${innerHtml}
         `;
