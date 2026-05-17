@@ -397,42 +397,12 @@
         <section class="stats" id="stats"></section>
         <section class="dash-grid">
           <article class="card">
-            <div class="card-h"><h2>Pipeline overview</h2></div>
-            <div class="card-b dash-list" id="pipelineOverview"></div>
-          </article>
-          <article class="card">
-            <div class="card-h"><h2>Priority actions</h2></div>
-            <div class="card-b dash-list" id="priorityActions"></div>
-          </article>
-        </section>
-        <section class="dash-grid">
-          <article class="card">
-            <div class="card-h"><h2>Recent clients</h2></div>
-            <div class="card-b dash-list" id="recentClients"></div>
-          </article>
-          <article class="card">
-            <div class="card-h"><h2>Setup progress board</h2></div>
-            <div class="card-b dash-list" id="progressBoard"></div>
-          </article>
-        </section>
-        <section class="dash-grid">
-          <article class="card">
-            <div class="card-h"><h2>Follow-ups due or overdue</h2></div>
-            <div class="card-b dash-list" id="followupsDue"></div>
-          </article>
-          <article class="card">
             <div class="card-h"><h2>Waiting on client</h2></div>
             <div class="card-b dash-list" id="waitingOnClientList"></div>
           </article>
-        </section>
-        <section class="dash-grid">
           <article class="card">
             <div class="card-h"><h2>High priority</h2></div>
             <div class="card-b dash-list" id="highPriorityList"></div>
-          </article>
-          <article class="card">
-            <div class="card-h"><h2>Near completion / ready to go live</h2></div>
-            <div class="card-b dash-list" id="nearCompletionList"></div>
           </article>
         </section>
       </section>
@@ -1475,105 +1445,24 @@
       const total = state.clients.length;
       const live = state.clients.filter(c => c.status === "live").length;
       const onboarding = state.clients.filter(c => c.status === "onboarding").length;
-      const brochureSent = state.clients.filter(c => !!c.brochureSentAt).length;
-      const dueFollowUps = state.clients.filter(c => c.followUpDate && new Date(c.followUpDate) <= new Date(new Date().toDateString())).length;
       const waitingOnClient = state.clients.filter(c => !!c.waitingOnClient).length;
       const highPriority = state.clients.filter(c => c.priority === "high").length;
-      const doneTasks = state.clients.reduce((s, c) => s + c.tasks.filter(t => t.done).length, 0);
-      const allTasks = state.clients.reduce((s, c) => s + c.tasks.length, 0);
-      const progress = allTasks ? Math.round((doneTasks / allTasks) * 100) : 0;
       document.getElementById("stats").innerHTML = `
-        <div class="stat"><div class="label">Clients</div><div class="value">${total}</div></div>
-        <div class="stat"><div class="label">Brochure Marked Sent</div><div class="value">${brochureSent}</div></div>
-        <div class="stat"><div class="label">Follow-ups Due</div><div class="value">${dueFollowUps}</div></div>
-        <div class="stat"><div class="label">Waiting on Client</div><div class="value">${waitingOnClient}</div></div>
-        <div class="stat"><div class="label">High Priority</div><div class="value">${highPriority}</div></div>
+        <div class="stat"><div class="label">Total Clients</div><div class="value">${total}</div></div>
         <div class="stat"><div class="label">Onboarding</div><div class="value">${onboarding}</div></div>
         <div class="stat"><div class="label">Live</div><div class="value">${live}</div></div>
-        <div class="stat"><div class="label">Task Completion</div><div class="value">${progress}%</div></div>
+        <div class="stat"><div class="label">Waiting on Client</div><div class="value">${waitingOnClient}</div></div>
+        <div class="stat"><div class="label">High Priority</div><div class="value">${highPriority}</div></div>
       `;
     }
 
     function renderDashboard() {
-      const pipeline = document.getElementById("pipelineOverview");
-      const priorities = document.getElementById("priorityActions");
-      const recent = document.getElementById("recentClients");
-      const progressBoard = document.getElementById("progressBoard");
-      const followupsDueList = document.getElementById("followupsDue");
       const waitingList = document.getElementById("waitingOnClientList");
       const highPriorityList = document.getElementById("highPriorityList");
-      const nearCompletionList = document.getElementById("nearCompletionList");
-      if (!pipeline || !priorities || !recent || !progressBoard || !followupsDueList || !waitingList || !highPriorityList || !nearCompletionList) return;
+      if (!waitingList || !highPriorityList) return;
 
-      const byStatus = {
-        lead: state.clients.filter(c => c.status === "lead").length,
-        onboarding: state.clients.filter(c => c.status === "onboarding").length,
-        live: state.clients.filter(c => c.status === "live").length,
-        paused: state.clients.filter(c => c.status === "paused").length
-      };
-      pipeline.innerHTML = `
-        <div class="dash-item clickable" onclick="openClientsFiltered({ status: 'lead' })"><div class="title">Leads</div><div class="sub">${byStatus.lead} waiting for next step</div></div>
-        <div class="dash-item clickable" onclick="openClientsFiltered({ status: 'onboarding' })"><div class="title">Onboarding</div><div class="sub">${byStatus.onboarding} currently in setup</div></div>
-        <div class="dash-item clickable" onclick="openClientsFiltered({ status: 'live' })"><div class="title">Live</div><div class="sub">${byStatus.live} completed and delivered</div></div>
-        <div class="dash-item clickable" onclick="openClientsFiltered({ status: 'paused' })"><div class="title">Paused</div><div class="sub">${byStatus.paused} currently on hold</div></div>
-      `;
-
-      const needsBrochure = state.clients.filter(c => !c.brochureSentAt && c.status !== "live" && c.status !== "paused");
-      const needsOnboardingStart = state.clients.filter(c => c.brochureSentAt && !c.onboardingStarted && c.status !== "live");
-      const nearComplete = state.clients.filter(c => c.onboardingStarted && c.status !== "live" && c.tasks.length > 0 && pct(c) >= 80);
-      const now = new Date();
-      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const followupsDue = state.clients.filter(c => c.followUpDate && new Date(c.followUpDate) <= todayStart);
       const waitingOnClient = state.clients.filter(c => !!c.waitingOnClient);
       const highPriority = state.clients.filter(c => c.priority === "high");
-      priorities.innerHTML = `
-        <div class="dash-item clickable" onclick="openClientsFiltered({ status: 'all', predicate: c => !c.brochureSentAt })"><div class="title">Mark brochure sent</div><div class="sub">${needsBrochure.length} clients still need brochure marked as sent</div></div>
-        <div class="dash-item clickable" onclick="openClientsFiltered({ status: 'all', predicate: c => c.brochureSentAt && !c.onboardingStarted && c.status !== 'live' })"><div class="title">Start onboarding</div><div class="sub">${needsOnboardingStart.length} brochure-ready clients waiting to start</div></div>
-        <div class="dash-item clickable" onclick="openClientsFiltered({ status: 'all', predicate: c => c.onboardingStarted && c.status !== 'live' && c.tasks.length > 0 && pct(c) >= 80 })"><div class="title">Near completion</div><div class="sub">${nearComplete.length} clients are 80%+ complete</div></div>
-      `;
-
-      if (!state.clients.length) {
-        recent.innerHTML = '<div class="hint">No clients yet. Add your first client on the Clients page.</div>';
-        progressBoard.innerHTML = '<div class="hint">No onboarding activity yet.</div>';
-        return;
-      }
-      recent.innerHTML = state.clients
-        .slice()
-        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-        .slice(0, 6)
-        .map(c => `
-          <div class="dash-item clickable" onclick="setSelected('${c.id}')">
-            <div class="title">${escapeHtml(c.name)}</div>
-            <div class="sub">${escapeHtml(c.businessName || "No business name")} · ${escapeHtml(c.status || "lead")} · ${pct(c)}% complete</div>
-          </div>
-        `).join("");
-
-      const stageBuckets = {};
-      [...STAGE_ORDER, "Complete", "Not started"].forEach(stage => { stageBuckets[stage] = []; });
-      state.clients.forEach(client => {
-        const stage = getCurrentStage(client);
-        if (!stageBuckets[stage]) stageBuckets[stage] = [];
-        stageBuckets[stage].push(client);
-      });
-      const stageBoardStages = [...CHECKLIST_STAGES, "Complete", GENERAL_OLD_STAGE, "Not started"].filter(stage => stageBuckets[stage]?.length);
-      if (!stageBoardStages.length) {
-        progressBoard.innerHTML = '<div class="hint">No onboarding started yet. Use Start onboarding from the Clients page.</div>';
-      } else {
-        progressBoard.innerHTML = stageBoardStages.map(stage => `
-          <div class="dash-item clickable" onclick='openClientsFiltered({ status: "all", predicate: c => getCurrentStage(c) === ${JSON.stringify(stage)} })'>
-            <div class="title">${escapeHtml(stage)}</div>
-            <div class="sub">${stageBuckets[stage].length} client(s) currently in this stage</div>
-          </div>
-        `).join("");
-      }
-
-      followupsDueList.innerHTML = followupsDue.length
-        ? followupsDue
-            .sort((a, b) => new Date(a.followUpDate) - new Date(b.followUpDate))
-            .slice(0, 8)
-            .map(c => `<div class="dash-item clickable" onclick="setSelected('${c.id}')"><div class="title">${escapeHtml(c.name)}</div><div class="sub">Follow-up ${escapeHtml(formatDate(c.followUpDate))}${c.nextAction ? ` · ${escapeHtml(c.nextAction)}` : ""}</div></div>`)
-            .join("")
-        : '<div class="hint">No follow-ups due today or overdue.</div>';
 
       waitingList.innerHTML = waitingOnClient.length
         ? waitingOnClient
@@ -1588,14 +1477,6 @@
             .map(c => `<div class="dash-item clickable" onclick="setSelected('${c.id}')"><div class="title">${escapeHtml(c.name)}</div><div class="sub">${escapeHtml(c.status || "lead")} · Updated ${escapeHtml(formatDate(c.lastUpdated))}</div></div>`)
             .join("")
         : '<div class="hint">No high-priority clients right now.</div>';
-
-      nearCompletionList.innerHTML = nearComplete.length
-        ? nearComplete
-            .sort((a, b) => pct(b) - pct(a))
-            .slice(0, 8)
-            .map(c => `<div class="dash-item clickable" onclick="setSelected('${c.id}')"><div class="title">${escapeHtml(c.name)} · ${pct(c)}%</div><div class="sub">${c.tasks.filter(t => t.done).length}/${c.tasks.length} tasks complete${c.followUpDate ? ` · Follow-up ${escapeHtml(formatDate(c.followUpDate))}` : ""}</div></div>`)
-            .join("")
-        : '<div class="hint">No clients near completion yet.</div>';
     }
 
     function exportData() {
