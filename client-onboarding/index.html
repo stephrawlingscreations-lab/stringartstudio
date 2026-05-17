@@ -1172,62 +1172,75 @@
       const pending = c.tasks.filter(t => !t.done);
       const completionPct = total ? Math.round((completed / total) * 100) : 0;
       const today = new Date().toLocaleDateString("en-IE");
-      const guide = `# ${c.businessName || c.name} - Website Operations Guide
-
-Prepared: ${today}
-Client Record Last Updated: ${formatDate(c.lastUpdated)}
-
-## 1) Client and Business Details
-- Client Name: ${c.name || "[add client name]"}
-- Business Name: ${c.businessName || "[add business name]"}
-- Service Type: ${c.service || "[add service type]"}
-- Primary Mobile: ${c.mobile || "[add mobile]"}
-- Primary Email: ${c.email || "[add email]"}
-- Business Email: ${c.businessEmail || "[add business email]"}
-
-## 2) Website and Access Information
-- Website URL: ${s.siteUrl || "[add site URL]"}
-- GitHub Repository: ${s.repoUrl || "[add github repo URL]"}
-- Brochure Marked Sent: ${c.brochureSentAt ? formatDate(c.brochureSentAt) : "No"}
-
-## 3) Hosting and Database Details
-- Hosting Provider: ${s.hostingProvider || "[add hosting provider]"}
-- Firebase Project ID: ${s.firebaseProject || "[add firebase project id]"}
-
-## 4) Ownership and Support
-- Owner Email: ${s.ownerEmail || "[add owner email]"}
-- Support Email: ${s.supportEmail || "[add support email]"}
-
-## 5) Backup Instructions
-- Backup Location: ${s.backupLocation || "[add backup location]"}
-- Recommended cadence: export a backup monthly and after major content or setup changes.
-
-## 6) Current Status and Next Steps
-- Current Status: ${c.status || "lead"}
-- Priority: ${c.priority || "normal"}
-- Waiting on Client: ${c.waitingOnClient ? "Yes" : "No"}
-- Next Action: ${c.nextAction || "No next action set"}
-- Follow-up Date: ${c.followUpDate ? formatDate(c.followUpDate) : "Not set"}
-
-## 7) Onboarding Progress
-- Completion: ${completed}/${total} tasks (${completionPct}%)
-
-### Completed Setup Items
-${c.tasks.filter(t => t.done).length ? c.tasks.filter(t => t.done).map(t => `- ${t.title}${t.note ? ` (${t.note})` : ""}`).join("\n") : "- No completed setup items yet."}
-
-### Remaining Setup Items
-${pending.length ? pending.map(t => `- ${t.title}`).join("\n") : "- All setup items complete."}
-
-## 8) Notes
-${c.notes || "No additional notes yet."}
-`;
-      const blob = new Blob([guide], { type: "text/markdown;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${slugifyName(c.businessName || c.name)}-site-guide.md`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const eh = escapeHtml;
+      function li(label, value) { return `<li><strong>${label}:</strong> ${eh(value)}</li>`; }
+      function section(num, title, items) {
+        return `<h2>${num}) ${title}</h2><ul>${items.join("")}</ul>`;
+      }
+      const doneTasks = c.tasks.filter(t => t.done);
+      const html = `
+        <h1>${eh(c.businessName || c.name)} — Website Operations Guide</h1>
+        <p style="color:#555;margin-bottom:20px">Prepared: ${eh(today)} &nbsp;·&nbsp; Record last updated: ${eh(formatDate(c.lastUpdated))}</p>
+        ${section(1, "Client and Business Details", [
+          li("Client Name", c.name || "—"),
+          li("Business Name", c.businessName || "—"),
+          li("Service Type", c.service || "—"),
+          li("Primary Mobile", c.mobile || "—"),
+          li("Primary Email", c.email || "—"),
+          li("Business Email", c.businessEmail || "—"),
+        ])}
+        ${section(2, "Website and Access Information", [
+          li("Website URL", s.siteUrl || "—"),
+          li("GitHub Repository", s.repoUrl || "—"),
+          li("Brochure Marked Sent", c.brochureSentAt ? formatDate(c.brochureSentAt) : "No"),
+        ])}
+        ${section(3, "Hosting and Database Details", [
+          li("Hosting Provider", s.hostingProvider || "—"),
+          li("Firebase Project ID", s.firebaseProject || "—"),
+        ])}
+        ${section(4, "Ownership and Support", [
+          li("Owner Email", s.ownerEmail || "—"),
+          li("Support Email", s.supportEmail || "—"),
+        ])}
+        ${section(5, "Backup Instructions", [
+          li("Backup Location", s.backupLocation || "—"),
+          `<li>Recommended cadence: export a backup monthly and after major content or setup changes.</li>`,
+        ])}
+        ${section(6, "Current Status and Next Steps", [
+          li("Current Status", c.status || "lead"),
+          li("Priority", c.priority || "normal"),
+          li("Waiting on Client", c.waitingOnClient ? "Yes" : "No"),
+          li("Next Action", c.nextAction || "No next action set"),
+          li("Follow-up Date", c.followUpDate ? formatDate(c.followUpDate) : "Not set"),
+        ])}
+        <h2>7) Onboarding Progress</h2>
+        <p>${completed}/${total} tasks complete (${completionPct}%)</p>
+        <h3>Completed Setup Items</h3>
+        ${doneTasks.length
+          ? `<ul>${doneTasks.map(t => `<li>${eh(t.title)}${t.note ? ` <span style="color:#555">(${eh(t.note)})</span>` : ""}</li>`).join("")}</ul>`
+          : `<p style="color:#888">No completed setup items yet.</p>`}
+        <h3>Remaining Setup Items</h3>
+        ${pending.length
+          ? `<ul>${pending.map(t => `<li>${eh(t.title)}</li>`).join("")}</ul>`
+          : `<p style="color:#555">All setup items complete.</p>`}
+        <h2>8) Notes</h2>
+        <p>${eh(c.notes || "No additional notes yet.").replace(/\n/g, "<br>")}</p>
+      `;
+      const name = eh(c.businessName || c.name);
+      const win = window.open("", "_blank");
+      win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${name} - Site Guide</title><style>
+        body { font-family: Georgia, serif; font-size: 13px; line-height: 1.7; color: #111; max-width: 720px; margin: 40px auto; padding: 0 24px; }
+        h1 { font-size: 20px; border-bottom: 2px solid #111; padding-bottom: 6px; margin-bottom: 8px; }
+        h2 { font-size: 14px; font-family: Arial, sans-serif; text-transform: uppercase; letter-spacing: .05em; margin-top: 24px; margin-bottom: 4px; border-bottom: 1px solid #ddd; padding-bottom: 3px; }
+        h3 { font-size: 13px; font-style: italic; margin-top: 14px; margin-bottom: 2px; }
+        ul { margin: 4px 0 8px 18px; padding: 0; }
+        li { margin-bottom: 3px; }
+        p { margin: 4px 0; }
+        @media print { body { margin: 20px; } }
+      </style></head><body>${html}</body></html>`);
+      win.document.close();
+      win.focus();
+      setTimeout(() => { win.print(); }, 300);
     }
 
     function addClientTask() {
