@@ -1153,9 +1153,6 @@
       c.setup[key] = value;
       touchClient(c);
       debouncedSave();
-      renderClients();
-      renderDashboard();
-      renderDetail();
     }
 
     function slugifyName(value) {
@@ -1268,9 +1265,6 @@ ${c.notes || "No additional notes yet."}
       t.note = note;
       touchClient(c);
       debouncedSave();
-      renderClients();
-      renderDashboard();
-      renderDetail();
     }
 
     function removeTask(taskId) {
