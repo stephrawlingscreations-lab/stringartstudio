@@ -318,6 +318,7 @@ select {
       <option value="na">N/A</option>
     </select>
     <button class="btn" onclick="openAddResident()">+ Add resident</button>
+    <button class="btn" onclick="printReport()">Print report</button>
     <button class="btn" onclick="exportData()">Export backup</button>
     <button class="btn" onclick="document.getElementById('importFile').click()">Import backup</button>
     <button class="btn" onclick="signOutGrass()">Sign out</button>
@@ -455,7 +456,8 @@ const fbDb = firebase.database();
 <script>
 const ALLOWED_GRASS_EMAILS = [
   'stephrawlingscreations@gmail.com',
-  'sdr22ie@gmail.com'
+  'sdr22ie@gmail.com',
+  'sdr22uk@gmail.com'
 ];
 let currentUser = null;
 let pendingDisallowGrass = '';
@@ -972,6 +974,121 @@ function saveCutting() {
   save();
   closeModal('cuttingModal');
   renderBalance(); renderSummary();
+}
+
+function printReport() {
+  const active = state.residents.filter(r => !r.na);
+  const totalOwed = active.reduce((s, r) => s + r.owed, 0);
+  const totalPaid = state.payments.reduce((s, p) => s + p.amount, 0);
+  const totalCost = state.cuttings.reduce((s, c) => s + c.cost, 0);
+  const balance = totalPaid - totalCost;
+  const paidCount = active.filter(r => getStatus(r) === 'paid').length;
+  const partialCount = active.filter(r => getStatus(r) === 'partial').length;
+  const unpaidCount = active.filter(r => getStatus(r) === 'unpaid').length;
+  const now = new Date().toLocaleDateString('en-IE', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  const residentRows = [...state.residents]
+    .sort((a, b) => a.houseNo - b.houseNo)
+    .map(r => {
+      const paid = getPaid(r.houseNo);
+      const bal = r.na ? 0 : r.owed - paid;
+      const status = r.na ? 'N/A' : getStatus(r) === 'paid' ? 'Paid' : getStatus(r) === 'partial' ? 'Partial' : 'Unpaid';
+      return `<tr>
+        <td>${r.houseNo}</td>
+        <td>${r.name}</td>
+        <td class="num">${r.na ? '—' : '€' + r.owed.toFixed(2)}</td>
+        <td class="num">${r.na ? '—' : '€' + paid.toFixed(2)}</td>
+        <td class="num">${r.na ? '—' : (bal > 0 ? '-€' + bal.toFixed(2) : bal < 0 ? '+€' + Math.abs(bal).toFixed(2) : '€0.00')}</td>
+        <td>${status}</td>
+      </tr>`;
+    }).join('');
+
+  const paymentRows = [...state.payments]
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map(p => `<tr>
+      <td>${fmtDate(p.date)}</td>
+      <td>${p.houseNo}</td>
+      <td>${p.name}</td>
+      <td class="num">€${p.amount.toFixed(2)}</td>
+      <td>${p.method}</td>
+      <td>${p.notes || ''}</td>
+    </tr>`).join('');
+
+  let runBal = totalPaid;
+  const balanceRows = [];
+  balanceRows.push(`<tr><td></td><td><strong>Opening — total payments collected</strong></td><td></td><td class="num pos">€${totalPaid.toFixed(2)}</td></tr>`);
+  state.cuttings.filter(c => c.cost > 0).sort((a, b) => a.date.localeCompare(b.date)).forEach(c => {
+    runBal -= c.cost;
+    balanceRows.push(`<tr><td>${fmtDate(c.date)}</td><td>${c.desc}</td><td class="num neg">-€${c.cost.toFixed(2)}</td><td class="num ${runBal < 0 ? 'neg' : 'pos'}">€${runBal.toFixed(2)}</td></tr>`);
+  });
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>Donaskeigh Grass Cutting — Report</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: Georgia, serif; font-size: 13px; color: #1a1a1a; padding: 30px 40px; }
+    h1 { font-size: 22px; margin-bottom: 4px; }
+    .sub { color: #555; font-size: 13px; margin-bottom: 24px; }
+    h2 { font-size: 15px; margin: 28px 0 10px; border-bottom: 1px solid #ccc; padding-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 8px; }
+    .stat { border: 1px solid #ddd; border-radius: 6px; padding: 10px 14px; }
+    .stat-label { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-value { font-size: 18px; font-weight: bold; margin-top: 2px; }
+    .pos { color: #2a6b1a; }
+    .neg { color: #a32d2d; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+    th { background: #f0f0ec; text-align: left; padding: 7px 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 2px solid #ccc; }
+    td { padding: 6px 10px; border-bottom: 1px solid #e8e8e4; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .footer { margin-top: 32px; font-size: 11px; color: #888; border-top: 1px solid #ddd; padding-top: 10px; }
+    .print-btn { position: fixed; top: 16px; right: 16px; padding: 8px 18px; background: #3a6b2a; color: #fff; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; }
+    @media print { .print-btn { display: none; } }
+  </style>
+  </head><body>
+  <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
+  <h1>Donaskeigh Grass Cutting</h1>
+  <div class="sub">Report printed ${now}</div>
+
+  <h2>Summary</h2>
+  <div class="summary">
+    <div class="stat"><div class="stat-label">Total collected</div><div class="stat-value pos">€${totalPaid.toFixed(2)}</div></div>
+    <div class="stat"><div class="stat-label">Total owed</div><div class="stat-value">€${totalOwed.toFixed(2)}</div></div>
+    <div class="stat"><div class="stat-label">Cutting costs</div><div class="stat-value neg">-€${totalCost.toFixed(2)}</div></div>
+    <div class="stat"><div class="stat-label">Current balance</div><div class="stat-value ${balance >= 0 ? 'pos' : 'neg'}">€${balance.toFixed(2)}</div></div>
+  </div>
+  <div class="summary" style="margin-top:8px">
+    <div class="stat"><div class="stat-label">Paid in full</div><div class="stat-value">${paidCount}</div></div>
+    <div class="stat"><div class="stat-label">Partial payment</div><div class="stat-value">${partialCount}</div></div>
+    <div class="stat"><div class="stat-label">No payment</div><div class="stat-value neg">${unpaidCount}</div></div>
+    <div class="stat"><div class="stat-label">Total residents</div><div class="stat-value">${active.length}</div></div>
+  </div>
+
+  <h2>Residents</h2>
+  <table>
+    <thead><tr><th>No.</th><th>Name</th><th class="num">Owed</th><th class="num">Paid</th><th class="num">Balance</th><th>Status</th></tr></thead>
+    <tbody>${residentRows}</tbody>
+  </table>
+
+  <h2>Payment log</h2>
+  <table>
+    <thead><tr><th>Date</th><th>House</th><th>Name</th><th class="num">Amount</th><th>Method</th><th>Notes</th></tr></thead>
+    <tbody>${paymentRows || '<tr><td colspan="6" style="color:#888;font-style:italic">No payments recorded</td></tr>'}</tbody>
+  </table>
+
+  <h2>Balance sheet</h2>
+  <table>
+    <thead><tr><th>Date</th><th>Description</th><th class="num">Cost</th><th class="num">Running balance</th></tr></thead>
+    <tbody>${balanceRows.join('')}</tbody>
+    <tfoot><tr style="border-top:2px solid #ccc;background:#f0f0ec"><td colspan="3" style="padding:8px 10px;font-weight:bold">Current balance</td><td class="num ${balance >= 0 ? 'pos' : 'neg'}" style="padding:8px 10px;font-weight:bold">€${balance.toFixed(2)}</td></tr></tfoot>
+  </table>
+
+  <div class="footer">Donaskeigh Grass Cutting · Private record · ${now}</div>
+  </body></html>`;
+
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
 }
 
 function exportData() {
