@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Postcard Collector</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Postcards">
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --sage:       #698F80;
+      --sage-dk:    #4e6e61;
+      --sage-lt:    #e8f0ec;
+      --bg:         #F7F5F0;
+      --card:       #ffffff;
+      --text:       #2C3E35;
+      --muted:      #7a8a84;
+      --border:     #e2ddd6;
+      --radius:     14px;
+      --amber:      #fdf3e3;
+      --amber-text: #92530a;
+      --rose:       #fce8ec;
+      --rose-text:  #9b2335;
+      --blue:       #e8eef6;
+      --blue-text:  #2a4a7a;
+      --green:      #e8f5ed;
+      --green-text: #1e6b3a;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Login ── */
+    #login-screen {
+      position: fixed; inset: 0; z-index: 200;
+      display: flex; align-items: center; justify-content: center; padding: 24px;
+      background: linear-gradient(135deg, #2A3244 0%, #3D4F6E 55%, #698F80 100%);
+    }
+    .login-card {
+      background: #fff; border-radius: 20px; padding: 40px 32px;
+      max-width: 360px; width: 100%; text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+    .login-logo {
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, #C9A94A, #a07830);
+      border-radius: 18px; margin: 0 auto 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+    }
+    .login-card h1 { font-size: 1.5rem; font-weight: 700; color: #2C3E35; margin-bottom: 6px; }
+    .login-card p  { font-size: 0.9rem; color: #7a8a84; margin-bottom: 28px; }
+    .btn-google {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; padding: 14px 20px;
+      background: #fff; border: 2px solid #e2ddd6;
+      border-radius: 12px; cursor: pointer;
+      font-size: 0.95rem; font-weight: 600; color: #2C3E35;
+      font-family: inherit;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .btn-google:hover { background: #f7f5f0; border-color: #698F80; }
+    #login-error { margin-top: 14px; font-size: 0.85rem; color: #c0392b; min-height: 20px; }
+
+    /* ── App shell ── */
+    #app { display: none; }
+
+    /* ── Header ── */
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .back-link {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 0.8rem; color: var(--muted); text-decoration: none;
+      padding: 6px 10px; border-radius: 8px; border: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .back-link:hover { background: var(--bg); color: var(--text); }
+    .header-icon {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, #C9A94A, #a07830);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+    .header-title { font-size: 1.05rem; font-weight: 700; }
+    .header-sub   { font-size: 0.73rem; color: var(--muted); }
+    .btn-add {
+      background: var(--sage); color: #fff;
+      border: none; border-radius: 10px;
+      padding: 9px 16px; font-size: 0.875rem; font-weight: 600;
+      cursor: pointer; white-space: nowrap; font-family: inherit;
+      transition: background 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-add:hover { background: var(--sage-dk); }
+
+    /* ── Main ── */
+    main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
+
+    /* ── Stats bar ── */
+    .stats-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 22px; }
+    .stat-pill {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 999px; padding: 7px 14px;
+      font-size: 0.8rem; display: flex; align-items: center; gap: 6px;
+    }
+    .stat-pill strong { color: var(--sage-dk); font-size: 0.9rem; }
+
+    /* ── Controls ── */
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; align-items: center; }
+    .search-wrap { position: relative; flex: 1; min-width: 180px; }
+    .search-icon {
+      position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+      color: var(--muted); pointer-events: none;
+    }
+    .search-input {
+      width: 100%; padding: 9px 12px 9px 34px;
+      border: 1px solid var(--border); border-radius: 10px;
+      font-size: 0.875rem; background: var(--card); color: var(--text);
+      outline: none; font-family: inherit;
+      transition: border-color 0.15s;
+    }
+    .search-input:focus { border-color: var(--sage); }
+    .filter-select {
+      padding: 9px 10px; border: 1px solid var(--border); border-radius: 10px;
+      font-size: 0.8rem; background: var(--card); color: var(--text);
+      cursor: pointer; outline: none; font-family: inherit;
+    }
+    .filter-select:focus { border-color: var(--sage); }
+
+    /* ── Gallery Grid ── */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 14px;
+    }
+
+    .postcard-tile {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    }
+    .postcard-tile:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(105,143,128,0.15);
+      border-color: var(--sage);
+    }
+    .tile-thumb {
+      width: 100%; aspect-ratio: 4/3;
+      background: #f0ebe3;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .tile-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .tile-thumb-placeholder { font-size: 2.2rem; opacity: 0.2; }
+    .tile-body { padding: 10px 11px 12px; }
+    .tile-caption {
+      font-size: 0.82rem; font-weight: 600; line-height: 1.35;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden; margin-bottom: 4px;
+    }
+    .tile-publisher {
+      font-size: 0.71rem; color: var(--muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 7px;
+    }
+    .tile-badges { display: flex; gap: 4px; flex-wrap: wrap; }
+
+    /* ── Badges ── */
+    .badge {
+      font-size: 0.63rem; font-weight: 700;
+      padding: 2px 6px; border-radius: 999px; white-space: nowrap;
+    }
+    .badge-Mint    { background: var(--green);  color: var(--green-text); }
+    .badge-Good    { background: var(--blue);   color: var(--blue-text); }
+    .badge-Fair    { background: var(--amber);  color: var(--amber-text); }
+    .badge-Poor    { background: var(--rose);   color: var(--rose-text); }
+    .badge-needed  { background: #fef3c7; color: #92400e; }
+    .badge-value   { background: var(--sage-lt); color: var(--sage-dk); }
+
+    /* ── Empty / Loading ── */
+    .empty-state {
+      grid-column: 1 / -1; text-align: center;
+      padding: 60px 20px; color: var(--muted);
+    }
+    .empty-icon { font-size: 3rem; margin-bottom: 12px; opacity: 0.35; }
+    .empty-state h3 { font-size: 1.05rem; color: var(--text); margin-bottom: 6px; }
+    .empty-state p  { font-size: 0.875rem; margin-bottom: 20px; }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      background: var(--sage); color: #fff; border: none; border-radius: 10px;
+      padding: 10px 20px; font-size: 0.875rem; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: background 0.15s;
+    }
+    .btn-primary:hover { background: var(--sage-dk); }
+    .btn-ghost {
+      background: none; border: 1px solid var(--border); border-radius: 10px;
+      padding: 9px 16px; font-size: 0.875rem; cursor: pointer;
+      color: var(--text); font-family: inherit; transition: background 0.15s;
+    }
+    .btn-ghost:hover { background: var(--bg); }
+    .btn-save {
+      background: var(--sage); color: #fff; border: none; border-radius: 10px;
+      padding: 9px 20px; font-size: 0.875rem; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: background 0.15s;
+    }
+    .btn-save:hover  { background: var(--sage-dk); }
+    .btn-save:disabled { opacity: 0.6; cursor: default; }
+    .btn-danger {
+      background: none; border: 1px solid #f0d0d0; border-radius: 10px;
+      padding: 9px 16px; font-size: 0.875rem; cursor: pointer;
+      color: #c0392b; font-family: inherit; margin-right: auto;
+      transition: background 0.15s;
+    }
+    .btn-danger:hover { background: #fee2e2; }
+    .btn-edit {
+      background: none; border: 1px solid var(--border); border-radius: 8px;
+      padding: 6px 12px; font-size: 0.8rem; cursor: pointer;
+      color: var(--text); font-family: inherit; transition: background 0.15s;
+    }
+    .btn-edit:hover { background: var(--bg); }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,0.45);
+      padding: 20px; overflow-y: auto;
+    }
+    .modal-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
+    .modal {
+      background: var(--card); border-radius: 20px;
+      padding: 26px; width: 100%; max-width: 600px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      margin: auto;
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .modal-title { font-size: 1.05rem; font-weight: 700; }
+    .modal-close {
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 1.4rem; line-height: 1;
+      padding: 2px 6px; border-radius: 6px; font-family: inherit;
+    }
+    .modal-close:hover { background: var(--bg); color: var(--text); }
+    .modal-footer {
+      display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px;
+      padding-top: 16px; border-top: 1px solid var(--border); flex-wrap: wrap;
+    }
+
+    /* ── Form ── */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+    .form-full  { grid-column: 1 / -1; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-label {
+      font-size: 0.72rem; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .form-input, .form-select, .form-textarea {
+      padding: 9px 11px; border: 1px solid var(--border); border-radius: 9px;
+      font-size: 0.875rem; font-family: inherit;
+      background: var(--bg); color: var(--text);
+      outline: none; transition: border-color 0.15s;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--sage); background: #fff;
+    }
+    .form-textarea { resize: vertical; min-height: 70px; }
+    .form-section-divider {
+      grid-column: 1 / -1;
+      font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--sage-dk);
+      padding-top: 10px; border-top: 1px solid var(--border); margin-top: 4px;
+    }
+
+    /* ── Image Upload ── */
+    .image-upload-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .image-upload-box {
+      border: 2px dashed var(--border); border-radius: 10px;
+      padding: 12px; text-align: center; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      position: relative; min-height: 80px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .image-upload-box:hover { border-color: var(--sage); background: var(--sage-lt); }
+    .image-upload-box input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%;
+    }
+    .upload-preview {
+      width: 100%; max-height: 90px; object-fit: contain;
+      border-radius: 6px; margin-bottom: 4px; display: none;
+    }
+    .upload-label { font-size: 0.75rem; color: var(--muted); pointer-events: none; line-height: 1.5; }
+
+    /* ── Detail modal ── */
+    .detail-images { display: flex; gap: 10px; margin-bottom: 20px; }
+    .detail-img-slot {
+      flex: 1; aspect-ratio: 4/3;
+      background: #f0ebe3; border-radius: 10px; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+    }
+    .detail-img-slot img {
+      width: 100%; height: 100%; object-fit: contain; cursor: zoom-in;
+    }
+    .detail-img-label {
+      position: absolute; bottom: 5px; left: 7px;
+      font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+      background: rgba(0,0,0,0.45); color: #fff;
+      padding: 2px 6px; border-radius: 4px;
+    }
+    .detail-img-placeholder { font-size: 2rem; opacity: 0.18; }
+
+    .detail-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
+    .detail-field  { display: flex; flex-direction: column; gap: 2px; }
+    .detail-field-full { grid-column: 1 / -1; }
+    .detail-field-label {
+      font-size: 0.67rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; color: var(--muted);
+    }
+    .detail-field-value { font-size: 0.875rem; }
+    .detail-field-value.empty { color: var(--muted); font-style: italic; }
+
+    /* ── Lightbox ── */
+    #lightbox {
+      display: none; position: fixed; inset: 0; z-index: 300;
+      background: rgba(0,0,0,0.92); align-items: center; justify-content: center;
+      cursor: zoom-out;
+    }
+    #lightbox.open { display: flex; }
+    #lightbox img  { max-width: 96vw; max-height: 96vh; object-fit: contain; border-radius: 4px; }
+
+    /* ── Toast ── */
+    .toast-container { position: fixed; bottom: 22px; right: 18px; z-index: 400; display: flex; flex-direction: column; gap: 8px; }
+    .toast {
+      background: #2C3E35; color: #fff; padding: 10px 16px;
+      border-radius: 10px; font-size: 0.875rem; font-weight: 500;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      animation: toast-in 0.2s ease;
+    }
+    @keyframes toast-in { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.6s linear infinite;
+      vertical-align: middle; margin-right: 5px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Responsive ── */
+    @media (max-width: 580px) {
+      header { padding: 12px 14px; }
+      main   { padding: 16px 12px 70px; }
+      .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 10px; }
+      .modal { padding: 18px 14px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .image-upload-row { grid-template-columns: 1fr; }
+      .detail-images { flex-direction: column; }
+      .detail-fields { grid-template-columns: 1fr; }
+      .btn-add span.btn-label { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Login screen -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">📮</div>
+    <h1>Postcard Collector</h1>
+    <p>Sign in to access your collection</p>
+    <button class="btn-google" onclick="startSignIn()">
+      <svg viewBox="0 0 24 24" width="20" height="20">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Continue with Google
+    </button>
+    <div id="login-error"></div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+
+  <header>
+    <div class="header-left">
+      <a class="back-link" href="/portal/">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="15 18 9 12 15 6"/></svg>
+        My Hub
+      </a>
+      <div class="header-icon">📮</div>
+      <div>
+        <div class="header-title">Postcard Collector</div>
+        <div class="header-sub" id="header-sub">Loading…</div>
+      </div>
+    </div>
+    <button class="btn-add" onclick="openAddModal()">
+      + <span class="btn-label">Add Card</span>
+    </button>
+  </header>
+
+  <main>
+
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat-pill">Total <strong id="stat-total">0</strong></div>
+      <div class="stat-pill">Est. value <strong id="stat-value">£0.00</strong></div>
+      <div class="stat-pill">Need research <strong id="stat-research">0</strong></div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="search-input" class="search-input" placeholder="Search caption, publisher, tags…" oninput="filterAndRender()">
+      </div>
+      <select class="filter-select" id="filter-condition" onchange="filterAndRender()">
+        <option value="">All conditions</option>
+        <option value="Mint">Mint</option>
+        <option value="Good">Good</option>
+        <option value="Fair">Fair</option>
+        <option value="Poor">Poor</option>
+      </select>
+      <select class="filter-select" id="filter-research" onchange="filterAndRender()">
+        <option value="">All research</option>
+        <option value="needed">Needs research</option>
+        <option value="in_progress">In progress</option>
+        <option value="done">Done</option>
+      </select>
+      <select class="filter-select" id="sort-by" onchange="filterAndRender()">
+        <option value="newest">Newest first</option>
+        <option value="oldest">Oldest first</option>
+        <option value="value_high">Highest value</option>
+        <option value="value_low">Lowest value</option>
+        <option value="publisher">Publisher A–Z</option>
+      </select>
+    </div>
+
+    <!-- Gallery -->
+    <div class="gallery-grid" id="gallery-grid">
+      <div class="empty-state">
+        <div class="empty-icon">📮</div>
+        <p>Loading your collection…</p>
+      </div>
+    </div>
+
+  </main>
+</div><!-- end #app -->
+
+
+<!-- ══════════════════════════════════════
+     MODAL: Add / Edit Card
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-form">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="form-modal-title">Add Postcard</div>
+      <button class="modal-close" onclick="closeModal('modal-form')">×</button>
+    </div>
+
+    <input type="hidden" id="f-id">
+
+    <div class="form-grid">
+
+      <div class="form-section-divider">Card Details</div>
+
+      <div class="form-group form-full">
+        <label class="form-label">Caption / Description</label>
+        <input type="text" id="f-caption" class="form-input" placeholder="e.g. At the Seaside">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Publisher</label>
+        <input type="text" id="f-publisher" class="form-input" placeholder="e.g. Bamforth">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Series Number</label>
+        <input type="text" id="f-series" class="form-input" placeholder="e.g. 1234">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Card Number</label>
+        <input type="text" id="f-cardno" class="form-input" placeholder="e.g. A5">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Theme</label>
+        <input type="text" id="f-theme" class="form-input" placeholder="e.g. Humour, Seaside">
+      </div>
+
+      <div class="form-section-divider">Classification</div>
+
+      <div class="form-group">
+        <label class="form-label">Era</label>
+        <input type="text" id="f-era" class="form-input" placeholder="e.g. Edwardian, 1900–1910">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Original / Reprint</label>
+        <select id="f-original" class="form-select">
+          <option value="">Unknown</option>
+          <option value="original">Original</option>
+          <option value="reprint">Reprint</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Condition</label>
+        <select id="f-condition" class="form-select">
+          <option value="">Unknown</option>
+          <option value="Mint">Mint</option>
+          <option value="Good">Good</option>
+          <option value="Fair">Fair</option>
+          <option value="Poor">Poor</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Research Status</label>
+        <select id="f-research" class="form-select">
+          <option value="">Not started</option>
+          <option value="needed">Needs research</option>
+          <option value="in_progress">In progress</option>
+          <option value="done">Done</option>
+        </select>
+      </div>
+
+      <div class="form-section-divider">Value &amp; Notes</div>
+
+      <div class="form-group">
+        <label class="form-label">Estimated Value (£)</label>
+        <input type="number" id="f-value" class="form-input" placeholder="0.00" step="0.01" min="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Duplicate Count</label>
+        <input type="number" id="f-dupes" class="form-input" placeholder="0" min="0">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Tags (comma-separated)</label>
+        <input type="text" id="f-tags" class="form-input" placeholder="e.g. comic, seaside, signed">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Album / Page Source</label>
+        <input type="text" id="f-album" class="form-input" placeholder="e.g. Album 2, Page 4">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Notes</label>
+        <textarea id="f-notes" class="form-textarea" placeholder="Postmarks, messages, condition details, anything interesting…"></textarea>
+      </div>
+
+      <div class="form-section-divider">Images</div>
+
+      <div class="form-full">
+        <div class="image-upload-row">
+          <div class="image-upload-box">
+            <input type="file" id="f-img-front" accept="image/*" onchange="previewImage(this,'prev-front','lbl-front')">
+            <img id="prev-front" class="upload-preview" alt="">
+            <div class="upload-label" id="lbl-front">📷 Front<br><small>Tap to choose</small></div>
+          </div>
+          <div class="image-upload-box">
+            <input type="file" id="f-img-back" accept="image/*" onchange="previewImage(this,'prev-back','lbl-back')">
+            <img id="prev-back" class="upload-preview" alt="">
+            <div class="upload-label" id="lbl-back">📷 Back<br><small>Tap to choose</small></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end form-grid -->
+
+    <div class="modal-footer">
+      <button class="btn-danger" id="btn-delete-card" onclick="deleteCard()" style="display:none">Delete</button>
+      <button class="btn-ghost" onclick="closeModal('modal-form')">Cancel</button>
+      <button class="btn-save" id="btn-save-card" onclick="saveCard()">Save Card</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     MODAL: Card Detail
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal" style="max-width:660px;">
+    <div class="modal-header">
+      <div class="modal-title" id="detail-modal-title">Postcard</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn-edit" onclick="editCurrentCard()">Edit</button>
+        <button class="modal-close" onclick="closeModal('modal-detail')">×</button>
+      </div>
+    </div>
+    <div id="detail-body"></div>
+  </div>
+</div>
+
+
+<!-- Lightbox -->
+<div id="lightbox" onclick="closeLightbox()">
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<!-- Toasts -->
+<div class="toast-container" id="toast-container"></div>
+
+
+<script>
+// ═══════════════════════════════════════════════
+// FIREBASE INIT
+// ═══════════════════════════════════════════════
+
+firebase.initializeApp({
+  apiKey:            'AIzaSyAcSc-3ejzUfaiods7fAGAH10EuVvZaL6U',
+  authDomain:        'steph-rawlings-creations.firebaseapp.com',
+  projectId:         'steph-rawlings-creations',
+  storageBucket:     'steph-rawlings-creations.firebasestorage.app',
+  messagingSenderId: '271810785275',
+  appId:             '1:271810785275:web:e44be9608f17386ae4e55e'
+});
+
+var auth    = firebase.auth();
+var db      = firebase.firestore();
+var storage = firebase.storage();
+
+var ALLOWED = ['stephrawlingscreations@gmail.com', 'sdr22ie@gmail.com', 'sdr22uk@gmail.com'];
+var currentUser   = null;
+var allCards      = [];
+var editingCardId = null;
+var currentDetailId = null;
+
+// ═══════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════
+
+function startSignIn() {
+  var provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(function(e) {
+    if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
+      auth.signInWithRedirect(provider).catch(function(e2) {
+        document.getElementById('login-error').textContent = 'Sign-in failed: ' + e2.message;
+      });
+    } else {
+      document.getElementById('login-error').textContent = 'Sign-in failed: ' + e.message;
+    }
+  });
+}
+
+auth.getRedirectResult().catch(function(err) {
+  if (err && err.message) document.getElementById('login-error').textContent = 'Sign-in failed: ' + err.message;
+});
+
+var pendingDisallow = '';
+auth.onAuthStateChanged(function(user) {
+  if (user) {
+    if (!ALLOWED.some(function(a) { return a.toLowerCase() === (user.email || '').toLowerCase(); })) {
+      pendingDisallow = 'That account (' + user.email + ') is not on the access list.';
+      auth.signOut();
+      return;
+    }
+    currentUser = user;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadCards();
+  } else {
+    currentUser = null;
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    if (pendingDisallow) {
+      document.getElementById('login-error').textContent = pendingDisallow;
+      pendingDisallow = '';
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════
+// LOAD CARDS (Firestore realtime listener)
+// ═══════════════════════════════════════════════
+
+function loadCards() {
+  db.collection('postcards')
+    .where('userId', '==', currentUser.uid)
+    .onSnapshot(function(snap) {
+      allCards = [];
+      snap.forEach(function(doc) {
+        allCards.push(Object.assign({ id: doc.id }, doc.data()));
+      });
+      updateStats();
+      filterAndRender();
+    }, function(err) {
+      document.getElementById('gallery-grid').innerHTML =
+        '<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Could not load collection</h3>' +
+        '<p style="font-size:0.8rem;max-width:340px;margin:0 auto">' + escHtml(err.message) + '</p></div>';
+    });
+}
+
+// ═══════════════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════════════
+
+function updateStats() {
+  var total    = allCards.length;
+  var value    = allCards.reduce(function(s, c) { return s + (parseFloat(c.estimatedValue) || 0); }, 0);
+  var research = allCards.filter(function(c) { return c.researchStatus === 'needed'; }).length;
+
+  document.getElementById('stat-total').textContent    = total;
+  document.getElementById('stat-value').textContent    = '£' + value.toFixed(2);
+  document.getElementById('stat-research').textContent = research;
+  document.getElementById('header-sub').textContent    = total + ' card' + (total !== 1 ? 's' : '');
+}
+
+// ═══════════════════════════════════════════════
+// FILTER & RENDER
+// ═══════════════════════════════════════════════
+
+function filterAndRender() {
+  var q         = (document.getElementById('search-input').value || '').toLowerCase().trim();
+  var condFilt  = document.getElementById('filter-condition').value;
+  var resFilt   = document.getElementById('filter-research').value;
+  var sortBy    = document.getElementById('sort-by').value;
+
+  var filtered = allCards.filter(function(c) {
+    if (condFilt && c.condition !== condFilt) return false;
+    if (resFilt  && c.researchStatus !== resFilt) return false;
+    if (q) {
+      var hay = [c.caption, c.publisher, c.theme, c.era, c.cardNo, c.seriesNo,
+                 (c.tags || []).join(' '), c.notes].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  filtered.sort(function(a, b) {
+    if (sortBy === 'oldest')     return ts(a) - ts(b);
+    if (sortBy === 'value_high') return (parseFloat(b.estimatedValue) || 0) - (parseFloat(a.estimatedValue) || 0);
+    if (sortBy === 'value_low')  return (parseFloat(a.estimatedValue) || 0) - (parseFloat(b.estimatedValue) || 0);
+    if (sortBy === 'publisher')  return (a.publisher || '').localeCompare(b.publisher || '');
+    return ts(b) - ts(a); // newest
+  });
+
+  renderGallery(filtered);
+}
+
+function ts(card) {
+  return (card.createdAt && card.createdAt.seconds) ? card.createdAt.seconds : 0;
+}
+
+function renderGallery(cards) {
+  var grid = document.getElementById('gallery-grid');
+
+  if (allCards.length === 0) {
+    grid.innerHTML = '<div class="empty-state">' +
+      '<div class="empty-icon">📮</div>' +
+      '<h3>Your collection is empty</h3>' +
+      '<p>Add your first postcard to get started.</p>' +
+      '<button class="btn-primary" onclick="openAddModal()">+ Add First Card</button>' +
+      '</div>';
+    return;
+  }
+
+  if (cards.length === 0) {
+    grid.innerHTML = '<div class="empty-state">' +
+      '<div class="empty-icon">🔍</div>' +
+      '<h3>No cards match</h3>' +
+      '<p>Try different search terms or filters.</p>' +
+      '</div>';
+    return;
+  }
+
+  grid.innerHTML = cards.map(function(card) {
+    var thumb = card.frontImageUrl
+      ? '<img src="' + escAttr(card.frontImageUrl) + '" alt="" loading="lazy">'
+      : '<div class="tile-thumb-placeholder">📮</div>';
+
+    var condBadge = card.condition
+      ? '<span class="badge badge-' + escAttr(card.condition) + '">' + escHtml(card.condition) + '</span>'
+      : '';
+    var resBadge = card.researchStatus === 'needed'
+      ? '<span class="badge badge-needed">Research</span>'
+      : '';
+    var valBadge = card.estimatedValue
+      ? '<span class="badge badge-value">£' + parseFloat(card.estimatedValue).toFixed(2) + '</span>'
+      : '';
+
+    return '<div class="postcard-tile" onclick="openDetail(\'' + esc(card.id) + '\')">' +
+      '<div class="tile-thumb">' + thumb + '</div>' +
+      '<div class="tile-body">' +
+        '<div class="tile-caption">' + escHtml(card.caption || '(no caption)') + '</div>' +
+        '<div class="tile-publisher">' + escHtml(card.publisher || '') + '</div>' +
+        '<div class="tile-badges">' + condBadge + resBadge + valBadge + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+// CARD DETAIL
+// ═══════════════════════════════════════════════
+
+function openDetail(id) {
+  var card = allCards.find(function(c) { return c.id === id; });
+  if (!card) return;
+  currentDetailId = id;
+
+  document.getElementById('detail-modal-title').textContent = card.caption || '(no caption)';
+
+  var frontImg = card.frontImageUrl
+    ? '<img src="' + escAttr(card.frontImageUrl) + '" alt="Front" onclick="openLightbox(\'' + escAttr(card.frontImageUrl) + '\')">'
+    : '<div class="detail-img-placeholder">📮</div>';
+  var backImg = card.backImageUrl
+    ? '<img src="' + escAttr(card.backImageUrl) + '" alt="Back" onclick="openLightbox(\'' + escAttr(card.backImageUrl) + '\')">'
+    : '<div class="detail-img-placeholder">📮</div>';
+
+  var origMap = { original: 'Original', reprint: 'Reprint' };
+  var resMap  = { needed: 'Needs research', in_progress: 'In progress', done: 'Done' };
+
+  function f(label, val, full) {
+    var v = val || '';
+    var cls = 'detail-field-value' + (v ? '' : ' empty');
+    var colClass = full ? 'detail-field detail-field-full' : 'detail-field';
+    return '<div class="' + colClass + '">' +
+      '<div class="detail-field-label">' + label + '</div>' +
+      '<div class="' + cls + '">' + escHtml(v || '—') + '</div>' +
+    '</div>';
+  }
+
+  var tagsText = (card.tags && card.tags.length) ? card.tags.join(', ') : '';
+
+  document.getElementById('detail-body').innerHTML =
+    '<div class="detail-images">' +
+      '<div class="detail-img-slot">' + frontImg + '<div class="detail-img-label">Front</div></div>' +
+      '<div class="detail-img-slot">' + backImg  + '<div class="detail-img-label">Back</div></div>' +
+    '</div>' +
+    '<div class="detail-fields">' +
+      f('Publisher',        card.publisher) +
+      f('Series No.',       card.seriesNo) +
+      f('Card No.',         card.cardNo) +
+      f('Theme',            card.theme) +
+      f('Era',              card.era) +
+      f('Condition',        card.condition) +
+      f('Original/Reprint', origMap[card.isOriginal] || '') +
+      f('Est. Value',       card.estimatedValue ? '£' + parseFloat(card.estimatedValue).toFixed(2) : '') +
+      f('Research',         resMap[card.researchStatus] || '') +
+      f('Duplicates',       card.duplicateCount ? String(card.duplicateCount) : '0') +
+      f('Album Source',     card.albumSource) +
+      f('Tags',             tagsText) +
+      (card.notes ? f('Notes', card.notes, true) : '') +
+    '</div>';
+
+  openModal('modal-detail');
+}
+
+function editCurrentCard() {
+  closeModal('modal-detail');
+  openEditModal(currentDetailId);
+}
+
+// ═══════════════════════════════════════════════
+// ADD / EDIT MODAL
+// ═══════════════════════════════════════════════
+
+function openAddModal() {
+  editingCardId = null;
+  document.getElementById('form-modal-title').textContent = 'Add Postcard';
+  document.getElementById('btn-delete-card').style.display = 'none';
+  clearForm();
+  openModal('modal-form');
+}
+
+function openEditModal(id) {
+  var card = allCards.find(function(c) { return c.id === id; });
+  if (!card) return;
+  editingCardId = id;
+  document.getElementById('form-modal-title').textContent = 'Edit Postcard';
+  document.getElementById('btn-delete-card').style.display = '';
+  populateForm(card);
+  openModal('modal-form');
+}
+
+function clearForm() {
+  ['f-caption','f-publisher','f-series','f-cardno','f-theme','f-era',
+   'f-notes','f-album','f-tags'].forEach(function(id) {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('f-value').value    = '';
+  document.getElementById('f-dupes').value    = '';
+  document.getElementById('f-original').value = '';
+  document.getElementById('f-condition').value= '';
+  document.getElementById('f-research').value = '';
+  document.getElementById('f-img-front').value = '';
+  document.getElementById('f-img-back').value  = '';
+  resetPreview('prev-front', 'lbl-front', '📷 Front<br><small>Tap to choose</small>');
+  resetPreview('prev-back',  'lbl-back',  '📷 Back<br><small>Tap to choose</small>');
+}
+
+function populateForm(card) {
+  document.getElementById('f-caption').value   = card.caption   || '';
+  document.getElementById('f-publisher').value = card.publisher || '';
+  document.getElementById('f-series').value    = card.seriesNo  || '';
+  document.getElementById('f-cardno').value    = card.cardNo    || '';
+  document.getElementById('f-theme').value     = card.theme     || '';
+  document.getElementById('f-era').value       = card.era       || '';
+  document.getElementById('f-original').value  = card.isOriginal    || '';
+  document.getElementById('f-condition').value = card.condition     || '';
+  document.getElementById('f-research').value  = card.researchStatus|| '';
+  document.getElementById('f-value').value     = card.estimatedValue|| '';
+  document.getElementById('f-dupes').value     = card.duplicateCount|| '';
+  document.getElementById('f-tags').value      = (card.tags || []).join(', ');
+  document.getElementById('f-notes').value     = card.notes     || '';
+  document.getElementById('f-album').value     = card.albumSource|| '';
+
+  if (card.frontImageUrl) showExistingPreview('prev-front', 'lbl-front', card.frontImageUrl, 'Front ✓');
+  else resetPreview('prev-front', 'lbl-front', '📷 Front<br><small>Tap to change</small>');
+
+  if (card.backImageUrl)  showExistingPreview('prev-back',  'lbl-back',  card.backImageUrl,  'Back ✓');
+  else resetPreview('prev-back',  'lbl-back',  '📷 Back<br><small>Tap to change</small>');
+}
+
+function previewImage(input, prevId, lblId) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var img = document.getElementById(prevId);
+    img.src = e.target.result;
+    img.style.display = 'block';
+    document.getElementById(lblId).textContent = file.name;
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetPreview(prevId, lblId, html) {
+  var img = document.getElementById(prevId);
+  img.src = ''; img.style.display = 'none';
+  document.getElementById(lblId).innerHTML = html;
+}
+
+function showExistingPreview(prevId, lblId, url, label) {
+  var img = document.getElementById(prevId);
+  img.src = url; img.style.display = 'block';
+  document.getElementById(lblId).innerHTML = label + '<br><small>Tap to change</small>';
+}
+
+// ═══════════════════════════════════════════════
+// SAVE
+// ═══════════════════════════════════════════════
+
+function saveCard() {
+  var btn = document.getElementById('btn-save-card');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Saving…';
+
+  var tags = document.getElementById('f-tags').value
+    .split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+
+  var data = {
+    userId:         currentUser.uid,
+    caption:        document.getElementById('f-caption').value.trim(),
+    publisher:      document.getElementById('f-publisher').value.trim(),
+    seriesNo:       document.getElementById('f-series').value.trim(),
+    cardNo:         document.getElementById('f-cardno').value.trim(),
+    theme:          document.getElementById('f-theme').value.trim(),
+    era:            document.getElementById('f-era').value.trim(),
+    isOriginal:     document.getElementById('f-original').value,
+    condition:      document.getElementById('f-condition').value,
+    researchStatus: document.getElementById('f-research').value,
+    estimatedValue: parseFloat(document.getElementById('f-value').value) || 0,
+    duplicateCount: parseInt(document.getElementById('f-dupes').value)   || 0,
+    tags:           tags,
+    notes:          document.getElementById('f-notes').value.trim(),
+    albumSource:    document.getElementById('f-album').value.trim(),
+    updatedAt:      firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  var frontFile = document.getElementById('f-img-front').files[0];
+  var backFile  = document.getElementById('f-img-back').files[0];
+  var cardId    = editingCardId || db.collection('postcards').doc().id;
+  var existing  = editingCardId ? allCards.find(function(c) { return c.id === editingCardId; }) : null;
+
+  data.frontImageUrl = existing ? (existing.frontImageUrl || '') : '';
+  data.backImageUrl  = existing ? (existing.backImageUrl  || '') : '';
+
+  if (!editingCardId) {
+    data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+  }
+
+  var uploads = [];
+  var uid = currentUser.uid;
+
+  if (frontFile) {
+    var fRef = storage.ref('users/' + uid + '/postcards/' + cardId + '/front.' + ext(frontFile));
+    uploads.push(fRef.put(frontFile).then(function() {
+      return fRef.getDownloadURL();
+    }).then(function(url) { data.frontImageUrl = url; }));
+  }
+  if (backFile) {
+    var bRef = storage.ref('users/' + uid + '/postcards/' + cardId + '/back.' + ext(backFile));
+    uploads.push(bRef.put(backFile).then(function() {
+      return bRef.getDownloadURL();
+    }).then(function(url) { data.backImageUrl = url; }));
+  }
+
+  Promise.all(uploads).then(function() {
+    var ref = db.collection('postcards').doc(cardId);
+    return editingCardId ? ref.update(data) : ref.set(data);
+  }).then(function() {
+    closeModal('modal-form');
+    toast(editingCardId ? 'Card updated ✓' : 'Card added to collection ✓');
+  }).catch(function(err) {
+    console.error('Save error:', err);
+    toast('Save failed — ' + err.message);
+  }).finally(function() {
+    btn.disabled = false;
+    btn.innerHTML = 'Save Card';
+  });
+}
+
+function ext(file) {
+  var parts = file.name.split('.');
+  return parts.length > 1 ? parts.pop().toLowerCase() : 'jpg';
+}
+
+// ═══════════════════════════════════════════════
+// DELETE
+// ═══════════════════════════════════════════════
+
+function deleteCard() {
+  if (!editingCardId) return;
+  if (!confirm('Delete this postcard? This cannot be undone.')) return;
+  db.collection('postcards').doc(editingCardId).delete().then(function() {
+    closeModal('modal-form');
+    toast('Card deleted');
+  }).catch(function(err) {
+    toast('Delete failed — ' + err.message);
+  });
+}
+
+// ═══════════════════════════════════════════════
+// MODALS
+// ═══════════════════════════════════════════════
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('modal-form').addEventListener('click', function(e) {
+  if (e.target === this) closeModal('modal-form');
+});
+document.getElementById('modal-detail').addEventListener('click', function(e) {
+  if (e.target === this) closeModal('modal-detail');
+});
+
+// ═══════════════════════════════════════════════
+// LIGHTBOX
+// ═══════════════════════════════════════════════
+
+function openLightbox(url) {
+  document.getElementById('lightbox-img').src = url;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════
+
+function toast(msg) {
+  var el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(function() { el.remove(); }, 3000);
+}
+
+// ═══════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) { return escHtml(String(s || '')); }
+function esc(s)     { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+</script>
+
+</body>
+</html>
