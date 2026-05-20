@@ -1927,17 +1927,15 @@ function imgToBase64(src) {
   if (!src.file) {
     return Promise.resolve({ url: src.url });
   }
-  // New file: compress then base64
+  // New file: read directly (canvas compression unreliable on mobile/HEIC)
   return new Promise(function(resolve, reject) {
-    compressToJpeg(src.file).then(function(compressed) {
-      var reader = new FileReader();
-      reader.onload = function(e) {
-        var d = e.target.result;
-        resolve({ b64: d.split(',')[1], mime: 'image/jpeg' });
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(compressed);
-    }).catch(reject);
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var d = e.target.result;
+      resolve({ b64: d.split(',')[1], mime: d.split(';')[0].split(':')[1] });
+    };
+    reader.onerror = function() { reject(new Error('Could not read image file')); };
+    reader.readAsDataURL(src.file);
   });
 }
 
