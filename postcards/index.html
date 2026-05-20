@@ -1900,22 +1900,44 @@ function saveApiKeyAndAnalyse() {
   runAIFill(pendingAIType, pendingAIImages, key);
 }
 
+function compressToJpeg(blob) {
+  return new Promise(function(resolve) {
+    var img = new Image();
+    var url = URL.createObjectURL(blob);
+    img.onload = function() {
+      var MAX = 1024;
+      var w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w >= h) { h = Math.round(h * MAX / w); w = MAX; }
+        else        { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      canvas.toBlob(function(out) { resolve(out || blob); }, 'image/jpeg', 0.82);
+    };
+    img.onerror = function() { URL.revokeObjectURL(url); resolve(blob); };
+    img.src = url;
+  });
+}
+
 function imgToBase64(src) {
+  // Already-uploaded images: pass the URL directly — OpenAI fetches it, no CORS issue
+  if (!src.file) {
+    return Promise.resolve({ url: src.url });
+  }
+  // New file: compress then base64
   return new Promise(function(resolve, reject) {
-    function fromBlob(blob) {
+    compressToJpeg(src.file).then(function(compressed) {
       var reader = new FileReader();
       reader.onload = function(e) {
         var d = e.target.result;
-        resolve({ b64: d.split(',')[1], mime: d.split(';')[0].split(':')[1] });
+        resolve({ b64: d.split(',')[1], mime: 'image/jpeg' });
       };
       reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    }
-    if (src.file) {
-      fromBlob(src.file);
-    } else {
-      fetch(src.url).then(function(r){ return r.blob(); }).then(fromBlob).catch(reject);
-    }
+      reader.readAsDataURL(compressed);
+    }).catch(reject);
   });
 }
 
@@ -1935,7 +1957,8 @@ function runAIFill(type, images, apiKey) {
         : 'Analyse this vintage postcard image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: caption, publisher, theme, era, condition (one of: Mint Good Fair Poor), isOriginal (one of: original reprint), notes (any interesting details). Leave fields as empty string if uncertain.';
 
     var content = encoded.map(function(e) {
-      return { type: 'image_url', image_url: { url: 'data:' + e.mime + ';base64,' + e.b64 } };
+      var imgUrl = e.url ? e.url : ('data:' + e.mime + ';base64,' + e.b64);
+      return { type: 'image_url', image_url: { url: imgUrl } };
     });
     content.push({ type: 'text', text: prompt });
 
