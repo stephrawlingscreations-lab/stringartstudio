@@ -1900,42 +1900,50 @@ function saveApiKeyAndAnalyse() {
   runAIFill(pendingAIType, pendingAIImages, key);
 }
 
-function compressToJpeg(blob) {
+function compressToJpeg(file) {
   return new Promise(function(resolve) {
-    var img = new Image();
-    var url = URL.createObjectURL(blob);
-    img.onload = function() {
-      var MAX = 1024;
-      var w = img.width, h = img.height;
+    var MAX = 1024;
+    function drawToCanvas(src, w, h) {
       if (w > MAX || h > MAX) {
         if (w >= h) { h = Math.round(h * MAX / w); w = MAX; }
         else        { w = Math.round(w * MAX / h); h = MAX; }
       }
-      var canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-      URL.revokeObjectURL(url);
-      canvas.toBlob(function(out) { resolve(out || blob); }, 'image/jpeg', 0.82);
-    };
-    img.onerror = function() { URL.revokeObjectURL(url); resolve(blob); };
-    img.src = url;
+      var c = document.createElement('canvas');
+      c.width = w; c.height = h;
+      c.getContext('2d').drawImage(src, 0, 0, w, h);
+      c.toBlob(function(out) { resolve(out || file); }, 'image/jpeg', 0.82);
+    }
+    function tryImgElement() {
+      var img = new Image(), url = URL.createObjectURL(file);
+      img.onload = function() { drawToCanvas(img, img.width, img.height); URL.revokeObjectURL(url); };
+      img.onerror = function() { URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    }
+    // createImageBitmap handles HEIC natively on Safari/iOS; fall back to Image element
+    if (typeof createImageBitmap !== 'undefined') {
+      createImageBitmap(file).then(function(bmp) {
+        drawToCanvas(bmp, bmp.width, bmp.height);
+        bmp.close();
+      }).catch(tryImgElement);
+    } else {
+      tryImgElement();
+    }
   });
 }
 
 function imgToBase64(src) {
-  // Already-uploaded images: pass the URL directly — OpenAI fetches it, no CORS issue
-  if (!src.file) {
-    return Promise.resolve({ url: src.url });
-  }
-  // New file: read directly (canvas compression unreliable on mobile/HEIC)
-  return new Promise(function(resolve, reject) {
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      var d = e.target.result;
-      resolve({ b64: d.split(',')[1], mime: d.split(';')[0].split(':')[1] });
-    };
-    reader.onerror = function() { reject(new Error('Could not read image file')); };
-    reader.readAsDataURL(src.file);
+  if (!src.file) { return Promise.resolve({ url: src.url }); }
+  // Compress to JPEG — converts HEIC/HEIF and reduces size for OpenAI
+  return compressToJpeg(src.file).then(function(compressed) {
+    return new Promise(function(resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var d = e.target.result;
+        resolve({ b64: d.split(',')[1], mime: 'image/jpeg' });
+      };
+      reader.onerror = function() { reject(new Error('Could not read image file')); };
+      reader.readAsDataURL(compressed);
+    });
   });
 }
 
