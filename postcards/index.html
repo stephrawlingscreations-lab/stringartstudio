@@ -1844,36 +1844,52 @@ function parseCSV(text) {
 
 // ── AI Image Fill ──
 
-var pendingAIType = '';
+var pendingAIType   = '';
+var pendingAIImages = [];
+
+function collectAIImages(type) {
+  var images = [];
+  if (type === 'stamp') {
+    var f = document.getElementById('s-img').files[0] || null;
+    var u = null;
+    if (editingStampId) {
+      var st = allStamps.find(function(s){ return s.id === editingStampId; });
+      if (st) u = st.imageUrl || null;
+    }
+    if (f || u) images.push({ file: f, url: u });
+  } else {
+    var ff = document.getElementById('f-img-front').files[0] || null;
+    var fu = null;
+    if (editingCardId) {
+      var c1 = allCards.find(function(c){ return c.id === editingCardId; });
+      if (c1) fu = c1.frontImageUrl || null;
+    }
+    if (ff || fu) images.push({ file: ff, url: fu });
+
+    var bf = document.getElementById('f-img-back').files[0] || null;
+    var bu = null;
+    if (editingCardId) {
+      var c2 = allCards.find(function(c){ return c.id === editingCardId; });
+      if (c2) bu = c2.backImageUrl || null;
+    }
+    if (bf || bu) images.push({ file: bf, url: bu });
+  }
+  return images;
+}
 
 function fillFromImage(type) {
-  pendingAIType = type;
-  var fileInputId = type === 'stamp' ? 's-img' : 'f-img-front';
-  var existingUrl = null;
+  pendingAIType   = type;
+  pendingAIImages = collectAIImages(type);
 
-  if (type === 'stamp' && editingStampId) {
-    var st = allStamps.find(function(s){ return s.id === editingStampId; });
-    if (st) existingUrl = st.imageUrl || null;
-  } else if (type === 'postcard' && editingCardId) {
-    var card = allCards.find(function(c){ return c.id === editingCardId; });
-    if (card) existingUrl = card.frontImageUrl || null;
-  }
-
-  var fileInput = document.getElementById(fileInputId);
-  var hasFile = fileInput.files && fileInput.files[0];
-
-  if (!hasFile && !existingUrl) {
+  if (!pendingAIImages.length) {
     toast('Please add an image first, then tap Fill from image');
     return;
   }
 
   var apiKey = localStorage.getItem('anthropic_api_key');
-  if (!apiKey) {
-    openModal('modal-apikey');
-    return;
-  }
+  if (!apiKey) { openModal('modal-apikey'); return; }
 
-  runAIFill(type, fileInput.files[0] || null, existingUrl, apiKey);
+  runAIFill(type, pendingAIImages, apiKey);
 }
 
 function saveApiKeyAndAnalyse() {
@@ -1881,33 +1897,49 @@ function saveApiKeyAndAnalyse() {
   if (!key) { toast('Please enter your API key'); return; }
   localStorage.setItem('anthropic_api_key', key);
   closeModal('modal-apikey');
-
-  var type = pendingAIType;
-  var fileInputId = type === 'stamp' ? 's-img' : 'f-img-front';
-  var fileInput = document.getElementById(fileInputId);
-  var existingUrl = null;
-  if (type === 'stamp' && editingStampId) {
-    var st = allStamps.find(function(s){ return s.id === editingStampId; });
-    if (st) existingUrl = st.imageUrl || null;
-  } else if (type === 'postcard' && editingCardId) {
-    var card = allCards.find(function(c){ return c.id === editingCardId; });
-    if (card) existingUrl = card.frontImageUrl || null;
-  }
-  runAIFill(type, fileInput.files[0] || null, existingUrl, key);
+  runAIFill(pendingAIType, pendingAIImages, key);
 }
 
-function runAIFill(type, file, existingUrl, apiKey) {
+function imgToBase64(src) {
+  return new Promise(function(resolve, reject) {
+    function fromBlob(blob) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var d = e.target.result;
+        resolve({ b64: d.split(',')[1], mime: d.split(';')[0].split(':')[1] });
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    }
+    if (src.file) {
+      fromBlob(src.file);
+    } else {
+      fetch(src.url).then(function(r){ return r.blob(); }).then(fromBlob).catch(reject);
+    }
+  });
+}
+
+function runAIFill(type, images, apiKey) {
   var btnId = type === 'stamp' ? 'btn-ai-stamp' : 'btn-ai-postcard';
   var btn = document.getElementById(btnId);
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Analysing…';
 
-  function doAnalyse(b64, mime) {
+  Promise.all(images.map(imgToBase64)).then(function(encoded) {
+    var hasBoth = type === 'postcard' && encoded.length > 1;
+
     var prompt = type === 'stamp'
       ? 'Analyse this postage stamp image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: description, country, year, denomination, colour, condition (one of: Mint Fine Good Fair Poor), used (one of: used unused). Leave fields as empty string if uncertain.'
-      : 'Analyse this vintage postcard image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: caption, publisher, theme, era, condition (one of: Mint Good Fair Poor), isOriginal (one of: original reprint), notes (any interesting details). Leave fields as empty string if uncertain.';
+      : hasBoth
+        ? 'Analyse this vintage postcard. The first image is the front (picture side); the second is the back which may show the publisher, printed caption, series number, card number, postmarks and any written message. Return ONLY a JSON object (no markdown) with these fields where you can determine them: caption, publisher, seriesNo, cardNo, theme, era, condition (one of: Mint Good Fair Poor), isOriginal (one of: original reprint), notes (postmarks, message, or anything interesting). Leave fields as empty string if uncertain.'
+        : 'Analyse this vintage postcard image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: caption, publisher, theme, era, condition (one of: Mint Good Fair Poor), isOriginal (one of: original reprint), notes (any interesting details). Leave fields as empty string if uncertain.';
 
-    fetch('https://api.anthropic.com/v1/messages', {
+    var content = encoded.map(function(e) {
+      return { type: 'image', source: { type: 'base64', media_type: e.mime, data: e.b64 } };
+    });
+    content.push({ type: 'text', text: prompt });
+
+    return fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'x-api-key': apiKey,
@@ -1918,61 +1950,33 @@ function runAIFill(type, file, existingUrl, apiKey) {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 512,
-        messages: [{ role: 'user', content: [
-          { type: 'image', source: { type: 'base64', media_type: mime, data: b64 } },
-          { type: 'text', text: prompt }
-        ]}]
+        messages: [{ role: 'user', content: content }]
       })
-    })
-    .then(function(res) {
-      if (!res.ok) return res.json().then(function(e){ throw new Error(e.error ? e.error.message : 'API error ' + res.status); });
-      return res.json();
-    })
-    .then(function(data) {
-      var text = data.content[0].text.trim();
-      var jsonStr = text.replace(/^```[a-z]*\n?/,'').replace(/```$/,'').trim();
-      var result = JSON.parse(jsonStr);
-      applyAIResult(result, type);
-      toast('Fields filled ✓ — please check and correct anything');
-    })
-    .catch(function(err) {
-      if (err.message.includes('API key') || err.message.includes('401')) {
-        localStorage.removeItem('anthropic_api_key');
-        toast('API key error — tap Fill again to re-enter your key');
-      } else {
-        toast('AI fill failed — ' + err.message);
-      }
-    })
-    .finally(function() {
-      btn.disabled = false;
-      btn.innerHTML = '✨ Fill form from image';
     });
-  }
-
-  if (file) {
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      var dataUrl = e.target.result;
-      var mime = dataUrl.split(';')[0].split(':')[1];
-      var b64  = dataUrl.split(',')[1];
-      doAnalyse(b64, mime);
-    };
-    reader.readAsDataURL(file);
-  } else {
-    fetch(existingUrl)
-      .then(function(r){ return r.blob(); })
-      .then(function(blob) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-          var dataUrl = e.target.result;
-          var mime = dataUrl.split(';')[0].split(':')[1];
-          var b64  = dataUrl.split(',')[1];
-          doAnalyse(b64, mime);
-        };
-        reader.readAsDataURL(blob);
-      })
-      .catch(function(){ toast('Could not load existing image for analysis'); btn.disabled = false; btn.innerHTML = '✨ Fill form from image'; });
-  }
+  })
+  .then(function(res) {
+    if (!res.ok) return res.json().then(function(e){ throw new Error(e.error ? e.error.message : 'API error ' + res.status); });
+    return res.json();
+  })
+  .then(function(data) {
+    var text = data.content[0].text.trim();
+    var jsonStr = text.replace(/^```[a-z]*\n?/,'').replace(/```$/,'').trim();
+    var result = JSON.parse(jsonStr);
+    applyAIResult(result, type);
+    toast('Fields filled ✓ — please check and correct anything');
+  })
+  .catch(function(err) {
+    if (err.message && (err.message.includes('API key') || err.message.includes('401'))) {
+      localStorage.removeItem('anthropic_api_key');
+      toast('API key error — tap Fill again to re-enter your key');
+    } else {
+      toast('AI fill failed — ' + (err.message || err));
+    }
+  })
+  .finally(function() {
+    btn.disabled = false;
+    btn.innerHTML = '✨ Fill form from image';
+  });
 }
 
 function applyAIResult(data, type) {
@@ -1983,6 +1987,8 @@ function applyAIResult(data, type) {
   if (type === 'postcard') {
     set('f-caption',   data.caption);
     set('f-publisher', data.publisher);
+    set('f-series',    data.seriesNo);
+    set('f-cardno',    data.cardNo);
     set('f-theme',     data.theme);
     set('f-era',       data.era);
     set('f-condition', data.condition);
