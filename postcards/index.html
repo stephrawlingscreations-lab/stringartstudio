@@ -713,7 +713,7 @@
       </div>
       <div class="form-full" style="padding-top:4px;">
         <button type="button" class="btn-ai" id="btn-ai-postcard" onclick="fillFromImage('postcard')">✨ Fill form from image</button>
-        <div class="ai-hint">Uses AI to read the card and pre-fill the fields above</div>
+        <div class="ai-hint">Uses AI to read the card and pre-fill the fields above &nbsp;·&nbsp; <button type="button" onclick="changeApiKey()" style="background:none;border:none;color:var(--muted);font-size:0.75rem;cursor:pointer;padding:0;text-decoration:underline">Change API key</button></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -823,7 +823,7 @@
       </div>
       <div class="form-full" style="padding-top:4px;">
         <button type="button" class="btn-ai" id="btn-ai-stamp" onclick="fillFromImage('stamp')">✨ Fill form from image</button>
-        <div class="ai-hint">Uses AI to read the stamp and pre-fill the fields above</div>
+        <div class="ai-hint">Uses AI to read the stamp and pre-fill the fields above &nbsp;·&nbsp; <button type="button" onclick="changeApiKey()" style="background:none;border:none;color:var(--muted);font-size:0.75rem;cursor:pointer;padding:0;text-decoration:underline">Change API key</button></div>
       </div>
     </div>
     <div class="modal-footer">
@@ -911,6 +911,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn-ghost" onclick="closeModal('modal-apikey')">Cancel</button>
+      <button class="btn-ghost" onclick="testApiConnection(this)">Test connection</button>
       <button class="btn-save" onclick="saveApiKeyAndAnalyse()">Save &amp; Fill</button>
     </div>
   </div>
@@ -1900,6 +1901,36 @@ function saveApiKeyAndAnalyse() {
   runAIFill(pendingAIType, pendingAIImages, key);
 }
 
+function changeApiKey() {
+  localStorage.removeItem('openai_api_key');
+  document.getElementById('apikey-input').value = '';
+  openModal('modal-apikey');
+}
+
+function testApiConnection(btn) {
+  var key = (document.getElementById('apikey-input').value || '').trim();
+  if (!key) { toast('Enter your API key first'); return; }
+  var orig = btn.textContent;
+  btn.textContent = 'Testing…';
+  btn.disabled = true;
+  fetch('https://api.openai.com/v1/models', {
+    headers: { 'Authorization': 'Bearer ' + key }
+  }).then(function(res) {
+    if (res.ok) {
+      toast('Connection OK ✓ — API key is valid');
+    } else {
+      return res.json().then(function(e) {
+        toast('Key error: ' + (e.error ? e.error.message : 'status ' + res.status));
+      });
+    }
+  }).catch(function() {
+    toast('Cannot reach OpenAI — try a different network or VPN');
+  }).finally(function() {
+    btn.textContent = orig;
+    btn.disabled = false;
+  });
+}
+
 function compressToJpeg(file) {
   return new Promise(function(resolve) {
     var MAX = 1024;
@@ -1971,7 +2002,7 @@ function runAIFill(type, images, apiKey) {
     return fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + apiKey,
+        'Authorization': 'Bearer ' + apiKey.trim(),
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -1993,11 +2024,15 @@ function runAIFill(type, images, apiKey) {
     toast('Fields filled ✓ — please check and correct anything');
   })
   .catch(function(err) {
-    if (err.message && (err.message.includes('API key') || err.message.includes('401') || err.message.includes('Incorrect'))) {
+    console.error('AI fill error:', err);
+    var msg = err.message || String(err);
+    if (msg.includes('API key') || msg.includes('401') || msg.includes('Incorrect') || msg.includes('invalid_api_key')) {
       localStorage.removeItem('openai_api_key');
-      toast('API key error — tap Fill again to re-enter your key');
+      toast('API key error — tap Change API key and re-enter');
+    } else if (msg === 'Failed to fetch' || msg === 'Load failed' || msg.includes('NetworkError')) {
+      toast('Cannot reach OpenAI — try Test connection in the API key screen, or a different network');
     } else {
-      toast('AI fill failed — ' + (err.message || err));
+      toast('AI fill failed — ' + msg);
     }
   })
   .finally(function() {
