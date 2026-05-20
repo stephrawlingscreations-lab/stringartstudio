@@ -1939,7 +1939,7 @@ function runAIFill(type, images, apiKey) {
     });
     parts.push({ text: prompt });
 
-    return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + encodeURIComponent(apiKey), {
+    return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(apiKey), {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ contents: [{ parts: parts }] })
