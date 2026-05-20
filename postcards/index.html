@@ -900,14 +900,14 @@
       <button class="modal-close" onclick="closeModal('modal-apikey')">×</button>
     </div>
     <p style="font-size:0.875rem;color:var(--muted);margin-bottom:12px;line-height:1.6">
-      AI fill uses the Claude API to read your image and fill in the form. You need an Anthropic API key — it's saved in your browser only and never sent anywhere except Anthropic.
+      AI fill uses Google Gemini to read your image and fill in the form. Your key is saved in your browser only.
     </p>
     <p style="font-size:0.8rem;color:var(--muted);margin-bottom:16px;">
-      Get a free key at <strong>console.anthropic.com</strong>. Each image analysis costs less than a penny.
+      Get a <strong>free</strong> key at <strong>aistudio.google.com</strong> — click "Get API key", no card needed.
     </p>
     <div class="form-group" style="margin-bottom:6px;">
-      <label class="form-label">Anthropic API Key</label>
-      <input type="password" id="apikey-input" class="form-input" placeholder="sk-ant-…">
+      <label class="form-label">Google Gemini API Key</label>
+      <input type="password" id="apikey-input" class="form-input" placeholder="AIza…">
     </div>
     <div class="modal-footer">
       <button class="btn-ghost" onclick="closeModal('modal-apikey')">Cancel</button>
@@ -1886,7 +1886,7 @@ function fillFromImage(type) {
     return;
   }
 
-  var apiKey = localStorage.getItem('anthropic_api_key');
+  var apiKey = localStorage.getItem('gemini_api_key');
   if (!apiKey) { openModal('modal-apikey'); return; }
 
   runAIFill(type, pendingAIImages, apiKey);
@@ -1895,7 +1895,7 @@ function fillFromImage(type) {
 function saveApiKeyAndAnalyse() {
   var key = (document.getElementById('apikey-input').value || '').trim();
   if (!key) { toast('Please enter your API key'); return; }
-  localStorage.setItem('anthropic_api_key', key);
+  localStorage.setItem('gemini_api_key', key);
   closeModal('modal-apikey');
   runAIFill(pendingAIType, pendingAIImages, key);
 }
@@ -1934,24 +1934,15 @@ function runAIFill(type, images, apiKey) {
         ? 'Analyse this vintage postcard. The first image is the front (picture side); the second is the back which may show the publisher, printed caption, series number, card number, postmarks and any written message. Return ONLY a JSON object (no markdown) with these fields where you can determine them: caption, publisher, seriesNo, cardNo, theme, era, condition (one of: Mint Good Fair Poor), isOriginal (one of: original reprint), notes (postmarks, message, or anything interesting). Leave fields as empty string if uncertain.'
         : 'Analyse this vintage postcard image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: caption, publisher, theme, era, condition (one of: Mint Good Fair Poor), isOriginal (one of: original reprint), notes (any interesting details). Leave fields as empty string if uncertain.';
 
-    var content = encoded.map(function(e) {
-      return { type: 'image', source: { type: 'base64', media_type: e.mime, data: e.b64 } };
+    var parts = encoded.map(function(e) {
+      return { inline_data: { mime_type: e.mime, data: e.b64 } };
     });
-    content.push({ type: 'text', text: prompt });
+    parts.push({ text: prompt });
 
-    return fetch('https://api.anthropic.com/v1/messages', {
+    return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + encodeURIComponent(apiKey), {
       method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-request-origin': 'user-intent',
-        'content-type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 512,
-        messages: [{ role: 'user', content: content }]
-      })
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: parts }] })
     });
   })
   .then(function(res) {
@@ -1959,7 +1950,7 @@ function runAIFill(type, images, apiKey) {
     return res.json();
   })
   .then(function(data) {
-    var text = data.content[0].text.trim();
+    var text = data.candidates[0].content.parts[0].text.trim();
     var jsonStr = text.replace(/^```[a-z]*\n?/,'').replace(/```$/,'').trim();
     var result = JSON.parse(jsonStr);
     applyAIResult(result, type);
@@ -1967,7 +1958,7 @@ function runAIFill(type, images, apiKey) {
   })
   .catch(function(err) {
     if (err.message && (err.message.includes('API key') || err.message.includes('401'))) {
-      localStorage.removeItem('anthropic_api_key');
+      localStorage.removeItem('gemini_api_key');
       toast('API key error — tap Fill again to re-enter your key');
     } else {
       toast('AI fill failed — ' + (err.message || err));
