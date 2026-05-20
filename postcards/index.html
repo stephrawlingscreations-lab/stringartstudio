@@ -900,14 +900,14 @@
       <button class="modal-close" onclick="closeModal('modal-apikey')">×</button>
     </div>
     <p style="font-size:0.875rem;color:var(--muted);margin-bottom:12px;line-height:1.6">
-      AI fill uses Google Gemini to read your image and fill in the form. Your key is saved in your browser only.
+      AI fill uses Claude (Anthropic) to read your image and fill in the form. Your key is saved in your browser only.
     </p>
     <p style="font-size:0.8rem;color:var(--muted);margin-bottom:16px;">
-      Get a free key at <strong>aistudio.google.com</strong> → Get API key. No billing needed — free tier covers personal use.
+      Get a key at <strong>console.anthropic.com</strong> → API keys.
     </p>
     <div class="form-group" style="margin-bottom:6px;">
-      <label class="form-label">Google Gemini API Key</label>
-      <input type="password" id="apikey-input" class="form-input" placeholder="AIza…">
+      <label class="form-label">Anthropic API Key</label>
+      <input type="password" id="apikey-input" class="form-input" placeholder="sk-ant-…">
     </div>
     <div class="modal-footer">
       <button class="btn-ghost" onclick="closeModal('modal-apikey')">Cancel</button>
@@ -1887,22 +1887,24 @@ function fillFromImage(type) {
     return;
   }
 
-  var apiKey = localStorage.getItem('gemini_api_key');
+  var apiKey = localStorage.getItem('anthropic_api_key');
   if (!apiKey) { openModal('modal-apikey'); return; }
 
   runAIFill(type, pendingAIImages, apiKey);
 }
 
+var AI_PROXY = 'https://postcard-ai.stephrawlingscreations.workers.dev';
+
 function saveApiKeyAndAnalyse() {
   var key = (document.getElementById('apikey-input').value || '').trim();
   if (!key) { toast('Please enter your API key'); return; }
-  localStorage.setItem('gemini_api_key', key);
+  localStorage.setItem('anthropic_api_key', key);
   closeModal('modal-apikey');
   runAIFill(pendingAIType, pendingAIImages, key);
 }
 
 function changeApiKey() {
-  localStorage.removeItem('gemini_api_key');
+  localStorage.removeItem('anthropic_api_key');
   document.getElementById('apikey-input').value = '';
   openModal('modal-apikey');
 }
@@ -1913,8 +1915,11 @@ function testApiConnection(btn) {
   var orig = btn.textContent;
   btn.textContent = 'Testing…';
   btn.disabled = true;
-  fetch('https://generativelanguage.googleapis.com/v1beta/models?key=' + encodeURIComponent(key))
-  .then(function(res) {
+  fetch(AI_PROXY, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ apiKey: key, messages: [{ role: 'user', content: 'Hi' }] })
+  }).then(function(res) {
     if (res.ok) {
       toast('Connection OK ✓ — API key is valid');
     } else {
@@ -1923,7 +1928,7 @@ function testApiConnection(btn) {
       });
     }
   }).catch(function() {
-    toast('Cannot reach Google AI — check your internet connection');
+    toast('Cannot reach AI proxy — check your internet connection');
   }).finally(function() {
     btn.textContent = orig;
     btn.disabled = false;
@@ -1992,18 +1997,20 @@ function runAIFill(type, images, apiKey) {
         ? 'Analyse this vintage postcard. The first image is the front (picture side); the second is the back which may show the publisher, printed caption, series number, card number, postmarks and any written message. Return ONLY a JSON object (no markdown) with these fields where you can determine them: caption, publisher, seriesNo, cardNo, theme, era, condition (one of: Mint Good Fair Poor), isOriginal (one of: original reprint), notes (postmarks, message, or anything interesting). Leave fields as empty string if uncertain.'
         : 'Analyse this vintage postcard image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: caption, publisher, theme, era, condition (one of: Mint Good Fair Poor), isOriginal (one of: original reprint), notes (any interesting details). Leave fields as empty string if uncertain.';
 
-    var parts = encoded.map(function(e) {
+    var content = encoded.map(function(e) {
       return e.url
-        ? { fileData: { mimeType: 'image/jpeg', fileUri: e.url } }
-        : { inlineData: { mimeType: e.mime, data: e.b64 } };
+        ? { type: 'image', source: { type: 'url', url: e.url } }
+        : { type: 'image', source: { type: 'base64', media_type: e.mime, data: e.b64 } };
     });
-    parts.push({ text: prompt });
+    content.push({ type: 'text', text: prompt });
 
-    var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + encodeURIComponent(apiKey.trim());
-    return fetch(url, {
+    return fetch(AI_PROXY, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: parts }] })
+      body: JSON.stringify({
+        apiKey: apiKey.trim(),
+        messages: [{ role: 'user', content: content }]
+      })
     });
   })
   .then(function(res) {
@@ -2011,7 +2018,7 @@ function runAIFill(type, images, apiKey) {
     return res.json();
   })
   .then(function(data) {
-    var text = data.candidates[0].content.parts[0].text.trim();
+    var text = data.content[0].text.trim();
     var jsonStr = text.replace(/^```[a-z]*\n?/,'').replace(/```$/,'').trim();
     var result = JSON.parse(jsonStr);
     applyAIResult(result, type);
@@ -2020,13 +2027,11 @@ function runAIFill(type, images, apiKey) {
   .catch(function(err) {
     console.error('AI fill error:', err);
     var msg = err.message || String(err);
-    if (msg.includes('API_KEY') || msg.includes('API key') || msg.includes('invalid') || msg.includes('401')) {
-      localStorage.removeItem('gemini_api_key');
+    if (msg.includes('API key') || msg.includes('401') || msg.includes('Incorrect') || msg.includes('authentication')) {
+      localStorage.removeItem('anthropic_api_key');
       toast('API key error — tap Change API key and re-enter');
     } else if (msg === 'Failed to fetch' || msg === 'Load failed' || msg.includes('NetworkError')) {
-      toast('Cannot reach Google AI — check your internet connection');
-    } else if (msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('limit: 0')) {
-      toast('Gemini quota exceeded — your API key is on a billing-enabled project which removes the free tier. Create a new key in a new project at aistudio.google.com.');
+      toast('Cannot reach AI proxy — check your internet connection');
     } else {
       toast('AI fill failed — ' + msg.slice(0, 120));
     }
