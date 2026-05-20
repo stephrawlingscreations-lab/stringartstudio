@@ -1913,12 +1913,19 @@ function testApiConnection(btn) {
   var orig = btn.textContent;
   btn.textContent = 'Testing…';
   btn.disabled = true;
-  fetch('https://api.anthropic.com/v1/models', {
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
     headers: {
       'x-api-key': key,
       'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-request-origin': 'user-intent'
-    }
+      'anthropic-dangerous-request-origin': 'user-intent',
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'claude-3-5-haiku-20241022',
+      max_tokens: 5,
+      messages: [{ role: 'user', content: 'Hi' }]
+    })
   }).then(function(res) {
     if (res.ok) {
       toast('Connection OK ✓ — API key is valid');
@@ -1928,7 +1935,7 @@ function testApiConnection(btn) {
       });
     }
   }).catch(function() {
-    toast('Cannot reach Anthropic API — try a different network');
+    toast('Cannot reach Anthropic API — browser requests are blocked by CORS');
   }).finally(function() {
     btn.textContent = orig;
     btn.disabled = false;
