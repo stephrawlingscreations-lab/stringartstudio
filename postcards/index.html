@@ -900,14 +900,14 @@
       <button class="modal-close" onclick="closeModal('modal-apikey')">×</button>
     </div>
     <p style="font-size:0.875rem;color:var(--muted);margin-bottom:12px;line-height:1.6">
-      AI fill uses the Claude API to read your image and fill in the form. Your key is saved in your browser only and never sent anywhere except Anthropic.
+      AI fill uses OpenAI to read your image and fill in the form. Your key is saved in your browser only.
     </p>
     <p style="font-size:0.8rem;color:var(--muted);margin-bottom:16px;">
-      Get a key at <strong>console.anthropic.com</strong> — add $5 credit (covers thousands of analyses).
+      Get a key at <strong>platform.openai.com</strong> → API keys. Add $5 credit — covers thousands of analyses.
     </p>
     <div class="form-group" style="margin-bottom:6px;">
-      <label class="form-label">Anthropic API Key</label>
-      <input type="password" id="apikey-input" class="form-input" placeholder="sk-ant-…">
+      <label class="form-label">OpenAI API Key</label>
+      <input type="password" id="apikey-input" class="form-input" placeholder="sk-…">
     </div>
     <div class="modal-footer">
       <button class="btn-ghost" onclick="closeModal('modal-apikey')">Cancel</button>
@@ -1886,7 +1886,7 @@ function fillFromImage(type) {
     return;
   }
 
-  var apiKey = localStorage.getItem('anthropic_api_key');
+  var apiKey = localStorage.getItem('openai_api_key');
   if (!apiKey) { openModal('modal-apikey'); return; }
 
   runAIFill(type, pendingAIImages, apiKey);
@@ -1895,7 +1895,7 @@ function fillFromImage(type) {
 function saveApiKeyAndAnalyse() {
   var key = (document.getElementById('apikey-input').value || '').trim();
   if (!key) { toast('Please enter your API key'); return; }
-  localStorage.setItem('anthropic_api_key', key);
+  localStorage.setItem('openai_api_key', key);
   closeModal('modal-apikey');
   runAIFill(pendingAIType, pendingAIImages, key);
 }
@@ -1935,20 +1935,18 @@ function runAIFill(type, images, apiKey) {
         : 'Analyse this vintage postcard image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: caption, publisher, theme, era, condition (one of: Mint Good Fair Poor), isOriginal (one of: original reprint), notes (any interesting details). Leave fields as empty string if uncertain.';
 
     var content = encoded.map(function(e) {
-      return { type: 'image', source: { type: 'base64', media_type: e.mime, data: e.b64 } };
+      return { type: 'image_url', image_url: { url: 'data:' + e.mime + ';base64,' + e.b64 } };
     });
     content.push({ type: 'text', text: prompt });
 
-    return fetch('https://api.anthropic.com/v1/messages', {
+    return fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-request-origin': 'user-intent',
-        'content-type': 'application/json'
+        'Authorization': 'Bearer ' + apiKey,
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'gpt-4o-mini',
         max_tokens: 512,
         messages: [{ role: 'user', content: content }]
       })
@@ -1959,15 +1957,15 @@ function runAIFill(type, images, apiKey) {
     return res.json();
   })
   .then(function(data) {
-    var text = data.content[0].text.trim();
+    var text = data.choices[0].message.content.trim();
     var jsonStr = text.replace(/^```[a-z]*\n?/,'').replace(/```$/,'').trim();
     var result = JSON.parse(jsonStr);
     applyAIResult(result, type);
     toast('Fields filled ✓ — please check and correct anything');
   })
   .catch(function(err) {
-    if (err.message && (err.message.includes('API key') || err.message.includes('401'))) {
-      localStorage.removeItem('anthropic_api_key');
+    if (err.message && (err.message.includes('API key') || err.message.includes('401') || err.message.includes('Incorrect'))) {
+      localStorage.removeItem('openai_api_key');
       toast('API key error — tap Fill again to re-enter your key');
     } else {
       toast('AI fill failed — ' + (err.message || err));
