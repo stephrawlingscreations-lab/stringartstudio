@@ -1992,10 +1992,10 @@ function runAIFill(type, images, apiKey) {
     var hasBoth = type === 'postcard' && encoded.length > 1;
 
     var prompt = type === 'stamp'
-      ? 'Analyse this postage stamp image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: description, country, year, denomination, colour, condition (one of: Mint Fine Good Fair Poor), used (one of: used unused). Leave fields as empty string if uncertain.'
+      ? 'Analyse this postage stamp image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: description, country, year, denomination, colour, condition (one of: Mint Fine Good Fair Poor), used (one of: used unused), estimatedValue (estimated GBP value as a number, e.g. 2.50 — leave as empty string if you cannot estimate). Leave fields as empty string if uncertain.'
       : hasBoth
-        ? 'Analyse this vintage postcard. The first image is the front (picture side); the second is the back which may show the publisher, printed caption, series number, card number, postmarks and any written message. Return ONLY a JSON object (no markdown) with these fields where you can determine them: caption, publisher, seriesNo, cardNo, theme, era, condition (one of: Mint Good Fair Poor), isOriginal (one of: original reprint), notes (postmarks, message, or anything interesting). Leave fields as empty string if uncertain.'
-        : 'Analyse this vintage postcard image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: caption, publisher, theme, era, condition (one of: Mint Good Fair Poor), isOriginal (one of: original reprint), notes (any interesting details). Leave fields as empty string if uncertain.';
+        ? 'Analyse this vintage postcard. The first image is the front (picture side); the second is the back which may show the publisher, printed caption, series number, card number, postmarks and any written message. Return ONLY a JSON object (no markdown) with these fields where you can determine them: caption, publisher, seriesNo, cardNo, theme, era, condition (one of: Mint Good Fair Poor), isOriginal (one of: original reprint), notes (postmarks, message, or anything interesting), estimatedValue (estimated GBP value as a number, e.g. 2.50 — leave as empty string if you cannot estimate). Leave fields as empty string if uncertain.'
+        : 'Analyse this vintage postcard image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: caption, publisher, theme, era, condition (one of: Mint Good Fair Poor), isOriginal (one of: original reprint), notes (any interesting details), estimatedValue (estimated GBP value as a number, e.g. 2.50 — leave as empty string if you cannot estimate). Leave fields as empty string if uncertain.';
 
     var content = encoded.map(function(e) {
       return e.url
@@ -2058,6 +2058,7 @@ function applyAIResult(data, type) {
     set('f-condition', data.condition);
     set('f-original',  data.isOriginal);
     set('f-notes',     data.notes);
+    set('f-value',     data.estimatedValue);
   } else {
     set('s-description', data.description);
     set('s-country',     data.country);
@@ -2066,6 +2067,7 @@ function applyAIResult(data, type) {
     set('s-colour',      data.colour);
     set('s-condition',   data.condition);
     set('s-used',        data.used);
+    set('s-value',       data.estimatedValue);
   }
 }
 
