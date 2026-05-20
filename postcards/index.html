@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Postcard Collector</title>
+  <title>Postcard &amp; Stamp Collector</title>
   <meta name="robots" content="noindex, nofollow">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Postcards">
+  <meta name="apple-mobile-web-app-title" content="Collector">
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -109,10 +109,26 @@
       border: none; border-radius: 10px;
       padding: 9px 16px; font-size: 0.875rem; font-weight: 600;
       cursor: pointer; white-space: nowrap; font-family: inherit;
-      transition: background 0.15s;
-      flex-shrink: 0;
+      transition: background 0.15s; flex-shrink: 0;
     }
     .btn-add:hover { background: var(--sage-dk); }
+
+    /* ── Tab bar ── */
+    .tab-bar {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex; padding: 0 20px;
+      position: sticky; top: 63px; z-index: 49;
+    }
+    .tab-btn {
+      padding: 11px 18px; font-size: 0.875rem; font-weight: 600;
+      color: var(--muted); border: none; background: none;
+      cursor: pointer; border-bottom: 2px solid transparent;
+      margin-bottom: -1px; font-family: inherit;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab-btn.active { color: var(--sage-dk); border-bottom-color: var(--sage); }
+    .tab-btn:hover:not(.active) { color: var(--text); }
 
     /* ── Main ── */
     main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 80px; }
@@ -137,8 +153,7 @@
       width: 100%; padding: 9px 12px 9px 34px;
       border: 1px solid var(--border); border-radius: 10px;
       font-size: 0.875rem; background: var(--card); color: var(--text);
-      outline: none; font-family: inherit;
-      transition: border-color 0.15s;
+      outline: none; font-family: inherit; transition: border-color 0.15s;
     }
     .search-input:focus { border-color: var(--sage); }
     .filter-select {
@@ -148,19 +163,15 @@
     }
     .filter-select:focus { border-color: var(--sage); }
 
-    /* ── Gallery Grid ── */
+    /* ── Postcard gallery grid ── */
     .gallery-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
       gap: 14px;
     }
-
     .postcard-tile {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      cursor: pointer;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden; cursor: pointer;
       transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
     }
     .postcard-tile:hover {
@@ -171,8 +182,7 @@
     .tile-thumb {
       width: 100%; aspect-ratio: 4/3;
       background: #f0ebe3;
-      display: flex; align-items: center; justify-content: center;
-      overflow: hidden;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
     }
     .tile-thumb img { width: 100%; height: 100%; object-fit: cover; }
     .tile-thumb-placeholder { font-size: 2.2rem; opacity: 0.2; }
@@ -184,22 +194,61 @@
     }
     .tile-publisher {
       font-size: 0.71rem; color: var(--muted);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      margin-bottom: 7px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 7px;
     }
     .tile-badges { display: flex; gap: 4px; flex-wrap: wrap; }
+
+    /* ── Stamp gallery grid ── */
+    .stamp-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 14px;
+    }
+    .stamp-tile {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden; cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    }
+    .stamp-tile:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(105,143,128,0.15);
+      border-color: var(--sage);
+    }
+    .stamp-thumb {
+      width: 100%; aspect-ratio: 3/4;
+      background: #f0ebe3;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .stamp-thumb img { width: 100%; height: 100%; object-fit: contain; padding: 6px; }
+    .stamp-thumb-placeholder { font-size: 2rem; opacity: 0.2; }
+    .stamp-body { padding: 9px 10px 11px; }
+    .stamp-denom {
+      font-size: 0.88rem; font-weight: 700; line-height: 1.2; margin-bottom: 2px;
+    }
+    .stamp-meta {
+      font-size: 0.71rem; color: var(--muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px;
+    }
+    .stamp-desc {
+      font-size: 0.75rem; color: var(--text); line-height: 1.3;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden; margin-bottom: 6px;
+    }
 
     /* ── Badges ── */
     .badge {
       font-size: 0.63rem; font-weight: 700;
       padding: 2px 6px; border-radius: 999px; white-space: nowrap;
     }
-    .badge-Mint    { background: var(--green);  color: var(--green-text); }
-    .badge-Good    { background: var(--blue);   color: var(--blue-text); }
-    .badge-Fair    { background: var(--amber);  color: var(--amber-text); }
-    .badge-Poor    { background: var(--rose);   color: var(--rose-text); }
-    .badge-needed  { background: #fef3c7; color: #92400e; }
-    .badge-value   { background: var(--sage-lt); color: var(--sage-dk); }
+    .badge-Mint   { background: var(--green);  color: var(--green-text); }
+    .badge-Fine   { background: var(--blue);   color: var(--blue-text); }
+    .badge-Good   { background: var(--blue);   color: var(--blue-text); }
+    .badge-Fair   { background: var(--amber);  color: var(--amber-text); }
+    .badge-Poor   { background: var(--rose);   color: var(--rose-text); }
+    .badge-needed { background: #fef3c7; color: #92400e; }
+    .badge-value  { background: var(--sage-lt); color: var(--sage-dk); }
+    .badge-used   { background: #f3e8ff; color: #6b21a8; }
+    .badge-unused { background: var(--green);  color: var(--green-text); }
 
     /* ── Empty / Loading ── */
     .empty-state {
@@ -228,7 +277,7 @@
       padding: 9px 20px; font-size: 0.875rem; font-weight: 600;
       cursor: pointer; font-family: inherit; transition: background 0.15s;
     }
-    .btn-save:hover  { background: var(--sage-dk); }
+    .btn-save:hover    { background: var(--sage-dk); }
     .btn-save:disabled { opacity: 0.6; cursor: default; }
     .btn-danger {
       background: none; border: 1px solid #f0d0d0; border-radius: 10px;
@@ -247,15 +296,13 @@
     /* ── Modal ── */
     .modal-overlay {
       display: none; position: fixed; inset: 0; z-index: 100;
-      background: rgba(0,0,0,0.45);
-      padding: 20px; overflow-y: auto;
+      background: rgba(0,0,0,0.45); padding: 20px; overflow-y: auto;
     }
     .modal-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
     .modal {
       background: var(--card); border-radius: 20px;
       padding: 26px; width: 100%; max-width: 600px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-      margin: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2); margin: auto;
     }
     .modal-header {
       display: flex; align-items: center; justify-content: space-between;
@@ -317,24 +364,29 @@
     }
     .upload-label { font-size: 0.75rem; color: var(--muted); pointer-events: none; line-height: 1.5; }
 
-    /* ── Detail modal ── */
+    /* ── Detail modal (postcards) ── */
     .detail-images { display: flex; gap: 10px; margin-bottom: 20px; }
     .detail-img-slot {
       flex: 1; aspect-ratio: 4/3;
       background: #f0ebe3; border-radius: 10px; overflow: hidden;
-      display: flex; align-items: center; justify-content: center;
-      position: relative;
+      display: flex; align-items: center; justify-content: center; position: relative;
     }
-    .detail-img-slot img {
-      width: 100%; height: 100%; object-fit: contain; cursor: zoom-in;
-    }
+    .detail-img-slot img { width: 100%; height: 100%; object-fit: contain; cursor: zoom-in; }
     .detail-img-label {
       position: absolute; bottom: 5px; left: 7px;
       font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
-      background: rgba(0,0,0,0.45); color: #fff;
-      padding: 2px 6px; border-radius: 4px;
+      background: rgba(0,0,0,0.45); color: #fff; padding: 2px 6px; border-radius: 4px;
     }
     .detail-img-placeholder { font-size: 2rem; opacity: 0.18; }
+
+    /* ── Detail modal (stamps) ── */
+    .stamp-detail-img {
+      max-width: 240px; margin: 0 auto 20px;
+      aspect-ratio: 3/4; background: #f0ebe3; border-radius: 10px; overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .stamp-detail-img img { width: 100%; height: 100%; object-fit: contain; padding: 12px; cursor: zoom-in; }
+    .stamp-detail-img-placeholder { font-size: 2.5rem; opacity: 0.18; }
 
     .detail-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
     .detail-field  { display: flex; flex-direction: column; gap: 2px; }
@@ -360,8 +412,7 @@
     .toast {
       background: #2C3E35; color: #fff; padding: 10px 16px;
       border-radius: 10px; font-size: 0.875rem; font-weight: 500;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-      animation: toast-in 0.2s ease;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2); animation: toast-in 0.2s ease;
     }
     @keyframes toast-in { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
 
@@ -378,13 +429,16 @@
     @media (max-width: 580px) {
       header { padding: 12px 14px; }
       main   { padding: 16px 12px 70px; }
+      .tab-bar { top: 59px; }
       .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 10px; }
+      .stamp-grid   { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
       .modal { padding: 18px 14px; }
       .form-grid { grid-template-columns: 1fr; }
       .image-upload-row { grid-template-columns: 1fr; }
       .detail-images { flex-direction: column; }
       .detail-fields { grid-template-columns: 1fr; }
       .btn-add span.btn-label { display: none; }
+      .stamp-detail-img { max-width: 180px; }
     }
   </style>
 </head>
@@ -394,7 +448,7 @@
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo">📮</div>
-    <h1>Postcard Collector</h1>
+    <h1>Postcard &amp; Stamp Collector</h1>
     <p>Sign in to access your collection</p>
     <button class="btn-google" onclick="startSignIn()">
       <svg viewBox="0 0 24 24" width="20" height="20">
@@ -418,84 +472,119 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><polyline points="15 18 9 12 15 6"/></svg>
         My Hub
       </a>
-      <div class="header-icon">📮</div>
+      <div class="header-icon" id="header-icon">📮</div>
       <div>
-        <div class="header-title">Postcard Collector</div>
+        <div class="header-title" id="header-title">Postcards</div>
         <div class="header-sub" id="header-sub">Loading…</div>
       </div>
     </div>
-    <button class="btn-add" onclick="openAddModal()">
+    <button class="btn-add" id="btn-add-main" onclick="openAddModal()">
       + <span class="btn-label">Add Card</span>
     </button>
   </header>
 
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab-postcards" onclick="switchView('postcards')">📮 Postcards</button>
+    <button class="tab-btn"        id="tab-stamps"    onclick="switchView('stamps')">🏷️ Stamps</button>
+  </div>
+
   <main>
 
-    <!-- Stats -->
-    <div class="stats-bar">
-      <div class="stat-pill">Total <strong id="stat-total">0</strong></div>
-      <div class="stat-pill">Est. value <strong id="stat-value">£0.00</strong></div>
-      <div class="stat-pill">Need research <strong id="stat-research">0</strong></div>
-    </div>
-
-    <!-- Controls -->
-    <div class="controls">
-      <div class="search-wrap">
-        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <input type="text" id="search-input" class="search-input" placeholder="Search caption, publisher, tags…" oninput="filterAndRender()">
+    <!-- Postcards section -->
+    <div id="section-postcards">
+      <div class="stats-bar">
+        <div class="stat-pill">Total <strong id="stat-total">0</strong></div>
+        <div class="stat-pill">Est. value <strong id="stat-value">£0.00</strong></div>
+        <div class="stat-pill">Need research <strong id="stat-research">0</strong></div>
       </div>
-      <select class="filter-select" id="filter-condition" onchange="filterAndRender()">
-        <option value="">All conditions</option>
-        <option value="Mint">Mint</option>
-        <option value="Good">Good</option>
-        <option value="Fair">Fair</option>
-        <option value="Poor">Poor</option>
-      </select>
-      <select class="filter-select" id="filter-research" onchange="filterAndRender()">
-        <option value="">All research</option>
-        <option value="needed">Needs research</option>
-        <option value="in_progress">In progress</option>
-        <option value="done">Done</option>
-      </select>
-      <select class="filter-select" id="sort-by" onchange="filterAndRender()">
-        <option value="newest">Newest first</option>
-        <option value="oldest">Oldest first</option>
-        <option value="value_high">Highest value</option>
-        <option value="value_low">Lowest value</option>
-        <option value="publisher">Publisher A–Z</option>
-      </select>
+      <div class="controls">
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="search-input" class="search-input" placeholder="Search caption, publisher, tags…" oninput="filterAndRender()">
+        </div>
+        <select class="filter-select" id="filter-condition" onchange="filterAndRender()">
+          <option value="">All conditions</option>
+          <option value="Mint">Mint</option>
+          <option value="Good">Good</option>
+          <option value="Fair">Fair</option>
+          <option value="Poor">Poor</option>
+        </select>
+        <select class="filter-select" id="filter-research" onchange="filterAndRender()">
+          <option value="">All research</option>
+          <option value="needed">Needs research</option>
+          <option value="in_progress">In progress</option>
+          <option value="done">Done</option>
+        </select>
+        <select class="filter-select" id="sort-by" onchange="filterAndRender()">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="value_high">Highest value</option>
+          <option value="value_low">Lowest value</option>
+          <option value="publisher">Publisher A–Z</option>
+        </select>
+      </div>
+      <div class="gallery-grid" id="gallery-grid">
+        <div class="empty-state"><div class="empty-icon">📮</div><p>Loading your collection…</p></div>
+      </div>
     </div>
 
-    <!-- Gallery -->
-    <div class="gallery-grid" id="gallery-grid">
-      <div class="empty-state">
-        <div class="empty-icon">📮</div>
-        <p>Loading your collection…</p>
+    <!-- Stamps section -->
+    <div id="section-stamps" style="display:none">
+      <div class="stats-bar">
+        <div class="stat-pill">Total <strong id="s-stat-total">0</strong></div>
+        <div class="stat-pill">Est. value <strong id="s-stat-value">£0.00</strong></div>
+        <div class="stat-pill">Countries <strong id="s-stat-countries">0</strong></div>
+      </div>
+      <div class="controls">
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="s-search-input" class="search-input" placeholder="Search description, country, SG number…" oninput="filterAndRenderStamps()">
+        </div>
+        <select class="filter-select" id="s-filter-used" onchange="filterAndRenderStamps()">
+          <option value="">Used &amp; unused</option>
+          <option value="used">Used only</option>
+          <option value="unused">Unused only</option>
+        </select>
+        <select class="filter-select" id="s-filter-condition" onchange="filterAndRenderStamps()">
+          <option value="">All conditions</option>
+          <option value="Mint">Mint</option>
+          <option value="Fine">Fine</option>
+          <option value="Good">Good</option>
+          <option value="Fair">Fair</option>
+          <option value="Poor">Poor</option>
+        </select>
+        <select class="filter-select" id="s-sort-by" onchange="filterAndRenderStamps()">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="value_high">Highest value</option>
+          <option value="value_low">Lowest value</option>
+          <option value="country">Country A–Z</option>
+          <option value="year">Year</option>
+        </select>
+      </div>
+      <div class="stamp-grid" id="stamp-grid">
+        <div class="empty-state"><div class="empty-icon">🏷️</div><p>Loading your stamps…</p></div>
       </div>
     </div>
 
   </main>
-</div><!-- end #app -->
+</div>
 
 
-<!-- ══════════════════════════════════════
-     MODAL: Add / Edit Card
-══════════════════════════════════════ -->
+<!-- MODAL: Add / Edit Postcard -->
 <div class="modal-overlay" id="modal-form">
   <div class="modal">
     <div class="modal-header">
       <div class="modal-title" id="form-modal-title">Add Postcard</div>
       <button class="modal-close" onclick="closeModal('modal-form')">×</button>
     </div>
-
     <input type="hidden" id="f-id">
-
     <div class="form-grid">
-
       <div class="form-section-divider">Card Details</div>
-
       <div class="form-group form-full">
         <label class="form-label">Caption / Description</label>
         <input type="text" id="f-caption" class="form-input" placeholder="e.g. At the Seaside">
@@ -516,9 +605,7 @@
         <label class="form-label">Theme</label>
         <input type="text" id="f-theme" class="form-input" placeholder="e.g. Humour, Seaside">
       </div>
-
       <div class="form-section-divider">Classification</div>
-
       <div class="form-group">
         <label class="form-label">Era</label>
         <input type="text" id="f-era" class="form-input" placeholder="e.g. Edwardian, 1900–1910">
@@ -550,9 +637,7 @@
           <option value="done">Done</option>
         </select>
       </div>
-
       <div class="form-section-divider">Value &amp; Notes</div>
-
       <div class="form-group">
         <label class="form-label">Estimated Value (£)</label>
         <input type="number" id="f-value" class="form-input" placeholder="0.00" step="0.01" min="0">
@@ -573,9 +658,7 @@
         <label class="form-label">Notes</label>
         <textarea id="f-notes" class="form-textarea" placeholder="Postmarks, messages, condition details, anything interesting…"></textarea>
       </div>
-
       <div class="form-section-divider">Images</div>
-
       <div class="form-full">
         <div class="image-upload-row">
           <div class="image-upload-box">
@@ -590,9 +673,7 @@
           </div>
         </div>
       </div>
-
-    </div><!-- end form-grid -->
-
+    </div>
     <div class="modal-footer">
       <button class="btn-danger" id="btn-delete-card" onclick="deleteCard()" style="display:none">Delete</button>
       <button class="btn-ghost" onclick="closeModal('modal-form')">Cancel</button>
@@ -602,9 +683,113 @@
 </div>
 
 
-<!-- ══════════════════════════════════════
-     MODAL: Card Detail
-══════════════════════════════════════ -->
+<!-- MODAL: Add / Edit Stamp -->
+<div class="modal-overlay" id="modal-stamp-form">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="stamp-form-title">Add Stamp</div>
+      <button class="modal-close" onclick="closeModal('modal-stamp-form')">×</button>
+    </div>
+    <input type="hidden" id="s-id">
+    <div class="form-grid">
+      <div class="form-section-divider">Stamp Details</div>
+      <div class="form-group form-full">
+        <label class="form-label">Description</label>
+        <input type="text" id="s-description" class="form-input" placeholder="e.g. Penny Black, Machin Definitive">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Country</label>
+        <input type="text" id="s-country" class="form-input" placeholder="e.g. Great Britain">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Year of Issue</label>
+        <input type="text" id="s-year" class="form-input" placeholder="e.g. 1840">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Denomination</label>
+        <input type="text" id="s-denomination" class="form-input" placeholder="e.g. 1d, 2½p, £1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Series / Set Name</label>
+        <input type="text" id="s-series" class="form-input" placeholder="e.g. Machin, Castles">
+      </div>
+      <div class="form-section-divider">Catalogue Numbers</div>
+      <div class="form-group">
+        <label class="form-label">Stanley Gibbons No.</label>
+        <input type="text" id="s-sg" class="form-input" placeholder="e.g. SG 1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Scott No.</label>
+        <input type="text" id="s-scott" class="form-input" placeholder="e.g. 1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Colour</label>
+        <input type="text" id="s-colour" class="form-input" placeholder="e.g. Black, Carmine-rose">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Perforation</label>
+        <input type="text" id="s-perforation" class="form-input" placeholder="e.g. 14, imperf">
+      </div>
+      <div class="form-section-divider">Condition &amp; Status</div>
+      <div class="form-group">
+        <label class="form-label">Used / Unused</label>
+        <select id="s-used" class="form-select">
+          <option value="">Unknown</option>
+          <option value="unused">Unused</option>
+          <option value="used">Used</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Condition</label>
+        <select id="s-condition" class="form-select">
+          <option value="">Unknown</option>
+          <option value="Mint">Mint</option>
+          <option value="Fine">Fine</option>
+          <option value="Good">Good</option>
+          <option value="Fair">Fair</option>
+          <option value="Poor">Poor</option>
+        </select>
+      </div>
+      <div class="form-section-divider">Value &amp; Notes</div>
+      <div class="form-group">
+        <label class="form-label">Estimated Value (£)</label>
+        <input type="number" id="s-value" class="form-input" placeholder="0.00" step="0.01" min="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Duplicate Count</label>
+        <input type="number" id="s-dupes" class="form-input" placeholder="0" min="0">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Tags (comma-separated)</label>
+        <input type="text" id="s-tags" class="form-input" placeholder="e.g. rare, commemorative, definitive">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Album / Page Source</label>
+        <input type="text" id="s-album" class="form-input" placeholder="e.g. Album 1, Page 3">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Notes</label>
+        <textarea id="s-notes" class="form-textarea" placeholder="Watermark, gum, hinge remnants, anything interesting…"></textarea>
+      </div>
+      <div class="form-section-divider">Image</div>
+      <div class="form-full">
+        <div class="image-upload-box" style="max-width:200px;">
+          <input type="file" id="s-img" accept="image/*" onchange="previewImage(this,'prev-stamp','lbl-stamp')">
+          <img id="prev-stamp" class="upload-preview" alt="">
+          <div class="upload-label" id="lbl-stamp">📷 Stamp image<br><small>Tap to choose</small></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-danger" id="btn-delete-stamp" onclick="deleteStamp()" style="display:none">Delete</button>
+      <button class="btn-ghost" onclick="closeModal('modal-stamp-form')">Cancel</button>
+      <button class="btn-save" id="btn-save-stamp" onclick="saveStamp()">Save Stamp</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL: Postcard Detail -->
 <div class="modal-overlay" id="modal-detail">
   <div class="modal" style="max-width:660px;">
     <div class="modal-header">
@@ -619,6 +804,21 @@
 </div>
 
 
+<!-- MODAL: Stamp Detail -->
+<div class="modal-overlay" id="modal-stamp-detail">
+  <div class="modal" style="max-width:580px;">
+    <div class="modal-header">
+      <div class="modal-title" id="stamp-detail-title">Stamp</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn-edit" onclick="editCurrentStamp()">Edit</button>
+        <button class="modal-close" onclick="closeModal('modal-stamp-detail')">×</button>
+      </div>
+    </div>
+    <div id="stamp-detail-body"></div>
+  </div>
+</div>
+
+
 <!-- Lightbox -->
 <div id="lightbox" onclick="closeLightbox()">
   <img id="lightbox-img" src="" alt="">
@@ -629,10 +829,7 @@
 
 
 <script>
-// ═══════════════════════════════════════════════
-// FIREBASE INIT
-// ═══════════════════════════════════════════════
-
+// ── Firebase init ──
 firebase.initializeApp({
   apiKey:            'AIzaSyAcSc-3ejzUfaiods7fAGAH10EuVvZaL6U',
   authDomain:        'steph-rawlings-creations.firebaseapp.com',
@@ -647,14 +844,17 @@ var db      = firebase.firestore();
 var storage = firebase.storage();
 
 var ALLOWED = ['stephrawlingscreations@gmail.com', 'sdr22ie@gmail.com', 'sdr22uk@gmail.com'];
-var currentUser   = null;
-var allCards      = [];
-var editingCardId = null;
-var currentDetailId = null;
 
-// ═══════════════════════════════════════════════
-// AUTH
-// ═══════════════════════════════════════════════
+var currentUser        = null;
+var allCards           = [];
+var editingCardId      = null;
+var currentDetailId    = null;
+var allStamps          = [];
+var editingStampId     = null;
+var currentDetailStampId = null;
+var currentView        = 'postcards';
+
+// ── Auth ──
 
 function startSignIn() {
   var provider = new firebase.auth.GoogleAuthProvider();
@@ -685,6 +885,7 @@ auth.onAuthStateChanged(function(user) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     loadCards();
+    loadStamps();
   } else {
     currentUser = null;
     document.getElementById('login-screen').style.display = 'flex';
@@ -696,18 +897,49 @@ auth.onAuthStateChanged(function(user) {
   }
 });
 
-// ═══════════════════════════════════════════════
-// LOAD CARDS (Firestore realtime listener)
-// ═══════════════════════════════════════════════
+// ── Tab switching ──
+
+function switchView(view) {
+  currentView = view;
+  var isPC = view === 'postcards';
+  document.getElementById('tab-postcards').classList.toggle('active', isPC);
+  document.getElementById('tab-stamps').classList.toggle('active', !isPC);
+  document.getElementById('section-postcards').style.display = isPC ? '' : 'none';
+  document.getElementById('section-stamps').style.display    = isPC ? 'none' : '';
+
+  if (isPC) {
+    document.getElementById('header-icon').textContent  = '📮';
+    document.getElementById('header-title').textContent = 'Postcards';
+    document.getElementById('btn-add-main').innerHTML   = '+ <span class="btn-label">Add Card</span>';
+    document.getElementById('btn-add-main').onclick     = openAddModal;
+    updateCardSubtitle();
+  } else {
+    document.getElementById('header-icon').textContent  = '🏷️';
+    document.getElementById('header-title').textContent = 'Stamps';
+    document.getElementById('btn-add-main').innerHTML   = '+ <span class="btn-label">Add Stamp</span>';
+    document.getElementById('btn-add-main').onclick     = openAddStampModal;
+    updateStampSubtitle();
+  }
+}
+
+function updateCardSubtitle() {
+  var n = allCards.length;
+  document.getElementById('header-sub').textContent = n + ' card' + (n !== 1 ? 's' : '');
+}
+
+function updateStampSubtitle() {
+  var n = allStamps.length;
+  document.getElementById('header-sub').textContent = n + ' stamp' + (n !== 1 ? 's' : '');
+}
+
+// ── Load postcards ──
 
 function loadCards() {
   db.collection('postcards')
     .where('userId', '==', currentUser.uid)
     .onSnapshot(function(snap) {
       allCards = [];
-      snap.forEach(function(doc) {
-        allCards.push(Object.assign({ id: doc.id }, doc.data()));
-      });
+      snap.forEach(function(doc) { allCards.push(Object.assign({ id: doc.id }, doc.data())); });
       updateStats();
       filterAndRender();
     }, function(err) {
@@ -717,30 +949,54 @@ function loadCards() {
     });
 }
 
-// ═══════════════════════════════════════════════
-// STATS
-// ═══════════════════════════════════════════════
+// ── Load stamps ──
+
+function loadStamps() {
+  db.collection('stamps')
+    .where('userId', '==', currentUser.uid)
+    .onSnapshot(function(snap) {
+      allStamps = [];
+      snap.forEach(function(doc) { allStamps.push(Object.assign({ id: doc.id }, doc.data())); });
+      updateStampStats();
+      filterAndRenderStamps();
+    }, function(err) {
+      document.getElementById('stamp-grid').innerHTML =
+        '<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Could not load stamps</h3>' +
+        '<p style="font-size:0.8rem;max-width:340px;margin:0 auto">' + escHtml(err.message) + '</p></div>';
+    });
+}
+
+// ── Postcard stats ──
 
 function updateStats() {
   var total    = allCards.length;
   var value    = allCards.reduce(function(s, c) { return s + (parseFloat(c.estimatedValue) || 0); }, 0);
   var research = allCards.filter(function(c) { return c.researchStatus === 'needed'; }).length;
-
   document.getElementById('stat-total').textContent    = total;
   document.getElementById('stat-value').textContent    = '£' + value.toFixed(2);
   document.getElementById('stat-research').textContent = research;
-  document.getElementById('header-sub').textContent    = total + ' card' + (total !== 1 ? 's' : '');
+  if (currentView === 'postcards') updateCardSubtitle();
 }
 
-// ═══════════════════════════════════════════════
-// FILTER & RENDER
-// ═══════════════════════════════════════════════
+// ── Stamp stats ──
+
+function updateStampStats() {
+  var total     = allStamps.length;
+  var value     = allStamps.reduce(function(s, st) { return s + (parseFloat(st.estimatedValue) || 0); }, 0);
+  var countries = new Set(allStamps.map(function(st) { return (st.country || '').trim().toLowerCase(); }).filter(Boolean)).size;
+  document.getElementById('s-stat-total').textContent     = total;
+  document.getElementById('s-stat-value').textContent     = '£' + value.toFixed(2);
+  document.getElementById('s-stat-countries').textContent = countries;
+  if (currentView === 'stamps') updateStampSubtitle();
+}
+
+// ── Postcard filter & render ──
 
 function filterAndRender() {
-  var q         = (document.getElementById('search-input').value || '').toLowerCase().trim();
-  var condFilt  = document.getElementById('filter-condition').value;
-  var resFilt   = document.getElementById('filter-research').value;
-  var sortBy    = document.getElementById('sort-by').value;
+  var q        = (document.getElementById('search-input').value || '').toLowerCase().trim();
+  var condFilt = document.getElementById('filter-condition').value;
+  var resFilt  = document.getElementById('filter-research').value;
+  var sortBy   = document.getElementById('sort-by').value;
 
   var filtered = allCards.filter(function(c) {
     if (condFilt && c.condition !== condFilt) return false;
@@ -758,7 +1014,7 @@ function filterAndRender() {
     if (sortBy === 'value_high') return (parseFloat(b.estimatedValue) || 0) - (parseFloat(a.estimatedValue) || 0);
     if (sortBy === 'value_low')  return (parseFloat(a.estimatedValue) || 0) - (parseFloat(b.estimatedValue) || 0);
     if (sortBy === 'publisher')  return (a.publisher || '').localeCompare(b.publisher || '');
-    return ts(b) - ts(a); // newest
+    return ts(b) - ts(a);
   });
 
   renderGallery(filtered);
@@ -772,21 +1028,14 @@ function renderGallery(cards) {
   var grid = document.getElementById('gallery-grid');
 
   if (allCards.length === 0) {
-    grid.innerHTML = '<div class="empty-state">' +
-      '<div class="empty-icon">📮</div>' +
-      '<h3>Your collection is empty</h3>' +
-      '<p>Add your first postcard to get started.</p>' +
-      '<button class="btn-primary" onclick="openAddModal()">+ Add First Card</button>' +
-      '</div>';
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">📮</div>' +
+      '<h3>Your collection is empty</h3><p>Add your first postcard to get started.</p>' +
+      '<button class="btn-primary" onclick="openAddModal()">+ Add First Card</button></div>';
     return;
   }
-
   if (cards.length === 0) {
-    grid.innerHTML = '<div class="empty-state">' +
-      '<div class="empty-icon">🔍</div>' +
-      '<h3>No cards match</h3>' +
-      '<p>Try different search terms or filters.</p>' +
-      '</div>';
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div>' +
+      '<h3>No cards match</h3><p>Try different search terms or filters.</p></div>';
     return;
   }
 
@@ -794,16 +1043,12 @@ function renderGallery(cards) {
     var thumb = card.frontImageUrl
       ? '<img src="' + escAttr(card.frontImageUrl) + '" alt="" loading="lazy">'
       : '<div class="tile-thumb-placeholder">📮</div>';
-
     var condBadge = card.condition
-      ? '<span class="badge badge-' + escAttr(card.condition) + '">' + escHtml(card.condition) + '</span>'
-      : '';
+      ? '<span class="badge badge-' + escAttr(card.condition) + '">' + escHtml(card.condition) + '</span>' : '';
     var resBadge = card.researchStatus === 'needed'
-      ? '<span class="badge badge-needed">Research</span>'
-      : '';
+      ? '<span class="badge badge-needed">Research</span>' : '';
     var valBadge = card.estimatedValue
-      ? '<span class="badge badge-value">£' + parseFloat(card.estimatedValue).toFixed(2) + '</span>'
-      : '';
+      ? '<span class="badge badge-value">£' + parseFloat(card.estimatedValue).toFixed(2) + '</span>' : '';
 
     return '<div class="postcard-tile" onclick="openDetail(\'' + esc(card.id) + '\')">' +
       '<div class="tile-thumb">' + thumb + '</div>' +
@@ -811,20 +1056,91 @@ function renderGallery(cards) {
         '<div class="tile-caption">' + escHtml(card.caption || '(no caption)') + '</div>' +
         '<div class="tile-publisher">' + escHtml(card.publisher || '') + '</div>' +
         '<div class="tile-badges">' + condBadge + resBadge + valBadge + '</div>' +
-      '</div>' +
-    '</div>';
+      '</div></div>';
   }).join('');
 }
 
-// ═══════════════════════════════════════════════
-// CARD DETAIL
-// ═══════════════════════════════════════════════
+// ── Stamp filter & render ──
+
+function filterAndRenderStamps() {
+  var q        = (document.getElementById('s-search-input').value || '').toLowerCase().trim();
+  var usedFilt = document.getElementById('s-filter-used').value;
+  var condFilt = document.getElementById('s-filter-condition').value;
+  var sortBy   = document.getElementById('s-sort-by').value;
+
+  var filtered = allStamps.filter(function(st) {
+    if (usedFilt === 'used'   && st.used !== 'used')   return false;
+    if (usedFilt === 'unused' && st.used !== 'unused') return false;
+    if (condFilt && st.condition !== condFilt) return false;
+    if (q) {
+      var hay = [st.description, st.country, st.year, st.denomination,
+                 st.seriesName, st.catalogueSG, st.catalogueScott,
+                 st.colour, (st.tags || []).join(' '), st.notes].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  filtered.sort(function(a, b) {
+    if (sortBy === 'oldest')     return tsS(a) - tsS(b);
+    if (sortBy === 'value_high') return (parseFloat(b.estimatedValue) || 0) - (parseFloat(a.estimatedValue) || 0);
+    if (sortBy === 'value_low')  return (parseFloat(a.estimatedValue) || 0) - (parseFloat(b.estimatedValue) || 0);
+    if (sortBy === 'country')    return (a.country || '').localeCompare(b.country || '');
+    if (sortBy === 'year')       return (parseInt(a.year) || 0) - (parseInt(b.year) || 0);
+    return tsS(b) - tsS(a);
+  });
+
+  renderStampGallery(filtered);
+}
+
+function tsS(st) {
+  return (st.createdAt && st.createdAt.seconds) ? st.createdAt.seconds : 0;
+}
+
+function renderStampGallery(stamps) {
+  var grid = document.getElementById('stamp-grid');
+
+  if (allStamps.length === 0) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🏷️</div>' +
+      '<h3>No stamps yet</h3><p>Add your first stamp to get started.</p>' +
+      '<button class="btn-primary" onclick="openAddStampModal()">+ Add First Stamp</button></div>';
+    return;
+  }
+  if (stamps.length === 0) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div>' +
+      '<h3>No stamps match</h3><p>Try different search terms or filters.</p></div>';
+    return;
+  }
+
+  grid.innerHTML = stamps.map(function(st) {
+    var thumb = st.imageUrl
+      ? '<img src="' + escAttr(st.imageUrl) + '" alt="" loading="lazy">'
+      : '<div class="stamp-thumb-placeholder">🏷️</div>';
+    var condBadge = st.condition
+      ? '<span class="badge badge-' + escAttr(st.condition) + '">' + escHtml(st.condition) + '</span>' : '';
+    var usedBadge = st.used
+      ? '<span class="badge badge-' + escAttr(st.used) + '">' + (st.used === 'used' ? 'Used' : 'Unused') + '</span>' : '';
+    var valBadge = st.estimatedValue
+      ? '<span class="badge badge-value">£' + parseFloat(st.estimatedValue).toFixed(2) + '</span>' : '';
+    var meta = [st.country, st.year].filter(Boolean).join(' · ');
+
+    return '<div class="stamp-tile" onclick="openStampDetail(\'' + esc(st.id) + '\')">' +
+      '<div class="stamp-thumb">' + thumb + '</div>' +
+      '<div class="stamp-body">' +
+        '<div class="stamp-denom">' + escHtml(st.denomination || '—') + '</div>' +
+        '<div class="stamp-meta">' + escHtml(meta) + '</div>' +
+        '<div class="stamp-desc">' + escHtml(st.description || '') + '</div>' +
+        '<div class="tile-badges">' + condBadge + usedBadge + valBadge + '</div>' +
+      '</div></div>';
+  }).join('');
+}
+
+// ── Postcard detail ──
 
 function openDetail(id) {
   var card = allCards.find(function(c) { return c.id === id; });
   if (!card) return;
   currentDetailId = id;
-
   document.getElementById('detail-modal-title').textContent = card.caption || '(no caption)';
 
   var frontImg = card.frontImageUrl
@@ -837,37 +1153,33 @@ function openDetail(id) {
   var origMap = { original: 'Original', reprint: 'Reprint' };
   var resMap  = { needed: 'Needs research', in_progress: 'In progress', done: 'Done' };
 
-  function f(label, val, full) {
+  function df(label, val, full) {
     var v = val || '';
-    var cls = 'detail-field-value' + (v ? '' : ' empty');
-    var colClass = full ? 'detail-field detail-field-full' : 'detail-field';
-    return '<div class="' + colClass + '">' +
+    return '<div class="' + (full ? 'detail-field detail-field-full' : 'detail-field') + '">' +
       '<div class="detail-field-label">' + label + '</div>' +
-      '<div class="' + cls + '">' + escHtml(v || '—') + '</div>' +
-    '</div>';
+      '<div class="detail-field-value' + (v ? '' : ' empty') + '">' + escHtml(v || '—') + '</div></div>';
   }
 
   var tagsText = (card.tags && card.tags.length) ? card.tags.join(', ') : '';
-
   document.getElementById('detail-body').innerHTML =
     '<div class="detail-images">' +
       '<div class="detail-img-slot">' + frontImg + '<div class="detail-img-label">Front</div></div>' +
       '<div class="detail-img-slot">' + backImg  + '<div class="detail-img-label">Back</div></div>' +
     '</div>' +
     '<div class="detail-fields">' +
-      f('Publisher',        card.publisher) +
-      f('Series No.',       card.seriesNo) +
-      f('Card No.',         card.cardNo) +
-      f('Theme',            card.theme) +
-      f('Era',              card.era) +
-      f('Condition',        card.condition) +
-      f('Original/Reprint', origMap[card.isOriginal] || '') +
-      f('Est. Value',       card.estimatedValue ? '£' + parseFloat(card.estimatedValue).toFixed(2) : '') +
-      f('Research',         resMap[card.researchStatus] || '') +
-      f('Duplicates',       card.duplicateCount ? String(card.duplicateCount) : '0') +
-      f('Album Source',     card.albumSource) +
-      f('Tags',             tagsText) +
-      (card.notes ? f('Notes', card.notes, true) : '') +
+      df('Publisher',        card.publisher) +
+      df('Series No.',       card.seriesNo) +
+      df('Card No.',         card.cardNo) +
+      df('Theme',            card.theme) +
+      df('Era',              card.era) +
+      df('Condition',        card.condition) +
+      df('Original/Reprint', origMap[card.isOriginal] || '') +
+      df('Est. Value',       card.estimatedValue ? '£' + parseFloat(card.estimatedValue).toFixed(2) : '') +
+      df('Research',         resMap[card.researchStatus] || '') +
+      df('Duplicates',       card.duplicateCount ? String(card.duplicateCount) : '0') +
+      df('Album Source',     card.albumSource) +
+      df('Tags',             tagsText) +
+      (card.notes ? df('Notes', card.notes, true) : '') +
     '</div>';
 
   openModal('modal-detail');
@@ -878,9 +1190,57 @@ function editCurrentCard() {
   openEditModal(currentDetailId);
 }
 
-// ═══════════════════════════════════════════════
-// ADD / EDIT MODAL
-// ═══════════════════════════════════════════════
+// ── Stamp detail ──
+
+function openStampDetail(id) {
+  var st = allStamps.find(function(s) { return s.id === id; });
+  if (!st) return;
+  currentDetailStampId = id;
+  document.getElementById('stamp-detail-title').textContent = st.description || '(no description)';
+
+  function df(label, val, full) {
+    var v = val || '';
+    return '<div class="' + (full ? 'detail-field detail-field-full' : 'detail-field') + '">' +
+      '<div class="detail-field-label">' + label + '</div>' +
+      '<div class="detail-field-value' + (v ? '' : ' empty') + '">' + escHtml(v || '—') + '</div></div>';
+  }
+
+  var imgHtml = st.imageUrl
+    ? '<div class="stamp-detail-img"><img src="' + escAttr(st.imageUrl) + '" alt="" onclick="openLightbox(\'' + escAttr(st.imageUrl) + '\')"></div>'
+    : '<div class="stamp-detail-img"><div class="stamp-detail-img-placeholder">🏷️</div></div>';
+
+  var tagsText = (st.tags && st.tags.length) ? st.tags.join(', ') : '';
+  var usedText = st.used === 'used' ? 'Used' : st.used === 'unused' ? 'Unused' : '';
+
+  document.getElementById('stamp-detail-body').innerHTML =
+    imgHtml +
+    '<div class="detail-fields">' +
+      df('Country',       st.country) +
+      df('Year',          st.year) +
+      df('Denomination',  st.denomination) +
+      df('Series / Set',  st.seriesName) +
+      df('SG Number',     st.catalogueSG) +
+      df('Scott Number',  st.catalogueScott) +
+      df('Colour',        st.colour) +
+      df('Perforation',   st.perforation) +
+      df('Used / Unused', usedText) +
+      df('Condition',     st.condition) +
+      df('Est. Value',    st.estimatedValue ? '£' + parseFloat(st.estimatedValue).toFixed(2) : '') +
+      df('Duplicates',    st.duplicateCount ? String(st.duplicateCount) : '0') +
+      df('Album Source',  st.albumSource) +
+      df('Tags',          tagsText) +
+      (st.notes ? df('Notes', st.notes, true) : '') +
+    '</div>';
+
+  openModal('modal-stamp-detail');
+}
+
+function editCurrentStamp() {
+  closeModal('modal-stamp-detail');
+  openEditStampModal(currentDetailStampId);
+}
+
+// ── Postcard form ──
 
 function openAddModal() {
   editingCardId = null;
@@ -901,15 +1261,14 @@ function openEditModal(id) {
 }
 
 function clearForm() {
-  ['f-caption','f-publisher','f-series','f-cardno','f-theme','f-era',
-   'f-notes','f-album','f-tags'].forEach(function(id) {
+  ['f-caption','f-publisher','f-series','f-cardno','f-theme','f-era','f-notes','f-album','f-tags'].forEach(function(id) {
     document.getElementById(id).value = '';
   });
-  document.getElementById('f-value').value    = '';
-  document.getElementById('f-dupes').value    = '';
-  document.getElementById('f-original').value = '';
-  document.getElementById('f-condition').value= '';
-  document.getElementById('f-research').value = '';
+  document.getElementById('f-value').value     = '';
+  document.getElementById('f-dupes').value     = '';
+  document.getElementById('f-original').value  = '';
+  document.getElementById('f-condition').value = '';
+  document.getElementById('f-research').value  = '';
   document.getElementById('f-img-front').value = '';
   document.getElementById('f-img-back').value  = '';
   resetPreview('prev-front', 'lbl-front', '📷 Front<br><small>Tap to choose</small>');
@@ -917,27 +1276,81 @@ function clearForm() {
 }
 
 function populateForm(card) {
-  document.getElementById('f-caption').value   = card.caption   || '';
-  document.getElementById('f-publisher').value = card.publisher || '';
-  document.getElementById('f-series').value    = card.seriesNo  || '';
-  document.getElementById('f-cardno').value    = card.cardNo    || '';
-  document.getElementById('f-theme').value     = card.theme     || '';
-  document.getElementById('f-era').value       = card.era       || '';
-  document.getElementById('f-original').value  = card.isOriginal    || '';
-  document.getElementById('f-condition').value = card.condition     || '';
-  document.getElementById('f-research').value  = card.researchStatus|| '';
-  document.getElementById('f-value').value     = card.estimatedValue|| '';
-  document.getElementById('f-dupes').value     = card.duplicateCount|| '';
+  document.getElementById('f-caption').value   = card.caption    || '';
+  document.getElementById('f-publisher').value = card.publisher  || '';
+  document.getElementById('f-series').value    = card.seriesNo   || '';
+  document.getElementById('f-cardno').value    = card.cardNo     || '';
+  document.getElementById('f-theme').value     = card.theme      || '';
+  document.getElementById('f-era').value       = card.era        || '';
+  document.getElementById('f-original').value  = card.isOriginal     || '';
+  document.getElementById('f-condition').value = card.condition      || '';
+  document.getElementById('f-research').value  = card.researchStatus || '';
+  document.getElementById('f-value').value     = card.estimatedValue || '';
+  document.getElementById('f-dupes').value     = card.duplicateCount || '';
   document.getElementById('f-tags').value      = (card.tags || []).join(', ');
-  document.getElementById('f-notes').value     = card.notes     || '';
+  document.getElementById('f-notes').value     = card.notes      || '';
   document.getElementById('f-album').value     = card.albumSource|| '';
-
   if (card.frontImageUrl) showExistingPreview('prev-front', 'lbl-front', card.frontImageUrl, 'Front ✓');
   else resetPreview('prev-front', 'lbl-front', '📷 Front<br><small>Tap to change</small>');
-
   if (card.backImageUrl)  showExistingPreview('prev-back',  'lbl-back',  card.backImageUrl,  'Back ✓');
   else resetPreview('prev-back',  'lbl-back',  '📷 Back<br><small>Tap to change</small>');
 }
+
+// ── Stamp form ──
+
+function openAddStampModal() {
+  editingStampId = null;
+  document.getElementById('stamp-form-title').textContent = 'Add Stamp';
+  document.getElementById('btn-delete-stamp').style.display = 'none';
+  clearStampForm();
+  openModal('modal-stamp-form');
+}
+
+function openEditStampModal(id) {
+  var st = allStamps.find(function(s) { return s.id === id; });
+  if (!st) return;
+  editingStampId = id;
+  document.getElementById('stamp-form-title').textContent = 'Edit Stamp';
+  document.getElementById('btn-delete-stamp').style.display = '';
+  populateStampForm(st);
+  openModal('modal-stamp-form');
+}
+
+function clearStampForm() {
+  ['s-description','s-country','s-year','s-denomination','s-series',
+   's-sg','s-scott','s-colour','s-perforation','s-tags','s-album','s-notes'].forEach(function(id) {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('s-value').value     = '';
+  document.getElementById('s-dupes').value     = '';
+  document.getElementById('s-used').value      = '';
+  document.getElementById('s-condition').value = '';
+  document.getElementById('s-img').value       = '';
+  resetPreview('prev-stamp', 'lbl-stamp', '📷 Stamp image<br><small>Tap to choose</small>');
+}
+
+function populateStampForm(st) {
+  document.getElementById('s-description').value  = st.description    || '';
+  document.getElementById('s-country').value      = st.country        || '';
+  document.getElementById('s-year').value         = st.year           || '';
+  document.getElementById('s-denomination').value = st.denomination   || '';
+  document.getElementById('s-series').value       = st.seriesName     || '';
+  document.getElementById('s-sg').value           = st.catalogueSG    || '';
+  document.getElementById('s-scott').value        = st.catalogueScott || '';
+  document.getElementById('s-colour').value       = st.colour         || '';
+  document.getElementById('s-perforation').value  = st.perforation    || '';
+  document.getElementById('s-used').value         = st.used           || '';
+  document.getElementById('s-condition').value    = st.condition      || '';
+  document.getElementById('s-value').value        = st.estimatedValue || '';
+  document.getElementById('s-dupes').value        = st.duplicateCount || '';
+  document.getElementById('s-tags').value         = (st.tags || []).join(', ');
+  document.getElementById('s-notes').value        = st.notes          || '';
+  document.getElementById('s-album').value        = st.albumSource    || '';
+  if (st.imageUrl) showExistingPreview('prev-stamp', 'lbl-stamp', st.imageUrl, 'Image ✓');
+  else resetPreview('prev-stamp', 'lbl-stamp', '📷 Stamp image<br><small>Tap to change</small>');
+}
+
+// ── Image helpers ──
 
 function previewImage(input, prevId, lblId) {
   var file = input.files[0];
@@ -964,18 +1377,14 @@ function showExistingPreview(prevId, lblId, url, label) {
   document.getElementById(lblId).innerHTML = label + '<br><small>Tap to change</small>';
 }
 
-// ═══════════════════════════════════════════════
-// SAVE
-// ═══════════════════════════════════════════════
+// ── Save postcard ──
 
 function saveCard() {
   var btn = document.getElementById('btn-save-card');
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Saving…';
 
-  var tags = document.getElementById('f-tags').value
-    .split(',').map(function(t) { return t.trim(); }).filter(Boolean);
-
+  var tags = document.getElementById('f-tags').value.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
   var data = {
     userId:         currentUser.uid,
     caption:        document.getElementById('f-caption').value.trim(),
@@ -1002,25 +1411,17 @@ function saveCard() {
 
   data.frontImageUrl = existing ? (existing.frontImageUrl || '') : '';
   data.backImageUrl  = existing ? (existing.backImageUrl  || '') : '';
-
-  if (!editingCardId) {
-    data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-  }
+  if (!editingCardId) data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
 
   var uploads = [];
   var uid = currentUser.uid;
-
   if (frontFile) {
     var fRef = storage.ref('users/' + uid + '/postcards/' + cardId + '/front.' + ext(frontFile));
-    uploads.push(fRef.put(frontFile).then(function() {
-      return fRef.getDownloadURL();
-    }).then(function(url) { data.frontImageUrl = url; }));
+    uploads.push(fRef.put(frontFile).then(function() { return fRef.getDownloadURL(); }).then(function(url) { data.frontImageUrl = url; }));
   }
   if (backFile) {
     var bRef = storage.ref('users/' + uid + '/postcards/' + cardId + '/back.' + ext(backFile));
-    uploads.push(bRef.put(backFile).then(function() {
-      return bRef.getDownloadURL();
-    }).then(function(url) { data.backImageUrl = url; }));
+    uploads.push(bRef.put(backFile).then(function() { return bRef.getDownloadURL(); }).then(function(url) { data.backImageUrl = url; }));
   }
 
   Promise.all(uploads).then(function() {
@@ -1038,14 +1439,65 @@ function saveCard() {
   });
 }
 
-function ext(file) {
-  var parts = file.name.split('.');
-  return parts.length > 1 ? parts.pop().toLowerCase() : 'jpg';
+// ── Save stamp ──
+
+function saveStamp() {
+  var btn = document.getElementById('btn-save-stamp');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Saving…';
+
+  var tags = document.getElementById('s-tags').value.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+  var data = {
+    userId:         currentUser.uid,
+    description:    document.getElementById('s-description').value.trim(),
+    country:        document.getElementById('s-country').value.trim(),
+    year:           document.getElementById('s-year').value.trim(),
+    denomination:   document.getElementById('s-denomination').value.trim(),
+    seriesName:     document.getElementById('s-series').value.trim(),
+    catalogueSG:    document.getElementById('s-sg').value.trim(),
+    catalogueScott: document.getElementById('s-scott').value.trim(),
+    colour:         document.getElementById('s-colour').value.trim(),
+    perforation:    document.getElementById('s-perforation').value.trim(),
+    used:           document.getElementById('s-used').value,
+    condition:      document.getElementById('s-condition').value,
+    estimatedValue: parseFloat(document.getElementById('s-value').value) || 0,
+    duplicateCount: parseInt(document.getElementById('s-dupes').value)   || 0,
+    tags:           tags,
+    notes:          document.getElementById('s-notes').value.trim(),
+    albumSource:    document.getElementById('s-album').value.trim(),
+    updatedAt:      firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  var imgFile  = document.getElementById('s-img').files[0];
+  var stampId  = editingStampId || db.collection('stamps').doc().id;
+  var existing = editingStampId ? allStamps.find(function(s) { return s.id === editingStampId; }) : null;
+
+  data.imageUrl = existing ? (existing.imageUrl || '') : '';
+  if (!editingStampId) data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+
+  var uploads = [];
+  var uid = currentUser.uid;
+  if (imgFile) {
+    var iRef = storage.ref('users/' + uid + '/stamps/' + stampId + '/stamp.' + ext(imgFile));
+    uploads.push(iRef.put(imgFile).then(function() { return iRef.getDownloadURL(); }).then(function(url) { data.imageUrl = url; }));
+  }
+
+  Promise.all(uploads).then(function() {
+    var ref = db.collection('stamps').doc(stampId);
+    return editingStampId ? ref.update(data) : ref.set(data);
+  }).then(function() {
+    closeModal('modal-stamp-form');
+    toast(editingStampId ? 'Stamp updated ✓' : 'Stamp added to collection ✓');
+  }).catch(function(err) {
+    console.error('Save error:', err);
+    toast('Save failed — ' + err.message);
+  }).finally(function() {
+    btn.disabled = false;
+    btn.innerHTML = 'Save Stamp';
+  });
 }
 
-// ═══════════════════════════════════════════════
-// DELETE
-// ═══════════════════════════════════════════════
+// ── Delete ──
 
 function deleteCard() {
   if (!editingCardId) return;
@@ -1053,14 +1505,19 @@ function deleteCard() {
   db.collection('postcards').doc(editingCardId).delete().then(function() {
     closeModal('modal-form');
     toast('Card deleted');
-  }).catch(function(err) {
-    toast('Delete failed — ' + err.message);
-  });
+  }).catch(function(err) { toast('Delete failed — ' + err.message); });
 }
 
-// ═══════════════════════════════════════════════
-// MODALS
-// ═══════════════════════════════════════════════
+function deleteStamp() {
+  if (!editingStampId) return;
+  if (!confirm('Delete this stamp? This cannot be undone.')) return;
+  db.collection('stamps').doc(editingStampId).delete().then(function() {
+    closeModal('modal-stamp-form');
+    toast('Stamp deleted');
+  }).catch(function(err) { toast('Delete failed — ' + err.message); });
+}
+
+// ── Modals ──
 
 function openModal(id) {
   document.getElementById(id).classList.add('open');
@@ -1071,16 +1528,13 @@ function closeModal(id) {
   document.body.style.overflow = '';
 }
 
-document.getElementById('modal-form').addEventListener('click', function(e) {
-  if (e.target === this) closeModal('modal-form');
-});
-document.getElementById('modal-detail').addEventListener('click', function(e) {
-  if (e.target === this) closeModal('modal-detail');
+['modal-form','modal-detail','modal-stamp-form','modal-stamp-detail'].forEach(function(id) {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target === this) closeModal(id);
+  });
 });
 
-// ═══════════════════════════════════════════════
-// LIGHTBOX
-// ═══════════════════════════════════════════════
+// ── Lightbox ──
 
 function openLightbox(url) {
   document.getElementById('lightbox-img').src = url;
@@ -1090,9 +1544,7 @@ function closeLightbox() {
   document.getElementById('lightbox').classList.remove('open');
 }
 
-// ═══════════════════════════════════════════════
-// TOAST
-// ═══════════════════════════════════════════════
+// ── Toast ──
 
 function toast(msg) {
   var el = document.createElement('div');
@@ -1102,9 +1554,7 @@ function toast(msg) {
   setTimeout(function() { el.remove(); }, 3000);
 }
 
-// ═══════════════════════════════════════════════
-// UTILS
-// ═══════════════════════════════════════════════
+// ── Utils ──
 
 function escHtml(s) {
   if (!s) return '';
@@ -1112,6 +1562,10 @@ function escHtml(s) {
 }
 function escAttr(s) { return escHtml(String(s || '')); }
 function esc(s)     { return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+function ext(file)  {
+  var parts = file.name.split('.');
+  return parts.length > 1 ? parts.pop().toLowerCase() : 'jpg';
+}
 </script>
 
 </body>
