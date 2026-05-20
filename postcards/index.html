@@ -900,14 +900,14 @@
       <button class="modal-close" onclick="closeModal('modal-apikey')">×</button>
     </div>
     <p style="font-size:0.875rem;color:var(--muted);margin-bottom:12px;line-height:1.6">
-      AI fill uses OpenAI to read your image and fill in the form. Your key is saved in your browser only.
+      AI fill uses Claude (Anthropic) to read your image and fill in the form. Your key is saved in your browser only.
     </p>
     <p style="font-size:0.8rem;color:var(--muted);margin-bottom:16px;">
-      Get a key at <strong>platform.openai.com</strong> → API keys. Add $5 credit — covers thousands of analyses.
+      Get a key at <strong>console.anthropic.com</strong> → API keys. Pay-as-you-go — a few pence per analysis.
     </p>
     <div class="form-group" style="margin-bottom:6px;">
-      <label class="form-label">OpenAI API Key</label>
-      <input type="password" id="apikey-input" class="form-input" placeholder="sk-…">
+      <label class="form-label">Anthropic API Key</label>
+      <input type="password" id="apikey-input" class="form-input" placeholder="sk-ant-…">
     </div>
     <div class="modal-footer">
       <button class="btn-ghost" onclick="closeModal('modal-apikey')">Cancel</button>
@@ -1887,7 +1887,7 @@ function fillFromImage(type) {
     return;
   }
 
-  var apiKey = localStorage.getItem('openai_api_key');
+  var apiKey = localStorage.getItem('anthropic_api_key');
   if (!apiKey) { openModal('modal-apikey'); return; }
 
   runAIFill(type, pendingAIImages, apiKey);
@@ -1896,13 +1896,13 @@ function fillFromImage(type) {
 function saveApiKeyAndAnalyse() {
   var key = (document.getElementById('apikey-input').value || '').trim();
   if (!key) { toast('Please enter your API key'); return; }
-  localStorage.setItem('openai_api_key', key);
+  localStorage.setItem('anthropic_api_key', key);
   closeModal('modal-apikey');
   runAIFill(pendingAIType, pendingAIImages, key);
 }
 
 function changeApiKey() {
-  localStorage.removeItem('openai_api_key');
+  localStorage.removeItem('anthropic_api_key');
   document.getElementById('apikey-input').value = '';
   openModal('modal-apikey');
 }
@@ -1913,8 +1913,12 @@ function testApiConnection(btn) {
   var orig = btn.textContent;
   btn.textContent = 'Testing…';
   btn.disabled = true;
-  fetch('https://api.openai.com/v1/models', {
-    headers: { 'Authorization': 'Bearer ' + key }
+  fetch('https://api.anthropic.com/v1/models', {
+    headers: {
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-request-origin': 'user-intent'
+    }
   }).then(function(res) {
     if (res.ok) {
       toast('Connection OK ✓ — API key is valid');
@@ -1924,7 +1928,7 @@ function testApiConnection(btn) {
       });
     }
   }).catch(function() {
-    toast('Cannot reach OpenAI — try a different network or VPN');
+    toast('Cannot reach Anthropic API — try a different network');
   }).finally(function() {
     btn.textContent = orig;
     btn.disabled = false;
@@ -1994,19 +1998,22 @@ function runAIFill(type, images, apiKey) {
         : 'Analyse this vintage postcard image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: caption, publisher, theme, era, condition (one of: Mint Good Fair Poor), isOriginal (one of: original reprint), notes (any interesting details). Leave fields as empty string if uncertain.';
 
     var content = encoded.map(function(e) {
-      var imgUrl = e.url ? e.url : ('data:' + e.mime + ';base64,' + e.b64);
-      return { type: 'image_url', image_url: { url: imgUrl } };
+      return e.url
+        ? { type: 'image', source: { type: 'url', url: e.url } }
+        : { type: 'image', source: { type: 'base64', media_type: e.mime, data: e.b64 } };
     });
     content.push({ type: 'text', text: prompt });
 
-    return fetch('https://api.openai.com/v1/chat/completions', {
+    return fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer ' + apiKey.trim(),
-        'Content-Type': 'application/json'
+        'x-api-key': apiKey.trim(),
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-request-origin': 'user-intent',
+        'content-type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'claude-3-5-haiku-20241022',
         max_tokens: 512,
         messages: [{ role: 'user', content: content }]
       })
@@ -2017,7 +2024,7 @@ function runAIFill(type, images, apiKey) {
     return res.json();
   })
   .then(function(data) {
-    var text = data.choices[0].message.content.trim();
+    var text = data.content[0].text.trim();
     var jsonStr = text.replace(/^```[a-z]*\n?/,'').replace(/```$/,'').trim();
     var result = JSON.parse(jsonStr);
     applyAIResult(result, type);
@@ -2026,11 +2033,11 @@ function runAIFill(type, images, apiKey) {
   .catch(function(err) {
     console.error('AI fill error:', err);
     var msg = err.message || String(err);
-    if (msg.includes('API key') || msg.includes('401') || msg.includes('Incorrect') || msg.includes('invalid_api_key')) {
-      localStorage.removeItem('openai_api_key');
+    if (msg.includes('API key') || msg.includes('401') || msg.includes('Incorrect') || msg.includes('invalid_api_key') || msg.includes('authentication')) {
+      localStorage.removeItem('anthropic_api_key');
       toast('API key error — tap Change API key and re-enter');
     } else if (msg === 'Failed to fetch' || msg === 'Load failed' || msg.includes('NetworkError')) {
-      toast('Cannot reach OpenAI — try Test connection in the API key screen, or a different network');
+      toast('Cannot reach Anthropic API — tap Change API key → Test connection, or try a different network');
     } else {
       toast('AI fill failed — ' + msg);
     }
