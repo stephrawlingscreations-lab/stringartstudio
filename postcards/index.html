@@ -425,6 +425,38 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ── AI fill button ── */
+    .btn-ai {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: linear-gradient(135deg, #6b5ea8, #4a5a9a);
+      color: #fff; border: none; border-radius: 10px;
+      padding: 9px 16px; font-size: 0.875rem; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: opacity 0.15s;
+    }
+    .btn-ai:hover    { opacity: 0.85; }
+    .btn-ai:disabled { opacity: 0.5; cursor: default; }
+    .ai-hint { font-size: 0.72rem; color: var(--muted); margin-top: 5px; }
+
+    /* ── Import table ── */
+    .import-table-wrap {
+      overflow-x: auto; max-height: 240px; overflow-y: auto;
+      border: 1px solid var(--border); border-radius: 10px; margin-top: 12px;
+    }
+    .import-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    .import-table th {
+      background: var(--bg); padding: 7px 10px; text-align: left;
+      font-weight: 700; color: var(--muted); text-transform: uppercase;
+      font-size: 0.65rem; letter-spacing: 0.05em;
+      position: sticky; top: 0; border-bottom: 1px solid var(--border);
+    }
+    .import-table td {
+      padding: 7px 10px; border-top: 1px solid var(--border);
+      max-width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .import-table tr:hover td { background: var(--bg); }
+    .import-count { font-size: 0.875rem; color: var(--muted); margin-bottom: 8px; }
+    .import-count strong { color: var(--sage-dk); }
+
     /* ── Responsive ── */
     @media (max-width: 580px) {
       header { padding: 12px 14px; }
@@ -497,6 +529,9 @@
         <div class="stat-pill">Est. value <strong id="stat-value">£0.00</strong></div>
         <div class="stat-pill">Need research <strong id="stat-research">0</strong></div>
       </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+        <button class="btn-ghost" onclick="openImportModal('postcards')" style="font-size:0.8rem;padding:7px 12px;">⬆ Import CSV</button>
+      </div>
       <div class="controls">
         <div class="search-wrap">
           <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
@@ -536,6 +571,9 @@
         <div class="stat-pill">Total <strong id="s-stat-total">0</strong></div>
         <div class="stat-pill">Est. value <strong id="s-stat-value">£0.00</strong></div>
         <div class="stat-pill">Countries <strong id="s-stat-countries">0</strong></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+        <button class="btn-ghost" onclick="openImportModal('stamps')" style="font-size:0.8rem;padding:7px 12px;">⬆ Import CSV</button>
       </div>
       <div class="controls">
         <div class="search-wrap">
@@ -673,6 +711,10 @@
           </div>
         </div>
       </div>
+      <div class="form-full" style="padding-top:4px;">
+        <button type="button" class="btn-ai" id="btn-ai-postcard" onclick="fillFromImage('postcard')">✨ Fill form from image</button>
+        <div class="ai-hint">Uses AI to read the card and pre-fill the fields above</div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn-danger" id="btn-delete-card" onclick="deleteCard()" style="display:none">Delete</button>
@@ -779,6 +821,10 @@
           <div class="upload-label" id="lbl-stamp">📷 Stamp image<br><small>Tap to choose</small></div>
         </div>
       </div>
+      <div class="form-full" style="padding-top:4px;">
+        <button type="button" class="btn-ai" id="btn-ai-stamp" onclick="fillFromImage('stamp')">✨ Fill form from image</button>
+        <div class="ai-hint">Uses AI to read the stamp and pre-fill the fields above</div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn-danger" id="btn-delete-stamp" onclick="deleteStamp()" style="display:none">Delete</button>
@@ -815,6 +861,58 @@
       </div>
     </div>
     <div id="stamp-detail-body"></div>
+  </div>
+</div>
+
+
+<!-- MODAL: CSV Import -->
+<div class="modal-overlay" id="modal-import">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-header">
+      <div class="modal-title" id="import-modal-title">Import from CSV</div>
+      <button class="modal-close" onclick="closeModal('modal-import')">×</button>
+    </div>
+    <p style="font-size:0.875rem;color:var(--muted);margin-bottom:16px;line-height:1.6">
+      Upload a CSV file to add multiple items at once. Download the template to see the exact column names expected — column order doesn't matter and you can leave columns blank.
+    </p>
+    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
+      <button class="btn-ghost" onclick="downloadTemplate()" style="font-size:0.8rem;padding:7px 12px;">⬇ Download template</button>
+      <span style="font-size:0.78rem;color:var(--muted);">Open in Excel, Numbers, or Google Sheets</span>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Choose CSV file</label>
+      <input type="file" id="import-file-input" accept=".csv,text/csv" onchange="handleImportFile(this)" class="form-input" style="padding:7px;">
+    </div>
+    <div id="import-preview"></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modal-import')">Cancel</button>
+      <button class="btn-save" id="btn-confirm-import" onclick="confirmImport()" style="display:none">Import</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL: API Key Setup -->
+<div class="modal-overlay" id="modal-apikey">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <div class="modal-title">Set up AI Image Analysis</div>
+      <button class="modal-close" onclick="closeModal('modal-apikey')">×</button>
+    </div>
+    <p style="font-size:0.875rem;color:var(--muted);margin-bottom:12px;line-height:1.6">
+      AI fill uses the Claude API to read your image and fill in the form. You need an Anthropic API key — it's saved in your browser only and never sent anywhere except Anthropic.
+    </p>
+    <p style="font-size:0.8rem;color:var(--muted);margin-bottom:16px;">
+      Get a free key at <strong>console.anthropic.com</strong>. Each image analysis costs less than a penny.
+    </p>
+    <div class="form-group" style="margin-bottom:6px;">
+      <label class="form-label">Anthropic API Key</label>
+      <input type="password" id="apikey-input" class="form-input" placeholder="sk-ant-…">
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modal-apikey')">Cancel</button>
+      <button class="btn-save" onclick="saveApiKeyAndAnalyse()">Save &amp; Fill</button>
+    </div>
   </div>
 </div>
 
@@ -1528,7 +1626,7 @@ function closeModal(id) {
   document.body.style.overflow = '';
 }
 
-['modal-form','modal-detail','modal-stamp-form','modal-stamp-detail'].forEach(function(id) {
+['modal-form','modal-detail','modal-stamp-form','modal-stamp-detail','modal-import','modal-apikey'].forEach(function(id) {
   document.getElementById(id).addEventListener('click', function(e) {
     if (e.target === this) closeModal(id);
   });
@@ -1552,6 +1650,353 @@ function toast(msg) {
   el.textContent = msg;
   document.getElementById('toast-container').appendChild(el);
   setTimeout(function() { el.remove(); }, 3000);
+}
+
+// ── CSV Import ──
+
+var importType    = 'postcards';
+var importRecords = [];
+
+var POSTCARD_FIELD_MAP = {
+  caption:'caption', description:'caption',
+  publisher:'publisher',
+  seriesno:'seriesNo', seriesnumber:'seriesNo', series:'seriesNo',
+  cardno:'cardNo', cardnumber:'cardNo',
+  theme:'theme', era:'era',
+  isoriginal:'isOriginal', original:'isOriginal', originalreprint:'isOriginal',
+  condition:'condition',
+  researchstatus:'researchStatus', research:'researchStatus',
+  estimatedvalue:'estimatedValue', value:'estimatedValue',
+  duplicatecount:'duplicateCount', duplicates:'duplicateCount',
+  tags:'tags',
+  albumsource:'albumSource', album:'albumSource',
+  notes:'notes'
+};
+
+var STAMP_FIELD_MAP = {
+  description:'description',
+  country:'country',
+  year:'year', yearofissue:'year',
+  denomination:'denomination',
+  seriesname:'seriesName', series:'seriesName', setname:'seriesName',
+  cataloguesg:'catalogueSG', sg:'catalogueSG', stanleygibbons:'catalogueSG', sgnumber:'catalogueSG',
+  cataloguescott:'catalogueScott', scott:'catalogueScott', scottnumber:'catalogueScott',
+  colour:'colour', color:'colour',
+  perforation:'perforation', perf:'perforation',
+  used:'used', usedunused:'used',
+  condition:'condition',
+  estimatedvalue:'estimatedValue', value:'estimatedValue',
+  duplicatecount:'duplicateCount', duplicates:'duplicateCount',
+  tags:'tags',
+  albumsource:'albumSource', album:'albumSource',
+  notes:'notes'
+};
+
+function openImportModal(type) {
+  importType = type;
+  importRecords = [];
+  document.getElementById('import-modal-title').textContent = 'Import ' + (type === 'stamps' ? 'Stamps' : 'Postcards') + ' from CSV';
+  document.getElementById('import-file-input').value = '';
+  document.getElementById('import-preview').innerHTML = '';
+  document.getElementById('btn-confirm-import').style.display = 'none';
+  openModal('modal-import');
+}
+
+function downloadTemplate() {
+  var headers, name;
+  if (importType === 'stamps') {
+    headers = 'Description,Country,Year,Denomination,Series Name,SG Number,Scott Number,Colour,Perforation,Used/Unused,Condition,Estimated Value,Duplicate Count,Tags,Album Source,Notes';
+    name = 'stamps-template.csv';
+  } else {
+    headers = 'Caption,Publisher,Series No,Card No,Theme,Era,Original/Reprint,Condition,Research Status,Estimated Value,Duplicate Count,Tags,Album Source,Notes';
+    name = 'postcards-template.csv';
+  }
+  var blob = new Blob([headers + '\n'], { type: 'text/csv' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function handleImportFile(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var rows = parseCSV(e.target.result);
+      if (rows.length < 2) { showImportError('File appears to be empty.'); return; }
+      var headers = rows[0].map(function(h) { return h.trim(); });
+      var fieldMap = importType === 'stamps' ? STAMP_FIELD_MAP : POSTCARD_FIELD_MAP;
+
+      importRecords = [];
+      for (var i = 1; i < rows.length; i++) {
+        var row = rows[i];
+        if (row.every(function(c) { return !c.trim(); })) continue;
+        var rec = {};
+        headers.forEach(function(h, idx) {
+          var key = fieldMap[h.toLowerCase().replace(/[^a-z0-9]/g, '')];
+          if (!key) return;
+          var val = (row[idx] || '').trim();
+          if (key === 'estimatedValue') val = parseFloat(val) || 0;
+          else if (key === 'duplicateCount') val = parseInt(val) || 0;
+          else if (key === 'tags') val = val ? val.split(/[,;]/).map(function(t){return t.trim();}).filter(Boolean) : [];
+          rec[key] = val;
+        });
+        if (!rec.tags) rec.tags = [];
+        importRecords.push(rec);
+      }
+
+      if (!importRecords.length) { showImportError('No valid rows found.'); return; }
+      renderImportPreview();
+    } catch(err) {
+      showImportError('Could not parse file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function showImportError(msg) {
+  document.getElementById('import-preview').innerHTML =
+    '<p style="color:#c0392b;font-size:0.875rem;margin-top:10px;">⚠️ ' + escHtml(msg) + '</p>';
+  document.getElementById('btn-confirm-import').style.display = 'none';
+}
+
+function renderImportPreview() {
+  var previewFields = importType === 'stamps'
+    ? ['description','country','denomination','condition']
+    : ['caption','publisher','condition','estimatedValue'];
+  var labels = importType === 'stamps'
+    ? ['Description','Country','Denomination','Condition']
+    : ['Caption','Publisher','Condition','Value'];
+
+  var rows = importRecords.slice(0, 8);
+  var thead = '<tr>' + labels.map(function(l){ return '<th>' + l + '</th>'; }).join('') + '</tr>';
+  var tbody = rows.map(function(r) {
+    return '<tr>' + previewFields.map(function(f) {
+      var v = r[f];
+      if (Array.isArray(v)) v = v.join(', ');
+      return '<td>' + escHtml(String(v || '')) + '</td>';
+    }).join('') + '</tr>';
+  }).join('');
+
+  var more = importRecords.length > 8 ? ' (showing first 8)' : '';
+  document.getElementById('import-preview').innerHTML =
+    '<p class="import-count">Found <strong>' + importRecords.length + ' rows</strong>' + escHtml(more) + '</p>' +
+    '<div class="import-table-wrap"><table class="import-table"><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table></div>';
+
+  var btn = document.getElementById('btn-confirm-import');
+  btn.style.display = '';
+  btn.textContent = 'Import ' + importRecords.length + ' item' + (importRecords.length !== 1 ? 's' : '');
+}
+
+function confirmImport() {
+  if (!importRecords.length) return;
+  var btn = document.getElementById('btn-confirm-import');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Importing…';
+
+  var col = importType === 'stamps' ? 'stamps' : 'postcards';
+  var CHUNK = 400;
+  var batches = [];
+
+  for (var i = 0; i < importRecords.length; i += CHUNK) {
+    var batch = db.batch();
+    importRecords.slice(i, i + CHUNK).forEach(function(rec) {
+      batch.set(db.collection(col).doc(), Object.assign({}, rec, {
+        userId: currentUser.uid,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }));
+    });
+    batches.push(batch.commit());
+  }
+
+  Promise.all(batches).then(function() {
+    closeModal('modal-import');
+    toast('Imported ' + importRecords.length + ' item' + (importRecords.length !== 1 ? 's' : '') + ' ✓');
+    importRecords = [];
+  }).catch(function(err) {
+    toast('Import failed — ' + err.message);
+  }).finally(function() {
+    btn.disabled = false;
+    btn.textContent = 'Import ' + importRecords.length + ' item' + (importRecords.length !== 1 ? 's' : '');
+  });
+}
+
+function parseCSV(text) {
+  var lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  return lines.map(function(line) {
+    var row = [], cur = '', inQ = false;
+    for (var i = 0; i < line.length; i++) {
+      var ch = line[i];
+      if (ch === '"') {
+        if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+        else { inQ = !inQ; }
+      } else if (ch === ',' && !inQ) { row.push(cur); cur = ''; }
+      else { cur += ch; }
+    }
+    row.push(cur);
+    return row;
+  });
+}
+
+// ── AI Image Fill ──
+
+var pendingAIType = '';
+
+function fillFromImage(type) {
+  pendingAIType = type;
+  var fileInputId = type === 'stamp' ? 's-img' : 'f-img-front';
+  var existingUrl = null;
+
+  if (type === 'stamp' && editingStampId) {
+    var st = allStamps.find(function(s){ return s.id === editingStampId; });
+    if (st) existingUrl = st.imageUrl || null;
+  } else if (type === 'postcard' && editingCardId) {
+    var card = allCards.find(function(c){ return c.id === editingCardId; });
+    if (card) existingUrl = card.frontImageUrl || null;
+  }
+
+  var fileInput = document.getElementById(fileInputId);
+  var hasFile = fileInput.files && fileInput.files[0];
+
+  if (!hasFile && !existingUrl) {
+    toast('Please add an image first, then tap Fill from image');
+    return;
+  }
+
+  var apiKey = localStorage.getItem('anthropic_api_key');
+  if (!apiKey) {
+    openModal('modal-apikey');
+    return;
+  }
+
+  runAIFill(type, fileInput.files[0] || null, existingUrl, apiKey);
+}
+
+function saveApiKeyAndAnalyse() {
+  var key = (document.getElementById('apikey-input').value || '').trim();
+  if (!key) { toast('Please enter your API key'); return; }
+  localStorage.setItem('anthropic_api_key', key);
+  closeModal('modal-apikey');
+
+  var type = pendingAIType;
+  var fileInputId = type === 'stamp' ? 's-img' : 'f-img-front';
+  var fileInput = document.getElementById(fileInputId);
+  var existingUrl = null;
+  if (type === 'stamp' && editingStampId) {
+    var st = allStamps.find(function(s){ return s.id === editingStampId; });
+    if (st) existingUrl = st.imageUrl || null;
+  } else if (type === 'postcard' && editingCardId) {
+    var card = allCards.find(function(c){ return c.id === editingCardId; });
+    if (card) existingUrl = card.frontImageUrl || null;
+  }
+  runAIFill(type, fileInput.files[0] || null, existingUrl, key);
+}
+
+function runAIFill(type, file, existingUrl, apiKey) {
+  var btnId = type === 'stamp' ? 'btn-ai-stamp' : 'btn-ai-postcard';
+  var btn = document.getElementById(btnId);
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Analysing…';
+
+  function doAnalyse(b64, mime) {
+    var prompt = type === 'stamp'
+      ? 'Analyse this postage stamp image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: description, country, year, denomination, colour, condition (one of: Mint Fine Good Fair Poor), used (one of: used unused). Leave fields as empty string if uncertain.'
+      : 'Analyse this vintage postcard image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: caption, publisher, theme, era, condition (one of: Mint Good Fair Poor), isOriginal (one of: original reprint), notes (any interesting details). Leave fields as empty string if uncertain.';
+
+    fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-request-origin': 'user-intent',
+        'content-type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 512,
+        messages: [{ role: 'user', content: [
+          { type: 'image', source: { type: 'base64', media_type: mime, data: b64 } },
+          { type: 'text', text: prompt }
+        ]}]
+      })
+    })
+    .then(function(res) {
+      if (!res.ok) return res.json().then(function(e){ throw new Error(e.error ? e.error.message : 'API error ' + res.status); });
+      return res.json();
+    })
+    .then(function(data) {
+      var text = data.content[0].text.trim();
+      var jsonStr = text.replace(/^```[a-z]*\n?/,'').replace(/```$/,'').trim();
+      var result = JSON.parse(jsonStr);
+      applyAIResult(result, type);
+      toast('Fields filled ✓ — please check and correct anything');
+    })
+    .catch(function(err) {
+      if (err.message.includes('API key') || err.message.includes('401')) {
+        localStorage.removeItem('anthropic_api_key');
+        toast('API key error — tap Fill again to re-enter your key');
+      } else {
+        toast('AI fill failed — ' + err.message);
+      }
+    })
+    .finally(function() {
+      btn.disabled = false;
+      btn.innerHTML = '✨ Fill form from image';
+    });
+  }
+
+  if (file) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var dataUrl = e.target.result;
+      var mime = dataUrl.split(';')[0].split(':')[1];
+      var b64  = dataUrl.split(',')[1];
+      doAnalyse(b64, mime);
+    };
+    reader.readAsDataURL(file);
+  } else {
+    fetch(existingUrl)
+      .then(function(r){ return r.blob(); })
+      .then(function(blob) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          var dataUrl = e.target.result;
+          var mime = dataUrl.split(';')[0].split(':')[1];
+          var b64  = dataUrl.split(',')[1];
+          doAnalyse(b64, mime);
+        };
+        reader.readAsDataURL(blob);
+      })
+      .catch(function(){ toast('Could not load existing image for analysis'); btn.disabled = false; btn.innerHTML = '✨ Fill form from image'; });
+  }
+}
+
+function applyAIResult(data, type) {
+  function set(id, val) {
+    var el = document.getElementById(id);
+    if (el && val !== undefined && val !== null && val !== '') el.value = val;
+  }
+  if (type === 'postcard') {
+    set('f-caption',   data.caption);
+    set('f-publisher', data.publisher);
+    set('f-theme',     data.theme);
+    set('f-era',       data.era);
+    set('f-condition', data.condition);
+    set('f-original',  data.isOriginal);
+    set('f-notes',     data.notes);
+  } else {
+    set('s-description', data.description);
+    set('s-country',     data.country);
+    set('s-year',        data.year);
+    set('s-denomination',data.denomination);
+    set('s-colour',      data.colour);
+    set('s-condition',   data.condition);
+    set('s-used',        data.used);
+  }
 }
 
 // ── Utils ──
