@@ -2020,13 +2020,15 @@ function runAIFill(type, images, apiKey) {
   .catch(function(err) {
     console.error('AI fill error:', err);
     var msg = err.message || String(err);
-    if (msg.includes('API key') || msg.includes('401') || msg.includes('403') || msg.includes('invalid') || msg.includes('API_KEY')) {
+    if (msg.includes('API_KEY') || msg.includes('API key') || msg.includes('invalid') || msg.includes('401')) {
       localStorage.removeItem('gemini_api_key');
       toast('API key error — tap Change API key and re-enter');
     } else if (msg === 'Failed to fetch' || msg === 'Load failed' || msg.includes('NetworkError')) {
       toast('Cannot reach Google AI — check your internet connection');
+    } else if (msg.includes('quota') || msg.includes('RESOURCE_EXHAUSTED') || msg.includes('limit: 0')) {
+      toast('Gemini quota exceeded — your API key is on a billing-enabled project which removes the free tier. Create a new key in a new project at aistudio.google.com.');
     } else {
-      toast('AI fill failed — ' + msg);
+      toast('AI fill failed — ' + msg.slice(0, 120));
     }
   })
   .finally(function() {
