@@ -491,6 +491,9 @@
           <div class="fg"><label>Category</label>
             <select id="log-cat"><option>Food</option><option>Transport</option><option>Clothing</option><option>Health</option><option>Dogs</option><option>Home</option><option>Entertainment</option><option>Other</option></select>
           </div>
+          <div class="fg"><label>Bank</label>
+            <select id="log-bank"><option value="">—</option><option>Bank of Ireland</option><option>Revolut</option><option>Monzo</option><option>N26</option></select>
+          </div>
           <div class="fg"><label>Date</label><input id="log-date" type="date"></div>
           <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px">
             <button class="save-btn" id="log-save-btn" onclick="saveLog()">Save</button>
@@ -499,7 +502,7 @@
         </div>
       </div>
       <div id="log-month-total" style="padding:10px 18px;font-size:13px;color:var(--text2);border-bottom:1px solid var(--border);background:var(--surface2);display:none"></div>
-      <table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th style="text-align:right">Amount</th><th></th></tr></thead>
+      <table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Bank</th><th style="text-align:right">Amount</th><th></th></tr></thead>
       <tbody id="log-body"></tbody></table>
     </div>
   </div>
@@ -581,13 +584,16 @@
             <select id="out-freq"><option value="monthly">Monthly</option><option value="weekly">Weekly</option><option value="annual">Annual</option></select>
           </div>
           <div class="fg"><label>Day of month</label><input id="out-day" class="xs" type="number" min="1" max="31" placeholder="e.g. 1"></div>
+          <div class="fg"><label>Bank</label>
+            <select id="out-bank"><option value="">—</option><option>Bank of Ireland</option><option>Revolut</option><option>Monzo</option><option>N26</option></select>
+          </div>
           <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px">
             <button class="save-btn" id="out-save-btn" onclick="saveOutgoing()">Save</button>
             <button class="cancel-btn" onclick="cancelForm('out')">Cancel</button>
           </div></div>
         </div>
       </div>
-      <table><thead><tr><th>Name</th><th>Category</th><th>Frequency</th><th>Day</th><th style="text-align:right">Amount</th><th style="text-align:right">Monthly equiv.</th><th></th></tr></thead>
+      <table><thead><tr><th>Name</th><th>Category</th><th>Frequency</th><th>Day</th><th>Bank</th><th style="text-align:right">Amount</th><th style="text-align:right">Monthly equiv.</th><th></th></tr></thead>
       <tbody id="outgoings-body"></tbody></table>
     </div>
   </div>
@@ -842,8 +848,8 @@ function cancelForm(key) {
   if (titleEl) titleEl.textContent = { sub:'Subscriptions', income:'Income', out:'Outgoings', log:'Spending log' }[key] || '';
   if (key === 'sub') { ['sub-name','sub-amount','sub-billday','sub-date'].forEach(id => document.getElementById(id).value=''); document.getElementById('sub-freq').value='monthly'; toggleSubDateFields(); }
   else if (key === 'income') { ['inc-name','inc-amount','inc-day'].forEach(id => document.getElementById(id).value=''); document.getElementById('inc-freq').value='monthly'; document.getElementById('inc-weekday').value='1'; toggleIncDayFields(); }
-  else if (key === 'out') { ['out-name','out-amount','out-day'].forEach(id => document.getElementById(id).value=''); document.getElementById('out-freq').value='monthly'; document.getElementById('out-cat').value='Housing'; }
-  else if (key === 'log') { ['log-name','log-amount'].forEach(id => document.getElementById(id).value=''); document.getElementById('log-cat').value='Food'; document.getElementById('log-date').value=new Date().toISOString().split('T')[0]; }
+  else if (key === 'out') { ['out-name','out-amount','out-day'].forEach(id => document.getElementById(id).value=''); document.getElementById('out-freq').value='monthly'; document.getElementById('out-cat').value='Housing'; document.getElementById('out-bank').value=''; }
+  else if (key === 'log') { ['log-name','log-amount'].forEach(id => document.getElementById(id).value=''); document.getElementById('log-cat').value='Food'; document.getElementById('log-bank').value=''; document.getElementById('log-date').value=new Date().toISOString().split('T')[0]; }
 }
 
 // ---- Edit ----
@@ -883,6 +889,7 @@ function editOutgoing(idx) {
   document.getElementById('out-cat').value = x.cat;
   document.getElementById('out-freq').value = x.freq;
   document.getElementById('out-day').value = x.day || '';
+  document.getElementById('out-bank').value = x.bank || '';
   document.getElementById('out-save-btn').textContent = 'Update';
   document.getElementById('out-form-title').textContent = 'Edit outgoing';
   document.getElementById('out-form').classList.add('open');
@@ -894,6 +901,7 @@ function editLog(idx) {
   document.getElementById('log-name').value = e.name;
   document.getElementById('log-amount').value = e.amount;
   document.getElementById('log-cat').value = e.cat;
+  document.getElementById('log-bank').value = e.bank || '';
   document.getElementById('log-date').value = e.date;
   document.getElementById('log-save-btn').textContent = 'Update';
   document.getElementById('spending-form-title').textContent = 'Edit spend';
@@ -932,8 +940,9 @@ function saveOutgoing() {
   const cat = document.getElementById('out-cat').value;
   const freq = document.getElementById('out-freq').value;
   const day = parseInt(document.getElementById('out-day').value) || null;
+  const bank = document.getElementById('out-bank').value;
   if (!name || isNaN(amount) || amount <= 0) return;
-  const item = { name, amount, cat, freq, day };
+  const item = { name, amount, cat, freq, day, bank };
   if (editState?.key === 'out') data[currentProfile].outgoings[editState.idx] = item;
   else data[currentProfile].outgoings.push(item);
   save(); render(); cancelForm('out');
@@ -942,9 +951,10 @@ function saveLog() {
   const name = document.getElementById('log-name').value.trim();
   const amount = parseFloat(document.getElementById('log-amount').value);
   const cat = document.getElementById('log-cat').value;
+  const bank = document.getElementById('log-bank').value;
   const date = document.getElementById('log-date').value;
   if (!name || isNaN(amount) || amount <= 0) return;
-  const item = { name, amount, cat, date };
+  const item = { name, amount, cat, bank, date };
   if (editState?.key === 'log') data[currentProfile].log[editState.idx] = item;
   else data[currentProfile].log.push(item);
   save(); render(); cancelForm('log');
@@ -1100,7 +1110,7 @@ function render() {
   }
   const logBody = document.getElementById('log-body');
   if (!logEntries.length) {
-    logBody.innerHTML = '<tr class="empty-row"><td colspan="5">No spending logged for this month</td></tr>';
+    logBody.innerHTML = '<tr class="empty-row"><td colspan="6">No spending logged for this month</td></tr>';
   } else {
     logBody.innerHTML = logEntries.map(e => {
       const oi = data[currentProfile].log.indexOf(e);
@@ -1108,6 +1118,7 @@ function render() {
         <td style="color:var(--text2);font-size:12px">${e.date ? new Date(e.date).toLocaleDateString('en-IE') : '—'}</td>
         <td>${e.name}</td>
         <td><span class="cat-pill">${e.cat}</span></td>
+        <td style="color:var(--text2);font-size:12px">${e.bank||'—'}</td>
         <td class="amount-col" style="color:var(--danger)">${fmt(e.amount)}</td>
         <td><div class="row-actions"><button class="edit-btn" onclick="editLog(${oi})" title="Edit">&#9998;</button><button class="del-btn" onclick="delItem('${currentProfile}','log',${oi})">&times;</button></div></td>
       </tr>`;
@@ -1140,10 +1151,10 @@ function render() {
 
   // Outgoings table
   const outb = document.getElementById('outgoings-body');
-  if (!p.outgoings.length) { outb.innerHTML = '<tr class="empty-row"><td colspan="7">No outgoings yet</td></tr>'; }
+  if (!p.outgoings.length) { outb.innerHTML = '<tr class="empty-row"><td colspan="8">No outgoings yet</td></tr>'; }
   else {
     outb.innerHTML = p.outgoings.map((x,i)=>({...x,_i:i})).sort((a,b)=>(a.day||99)-(b.day||99)).map(x =>
-      `<tr><td>${x.name}</td><td style="color:var(--text2);font-size:12px">${x.cat}</td><td><span class="badge badge-expense">${x.freq}</span></td><td style="color:var(--text2);font-size:13px">${x.day?ordinal(x.day):'<span style="color:var(--text3)">—</span>'}</td><td class="amount-col">${fmt(x.amount)}</td><td class="amount-col" style="color:var(--text2);font-size:13px">${fmt(toMonthly(x.amount,x.freq))}/mo</td><td><div class="row-actions"><button class="move-btn edit-btn" onclick="moveToSubs(${x._i})" title="Move to subscriptions">&#8594; Sub</button><button class="edit-btn" onclick="editOutgoing(${x._i})" title="Edit">&#9998;</button><button class="del-btn" onclick="delItem('${currentProfile}','outgoings',${x._i})">&times;</button></div></td></tr>`
+      `<tr><td>${x.name}</td><td style="color:var(--text2);font-size:12px">${x.cat}</td><td><span class="badge badge-expense">${x.freq}</span></td><td style="color:var(--text2);font-size:13px">${x.day?ordinal(x.day):'<span style="color:var(--text3)">—</span>'}</td><td style="color:var(--text2);font-size:12px">${x.bank||'—'}</td><td class="amount-col">${fmt(x.amount)}</td><td class="amount-col" style="color:var(--text2);font-size:13px">${fmt(toMonthly(x.amount,x.freq))}/mo</td><td><div class="row-actions"><button class="move-btn edit-btn" onclick="moveToSubs(${x._i})" title="Move to subscriptions">&#8594; Sub</button><button class="edit-btn" onclick="editOutgoing(${x._i})" title="Edit">&#9998;</button><button class="del-btn" onclick="delItem('${currentProfile}','outgoings',${x._i})">&times;</button></div></td></tr>`
     ).join('');
   }
 
@@ -1253,9 +1264,9 @@ function openPrintReport() {
     <div class="pr-section">
       <h2>Spending log — ${monthLabel}</h2>
       <table class="pr-table">
-        <thead><tr><th>Date</th><th>Description</th><th>Category</th><th class="r">Amount</th></tr></thead>
+        <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Bank</th><th class="r">Amount</th></tr></thead>
         <tbody>
-          ${logEntries.map(e=>`<tr><td class="muted">${e.date?new Date(e.date).toLocaleDateString('en-IE'):'—'}</td><td>${e.name}</td><td class="muted">${e.cat}</td><td class="r">${fmt(e.amount)}</td></tr>`).join('')}
+          ${logEntries.map(e=>`<tr><td class="muted">${e.date?new Date(e.date).toLocaleDateString('en-IE'):'—'}</td><td>${e.name}</td><td class="muted">${e.cat}</td><td class="muted">${e.bank||'—'}</td><td class="r">${fmt(e.amount)}</td></tr>`).join('')}
           <tr><td colspan="3"><strong>Total</strong></td><td class="r"><strong>${fmt(spentThisMonth)}</strong></td></tr>
         </tbody>
       </table>
@@ -1266,10 +1277,10 @@ function openPrintReport() {
     <div class="pr-section">
       <h2>Regular outgoings</h2>
       <table class="pr-table">
-        <thead><tr><th>Name</th><th>Type</th><th>Frequency</th><th class="r">Monthly</th></tr></thead>
+        <thead><tr><th>Name</th><th>Type</th><th>Frequency</th><th>Bank</th><th class="r">Monthly</th></tr></thead>
         <tbody>
-          ${p.subs.map(s=>`<tr><td>${s.name}</td><td class="muted">Subscription</td><td class="muted">${s.freq}</td><td class="r">${fmt(toMonthly(s.amount,s.freq))}</td></tr>`).join('')}
-          ${p.outgoings.map(x=>`<tr><td>${x.name}</td><td class="muted">${x.cat}</td><td class="muted">${x.freq}</td><td class="r">${fmt(toMonthly(x.amount,x.freq))}</td></tr>`).join('')}
+          ${p.subs.map(s=>`<tr><td>${s.name}</td><td class="muted">Subscription</td><td class="muted">${s.freq}</td><td class="muted">—</td><td class="r">${fmt(toMonthly(s.amount,s.freq))}</td></tr>`).join('')}
+          ${p.outgoings.map(x=>`<tr><td>${x.name}</td><td class="muted">${x.cat}</td><td class="muted">${x.freq}</td><td class="muted">${x.bank||'—'}</td><td class="r">${fmt(toMonthly(x.amount,x.freq))}</td></tr>`).join('')}
         </tbody>
       </table>
     </div>` : ''}
