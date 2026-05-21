@@ -518,6 +518,7 @@
   <div class="tab-bar">
     <button class="tab-btn active" id="tab-postcards" onclick="switchView('postcards')">📮 Postcards</button>
     <button class="tab-btn"        id="tab-stamps"    onclick="switchView('stamps')">🏷️ Stamps</button>
+    <button class="tab-btn"        id="tab-monopoly"  onclick="switchView('monopoly')">🎩 Monopoly</button>
   </div>
 
   <main>
@@ -606,6 +607,50 @@
       </div>
       <div class="stamp-grid" id="stamp-grid">
         <div class="empty-state"><div class="empty-icon">🏷️</div><p>Loading your stamps…</p></div>
+      </div>
+    </div>
+
+    <!-- Monopoly section -->
+    <div id="section-monopoly" style="display:none">
+      <div class="stats-bar">
+        <div class="stat-pill">Total <strong id="m-stat-total">0</strong></div>
+        <div class="stat-pill">Est. value <strong id="m-stat-value">£0.00</strong></div>
+        <div class="stat-pill">Complete <strong id="m-stat-complete">0</strong></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+        <button class="btn-ghost" onclick="openImportModal('monopoly')" style="font-size:0.8rem;padding:7px 12px;">⬆ Import CSV</button>
+      </div>
+      <div class="controls">
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="m-search-input" class="search-input" placeholder="Search edition, publisher, year…" oninput="filterAndRenderMonopoly()">
+        </div>
+        <select class="filter-select" id="m-filter-completeness" onchange="filterAndRenderMonopoly()">
+          <option value="">All sets</option>
+          <option value="Complete">Complete</option>
+          <option value="Near-Complete">Near Complete</option>
+          <option value="Incomplete">Incomplete</option>
+        </select>
+        <select class="filter-select" id="m-filter-condition" onchange="filterAndRenderMonopoly()">
+          <option value="">All conditions</option>
+          <option value="Mint">Mint</option>
+          <option value="Good">Good</option>
+          <option value="Fair">Fair</option>
+          <option value="Poor">Poor</option>
+        </select>
+        <select class="filter-select" id="m-sort-by" onchange="filterAndRenderMonopoly()">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="value_high">Highest value</option>
+          <option value="value_low">Lowest value</option>
+          <option value="year">Year</option>
+          <option value="edition">Edition A–Z</option>
+        </select>
+      </div>
+      <div class="stamp-grid" id="monopoly-grid">
+        <div class="empty-state"><div class="empty-icon">🎩</div><p>Loading your Monopoly collection…</p></div>
       </div>
     </div>
 
@@ -720,6 +765,98 @@
       <button class="btn-danger" id="btn-delete-card" onclick="deleteCard()" style="display:none">Delete</button>
       <button class="btn-ghost" onclick="closeModal('modal-form')">Cancel</button>
       <button class="btn-save" id="btn-save-card" onclick="saveCard()">Save Card</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL: Add / Edit Monopoly -->
+<div class="modal-overlay" id="modal-monopoly-form">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="monopoly-form-title">Add Monopoly Edition</div>
+      <button class="modal-close" onclick="closeModal('modal-monopoly-form')">×</button>
+    </div>
+    <input type="hidden" id="m-id">
+    <div class="form-grid">
+      <div class="form-section-divider">Edition Details</div>
+      <div class="form-group form-full">
+        <label class="form-label">Edition Name</label>
+        <input type="text" id="m-edition" class="form-input" placeholder="e.g. Classic UK Edition, Here &amp; Now, National Parks">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Publisher / Manufacturer</label>
+        <input type="text" id="m-publisher" class="form-input" placeholder="e.g. Waddingtons, Hasbro">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Year</label>
+        <input type="text" id="m-year" class="form-input" placeholder="e.g. 1935">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Country / Region</label>
+        <input type="text" id="m-country" class="form-input" placeholder="e.g. UK, US">
+      </div>
+      <div class="form-section-divider">Condition</div>
+      <div class="form-group">
+        <label class="form-label">Completeness</label>
+        <select id="m-completeness" class="form-select">
+          <option value="">Unknown</option>
+          <option value="Complete">Complete</option>
+          <option value="Near-Complete">Near Complete</option>
+          <option value="Incomplete">Incomplete</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Box Condition</label>
+        <select id="m-condition" class="form-select">
+          <option value="">Unknown</option>
+          <option value="Mint">Mint</option>
+          <option value="Good">Good</option>
+          <option value="Fair">Fair</option>
+          <option value="Poor">Poor</option>
+        </select>
+      </div>
+      <div class="form-section-divider">Value &amp; Notes</div>
+      <div class="form-group">
+        <label class="form-label">Estimated Value (£)</label>
+        <input type="number" id="m-value" class="form-input" placeholder="0.00" step="0.01" min="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Duplicate Count</label>
+        <input type="number" id="m-dupes" class="form-input" placeholder="0" min="0">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Tags (comma-separated)</label>
+        <input type="text" id="m-tags" class="form-input" placeholder="e.g. vintage, complete, waddingtons">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Notes</label>
+        <textarea id="m-notes" class="form-textarea" placeholder="Missing pieces, box condition details, edition variants, anything interesting…"></textarea>
+      </div>
+      <div class="form-section-divider">Images</div>
+      <div class="form-full">
+        <div class="image-upload-row">
+          <div class="image-upload-box">
+            <input type="file" id="m-img-box" accept="image/*" onchange="previewImage(this,'prev-m-box','lbl-m-box')">
+            <img id="prev-m-box" class="upload-preview" alt="">
+            <div class="upload-label" id="lbl-m-box">📷 Box<br><small>Tap to choose</small></div>
+          </div>
+          <div class="image-upload-box">
+            <input type="file" id="m-img-contents" accept="image/*" onchange="previewImage(this,'prev-m-contents','lbl-m-contents')">
+            <img id="prev-m-contents" class="upload-preview" alt="">
+            <div class="upload-label" id="lbl-m-contents">📷 Contents / Board<br><small>Tap to choose</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="form-full" style="padding-top:4px;">
+        <button type="button" class="btn-ai" id="btn-ai-monopoly" onclick="fillFromImage('monopoly')">✨ Fill form from image</button>
+        <div class="ai-hint">Uses AI to read the box and pre-fill the fields above &nbsp;·&nbsp; <button type="button" onclick="changeApiKey()" style="background:none;border:none;color:var(--muted);font-size:0.75rem;cursor:pointer;padding:0;text-decoration:underline">Change API key</button></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-danger" id="btn-delete-monopoly" onclick="deleteMonopoly()" style="display:none">Delete</button>
+      <button class="btn-ghost" onclick="closeModal('modal-monopoly-form')">Cancel</button>
+      <button class="btn-save" id="btn-save-monopoly" onclick="saveMonopoly()">Save Edition</button>
     </div>
   </div>
 </div>
@@ -865,6 +1002,21 @@
 </div>
 
 
+<!-- MODAL: Monopoly Detail -->
+<div class="modal-overlay" id="modal-monopoly-detail">
+  <div class="modal" style="max-width:580px;">
+    <div class="modal-header">
+      <div class="modal-title" id="monopoly-detail-title">Monopoly Edition</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn-edit" onclick="editCurrentMonopoly()">Edit</button>
+        <button class="modal-close" onclick="closeModal('modal-monopoly-detail')">×</button>
+      </div>
+    </div>
+    <div id="monopoly-detail-body"></div>
+  </div>
+</div>
+
+
 <!-- MODAL: CSV Import -->
 <div class="modal-overlay" id="modal-import">
   <div class="modal" style="max-width:680px;">
@@ -951,6 +1103,9 @@ var currentDetailId    = null;
 var allStamps          = [];
 var editingStampId     = null;
 var currentDetailStampId = null;
+var allMonopoly        = [];
+var editingMonopolyId  = null;
+var currentDetailMonopolyId = null;
 var currentView        = 'postcards';
 
 // ── Auth ──
@@ -985,6 +1140,7 @@ auth.onAuthStateChanged(function(user) {
     document.getElementById('app').style.display = 'block';
     loadCards();
     loadStamps();
+    loadMonopoly();
   } else {
     currentUser = null;
     document.getElementById('login-screen').style.display = 'flex';
@@ -1000,24 +1156,31 @@ auth.onAuthStateChanged(function(user) {
 
 function switchView(view) {
   currentView = view;
-  var isPC = view === 'postcards';
-  document.getElementById('tab-postcards').classList.toggle('active', isPC);
-  document.getElementById('tab-stamps').classList.toggle('active', !isPC);
-  document.getElementById('section-postcards').style.display = isPC ? '' : 'none';
-  document.getElementById('section-stamps').style.display    = isPC ? 'none' : '';
+  document.getElementById('tab-postcards').classList.toggle('active', view === 'postcards');
+  document.getElementById('tab-stamps').classList.toggle('active',    view === 'stamps');
+  document.getElementById('tab-monopoly').classList.toggle('active',  view === 'monopoly');
+  document.getElementById('section-postcards').style.display = view === 'postcards' ? '' : 'none';
+  document.getElementById('section-stamps').style.display    = view === 'stamps'    ? '' : 'none';
+  document.getElementById('section-monopoly').style.display  = view === 'monopoly'  ? '' : 'none';
 
-  if (isPC) {
+  if (view === 'postcards') {
     document.getElementById('header-icon').textContent  = '📮';
     document.getElementById('header-title').textContent = 'Postcards';
     document.getElementById('btn-add-main').innerHTML   = '+ <span class="btn-label">Add Card</span>';
     document.getElementById('btn-add-main').onclick     = openAddModal;
     updateCardSubtitle();
-  } else {
+  } else if (view === 'stamps') {
     document.getElementById('header-icon').textContent  = '🏷️';
     document.getElementById('header-title').textContent = 'Stamps';
     document.getElementById('btn-add-main').innerHTML   = '+ <span class="btn-label">Add Stamp</span>';
     document.getElementById('btn-add-main').onclick     = openAddStampModal;
     updateStampSubtitle();
+  } else {
+    document.getElementById('header-icon').textContent  = '🎩';
+    document.getElementById('header-title').textContent = 'Monopoly';
+    document.getElementById('btn-add-main').innerHTML   = '+ <span class="btn-label">Add Edition</span>';
+    document.getElementById('btn-add-main').onclick     = openAddMonopolyModal;
+    updateMonopolySubtitle();
   }
 }
 
@@ -1029,6 +1192,278 @@ function updateCardSubtitle() {
 function updateStampSubtitle() {
   var n = allStamps.length;
   document.getElementById('header-sub').textContent = n + ' stamp' + (n !== 1 ? 's' : '');
+}
+
+function updateMonopolySubtitle() {
+  var n = allMonopoly.length;
+  document.getElementById('header-sub').textContent = n + ' edition' + (n !== 1 ? 's' : '');
+}
+
+// ── Load Monopoly ──
+
+function loadMonopoly() {
+  db.collection('monopoly')
+    .where('userId', '==', currentUser.uid)
+    .onSnapshot(function(snap) {
+      allMonopoly = [];
+      snap.forEach(function(doc) { allMonopoly.push(Object.assign({ id: doc.id }, doc.data())); });
+      updateMonopolyStats();
+      filterAndRenderMonopoly();
+    }, function(err) {
+      document.getElementById('monopoly-grid').innerHTML =
+        '<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Could not load collection</h3>' +
+        '<p style="font-size:0.8rem;max-width:340px;margin:0 auto">' + escHtml(err.message) + '</p></div>';
+    });
+}
+
+// ── Monopoly stats ──
+
+function updateMonopolyStats() {
+  var total    = allMonopoly.length;
+  var value    = allMonopoly.reduce(function(s, m) { return s + (parseFloat(m.estimatedValue) || 0); }, 0);
+  var complete = allMonopoly.filter(function(m) { return m.completeness === 'Complete'; }).length;
+  document.getElementById('m-stat-total').textContent    = total;
+  document.getElementById('m-stat-value').textContent    = '£' + value.toFixed(2);
+  document.getElementById('m-stat-complete').textContent = complete;
+  if (currentView === 'monopoly') updateMonopolySubtitle();
+}
+
+// ── Monopoly filter & render ──
+
+function filterAndRenderMonopoly() {
+  var q          = (document.getElementById('m-search-input').value || '').toLowerCase().trim();
+  var compFilt   = document.getElementById('m-filter-completeness').value;
+  var condFilt   = document.getElementById('m-filter-condition').value;
+  var sortBy     = document.getElementById('m-sort-by').value;
+
+  var filtered = allMonopoly.filter(function(m) {
+    if (compFilt && m.completeness !== compFilt) return false;
+    if (condFilt && m.condition !== condFilt)    return false;
+    if (q) {
+      var hay = [m.edition, m.publisher, m.year, m.country,
+                 (m.tags || []).join(' '), m.notes].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  filtered.sort(function(a, b) {
+    if (sortBy === 'oldest')     return tsM(a) - tsM(b);
+    if (sortBy === 'value_high') return (parseFloat(b.estimatedValue) || 0) - (parseFloat(a.estimatedValue) || 0);
+    if (sortBy === 'value_low')  return (parseFloat(a.estimatedValue) || 0) - (parseFloat(b.estimatedValue) || 0);
+    if (sortBy === 'year')       return (parseInt(a.year) || 0) - (parseInt(b.year) || 0);
+    if (sortBy === 'edition')    return (a.edition || '').localeCompare(b.edition || '');
+    return tsM(b) - tsM(a);
+  });
+
+  renderMonopolyGallery(filtered);
+}
+
+function tsM(m) {
+  return (m.createdAt && m.createdAt.seconds) ? m.createdAt.seconds : 0;
+}
+
+function renderMonopolyGallery(items) {
+  var grid = document.getElementById('monopoly-grid');
+
+  if (allMonopoly.length === 0) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🎩</div>' +
+      '<h3>No editions yet</h3><p>Add your first Monopoly edition to get started.</p>' +
+      '<button class="btn-primary" onclick="openAddMonopolyModal()">+ Add First Edition</button></div>';
+    return;
+  }
+  if (items.length === 0) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div>' +
+      '<h3>No editions match</h3><p>Try different search terms or filters.</p></div>';
+    return;
+  }
+
+  grid.innerHTML = items.map(function(m) {
+    var thumb = m.boxImageUrl
+      ? '<img src="' + escAttr(m.boxImageUrl) + '" alt="" loading="lazy">'
+      : '<div class="stamp-thumb-placeholder">🎩</div>';
+    var condBadge = m.condition
+      ? '<span class="badge badge-' + escAttr(m.condition) + '">' + escHtml(m.condition) + '</span>' : '';
+    var compBadge = m.completeness
+      ? '<span class="badge badge-' + (m.completeness === 'Complete' ? 'Mint' : m.completeness === 'Near-Complete' ? 'Fair' : 'Poor') + '">' + escHtml(m.completeness) + '</span>' : '';
+    var valBadge = m.estimatedValue
+      ? '<span class="badge badge-value">£' + parseFloat(m.estimatedValue).toFixed(2) + '</span>' : '';
+    var meta = [m.publisher, m.year].filter(Boolean).join(' · ');
+
+    return '<div class="stamp-tile" onclick="openMonopolyDetail(\'' + esc(m.id) + '\')">' +
+      '<div class="stamp-thumb">' + thumb + '</div>' +
+      '<div class="stamp-body">' +
+        '<div class="stamp-denom">' + escHtml(m.edition || '(no edition name)') + '</div>' +
+        '<div class="stamp-meta">' + escHtml(meta) + '</div>' +
+        '<div class="tile-badges">' + condBadge + compBadge + valBadge + '</div>' +
+      '</div></div>';
+  }).join('');
+}
+
+// ── Monopoly detail ──
+
+function openMonopolyDetail(id) {
+  var m = allMonopoly.find(function(x) { return x.id === id; });
+  if (!m) return;
+  currentDetailMonopolyId = id;
+  document.getElementById('monopoly-detail-title').textContent = m.edition || '(no edition name)';
+
+  function df(label, val, full) {
+    var v = val || '';
+    return '<div class="' + (full ? 'detail-field detail-field-full' : 'detail-field') + '">' +
+      '<div class="detail-field-label">' + label + '</div>' +
+      '<div class="detail-field-value' + (v ? '' : ' empty') + '">' + escHtml(v || '—') + '</div></div>';
+  }
+
+  var boxImg = m.boxImageUrl
+    ? '<img src="' + escAttr(m.boxImageUrl) + '" alt="Box" onclick="openLightbox(\'' + escAttr(m.boxImageUrl) + '\')">'
+    : '<div class="detail-img-placeholder">🎩</div>';
+  var contentsImg = m.contentsImageUrl
+    ? '<img src="' + escAttr(m.contentsImageUrl) + '" alt="Contents" onclick="openLightbox(\'' + escAttr(m.contentsImageUrl) + '\')">'
+    : '<div class="detail-img-placeholder">🎩</div>';
+
+  var tagsText = (m.tags && m.tags.length) ? m.tags.join(', ') : '';
+  document.getElementById('monopoly-detail-body').innerHTML =
+    '<div class="detail-images">' +
+      '<div class="detail-img-slot">' + boxImg      + '<div class="detail-img-label">Box</div></div>' +
+      '<div class="detail-img-slot">' + contentsImg + '<div class="detail-img-label">Contents / Board</div></div>' +
+    '</div>' +
+    '<div class="detail-fields">' +
+      df('Publisher',    m.publisher) +
+      df('Year',         m.year) +
+      df('Country',      m.country) +
+      df('Completeness', m.completeness) +
+      df('Box Condition',m.condition) +
+      df('Est. Value',   m.estimatedValue ? '£' + parseFloat(m.estimatedValue).toFixed(2) : '') +
+      df('Duplicates',   m.duplicateCount ? String(m.duplicateCount) : '0') +
+      df('Tags',         tagsText) +
+      (m.notes ? df('Notes', m.notes, true) : '') +
+    '</div>';
+
+  openModal('modal-monopoly-detail');
+}
+
+function editCurrentMonopoly() {
+  closeModal('modal-monopoly-detail');
+  openEditMonopolyModal(currentDetailMonopolyId);
+}
+
+// ── Monopoly form ──
+
+function openAddMonopolyModal() {
+  editingMonopolyId = null;
+  document.getElementById('monopoly-form-title').textContent = 'Add Monopoly Edition';
+  document.getElementById('btn-delete-monopoly').style.display = 'none';
+  clearMonopolyForm();
+  openModal('modal-monopoly-form');
+}
+
+function openEditMonopolyModal(id) {
+  var m = allMonopoly.find(function(x) { return x.id === id; });
+  if (!m) return;
+  editingMonopolyId = id;
+  document.getElementById('monopoly-form-title').textContent = 'Edit Monopoly Edition';
+  document.getElementById('btn-delete-monopoly').style.display = '';
+  populateMonopolyForm(m);
+  openModal('modal-monopoly-form');
+}
+
+function clearMonopolyForm() {
+  ['m-edition','m-publisher','m-year','m-country','m-tags','m-notes'].forEach(function(id) {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('m-value').value        = '';
+  document.getElementById('m-dupes').value        = '';
+  document.getElementById('m-completeness').value = '';
+  document.getElementById('m-condition').value    = '';
+  document.getElementById('m-img-box').value      = '';
+  document.getElementById('m-img-contents').value = '';
+  resetPreview('prev-m-box',      'lbl-m-box',      '📷 Box<br><small>Tap to choose</small>');
+  resetPreview('prev-m-contents', 'lbl-m-contents', '📷 Contents / Board<br><small>Tap to choose</small>');
+}
+
+function populateMonopolyForm(m) {
+  document.getElementById('m-edition').value     = m.edition       || '';
+  document.getElementById('m-publisher').value   = m.publisher     || '';
+  document.getElementById('m-year').value        = m.year          || '';
+  document.getElementById('m-country').value     = m.country       || '';
+  document.getElementById('m-completeness').value= m.completeness  || '';
+  document.getElementById('m-condition').value   = m.condition     || '';
+  document.getElementById('m-value').value       = m.estimatedValue|| '';
+  document.getElementById('m-dupes').value       = m.duplicateCount|| '';
+  document.getElementById('m-tags').value        = (m.tags || []).join(', ');
+  document.getElementById('m-notes').value       = m.notes         || '';
+  if (m.boxImageUrl)      showExistingPreview('prev-m-box',      'lbl-m-box',      m.boxImageUrl,      'Box ✓');
+  else resetPreview('prev-m-box',      'lbl-m-box',      '📷 Box<br><small>Tap to change</small>');
+  if (m.contentsImageUrl) showExistingPreview('prev-m-contents', 'lbl-m-contents', m.contentsImageUrl, 'Contents ✓');
+  else resetPreview('prev-m-contents', 'lbl-m-contents', '📷 Contents / Board<br><small>Tap to change</small>');
+}
+
+// ── Save Monopoly ──
+
+function saveMonopoly() {
+  var btn = document.getElementById('btn-save-monopoly');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Saving…';
+
+  var tags = document.getElementById('m-tags').value.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+  var data = {
+    userId:         currentUser.uid,
+    edition:        document.getElementById('m-edition').value.trim(),
+    publisher:      document.getElementById('m-publisher').value.trim(),
+    year:           document.getElementById('m-year').value.trim(),
+    country:        document.getElementById('m-country').value.trim(),
+    completeness:   document.getElementById('m-completeness').value,
+    condition:      document.getElementById('m-condition').value,
+    estimatedValue: parseFloat(document.getElementById('m-value').value) || 0,
+    duplicateCount: parseInt(document.getElementById('m-dupes').value)   || 0,
+    tags:           tags,
+    notes:          document.getElementById('m-notes').value.trim(),
+    updatedAt:      firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  var boxFile      = document.getElementById('m-img-box').files[0];
+  var contentsFile = document.getElementById('m-img-contents').files[0];
+  var mId          = editingMonopolyId || db.collection('monopoly').doc().id;
+  var existing     = editingMonopolyId ? allMonopoly.find(function(x) { return x.id === editingMonopolyId; }) : null;
+
+  data.boxImageUrl      = existing ? (existing.boxImageUrl      || '') : '';
+  data.contentsImageUrl = existing ? (existing.contentsImageUrl || '') : '';
+  if (!editingMonopolyId) data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+
+  var uploads = [];
+  var uid = currentUser.uid;
+  if (boxFile) {
+    var bRef = storage.ref('users/' + uid + '/monopoly/' + mId + '/box.' + ext(boxFile));
+    uploads.push(bRef.put(boxFile).then(function() { return bRef.getDownloadURL(); }).then(function(url) { data.boxImageUrl = url; }));
+  }
+  if (contentsFile) {
+    var cRef = storage.ref('users/' + uid + '/monopoly/' + mId + '/contents.' + ext(contentsFile));
+    uploads.push(cRef.put(contentsFile).then(function() { return cRef.getDownloadURL(); }).then(function(url) { data.contentsImageUrl = url; }));
+  }
+
+  Promise.all(uploads).then(function() {
+    var ref = db.collection('monopoly').doc(mId);
+    return editingMonopolyId ? ref.update(data) : ref.set(data);
+  }).then(function() {
+    closeModal('modal-monopoly-form');
+    toast(editingMonopolyId ? 'Edition updated ✓' : 'Edition added to collection ✓');
+  }).catch(function(err) {
+    console.error('Save error:', err);
+    toast('Save failed — ' + err.message);
+  }).finally(function() {
+    btn.disabled = false;
+    btn.innerHTML = 'Save Edition';
+  });
+}
+
+function deleteMonopoly() {
+  if (!editingMonopolyId) return;
+  if (!confirm('Delete this edition? This cannot be undone.')) return;
+  db.collection('monopoly').doc(editingMonopolyId).delete().then(function() {
+    closeModal('modal-monopoly-form');
+    toast('Edition deleted');
+  }).catch(function(err) { toast('Delete failed — ' + err.message); });
 }
 
 // ── Load postcards ──
@@ -1627,7 +2062,7 @@ function closeModal(id) {
   document.body.style.overflow = '';
 }
 
-['modal-form','modal-detail','modal-stamp-form','modal-stamp-detail','modal-import','modal-apikey'].forEach(function(id) {
+['modal-form','modal-detail','modal-stamp-form','modal-stamp-detail','modal-monopoly-form','modal-monopoly-detail','modal-import','modal-apikey'].forEach(function(id) {
   document.getElementById(id).addEventListener('click', function(e) {
     if (e.target === this) closeModal(id);
   });
@@ -1674,6 +2109,19 @@ var POSTCARD_FIELD_MAP = {
   notes:'notes'
 };
 
+var MONOPOLY_FIELD_MAP = {
+  edition:'edition', editionname:'edition', name:'edition',
+  publisher:'publisher', manufacturer:'publisher',
+  year:'year', yearofmanufacture:'year',
+  country:'country', region:'country',
+  completeness:'completeness',
+  condition:'condition', boxcondition:'condition',
+  estimatedvalue:'estimatedValue', value:'estimatedValue',
+  duplicatecount:'duplicateCount', duplicates:'duplicateCount',
+  tags:'tags',
+  notes:'notes'
+};
+
 var STAMP_FIELD_MAP = {
   description:'description',
   country:'country',
@@ -1696,7 +2144,8 @@ var STAMP_FIELD_MAP = {
 function openImportModal(type) {
   importType = type;
   importRecords = [];
-  document.getElementById('import-modal-title').textContent = 'Import ' + (type === 'stamps' ? 'Stamps' : 'Postcards') + ' from CSV';
+  var label = type === 'stamps' ? 'Stamps' : type === 'monopoly' ? 'Monopoly Editions' : 'Postcards';
+  document.getElementById('import-modal-title').textContent = 'Import ' + label + ' from CSV';
   document.getElementById('import-file-input').value = '';
   document.getElementById('import-preview').innerHTML = '';
   document.getElementById('btn-confirm-import').style.display = 'none';
@@ -1708,6 +2157,9 @@ function downloadTemplate() {
   if (importType === 'stamps') {
     headers = 'Description,Country,Year,Denomination,Series Name,SG Number,Scott Number,Colour,Perforation,Used/Unused,Condition,Estimated Value,Duplicate Count,Tags,Album Source,Notes';
     name = 'stamps-template.csv';
+  } else if (importType === 'monopoly') {
+    headers = 'Edition Name,Publisher,Year,Country,Completeness,Condition,Estimated Value,Duplicate Count,Tags,Notes';
+    name = 'monopoly-template.csv';
   } else {
     headers = 'Caption,Publisher,Series No,Card No,Theme,Era,Original/Reprint,Condition,Research Status,Estimated Value,Duplicate Count,Tags,Album Source,Notes';
     name = 'postcards-template.csv';
@@ -1729,7 +2181,7 @@ function handleImportFile(input) {
       var rows = parseCSV(e.target.result);
       if (rows.length < 2) { showImportError('File appears to be empty.'); return; }
       var headers = rows[0].map(function(h) { return h.trim(); });
-      var fieldMap = importType === 'stamps' ? STAMP_FIELD_MAP : POSTCARD_FIELD_MAP;
+      var fieldMap = importType === 'stamps' ? STAMP_FIELD_MAP : importType === 'monopoly' ? MONOPOLY_FIELD_MAP : POSTCARD_FIELD_MAP;
 
       importRecords = [];
       for (var i = 1; i < rows.length; i++) {
@@ -1767,10 +2219,14 @@ function showImportError(msg) {
 function renderImportPreview() {
   var previewFields = importType === 'stamps'
     ? ['description','country','denomination','condition']
-    : ['caption','publisher','condition','estimatedValue'];
+    : importType === 'monopoly'
+      ? ['edition','publisher','year','completeness']
+      : ['caption','publisher','condition','estimatedValue'];
   var labels = importType === 'stamps'
     ? ['Description','Country','Denomination','Condition']
-    : ['Caption','Publisher','Condition','Value'];
+    : importType === 'monopoly'
+      ? ['Edition','Publisher','Year','Completeness']
+      : ['Caption','Publisher','Condition','Value'];
 
   var rows = importRecords.slice(0, 8);
   var thead = '<tr>' + labels.map(function(l){ return '<th>' + l + '</th>'; }).join('') + '</tr>';
@@ -1798,7 +2254,7 @@ function confirmImport() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Importing…';
 
-  var col = importType === 'stamps' ? 'stamps' : 'postcards';
+  var col = importType === 'stamps' ? 'stamps' : importType === 'monopoly' ? 'monopoly' : 'postcards';
   var CHUNK = 400;
   var batches = [];
 
@@ -1858,6 +2314,22 @@ function collectAIImages(type) {
       if (st) u = st.imageUrl || null;
     }
     if (f || u) images.push({ file: f, url: u });
+  } else if (type === 'monopoly') {
+    var mf = document.getElementById('m-img-box').files[0] || null;
+    var mu = null;
+    if (editingMonopolyId) {
+      var mx = allMonopoly.find(function(m){ return m.id === editingMonopolyId; });
+      if (mx) mu = mx.boxImageUrl || null;
+    }
+    if (mf || mu) images.push({ file: mf, url: mu });
+
+    var cf = document.getElementById('m-img-contents').files[0] || null;
+    var cu = null;
+    if (editingMonopolyId) {
+      var mx2 = allMonopoly.find(function(m){ return m.id === editingMonopolyId; });
+      if (mx2) cu = mx2.contentsImageUrl || null;
+    }
+    if (cf || cu) images.push({ file: cf, url: cu });
   } else {
     var ff = document.getElementById('f-img-front').files[0] || null;
     var fu = null;
@@ -1983,7 +2455,7 @@ function imgToBase64(src) {
 }
 
 function runAIFill(type, images, apiKey) {
-  var btnId = type === 'stamp' ? 'btn-ai-stamp' : 'btn-ai-postcard';
+  var btnId = type === 'stamp' ? 'btn-ai-stamp' : type === 'monopoly' ? 'btn-ai-monopoly' : 'btn-ai-postcard';
   var btn = document.getElementById(btnId);
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Analysing…';
@@ -1993,6 +2465,8 @@ function runAIFill(type, images, apiKey) {
 
     var prompt = type === 'stamp'
       ? 'Analyse this postage stamp image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: description, country, year, denomination, colour, condition (one of: Mint Fine Good Fair Poor), used (one of: used unused), estimatedValue (estimated GBP value as a number, e.g. 2.50 — leave as empty string if you cannot estimate). Leave fields as empty string if uncertain.'
+      : type === 'monopoly'
+        ? 'Analyse this Monopoly board game image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: edition (the edition or version name, e.g. "Classic UK Edition", "Here & Now"), publisher (e.g. Waddingtons, Parker Brothers, Hasbro, Winning Moves), year (year of manufacture if visible), country (e.g. UK, US), completeness (one of: Complete Near-Complete Incomplete — if visible), condition (one of: Mint Good Fair Poor — based on box condition), notes (any interesting details about the edition), estimatedValue (estimated GBP collector value as a number, e.g. 25.00 — leave as empty string if uncertain). Leave fields as empty string if uncertain.'
       : hasBoth
         ? 'Analyse this vintage postcard. The first image is the front (picture side); the second is the back which may show the publisher, printed caption, series number, card number, postmarks and any written message. Return ONLY a JSON object (no markdown) with these fields where you can determine them: caption, publisher, seriesNo, cardNo, theme, era, condition (one of: Mint Good Fair Poor), isOriginal (one of: original reprint), notes (postmarks, message, or anything interesting), estimatedValue (estimated GBP value as a number, e.g. 2.50 — leave as empty string if you cannot estimate). Leave fields as empty string if uncertain.'
         : 'Analyse this vintage postcard image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: caption, publisher, theme, era, condition (one of: Mint Good Fair Poor), isOriginal (one of: original reprint), notes (any interesting details), estimatedValue (estimated GBP value as a number, e.g. 2.50 — leave as empty string if you cannot estimate). Leave fields as empty string if uncertain.';
@@ -2059,6 +2533,15 @@ function applyAIResult(data, type) {
     set('f-original',  data.isOriginal);
     set('f-notes',     data.notes);
     set('f-value',     data.estimatedValue);
+  } else if (type === 'monopoly') {
+    set('m-edition',      data.edition);
+    set('m-publisher',    data.publisher);
+    set('m-year',         data.year);
+    set('m-country',      data.country);
+    set('m-completeness', data.completeness);
+    set('m-condition',    data.condition);
+    set('m-notes',        data.notes);
+    set('m-value',        data.estimatedValue);
   } else {
     set('s-description', data.description);
     set('s-country',     data.country);
