@@ -372,9 +372,6 @@
 </head>
 <body>
 
-<a href="/portal/" class="hub-back-btn">← Hub</a>
-<style>.hub-back-btn{position:fixed;top:14px;left:14px;z-index:99999;background:rgba(42,50,68,0.82);color:#fff;text-decoration:none;font-size:.75rem;font-weight:600;padding:6px 13px;border-radius:20px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);letter-spacing:.02em;transition:background .15s}.hub-back-btn:hover{background:rgba(42,50,68,1)}</style>
-
 <div id="auth-loading">
   <div class="auth-spinner" aria-hidden="true"></div>
   <div>Loading household…</div>
@@ -424,9 +421,6 @@
   </div>
 </div>
 
-<!-- Print area (only visible when printing) -->
-<div id="print-area"></div>
-
 <header class="app-hero">
   <div class="app-hero-top">
     <div class="hero-brand">
@@ -437,6 +431,7 @@
       </div>
     </div>
     <span id="last-saved" class="hero-status">Not saved yet</span>
+    <span class="hero-status" style="font-size:11px;opacity:0.5;margin-left:8px">v2026-05-21</span>
   </div>
   <div class="hero-actions">
     <button type="button" class="hdr-btn" onclick="openSyncModal()">Sync data</button>
@@ -497,6 +492,9 @@
           <div class="fg"><label>Category</label>
             <select id="log-cat"><option>Food</option><option>Transport</option><option>Clothing</option><option>Health</option><option>Dogs</option><option>Home</option><option>Entertainment</option><option>Other</option></select>
           </div>
+          <div class="fg"><label>Bank</label>
+            <select id="log-bank"><option value="">—</option><option>Bank of Ireland</option><option>Revolut</option><option>Monzo</option><option>N26</option></select>
+          </div>
           <div class="fg"><label>Date</label><input id="log-date" type="date"></div>
           <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px">
             <button class="save-btn" id="log-save-btn" onclick="saveLog()">Save</button>
@@ -505,7 +503,7 @@
         </div>
       </div>
       <div id="log-month-total" style="padding:10px 18px;font-size:13px;color:var(--text2);border-bottom:1px solid var(--border);background:var(--surface2);display:none"></div>
-      <table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th style="text-align:right">Amount</th><th></th></tr></thead>
+      <table><thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Bank</th><th style="text-align:right">Amount</th><th></th></tr></thead>
       <tbody id="log-body"></tbody></table>
     </div>
   </div>
@@ -587,107 +585,43 @@
             <select id="out-freq"><option value="monthly">Monthly</option><option value="weekly">Weekly</option><option value="annual">Annual</option></select>
           </div>
           <div class="fg"><label>Day of month</label><input id="out-day" class="xs" type="number" min="1" max="31" placeholder="e.g. 1"></div>
+          <div class="fg"><label>Bank</label>
+            <select id="out-bank"><option value="">—</option><option>Bank of Ireland</option><option>Revolut</option><option>Monzo</option><option>N26</option></select>
+          </div>
           <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px">
             <button class="save-btn" id="out-save-btn" onclick="saveOutgoing()">Save</button>
             <button class="cancel-btn" onclick="cancelForm('out')">Cancel</button>
           </div></div>
         </div>
       </div>
-      <table><thead><tr><th>Name</th><th>Category</th><th>Frequency</th><th>Day</th><th style="text-align:right">Amount</th><th style="text-align:right">Monthly equiv.</th><th></th></tr></thead>
+      <table><thead><tr><th>Name</th><th>Category</th><th>Frequency</th><th>Day</th><th>Bank</th><th style="text-align:right">Amount</th><th style="text-align:right">Monthly equiv.</th><th></th></tr></thead>
       <tbody id="outgoings-body"></tbody></table>
     </div>
   </div>
 
   <!-- FAMILY DEBTS -->
   <div id="tab-debts" class="hidden">
-    <p class="debts-lede">Track what you owe to family members, log payments, and see your running balance.</p>
-
-    <div class="card debt-section">
-      <div class="debt-header">
-        <div class="debt-meta">
-          <h3>Wendy &mdash; Boiler</h3>
-          <p>Amount borrowed: <strong id="wendy-original">€0.00</strong></p>
-          <p id="wendy-monthly-label" style="display:none">Monthly payment: <strong id="wendy-monthly">€0.00</strong> <span style="color:var(--text3);font-size:11px">(counted in outgoings)</span></p>
-        </div>
-        <div class="debt-totals">
-          <div class="owed" id="wendy-owed">€0.00</div>
-          <div class="paid-label">still owed</div>
-        </div>
-      </div>
-      <div class="debt-progress"><div class="debt-progress-bar" id="wendy-bar" style="width:0%"></div></div>
-      <div class="debt-progress-label"><span id="wendy-paid-label">€0.00 paid</span><span id="wendy-pct">0%</span></div>
-      <div class="card-header" style="border-top:1px solid var(--border)">
-        <span class="card-title">Payment history</span>
-        <div style="display:flex;gap:8px">
-          <button class="add-btn" onclick="toggleForm('wendy-setup-form')">Set total owed</button>
-          <button class="add-btn" onclick="toggleForm('wendy-pay-form')">+ Log payment</button>
-        </div>
-      </div>
-      <div class="add-form" id="wendy-setup-form">
+    <p class="debts-lede">Track debts and credit cards — log payments and see your running balance.</p>
+    <div style="margin-bottom:16px">
+      <button class="add-btn" onclick="toggleForm('add-debt-form')">+ Add debt / credit card</button>
+      <div class="add-form" id="add-debt-form">
         <div class="form-row">
-          <div class="fg"><label>Total amount owed (€)</label><input id="wendy-total-input" class="sm" type="number" step="0.01" placeholder="0.00"></div>
-          <div class="fg"><label>Monthly payment (€)</label><input id="wendy-monthly-input" class="sm" type="number" step="0.01" placeholder="0.00"></div>
-          <div class="fg"><label>Notes</label><input id="wendy-total-note" placeholder="e.g. Boiler replacement"></div>
-          <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px"><button class="save-btn" onclick="setDebtTotal('wendy')">Save</button><button class="cancel-btn" onclick="toggleForm('wendy-setup-form')">Cancel</button></div></div>
+          <div class="fg"><label>Name</label><input id="new-debt-label" placeholder="e.g. Monzo credit card"></div>
+          <div class="fg"><label>Current balance (€)</label><input id="new-debt-total" class="sm" type="number" step="0.01" placeholder="0.00"></div>
+          <div class="fg"><label>Monthly payment (€)</label><input id="new-debt-monthly" class="sm" type="number" step="0.01" placeholder="0.00"></div>
+          <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px"><button class="save-btn" onclick="addDebt()">Add</button><button class="cancel-btn" onclick="toggleForm('add-debt-form')">Cancel</button></div></div>
         </div>
       </div>
-      <div class="add-form" id="wendy-pay-form">
-        <div class="form-row">
-          <div class="fg"><label>Amount paid (€)</label><input id="wendy-pay-amount" class="sm" type="number" step="0.01" placeholder="0.00"></div>
-          <div class="fg"><label>Date</label><input id="wendy-pay-date" type="date"></div>
-          <div class="fg"><label>Notes</label><input id="wendy-pay-note" placeholder="Optional note"></div>
-          <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px"><button class="save-btn" onclick="addPayment('wendy')">Save</button><button class="cancel-btn" onclick="toggleForm('wendy-pay-form')">Cancel</button></div></div>
-        </div>
-      </div>
-      <table><thead><tr><th>Date</th><th>Notes</th><th style="text-align:right">Amount</th><th></th></tr></thead>
-      <tbody id="wendy-payments"></tbody></table>
     </div>
-
-    <div class="card debt-section">
-      <div class="debt-header">
-        <div class="debt-meta">
-          <h3>Mum &amp; Dad &mdash; Shed</h3>
-          <p>Amount borrowed: <strong id="parents-original">€0.00</strong></p>
-          <p id="parents-monthly-label" style="display:none">Monthly payment: <strong id="parents-monthly">€0.00</strong> <span style="color:var(--text3);font-size:11px">(counted in outgoings)</span></p>
-        </div>
-        <div class="debt-totals">
-          <div class="owed" id="parents-owed">€0.00</div>
-          <div class="paid-label">still owed</div>
-        </div>
-      </div>
-      <div class="debt-progress"><div class="debt-progress-bar" id="parents-bar" style="width:0%"></div></div>
-      <div class="debt-progress-label"><span id="parents-paid-label">€0.00 paid</span><span id="parents-pct">0%</span></div>
-      <div class="card-header" style="border-top:1px solid var(--border)">
-        <span class="card-title">Payment history</span>
-        <div style="display:flex;gap:8px">
-          <button class="add-btn" onclick="toggleForm('parents-setup-form')">Set total owed</button>
-          <button class="add-btn" onclick="toggleForm('parents-pay-form')">+ Log payment</button>
-        </div>
-      </div>
-      <div class="add-form" id="parents-setup-form">
-        <div class="form-row">
-          <div class="fg"><label>Total amount owed (€)</label><input id="parents-total-input" class="sm" type="number" step="0.01" placeholder="0.00"></div>
-          <div class="fg"><label>Monthly payment (€)</label><input id="parents-monthly-input" class="sm" type="number" step="0.01" placeholder="0.00"></div>
-          <div class="fg"><label>Notes</label><input id="parents-total-note" placeholder="e.g. Garden shed"></div>
-          <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px"><button class="save-btn" onclick="setDebtTotal('parents')">Save</button><button class="cancel-btn" onclick="toggleForm('parents-setup-form')">Cancel</button></div></div>
-        </div>
-      </div>
-      <div class="add-form" id="parents-pay-form">
-        <div class="form-row">
-          <div class="fg"><label>Amount paid (€)</label><input id="parents-pay-amount" class="sm" type="number" step="0.01" placeholder="0.00"></div>
-          <div class="fg"><label>Date</label><input id="parents-pay-date" type="date"></div>
-          <div class="fg"><label>Notes</label><input id="parents-pay-note" placeholder="Optional note"></div>
-          <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px"><button class="save-btn" onclick="addPayment('parents')">Save</button><button class="cancel-btn" onclick="toggleForm('parents-pay-form')">Cancel</button></div></div>
-        </div>
-      </div>
-      <table><thead><tr><th>Date</th><th>Notes</th><th style="text-align:right">Amount</th><th></th></tr></thead>
-      <tbody id="parents-payments"></tbody></table>
-    </div>
+    <div id="debts-container"></div>
   </div>
 
 </div><!-- end container -->
 
 </div><!-- end main-app -->
+
+<!-- Print area (only visible when printing) -->
+<div id="print-area"></div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -709,8 +643,7 @@ const fbDb = firebase.database();
 <script>
 const ALLOWED_HOUSEHOLD_EMAILS = [
   'stephrawlingscreations@gmail.com',
-  'sdr22ie@gmail.com',
-  'sdr22uk@gmail.com'
+  'sdr22ie@gmail.com'
 ];
 let currentUser = null;
 let pendingDisallowMessage = '';
@@ -724,10 +657,10 @@ const defaultData = {
   steph:   { subs: [], income: [], outgoings: [], log: [] },
   partner: { subs: [], income: [], outgoings: [], log: [] },
   shared:  { subs: [], income: [], outgoings: [], log: [] },
-  debts: {
-    wendy:   { total: 0, note: '', monthlyPayment: 0, payments: [] },
-    parents: { total: 0, note: '', monthlyPayment: 0, payments: [] }
-  }
+  debts: [
+    { id: 'wendy',   label: 'Wendy — Boiler',    total: 0, note: '', monthlyPayment: 0, payments: [] },
+    { id: 'parents', label: 'Mum & Dad — Shed',  total: 0, note: '', monthlyPayment: 0, payments: [] }
+  ]
 };
 
 let data;
@@ -735,11 +668,19 @@ let data;
 function ensureDataShape(obj) {
   const d = obj && typeof obj === 'object' ? obj : JSON.parse(JSON.stringify(defaultData));
   ['steph','partner','shared'].forEach(p => { if (!d[p]) d[p] = defaultData[p]; if (!d[p].log) d[p].log = []; });
-  if (!d.debts) d.debts = defaultData.debts;
-  if (!d.debts.wendy) d.debts.wendy = defaultData.debts.wendy;
-  if (!d.debts.parents) d.debts.parents = defaultData.debts.parents;
-  if (!d.debts.wendy.monthlyPayment) d.debts.wendy.monthlyPayment = 0;
-  if (!d.debts.parents.monthlyPayment) d.debts.parents.monthlyPayment = 0;
+  if (!d.debts) {
+    d.debts = JSON.parse(JSON.stringify(defaultData.debts));
+  } else if (!Array.isArray(d.debts)) {
+    // migrate old object format { wendy:{...}, parents:{...} } to array
+    const arr = [];
+    if (d.debts.wendy)   arr.push({ id:'wendy',   label:'Wendy — Boiler',   ...d.debts.wendy });
+    if (d.debts.parents) arr.push({ id:'parents', label:'Mum & Dad — Shed', ...d.debts.parents });
+    Object.entries(d.debts).forEach(([k,v]) => {
+      if (k !== 'wendy' && k !== 'parents') arr.push({ id:k, label:k, ...v });
+    });
+    d.debts = arr;
+  }
+  d.debts.forEach(debt => { if (!debt.monthlyPayment) debt.monthlyPayment=0; if (!debt.payments) debt.payments=[]; });
   return d;
 }
 
@@ -771,7 +712,7 @@ function save() {
   if (!data) return;
   localStorage.setItem(KEY, JSON.stringify(data));
   if (currentUser) {
-    fbDb.ref(FB_HOUSEHOLD_PATH).set(data).catch(() => {});
+    fbDb.ref('users/' + currentUser.uid + '/' + FB_HOUSEHOLD_PATH).set(data).catch(() => {});
   }
   const now = new Date();
   document.getElementById('last-saved').textContent = 'Saved ' + now.toLocaleTimeString('en-IE', {hour:'2-digit',minute:'2-digit'});
@@ -846,8 +787,8 @@ function cancelForm(key) {
   if (titleEl) titleEl.textContent = { sub:'Subscriptions', income:'Income', out:'Outgoings', log:'Spending log' }[key] || '';
   if (key === 'sub') { ['sub-name','sub-amount','sub-billday','sub-date'].forEach(id => document.getElementById(id).value=''); document.getElementById('sub-freq').value='monthly'; toggleSubDateFields(); }
   else if (key === 'income') { ['inc-name','inc-amount','inc-day'].forEach(id => document.getElementById(id).value=''); document.getElementById('inc-freq').value='monthly'; document.getElementById('inc-weekday').value='1'; toggleIncDayFields(); }
-  else if (key === 'out') { ['out-name','out-amount','out-day'].forEach(id => document.getElementById(id).value=''); document.getElementById('out-freq').value='monthly'; document.getElementById('out-cat').value='Housing'; }
-  else if (key === 'log') { ['log-name','log-amount'].forEach(id => document.getElementById(id).value=''); document.getElementById('log-cat').value='Food'; document.getElementById('log-date').value=new Date().toISOString().split('T')[0]; }
+  else if (key === 'out') { ['out-name','out-amount','out-day'].forEach(id => document.getElementById(id).value=''); document.getElementById('out-freq').value='monthly'; document.getElementById('out-cat').value='Housing'; document.getElementById('out-bank').value=''; }
+  else if (key === 'log') { ['log-name','log-amount'].forEach(id => document.getElementById(id).value=''); document.getElementById('log-cat').value='Food'; document.getElementById('log-bank').value=''; document.getElementById('log-date').value=new Date().toISOString().split('T')[0]; }
 }
 
 // ---- Edit ----
@@ -887,6 +828,7 @@ function editOutgoing(idx) {
   document.getElementById('out-cat').value = x.cat;
   document.getElementById('out-freq').value = x.freq;
   document.getElementById('out-day').value = x.day || '';
+  document.getElementById('out-bank').value = x.bank || '';
   document.getElementById('out-save-btn').textContent = 'Update';
   document.getElementById('out-form-title').textContent = 'Edit outgoing';
   document.getElementById('out-form').classList.add('open');
@@ -898,6 +840,7 @@ function editLog(idx) {
   document.getElementById('log-name').value = e.name;
   document.getElementById('log-amount').value = e.amount;
   document.getElementById('log-cat').value = e.cat;
+  document.getElementById('log-bank').value = e.bank || '';
   document.getElementById('log-date').value = e.date;
   document.getElementById('log-save-btn').textContent = 'Update';
   document.getElementById('spending-form-title').textContent = 'Edit spend';
@@ -936,8 +879,9 @@ function saveOutgoing() {
   const cat = document.getElementById('out-cat').value;
   const freq = document.getElementById('out-freq').value;
   const day = parseInt(document.getElementById('out-day').value) || null;
+  const bank = document.getElementById('out-bank').value;
   if (!name || isNaN(amount) || amount <= 0) return;
-  const item = { name, amount, cat, freq, day };
+  const item = { name, amount, cat, freq, day, bank };
   if (editState?.key === 'out') data[currentProfile].outgoings[editState.idx] = item;
   else data[currentProfile].outgoings.push(item);
   save(); render(); cancelForm('out');
@@ -946,9 +890,10 @@ function saveLog() {
   const name = document.getElementById('log-name').value.trim();
   const amount = parseFloat(document.getElementById('log-amount').value);
   const cat = document.getElementById('log-cat').value;
+  const bank = document.getElementById('log-bank').value;
   const date = document.getElementById('log-date').value;
   if (!name || isNaN(amount) || amount <= 0) return;
-  const item = { name, amount, cat, date };
+  const item = { name, amount, cat, bank, date };
   if (editState?.key === 'log') data[currentProfile].log[editState.idx] = item;
   else data[currentProfile].log.push(item);
   save(); render(); cancelForm('log');
@@ -962,58 +907,111 @@ function moveToSubs(idx) {
   save(); render();
 }
 
-function setDebtTotal(who) {
-  const amount = parseFloat(document.getElementById(who + '-total-input').value);
-  const monthly = parseFloat(document.getElementById(who + '-monthly-input').value) || 0;
-  const note = document.getElementById(who + '-total-note').value.trim();
-  if (isNaN(amount) || amount <= 0) return;
-  data.debts[who].total = amount;
-  data.debts[who].monthlyPayment = monthly;
-  data.debts[who].note = note;
-  save(); renderDebts(); render();
-  document.getElementById(who + '-total-input').value = '';
-  document.getElementById(who + '-monthly-input').value = '';
-  document.getElementById(who + '-total-note').value = '';
-  document.getElementById(who + '-setup-form').classList.remove('open');
+function debtCardHTML(d) {
+  const totalPaid = d.payments.reduce((s,p) => s + Number(p.amount), 0);
+  const owed = Math.max(0, d.total - totalPaid);
+  const pct = d.total > 0 ? Math.min(100, Math.round(totalPaid / d.total * 100)) : 0;
+  const mp = Number(d.monthlyPayment) || 0;
+  const paymentRows = !d.payments.length
+    ? '<tr class="empty-row"><td colspan="4">No payments logged yet</td></tr>'
+    : [...d.payments].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(p => {
+        const oi = d.payments.indexOf(p);
+        return `<tr><td>${p.date ? new Date(p.date).toLocaleDateString('en-IE') : '—'}</td><td style="color:var(--text2)">${p.note||'—'}</td><td class="amount-col" style="color:var(--accent)">${fmt(p.amount)}</td><td style="text-align:right"><button class="del-btn" onclick="delPayment('${d.id}',${oi})">&times;</button></td></tr>`;
+      }).join('');
+  return `
+    <div class="card debt-section">
+      <div class="debt-header">
+        <div class="debt-meta">
+          <h3>${d.label}</h3>
+          <p>Amount owed: <strong>${fmt(d.total)}</strong></p>
+          ${mp > 0 ? `<p>Monthly payment: <strong>${fmt(mp)}</strong> <span style="color:var(--text3);font-size:11px">(counted in outgoings)</span></p>` : ''}
+        </div>
+        <div class="debt-totals">
+          <div class="owed">${fmt(owed)}</div>
+          <div class="paid-label">still owed</div>
+        </div>
+      </div>
+      <div class="debt-progress"><div class="debt-progress-bar" style="width:${pct}%"></div></div>
+      <div class="debt-progress-label"><span>${fmt(totalPaid)} paid</span><span>${pct}%</span></div>
+      <div class="card-header" style="border-top:1px solid var(--border)">
+        <span class="card-title">Payment history</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="add-btn" onclick="toggleForm('${d.id}-setup-form')">Update balance</button>
+          <button class="add-btn" onclick="toggleForm('${d.id}-pay-form')">+ Log payment</button>
+          <button class="del-btn" onclick="deleteDebt('${d.id}')" title="Delete this debt" style="opacity:0.45">×</button>
+        </div>
+      </div>
+      <div class="add-form" id="${d.id}-setup-form">
+        <div class="form-row">
+          <div class="fg"><label>Total / current balance (€)</label><input id="${d.id}-total-input" class="sm" type="number" step="0.01" placeholder="0.00" value="${d.total||''}"></div>
+          <div class="fg"><label>Monthly payment (€)</label><input id="${d.id}-monthly-input" class="sm" type="number" step="0.01" placeholder="0.00" value="${mp||''}"></div>
+          <div class="fg"><label>Notes</label><input id="${d.id}-total-note" placeholder="Optional note" value="${d.note||''}"></div>
+          <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px"><button class="save-btn" onclick="setDebtTotal('${d.id}')">Save</button><button class="cancel-btn" onclick="toggleForm('${d.id}-setup-form')">Cancel</button></div></div>
+        </div>
+      </div>
+      <div class="add-form" id="${d.id}-pay-form">
+        <div class="form-row">
+          <div class="fg"><label>Amount paid (€)</label><input id="${d.id}-pay-amount" class="sm" type="number" step="0.01" placeholder="0.00"></div>
+          <div class="fg"><label>Date</label><input id="${d.id}-pay-date" type="date"></div>
+          <div class="fg"><label>Notes</label><input id="${d.id}-pay-note" placeholder="Optional note"></div>
+          <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px"><button class="save-btn" onclick="addPayment('${d.id}')">Save</button><button class="cancel-btn" onclick="toggleForm('${d.id}-pay-form')">Cancel</button></div></div>
+        </div>
+      </div>
+      <table><thead><tr><th>Date</th><th>Notes</th><th style="text-align:right">Amount</th><th></th></tr></thead>
+      <tbody>${paymentRows}</tbody></table>
+    </div>`;
 }
-function addPayment(who) {
-  const amount = parseFloat(document.getElementById(who + '-pay-amount').value);
-  const date = document.getElementById(who + '-pay-date').value;
-  const note = document.getElementById(who + '-pay-note').value.trim();
-  if (isNaN(amount) || amount <= 0) return;
-  data.debts[who].payments.push({ amount, date, note });
-  save(); renderDebts();
-  document.getElementById(who + '-pay-amount').value = '';
-  document.getElementById(who + '-pay-date').value = '';
-  document.getElementById(who + '-pay-note').value = '';
-  document.getElementById(who + '-pay-form').classList.remove('open');
-}
-function delPayment(who, idx) { data.debts[who].payments.splice(idx, 1); save(); renderDebts(); }
 
 function renderDebts() {
-  ['wendy','parents'].forEach(who => {
-    const d = data.debts[who];
-    const totalPaid = d.payments.reduce((s,p) => s + Number(p.amount), 0);
-    const owed = Math.max(0, d.total - totalPaid);
-    const pct = d.total > 0 ? Math.min(100, Math.round(totalPaid / d.total * 100)) : 0;
-    document.getElementById(who+'-original').textContent = fmt(d.total);
-    document.getElementById(who+'-owed').textContent = fmt(owed);
-    document.getElementById(who+'-bar').style.width = pct + '%';
-    document.getElementById(who+'-paid-label').textContent = fmt(totalPaid) + ' paid';
-    document.getElementById(who+'-pct').textContent = pct + '%';
-    const mp = Number(d.monthlyPayment) || 0;
-    document.getElementById(who+'-monthly-label').style.display = mp > 0 ? '' : 'none';
-    document.getElementById(who+'-monthly').textContent = fmt(mp);
-    const tbody = document.getElementById(who+'-payments');
-    if (!d.payments.length) {
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="4">No payments logged yet</td></tr>';
-    } else {
-      tbody.innerHTML = [...d.payments].sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(p => {
-        const oi = d.payments.indexOf(p);
-        return `<tr><td>${p.date ? new Date(p.date).toLocaleDateString('en-IE') : '—'}</td><td style="color:var(--text2)">${p.note||'—'}</td><td class="amount-col" style="color:var(--accent)">${fmt(p.amount)}</td><td style="text-align:right"><button class="del-btn" onclick="delPayment('${who}',${oi})">&times;</button></td></tr>`;
-      }).join('');
-    }
-  });
+  const container = document.getElementById('debts-container');
+  container.innerHTML = data.debts.length
+    ? data.debts.map(debtCardHTML).join('')
+    : '<p style="color:var(--text2);font-size:14px;padding:8px 0">No debts added yet.</p>';
+}
+
+function setDebtTotal(id) {
+  const d = data.debts.find(x => x.id === id);
+  if (!d) return;
+  const amount = parseFloat(document.getElementById(id + '-total-input').value);
+  const monthly = parseFloat(document.getElementById(id + '-monthly-input').value) || 0;
+  const note = document.getElementById(id + '-total-note').value.trim();
+  if (isNaN(amount) || amount <= 0) return;
+  d.total = amount;
+  d.monthlyPayment = monthly;
+  d.note = note;
+  save(); renderDebts(); render();
+}
+
+function addPayment(id) {
+  const d = data.debts.find(x => x.id === id);
+  if (!d) return;
+  const amount = parseFloat(document.getElementById(id + '-pay-amount').value);
+  const date = document.getElementById(id + '-pay-date').value;
+  const note = document.getElementById(id + '-pay-note').value.trim();
+  if (isNaN(amount) || amount <= 0) return;
+  d.payments.push({ amount, date, note });
+  save(); renderDebts();
+}
+function delPayment(id, idx) {
+  const d = data.debts.find(x => x.id === id);
+  if (d) { d.payments.splice(idx, 1); save(); renderDebts(); }
+}
+function addDebt() {
+  const label = document.getElementById('new-debt-label').value.trim();
+  const total = parseFloat(document.getElementById('new-debt-total').value) || 0;
+  const monthly = parseFloat(document.getElementById('new-debt-monthly').value) || 0;
+  if (!label) return;
+  data.debts.push({ id: 'debt_' + Date.now(), label, total, note: '', monthlyPayment: monthly, payments: [] });
+  document.getElementById('new-debt-label').value = '';
+  document.getElementById('new-debt-total').value = '';
+  document.getElementById('new-debt-monthly').value = '';
+  toggleForm('add-debt-form');
+  save(); renderDebts(); render();
+}
+function deleteDebt(id) {
+  if (!confirm('Delete this debt and all its payment history?')) return;
+  data.debts = data.debts.filter(x => x.id !== id);
+  save(); renderDebts(); render();
 }
 
 function render() {
@@ -1023,7 +1021,7 @@ function render() {
   const totalSubsM = p.subs.reduce((s,x) => s + toMonthly(x.amount, x.freq), 0);
   const totalIncM  = p.income.reduce((s,x) => s + toMonthly(x.amount, x.freq), 0);
   const totalOutM  = p.outgoings.reduce((s,x) => s + toMonthly(x.amount, x.freq), 0);
-  const totalDebtM = Object.values(data.debts).reduce((s,d) => s + (Number(d.monthlyPayment)||0), 0);
+  const totalDebtM = data.debts.reduce((s,d) => s + (Number(d.monthlyPayment)||0), 0);
   const budget = totalIncM - (totalSubsM + totalOutM + totalDebtM);
   const spentThisMonth = logEntriesForMonth(ym).reduce((s,e) => s + Number(e.amount), 0);
   const leftThisMonth = budget - spentThisMonth;
@@ -1104,7 +1102,7 @@ function render() {
   }
   const logBody = document.getElementById('log-body');
   if (!logEntries.length) {
-    logBody.innerHTML = '<tr class="empty-row"><td colspan="5">No spending logged for this month</td></tr>';
+    logBody.innerHTML = '<tr class="empty-row"><td colspan="6">No spending logged for this month</td></tr>';
   } else {
     logBody.innerHTML = logEntries.map(e => {
       const oi = data[currentProfile].log.indexOf(e);
@@ -1112,6 +1110,7 @@ function render() {
         <td style="color:var(--text2);font-size:12px">${e.date ? new Date(e.date).toLocaleDateString('en-IE') : '—'}</td>
         <td>${e.name}</td>
         <td><span class="cat-pill">${e.cat}</span></td>
+        <td style="color:var(--text2);font-size:12px">${e.bank||'—'}</td>
         <td class="amount-col" style="color:var(--danger)">${fmt(e.amount)}</td>
         <td><div class="row-actions"><button class="edit-btn" onclick="editLog(${oi})" title="Edit">&#9998;</button><button class="del-btn" onclick="delItem('${currentProfile}','log',${oi})">&times;</button></div></td>
       </tr>`;
@@ -1144,10 +1143,10 @@ function render() {
 
   // Outgoings table
   const outb = document.getElementById('outgoings-body');
-  if (!p.outgoings.length) { outb.innerHTML = '<tr class="empty-row"><td colspan="7">No outgoings yet</td></tr>'; }
+  if (!p.outgoings.length) { outb.innerHTML = '<tr class="empty-row"><td colspan="8">No outgoings yet</td></tr>'; }
   else {
     outb.innerHTML = p.outgoings.map((x,i)=>({...x,_i:i})).sort((a,b)=>(a.day||99)-(b.day||99)).map(x =>
-      `<tr><td>${x.name}</td><td style="color:var(--text2);font-size:12px">${x.cat}</td><td><span class="badge badge-expense">${x.freq}</span></td><td style="color:var(--text2);font-size:13px">${x.day?ordinal(x.day):'<span style="color:var(--text3)">—</span>'}</td><td class="amount-col">${fmt(x.amount)}</td><td class="amount-col" style="color:var(--text2);font-size:13px">${fmt(toMonthly(x.amount,x.freq))}/mo</td><td><div class="row-actions"><button class="move-btn edit-btn" onclick="moveToSubs(${x._i})" title="Move to subscriptions">&#8594; Sub</button><button class="edit-btn" onclick="editOutgoing(${x._i})" title="Edit">&#9998;</button><button class="del-btn" onclick="delItem('${currentProfile}','outgoings',${x._i})">&times;</button></div></td></tr>`
+      `<tr><td>${x.name}</td><td style="color:var(--text2);font-size:12px">${x.cat}</td><td><span class="badge badge-expense">${x.freq}</span></td><td style="color:var(--text2);font-size:13px">${x.day?ordinal(x.day):'<span style="color:var(--text3)">—</span>'}</td><td style="color:var(--text2);font-size:12px">${x.bank||'—'}</td><td class="amount-col">${fmt(x.amount)}</td><td class="amount-col" style="color:var(--text2);font-size:13px">${fmt(toMonthly(x.amount,x.freq))}/mo</td><td><div class="row-actions"><button class="move-btn edit-btn" onclick="moveToSubs(${x._i})" title="Move to subscriptions">&#8594; Sub</button><button class="edit-btn" onclick="editOutgoing(${x._i})" title="Edit">&#9998;</button><button class="del-btn" onclick="delItem('${currentProfile}','outgoings',${x._i})">&times;</button></div></td></tr>`
     ).join('');
   }
 
@@ -1184,13 +1183,7 @@ function loadSyncCode() {
   try {
     const loaded = JSON.parse(decodeURIComponent(escape(atob(code))));
     if (!loaded.steph && !loaded.debts) throw new Error('invalid');
-    data = loaded;
-    ['steph','partner','shared'].forEach(p => { if (!data[p]) data[p]=defaultData[p]; if (!data[p].log) data[p].log=[]; });
-    if (!data.debts) data.debts=defaultData.debts;
-    if (!data.debts.wendy) data.debts.wendy=defaultData.debts.wendy;
-    if (!data.debts.parents) data.debts.parents=defaultData.debts.parents;
-    if (!data.debts.wendy.monthlyPayment) data.debts.wendy.monthlyPayment=0;
-    if (!data.debts.parents.monthlyPayment) data.debts.parents.monthlyPayment=0;
+    data = ensureDataShape(loaded);
     save(); render();
     fb.textContent = 'Data loaded successfully!'; fb.className='sync-feedback ok';
     setTimeout(closeSyncModal, 1200);
@@ -1199,6 +1192,7 @@ function loadSyncCode() {
 
 // ---- Print report ----
 function openPrintReport() {
+  if (!data) return;
   const p = data[currentProfile];
   const now = new Date();
   const monthLabel = MONTHS[now.getMonth()] + ' ' + now.getFullYear();
@@ -1208,7 +1202,7 @@ function openPrintReport() {
   const totalSubsM = p.subs.reduce((s,x)=>s+toMonthly(x.amount,x.freq),0);
   const totalIncM  = p.income.reduce((s,x)=>s+toMonthly(x.amount,x.freq),0);
   const totalOutM  = p.outgoings.reduce((s,x)=>s+toMonthly(x.amount,x.freq),0);
-  const totalDebtM = Object.values(data.debts).reduce((s,d)=>s+(Number(d.monthlyPayment)||0),0);
+  const totalDebtM = data.debts.reduce((s,d)=>s+(Number(d.monthlyPayment)||0),0);
   const budget = totalIncM - (totalSubsM + totalOutM + totalDebtM);
   const logEntries = logEntriesForMonth(ym).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   const spentThisMonth = logEntries.reduce((s,e)=>s+Number(e.amount),0);
@@ -1224,14 +1218,12 @@ function openPrintReport() {
     `<tr><td>${cat}</td><td class="r">${fmt(amt)}</td></tr>`).join('');
 
   // Debt summary
-  const debtRows = ['wendy','parents'].map(who => {
-    const d = data.debts[who];
+  const debtRows = data.debts.map(d => {
     if (!d.total) return '';
     const totalPaid = d.payments.reduce((s,p)=>s+Number(p.amount),0);
     const owed = Math.max(0, d.total - totalPaid);
     const pct = Math.min(100, Math.round(totalPaid/d.total*100));
-    const label = who==='wendy'?'Wendy — Boiler':'Mum & Dad — Shed';
-    return `<tr><td>${label}</td><td class="r muted">${fmt(d.total)}</td><td class="r">${fmt(owed)}</td><td class="r muted">${pct}%<div class="pr-debt-bar"><div class="pr-debt-bar-fill" style="width:${pct}%"></div></div></td></tr>`;
+    return `<tr><td>${d.label}</td><td class="r muted">${fmt(d.total)}</td><td class="r">${fmt(owed)}</td><td class="r muted">${pct}%<div class="pr-debt-bar"><div class="pr-debt-bar-fill" style="width:${pct}%"></div></div></td></tr>`;
   }).join('');
 
   document.getElementById('print-area').innerHTML = `
@@ -1257,9 +1249,9 @@ function openPrintReport() {
     <div class="pr-section">
       <h2>Spending log — ${monthLabel}</h2>
       <table class="pr-table">
-        <thead><tr><th>Date</th><th>Description</th><th>Category</th><th class="r">Amount</th></tr></thead>
+        <thead><tr><th>Date</th><th>Description</th><th>Category</th><th>Bank</th><th class="r">Amount</th></tr></thead>
         <tbody>
-          ${logEntries.map(e=>`<tr><td class="muted">${e.date?new Date(e.date).toLocaleDateString('en-IE'):'—'}</td><td>${e.name}</td><td class="muted">${e.cat}</td><td class="r">${fmt(e.amount)}</td></tr>`).join('')}
+          ${logEntries.map(e=>`<tr><td class="muted">${e.date?new Date(e.date).toLocaleDateString('en-IE'):'—'}</td><td>${e.name}</td><td class="muted">${e.cat}</td><td class="muted">${e.bank||'—'}</td><td class="r">${fmt(e.amount)}</td></tr>`).join('')}
           <tr><td colspan="3"><strong>Total</strong></td><td class="r"><strong>${fmt(spentThisMonth)}</strong></td></tr>
         </tbody>
       </table>
@@ -1270,10 +1262,10 @@ function openPrintReport() {
     <div class="pr-section">
       <h2>Regular outgoings</h2>
       <table class="pr-table">
-        <thead><tr><th>Name</th><th>Type</th><th>Frequency</th><th class="r">Monthly</th></tr></thead>
+        <thead><tr><th>Name</th><th>Type</th><th>Frequency</th><th>Bank</th><th class="r">Monthly</th></tr></thead>
         <tbody>
-          ${p.subs.map(s=>`<tr><td>${s.name}</td><td class="muted">Subscription</td><td class="muted">${s.freq}</td><td class="r">${fmt(toMonthly(s.amount,s.freq))}</td></tr>`).join('')}
-          ${p.outgoings.map(x=>`<tr><td>${x.name}</td><td class="muted">${x.cat}</td><td class="muted">${x.freq}</td><td class="r">${fmt(toMonthly(x.amount,x.freq))}</td></tr>`).join('')}
+          ${p.subs.map(s=>`<tr><td>${s.name}</td><td class="muted">Subscription</td><td class="muted">${s.freq}</td><td class="muted">—</td><td class="r">${fmt(toMonthly(s.amount,s.freq))}</td></tr>`).join('')}
+          ${p.outgoings.map(x=>`<tr><td>${x.name}</td><td class="muted">${x.cat}</td><td class="muted">${x.freq}</td><td class="muted">${x.bank||'—'}</td><td class="r">${fmt(toMonthly(x.amount,x.freq))}</td></tr>`).join('')}
         </tbody>
       </table>
     </div>` : ''}
@@ -1288,7 +1280,7 @@ function openPrintReport() {
     </div>` : ''}
   `;
 
-  window.print();
+  setTimeout(() => window.print(), 100);
 }
 
 // ---- Backup ----
@@ -1353,14 +1345,14 @@ function signOutHousehold() {
 
 function refreshHouseholdFromCloud() {
   if (!currentUser) return Promise.resolve();
-  return fbDb.ref(FB_HOUSEHOLD_PATH).once('value').then(snap => {
+  return fbDb.ref('users/' + currentUser.uid + '/' + FB_HOUSEHOLD_PATH).once('value').then(snap => {
     const cloud = snap.val();
     if (cloud && typeof cloud === 'object' && (cloud.steph || cloud.partner || cloud.shared)) {
       data = ensureDataShape(JSON.parse(JSON.stringify(cloud)));
       localStorage.setItem(KEY, JSON.stringify(data));
     } else {
       data = loadDataFromLocalStorage();
-      return fbDb.ref(FB_HOUSEHOLD_PATH).set(data).catch(() => {});
+      return fbDb.ref('users/' + currentUser.uid + '/' + FB_HOUSEHOLD_PATH).set(data).catch(() => {});
     }
   });
 }
