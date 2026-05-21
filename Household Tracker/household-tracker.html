@@ -1191,6 +1191,7 @@ function loadSyncCode() {
 
 // ---- Print report ----
 function openPrintReport() {
+  if (!data) return;
   const p = data[currentProfile];
   const now = new Date();
   const monthLabel = MONTHS[now.getMonth()] + ' ' + now.getFullYear();
@@ -1200,7 +1201,7 @@ function openPrintReport() {
   const totalSubsM = p.subs.reduce((s,x)=>s+toMonthly(x.amount,x.freq),0);
   const totalIncM  = p.income.reduce((s,x)=>s+toMonthly(x.amount,x.freq),0);
   const totalOutM  = p.outgoings.reduce((s,x)=>s+toMonthly(x.amount,x.freq),0);
-  const totalDebtM = Object.values(data.debts).reduce((s,d)=>s+(Number(d.monthlyPayment)||0),0);
+  const totalDebtM = data.debts.reduce((s,d)=>s+(Number(d.monthlyPayment)||0),0);
   const budget = totalIncM - (totalSubsM + totalOutM + totalDebtM);
   const logEntries = logEntriesForMonth(ym).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
   const spentThisMonth = logEntries.reduce((s,e)=>s+Number(e.amount),0);
@@ -1278,7 +1279,7 @@ function openPrintReport() {
     </div>` : ''}
   `;
 
-  window.print();
+  setTimeout(() => window.print(), 100);
 }
 
 // ---- Backup ----
