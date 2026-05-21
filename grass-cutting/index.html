@@ -211,6 +211,8 @@ select {
 .balance-table th:last-child, .balance-table th:nth-child(3), .balance-table th:nth-child(4) { text-align: right; }
 .positive { color: var(--leaf); font-weight: 600; }
 .negative { color: var(--red); font-weight: 600; }
+.del-btn { font-size: 12px; padding: 1px 5px; margin-left: 6px; color: var(--red); background: transparent; border: 1px solid transparent; cursor: pointer; border-radius: 3px; opacity: 0.4; vertical-align: middle; line-height: 1; }
+.del-btn:hover { opacity: 1; border-color: var(--red); background: rgba(200,50,50,0.08); }
 
 #saveStatus { font-size: 12px; font-weight: 600; min-height: 1.2em; }
 
@@ -865,17 +867,20 @@ function renderBalance() {
   const totalPaid = state.payments.reduce((s,p)=>s+p.amount,0);
   const events = [];
   events.push({date:'',desc:'Total payments collected',cost:0,type:'open',amount:totalPaid});
-  state.cuttings.filter(c=>c.cost>0).sort((a,b)=>a.date.localeCompare(b.date)).forEach(c=>{
-    events.push({date:c.date,desc:c.desc,cost:c.cost,type:'cutting'});
+  state.cuttings.map((c,i)=>({...c,idx:i})).sort((a,b)=>a.date.localeCompare(b.date)).forEach(c=>{
+    events.push({date:c.date,desc:c.desc,cost:c.cost,type:'cutting',idx:c.idx});
   });
   let rows = '';
   let bal = totalPaid;
   events.forEach(e => {
     if (e.type === 'open') {
       rows += `<tr><td style="color:var(--muted);font-size:12px;font-weight:600">Opening</td><td>${e.desc}</td><td style="text-align:right"></td><td style="text-align:right;font-weight:600" class="positive">${fmt(bal)}</td></tr>`;
+    } else if (e.cost === 0) {
+      bal -= e.cost;
+      rows += `<tr><td>${fmtDate(e.date)}</td><td>${e.desc} <button class="del-btn" onclick="deleteCutting(${e.idx})" title="Delete entry">×</button></td><td style="text-align:right;color:var(--muted);font-style:italic">Not yet paid</td><td style="text-align:right;font-weight:600" class="${bal<0?'negative':'positive'}">${fmt(bal)}</td></tr>`;
     } else {
       bal -= e.cost;
-      rows += `<tr><td>${fmtDate(e.date)}</td><td>${e.desc}</td><td style="text-align:right" class="negative">-${fmt(e.cost)}</td><td style="text-align:right;font-weight:600" class="${bal<0?'negative':'positive'}">${fmt(bal)}</td></tr>`;
+      rows += `<tr><td>${fmtDate(e.date)}</td><td>${e.desc} <button class="del-btn" onclick="deleteCutting(${e.idx})" title="Delete entry">×</button></td><td style="text-align:right" class="negative">-${fmt(e.cost)}</td><td style="text-align:right;font-weight:600" class="${bal<0?'negative':'positive'}">${fmt(bal)}</td></tr>`;
     }
   });
   document.getElementById('balanceBody').innerHTML = rows;
@@ -976,6 +981,13 @@ function saveCutting() {
   renderBalance(); renderSummary();
 }
 
+function deleteCutting(index) {
+  if (!confirm('Delete this balance entry?')) return;
+  state.cuttings.splice(index, 1);
+  save();
+  renderBalance(); renderSummary();
+}
+
 function printReport() {
   const w = window.open('', '_blank');
   if (!w) { alert('Pop-up blocked. Please allow pop-ups for this page and try again.'); return; }
@@ -1005,9 +1017,12 @@ function printReport() {
     return `<tr><td class="muted">${r.houseNo}</td><td>${r.name}</td><td class="num">${r.na ? '—' : '€' + r.owed.toFixed(2)}</td><td class="num ${paid > 0 ? 'green' : ''}">${paid > 0 ? '€' + paid.toFixed(2) : '—'}</td><td class="num ${balClass}">${r.na ? '—' : '€' + balance.toFixed(2)}</td><td>${statusLabel}</td></tr>`;
   }).join('');
 
-  const sortedCuttings = state.cuttings.filter(c => c.cost > 0).sort((a, b) => a.date.localeCompare(b.date));
+  const sortedCuttings = state.cuttings.slice().sort((a, b) => a.date.localeCompare(b.date));
   let runBal = totalPaid;
   const cuttingRows = sortedCuttings.map(c => {
+    if (c.cost === 0) {
+      return `<tr><td>${fmtDate(c.date)}</td><td>${c.desc}</td><td class="num muted" style="font-style:italic">Not yet paid</td><td class="num ${runBal >= 0 ? 'green' : 'red'}">€${runBal.toFixed(2)}</td></tr>`;
+    }
     runBal -= c.cost;
     return `<tr><td>${fmtDate(c.date)}</td><td>${c.desc}</td><td class="num red">−€${c.cost.toFixed(2)}</td><td class="num ${runBal >= 0 ? 'green' : 'red'}">€${runBal.toFixed(2)}</td></tr>`;
   }).join('');
