@@ -561,7 +561,8 @@
         <div class="stat-pill">Est. value <strong id="stat-value">£0.00</strong></div>
         <div class="stat-pill">Need research <strong id="stat-research">0</strong></div>
       </div>
-      <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;">
+        <button class="btn-ghost" onclick="printReport('postcards')" style="font-size:0.8rem;padding:7px 12px;">🖨 Print Report</button>
         <button class="btn-ghost" onclick="openImportModal('postcards')" style="font-size:0.8rem;padding:7px 12px;">⬆ Import CSV</button>
       </div>
       <div class="controls">
@@ -604,7 +605,8 @@
         <div class="stat-pill">Est. value <strong id="s-stat-value">£0.00</strong></div>
         <div class="stat-pill">Countries <strong id="s-stat-countries">0</strong></div>
       </div>
-      <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;">
+        <button class="btn-ghost" onclick="printReport('stamps')" style="font-size:0.8rem;padding:7px 12px;">🖨 Print Report</button>
         <button class="btn-ghost" onclick="openImportModal('stamps')" style="font-size:0.8rem;padding:7px 12px;">⬆ Import CSV</button>
       </div>
       <div class="controls">
@@ -648,7 +650,8 @@
         <div class="stat-pill">Est. value <strong id="m-stat-value">£0.00</strong></div>
         <div class="stat-pill">Complete <strong id="m-stat-complete">0</strong></div>
       </div>
-      <div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;">
+        <button class="btn-ghost" onclick="printReport('monopoly')" style="font-size:0.8rem;padding:7px 12px;">🖨 Print Report</button>
         <button class="btn-ghost" onclick="openImportModal('monopoly')" style="font-size:0.8rem;padding:7px 12px;">⬆ Import CSV</button>
       </div>
       <div class="controls">
@@ -2587,6 +2590,156 @@ function applyAIResult(data, type) {
     set('s-used',        data.used);
     set('s-value',       data.estimatedValue);
   }
+}
+
+// ── Print Reports ──
+
+function printReport(view) {
+  var now = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  var title, icon, statsHtml, theadHtml, tbodyHtml, filtered, isFiltered;
+
+  if (view === 'postcards') {
+    var q        = (document.getElementById('search-input').value || '').toLowerCase().trim();
+    var condFilt = document.getElementById('filter-condition').value;
+    var resFilt  = document.getElementById('filter-research').value;
+    var sortBy   = document.getElementById('sort-by').value;
+    isFiltered   = !!(q || condFilt || resFilt);
+    filtered = allCards.filter(function(c) {
+      if (condFilt && c.condition !== condFilt) return false;
+      if (resFilt  && c.researchStatus !== resFilt) return false;
+      if (q) {
+        var hay = [c.caption,c.publisher,c.theme,c.era,c.cardNo,c.seriesNo,(c.tags||[]).join(' '),c.notes].join(' ').toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+    filtered.sort(function(a,b) {
+      if (sortBy==='oldest')     return ts(a)-ts(b);
+      if (sortBy==='value_high') return (parseFloat(b.estimatedValue)||0)-(parseFloat(a.estimatedValue)||0);
+      if (sortBy==='value_low')  return (parseFloat(a.estimatedValue)||0)-(parseFloat(b.estimatedValue)||0);
+      if (sortBy==='publisher')  return (a.publisher||'').localeCompare(b.publisher||'');
+      return ts(b)-ts(a);
+    });
+    title = 'Postcard Collection Report'; icon = '📮';
+    var tVal = filtered.reduce(function(s,c){return s+(parseFloat(c.estimatedValue)||0);},0);
+    var tRes = filtered.filter(function(c){return c.researchStatus==='needed';}).length;
+    statsHtml = stat('Items', filtered.length) + stat('Est. Value', '£'+tVal.toFixed(2)) + stat('Need Research', tRes);
+    theadHtml = row(['#','Caption / Description','Publisher','Series #','Era','Condition','Est. Value','Research'], true);
+    var resMap = {needed:'Needs research', in_progress:'In progress', done:'Done'};
+    tbodyHtml = filtered.map(function(c,i) {
+      return row([(i+1), c.caption||'—', c.publisher||'—', c.seriesNo||'—', c.era||'—',
+                  c.condition||'—', c.estimatedValue?'£'+parseFloat(c.estimatedValue).toFixed(2):'—',
+                  resMap[c.researchStatus]||'—']);
+    }).join('');
+
+  } else if (view === 'stamps') {
+    var sq       = (document.getElementById('s-search-input').value || '').toLowerCase().trim();
+    var usedFilt = document.getElementById('s-filter-used').value;
+    var scondFilt= document.getElementById('s-filter-condition').value;
+    var ssortBy  = document.getElementById('s-sort-by').value;
+    isFiltered   = !!(sq || usedFilt || scondFilt);
+    filtered = allStamps.filter(function(st) {
+      if (usedFilt==='used'   && st.used!=='used')   return false;
+      if (usedFilt==='unused' && st.used!=='unused') return false;
+      if (scondFilt && st.condition !== scondFilt) return false;
+      if (sq) {
+        var hay = [st.description,st.country,st.year,st.denomination,st.seriesName,st.catalogueSG,st.catalogueScott,st.colour,(st.tags||[]).join(' '),st.notes].join(' ').toLowerCase();
+        if (!hay.includes(sq)) return false;
+      }
+      return true;
+    });
+    filtered.sort(function(a,b) {
+      if (ssortBy==='oldest')     return tsS(a)-tsS(b);
+      if (ssortBy==='value_high') return (parseFloat(b.estimatedValue)||0)-(parseFloat(a.estimatedValue)||0);
+      if (ssortBy==='value_low')  return (parseFloat(a.estimatedValue)||0)-(parseFloat(b.estimatedValue)||0);
+      if (ssortBy==='country')    return (a.country||'').localeCompare(b.country||'');
+      if (ssortBy==='year')       return (parseInt(a.year)||0)-(parseInt(b.year)||0);
+      return tsS(b)-tsS(a);
+    });
+    title = 'Stamp Collection Report'; icon = '🏷️';
+    var sVal = filtered.reduce(function(s,st){return s+(parseFloat(st.estimatedValue)||0);},0);
+    var sCntries = new Set(filtered.map(function(st){return (st.country||'').trim().toLowerCase();}).filter(Boolean)).size;
+    statsHtml = stat('Items', filtered.length) + stat('Est. Value', '£'+sVal.toFixed(2)) + stat('Countries', sCntries);
+    theadHtml = row(['#','Description','Country','Year','Denom.','SG #','Condition','Used','Est. Value'], true);
+    tbodyHtml = filtered.map(function(st,i) {
+      var usedTxt = st.used==='used'?'Used':st.used==='unused'?'Unused':'—';
+      return row([(i+1), st.description||'—', st.country||'—', st.year||'—', st.denomination||'—',
+                  st.catalogueSG||'—', st.condition||'—', usedTxt,
+                  st.estimatedValue?'£'+parseFloat(st.estimatedValue).toFixed(2):'—']);
+    }).join('');
+
+  } else {
+    var mq       = (document.getElementById('m-search-input').value || '').toLowerCase().trim();
+    var compFilt = document.getElementById('m-filter-completeness').value;
+    var mcondFilt= document.getElementById('m-filter-condition').value;
+    var msortBy  = document.getElementById('m-sort-by').value;
+    isFiltered   = !!(mq || compFilt || mcondFilt);
+    filtered = allMonopoly.filter(function(m) {
+      if (compFilt && m.completeness !== compFilt) return false;
+      if (mcondFilt && m.condition !== mcondFilt)  return false;
+      if (mq) {
+        var hay = [m.edition,m.publisher,m.year,m.country,(m.tags||[]).join(' '),m.notes].join(' ').toLowerCase();
+        if (!hay.includes(mq)) return false;
+      }
+      return true;
+    });
+    filtered.sort(function(a,b) {
+      if (msortBy==='oldest')     return tsM(a)-tsM(b);
+      if (msortBy==='value_high') return (parseFloat(b.estimatedValue)||0)-(parseFloat(a.estimatedValue)||0);
+      if (msortBy==='value_low')  return (parseFloat(a.estimatedValue)||0)-(parseFloat(b.estimatedValue)||0);
+      if (msortBy==='year')       return (parseInt(a.year)||0)-(parseInt(b.year)||0);
+      if (msortBy==='edition')    return (a.edition||'').localeCompare(b.edition||'');
+      return tsM(b)-tsM(a);
+    });
+    title = 'Monopoly Collection Report'; icon = '🎩';
+    var mVal  = filtered.reduce(function(s,m){return s+(parseFloat(m.estimatedValue)||0);},0);
+    var mComp = filtered.filter(function(m){return m.completeness==='Complete';}).length;
+    statsHtml = stat('Items', filtered.length) + stat('Est. Value', '£'+mVal.toFixed(2)) + stat('Complete', mComp);
+    theadHtml = row(['#','Edition','Publisher','Year','Country','Completeness','Condition','Est. Value'], true);
+    tbodyHtml = filtered.map(function(m,i) {
+      return row([(i+1), m.edition||'—', m.publisher||'—', m.year||'—', m.country||'—',
+                  m.completeness||'—', m.condition||'—',
+                  m.estimatedValue?'£'+parseFloat(m.estimatedValue).toFixed(2):'—']);
+    }).join('');
+  }
+
+  function stat(label, value) {
+    return '<div class="stat"><div class="stat-label">' + label + '</div><div class="stat-value">' + value + '</div></div>';
+  }
+  function row(cells, isHead) {
+    var tag = isHead ? 'th' : 'td';
+    return '<tr>' + cells.map(function(c){ return '<'+tag+'>'+escHtml(String(c))+'</'+tag+'>'; }).join('') + '</tr>';
+  }
+
+  var html = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">' +
+    '<title>' + title + '</title>' +
+    '<style>' +
+    'body{font-family:Arial,Helvetica,sans-serif;font-size:10pt;color:#222;margin:15mm 18mm;}' +
+    'h1{font-size:15pt;font-weight:700;margin:0 0 3px;color:#2C3E35;}' +
+    '.subtitle{font-size:9pt;color:#7a8a84;margin-bottom:14px;}' +
+    '.stats{display:flex;gap:24px;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #e2ddd6;}' +
+    '.stat-label{font-size:7.5pt;text-transform:uppercase;letter-spacing:.05em;color:#7a8a84;margin-bottom:2px;}' +
+    '.stat-value{font-size:14pt;font-weight:700;color:#4e6e61;}' +
+    'table{width:100%;border-collapse:collapse;font-size:8.5pt;}' +
+    'thead tr{background:#e8f0ec;}' +
+    'th{text-align:left;padding:6px 7px;font-size:7.5pt;text-transform:uppercase;letter-spacing:.05em;color:#4e6e61;border-bottom:2px solid #698F80;}' +
+    'td{padding:5px 7px;border-bottom:1px solid #ede9e2;vertical-align:top;}' +
+    'tr:nth-child(even) td{background:#faf8f4;}' +
+    '.footer{margin-top:18px;font-size:7.5pt;color:#aaa;border-top:1px solid #e2ddd6;padding-top:8px;display:flex;justify-content:space-between;}' +
+    '@media print{body{margin:10mm 12mm;}@page{margin:10mm;}}' +
+    '</style></head><body>' +
+    '<h1>' + icon + ' ' + title + '</h1>' +
+    '<div class="subtitle">Generated ' + now + (isFiltered ? ' &nbsp;·&nbsp; Showing filtered results (' + filtered.length + ' items)' : ' &nbsp;·&nbsp; Full collection (' + filtered.length + ' items)') + '</div>' +
+    '<div class="stats">' + statsHtml + '</div>' +
+    (filtered.length ? '<table><thead>' + theadHtml + '</thead><tbody>' + tbodyHtml + '</tbody></table>' : '<p style="color:#7a8a84;font-style:italic;">No items to display.</p>') +
+    '<div class="footer"><span>Postcard &amp; Stamp Collector</span><span>Printed ' + now + '</span></div>' +
+    '</body></html>';
+
+  var win = window.open('', '_blank');
+  if (!win) { toast('Pop-up blocked — please allow pop-ups for this page'); return; }
+  win.document.write(html);
+  win.document.close();
+  setTimeout(function() { win.focus(); win.print(); }, 350);
 }
 
 // ── Utils ──
