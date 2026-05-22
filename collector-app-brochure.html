@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collector Tracker — Brochure</title>
+  <style>
+    @page { size: A4; margin: 0; }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #ddd;
+      color: #2C3E35;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      background: #fff;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    .header-band {
+      background: linear-gradient(135deg, #1e2a3a 0%, #2A3244 45%, #3d5a50 100%);
+      padding: 14mm 16mm 12mm;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+    .header-deco {
+      position: absolute; right: -8mm; top: -8mm;
+      font-size: 95pt; opacity: 0.07; line-height: 1; pointer-events: none;
+    }
+    .logo-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10mm; }
+    .logo-badge {
+      width: 46px; height: 46px;
+      background: linear-gradient(135deg, #C9A94A, #9a6f28);
+      border-radius: 13px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; flex-shrink: 0;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.3);
+    }
+    .logo-name  { font-size: 13pt; font-weight: 700; letter-spacing: 0.01em; }
+    .logo-sub   { font-size: 8pt; color: rgba(255,255,255,0.55); letter-spacing: 0.09em; text-transform: uppercase; margin-top: 1px; }
+
+    .hero-headline {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 28pt; font-weight: 700; line-height: 1.15;
+      margin-bottom: 5mm; color: #fff;
+    }
+    .hero-headline em { color: #C9A94A; font-style: normal; }
+    .hero-body {
+      font-size: 11pt; line-height: 1.6;
+      color: rgba(255,255,255,0.82); max-width: 150mm;
+    }
+
+    /* ── Pill strip ── */
+    .pill-strip {
+      background: #e8f0ec;
+      display: flex;
+      border-bottom: 2px solid #698F80;
+    }
+    .pill {
+      flex: 1; text-align: center;
+      padding: 4mm 2mm; font-size: 7.5pt; font-weight: 700;
+      color: #4e6e61;
+      border-right: 1px solid #c5d8d0;
+    }
+    .pill:last-child { border-right: none; }
+    .pill-icon { font-size: 13pt; display: block; margin-bottom: 2px; }
+
+    /* ── Section ── */
+    .section { padding: 8mm 16mm; }
+    .section + .section { padding-top: 0; }
+
+    .s-label {
+      font-size: 7pt; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.12em; color: #698F80; margin-bottom: 4px;
+    }
+    .s-title {
+      font-family: Georgia, serif;
+      font-size: 15pt; font-weight: 700; color: #2C3E35;
+      line-height: 1.2; margin-bottom: 5px;
+    }
+    .s-body { font-size: 9.5pt; line-height: 1.65; color: #3a4a44; }
+
+    .divider { border: none; border-top: 1px solid #e8e4dd; margin: 7mm 16mm; }
+
+    /* ── Collection type tiles ── */
+    .ctypes { display: flex; gap: 5mm; margin: 5mm 0 2mm; }
+    .ctype {
+      flex: 1; background: #F7F5F0;
+      border: 1.5px solid #e2ddd6; border-radius: 10px;
+      padding: 5mm 4mm; text-align: center;
+    }
+    .ctype-icon  { font-size: 20pt; display: block; margin-bottom: 3px; }
+    .ctype-name  { font-size: 9.5pt; font-weight: 700; color: #2C3E35; margin-bottom: 3px; }
+    .ctype-desc  { font-size: 7.5pt; color: #7a8a84; line-height: 1.45; }
+
+    /* ── Feature grid ── */
+    .fgrid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5mm; margin: 5mm 0; }
+    .fcard {
+      background: #F7F5F0; border-radius: 9px;
+      padding: 4.5mm 4mm; border-left: 3px solid #698F80;
+    }
+    .fcard-icon  { font-size: 16pt; display: block; margin-bottom: 3px; }
+    .fcard-title { font-size: 8.5pt; font-weight: 700; color: #2C3E35; margin-bottom: 2px; }
+    .fcard-desc  { font-size: 7.5pt; color: #7a8a84; line-height: 1.5; }
+
+    /* ── Mock screen ── */
+    .mock-wrap {
+      background: #2A3244; border-radius: 12px;
+      padding: 3mm; box-shadow: 0 5px 18px rgba(0,0,0,0.25);
+    }
+    .mock-inner { background: #F7F5F0; border-radius: 9px; padding: 3mm; }
+    .mock-header-bar {
+      background: #fff; border-radius: 7px 7px 0 0;
+      padding: 2mm 3mm; display: flex; align-items: center; gap: 2mm;
+      border-bottom: 1px solid #e2ddd6; margin-bottom: 2mm;
+    }
+    .mock-app-icon {
+      width: 16px; height: 16px;
+      background: linear-gradient(135deg, #C9A94A, #9a6f28);
+      border-radius: 4px; font-size: 9pt;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .mock-app-name { font-size: 7pt; font-weight: 700; flex: 1; }
+    .mock-add-btn {
+      font-size: 6pt; font-weight: 700;
+      background: #698F80; color: #fff;
+      padding: 2px 5px; border-radius: 4px;
+    }
+    .mock-row {
+      background: #fff; border: 1px solid #e8e4dd; border-radius: 6px;
+      padding: 2mm 2.5mm; display: flex; align-items: center; gap: 2.5mm; margin-bottom: 1.5mm;
+    }
+    .mock-thumb {
+      width: 11mm; height: 8mm; background: #e8f0ec;
+      border-radius: 4px; flex-shrink: 0; font-size: 10pt;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .mock-lines { flex: 1; }
+    .mock-line-a { height: 2.5mm; background: #d8d3cc; border-radius: 2px; width: 75%; margin-bottom: 1.5mm; }
+    .mock-line-b { height: 1.8mm; background: #ede9e2; border-radius: 2px; width: 55%; }
+    .mock-badge-wrap { display: flex; flex-direction: column; gap: 1.5mm; align-items: flex-end; }
+    .mock-badge {
+      font-size: 5.5pt; font-weight: 700;
+      padding: 1.5px 4px; border-radius: 3px;
+      white-space: nowrap;
+    }
+    .mb-green { background: #e8f5ed; color: #1e6b3a; }
+    .mb-sage  { background: #e8f0ec; color: #4e6e61; }
+    .mb-gold  { background: #fdf3e3; color: #92530a; }
+
+    /* ── Two-col layout ── */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 7mm; align-items: start; }
+
+    /* ── Callout ── */
+    .callout {
+      background: linear-gradient(135deg, #e8f0ec, #f2f6f4);
+      border-left: 4px solid #698F80;
+      border-radius: 0 10px 10px 0;
+      padding: 5mm 7mm; margin: 6mm 0 0;
+    }
+    .callout-text { font-family: Georgia, serif; font-size: 10.5pt; font-style: italic; line-height: 1.6; color: #2C3E35; }
+    .callout-attr { font-size: 8pt; color: #7a8a84; margin-top: 4px; }
+
+    /* ── Footer CTA band ── */
+    .footer-band {
+      background: linear-gradient(135deg, #1e2a3a, #2A3244, #3d5a50);
+      padding: 8mm 16mm;
+      display: flex; align-items: center; justify-content: space-between; gap: 10mm;
+      color: #fff;
+      position: absolute; bottom: 0; left: 0; right: 0;
+    }
+    .footer-left .ft-title { font-size: 12pt; font-weight: 700; margin-bottom: 3px; }
+    .footer-left .ft-sub   { font-size: 8.5pt; color: rgba(255,255,255,0.68); }
+    .footer-right { text-align: right; }
+    .footer-right .fc-row  { font-size: 9pt; color: rgba(255,255,255,0.88); margin-bottom: 3px; }
+    .footer-right .fc-row span { color: #C9A94A; font-weight: 700; }
+    .footer-right .fc-note { font-size: 7pt; color: rgba(255,255,255,0.38); margin-top: 5px; }
+
+    @media screen {
+      body { padding: 10mm 0 20mm; }
+      .page { box-shadow: 0 6px 40px rgba(0,0,0,0.3); }
+    }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .page { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="header-band">
+    <div class="header-deco">📮</div>
+    <div class="logo-row">
+      <div class="logo-badge">📮</div>
+      <div>
+        <div class="logo-name">Collector Tracker</div>
+        <div class="logo-sub">Postcards &nbsp;·&nbsp; Stamps &nbsp;·&nbsp; Monopoly</div>
+      </div>
+    </div>
+    <div class="hero-headline">Your entire collection,<br><em>beautifully organised.</em></div>
+    <div class="hero-body">A private, cloud-based app to catalogue, photograph, value and manage your collection — accessible from any phone, tablet or computer, wherever you are.</div>
+  </div>
+
+  <!-- Pill strip -->
+  <div class="pill-strip">
+    <div class="pill"><span class="pill-icon">📱</span>Any device</div>
+    <div class="pill"><span class="pill-icon">☁️</span>Cloud storage</div>
+    <div class="pill"><span class="pill-icon">✨</span>AI fill-in</div>
+    <div class="pill"><span class="pill-icon">🖨</span>Print reports</div>
+    <div class="pill"><span class="pill-icon">🔒</span>Private &amp; secure</div>
+  </div>
+
+  <!-- What is it -->
+  <div class="section">
+    <div class="s-label">What is Collector Tracker?</div>
+    <div class="s-title">Stop losing track of what you own</div>
+    <div class="s-body">Whether you have fifty pieces or five thousand, keeping on top of a physical collection is time-consuming and easy to get wrong. Collector Tracker gives you a beautifully organised digital catalogue — with photos, condition notes, estimated values and research status — all stored safely and accessible from anywhere. No spreadsheets, no paperwork, no guessing.</div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Collection types -->
+  <div class="section">
+    <div class="s-label">Three collections, one app</div>
+    <div class="ctypes">
+      <div class="ctype">
+        <span class="ctype-icon">📮</span>
+        <div class="ctype-name">Postcards</div>
+        <div class="ctype-desc">Front &amp; back photos, publisher, series number, era, condition grading and research status</div>
+      </div>
+      <div class="ctype">
+        <span class="ctype-icon">🏷️</span>
+        <div class="ctype-name">Stamps</div>
+        <div class="ctype-desc">Stanley Gibbons &amp; Scott numbers, denomination, perforation, country, used or unused</div>
+      </div>
+      <div class="ctype">
+        <span class="ctype-icon">🎩</span>
+        <div class="ctype-name">Monopoly</div>
+        <div class="ctype-desc">Edition, publisher, year, completeness, box condition and estimated value tracking</div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- Features + mock screen -->
+  <div class="section">
+    <div class="s-label">Key features</div>
+    <div class="two-col" style="margin-top:4mm;">
+
+      <div>
+        <div class="fgrid">
+          <div class="fcard">
+            <span class="fcard-icon">✨</span>
+            <div class="fcard-title">AI-Powered Entry</div>
+            <div class="fcard-desc">Take a photo — the AI reads the item and fills in the details for you automatically.</div>
+          </div>
+          <div class="fcard">
+            <span class="fcard-icon">📷</span>
+            <div class="fcard-title">Photo Storage</div>
+            <div class="fcard-desc">Store front &amp; back images for every item, uploaded securely to the cloud.</div>
+          </div>
+          <div class="fcard">
+            <span class="fcard-icon">💷</span>
+            <div class="fcard-title">Value Tracking</div>
+            <div class="fcard-desc">Record estimated values per item and see your total collection value at a glance.</div>
+          </div>
+          <div class="fcard">
+            <span class="fcard-icon">🔍</span>
+            <div class="fcard-title">Search &amp; Filter</div>
+            <div class="fcard-desc">Find any piece instantly by caption, country, publisher, condition or your own tags.</div>
+          </div>
+          <div class="fcard">
+            <span class="fcard-icon">🖨</span>
+            <div class="fcard-title">Print Reports</div>
+            <div class="fcard-desc">Generate a clean printed inventory — ideal for insurance, auctions or sharing with buyers.</div>
+          </div>
+          <div class="fcard">
+            <span class="fcard-icon">📊</span>
+            <div class="fcard-title">CSV Import</div>
+            <div class="fcard-desc">Already have a spreadsheet? Import your whole collection in one go.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mock app screen -->
+      <div>
+        <div class="mock-wrap">
+          <div class="mock-inner">
+            <div class="mock-header-bar">
+              <div class="mock-app-icon">📮</div>
+              <div class="mock-app-name">Postcards &nbsp;·&nbsp; 847 cards</div>
+              <div class="mock-add-btn">+ Add Card</div>
+            </div>
+            <div class="mock-row">
+              <div class="mock-thumb">📮</div>
+              <div class="mock-lines">
+                <div class="mock-line-a"></div>
+                <div class="mock-line-b"></div>
+              </div>
+              <div class="mock-badge-wrap">
+                <div class="mock-badge mb-green">Mint</div>
+                <div class="mock-badge mb-sage">£12.50</div>
+              </div>
+            </div>
+            <div class="mock-row">
+              <div class="mock-thumb">📮</div>
+              <div class="mock-lines">
+                <div class="mock-line-a" style="width:60%"></div>
+                <div class="mock-line-b" style="width:40%"></div>
+              </div>
+              <div class="mock-badge-wrap">
+                <div class="mock-badge mb-gold">Research</div>
+                <div class="mock-badge mb-sage">£8.00</div>
+              </div>
+            </div>
+            <div class="mock-row">
+              <div class="mock-thumb">🏷️</div>
+              <div class="mock-lines">
+                <div class="mock-line-a" style="width:80%"></div>
+                <div class="mock-line-b" style="width:50%"></div>
+              </div>
+              <div class="mock-badge-wrap">
+                <div class="mock-badge mb-green">Fine</div>
+                <div class="mock-badge mb-sage">£45.00</div>
+              </div>
+            </div>
+            <div class="mock-row">
+              <div class="mock-thumb">🎩</div>
+              <div class="mock-lines">
+                <div class="mock-line-a" style="width:65%"></div>
+                <div class="mock-line-b" style="width:45%"></div>
+              </div>
+              <div class="mock-badge-wrap">
+                <div class="mock-badge mb-green">Complete</div>
+                <div class="mock-badge mb-sage">£95.00</div>
+              </div>
+            </div>
+            <div class="mock-row" style="background:#f7f5f0;border-style:dashed;">
+              <div class="mock-thumb" style="background:#f0ebe3;">📮</div>
+              <div class="mock-lines">
+                <div class="mock-line-a" style="width:50%;background:#e8e4dd"></div>
+                <div class="mock-line-b" style="width:35%;background:#f0ebe3"></div>
+              </div>
+              <div class="mock-badge-wrap">
+                <div class="mock-badge" style="background:#f0ebe3;color:#aaa;">Unknown</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout">
+          <div class="callout-text">"I can finally see my whole collection properly — know what I have, what condition it's in, and what it's worth. The print report alone is worth it for insurance."</div>
+          <div class="callout-attr">— Collector Tracker user</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Footer CTA -->
+  <div class="footer-band">
+    <div class="footer-left">
+      <div class="ft-title">Interested? Get in touch — happy to show you a demo.</div>
+      <div class="ft-sub">No obligation. Works on any phone, tablet or computer. Your data stays private and is never shared.</div>
+    </div>
+    <div class="footer-right">
+      <div class="fc-row"><span>Email</span> &nbsp; sdr22uk@gmail.com</div>
+      <div class="fc-note">Collector Tracker &nbsp;·&nbsp; bespoke digital collection management</div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
