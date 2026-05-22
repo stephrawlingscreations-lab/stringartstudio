@@ -301,12 +301,14 @@
     .modal-overlay.open { display: flex; align-items: flex-start; justify-content: center; }
     .modal {
       background: var(--card); border-radius: 20px;
-      padding: 26px; width: 100%; max-width: 600px;
+      padding: 0; width: 100%; max-width: 600px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.2); margin: auto;
+      display: flex; flex-direction: column;
+      max-height: calc(100dvh - 40px);
     }
     .modal-header {
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 20px;
+      padding: 22px 26px 0; flex-shrink: 0; margin-bottom: 20px;
     }
     .modal-title { font-size: 1.05rem; font-weight: 700; }
     .modal-close {
@@ -316,8 +318,25 @@
     }
     .modal-close:hover { background: var(--bg); color: var(--text); }
     .modal-footer {
-      display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px;
-      padding-top: 16px; border-top: 1px solid var(--border); flex-wrap: wrap;
+      display: flex; gap: 10px; justify-content: flex-end;
+      padding: 14px 26px 22px; border-top: 1px solid var(--border);
+      flex-wrap: wrap; flex-shrink: 0; background: var(--card);
+      border-radius: 0 0 20px 20px;
+    }
+    /* Scrollable form body */
+    .form-grid {
+      overflow-y: auto; flex: 1; min-height: 0;
+      padding: 0 26px 4px;
+    }
+    /* Scrollable detail body */
+    #detail-body, #stamp-detail-body, #monopoly-detail-body {
+      overflow-y: auto; flex: 1; min-height: 0;
+      padding: 0 26px 26px;
+    }
+    /* Import / API key modal simple content */
+    .modal-simple-body {
+      overflow-y: auto; flex: 1; min-height: 0;
+      padding: 0 26px 4px;
     }
 
     /* ── Form ── */
@@ -464,8 +483,20 @@
       .tab-bar { top: 59px; }
       .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 10px; }
       .stamp-grid   { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
-      .modal { padding: 18px 14px; }
-      .form-grid { grid-template-columns: 1fr; }
+      .modal-overlay { padding: 0; align-items: flex-end; }
+      .modal {
+        max-height: 93dvh; border-radius: 20px 20px 0 0;
+        margin: 0; width: 100%;
+      }
+      .modal-header { padding: 18px 16px 0; }
+      .form-grid { padding: 0 16px 4px; grid-template-columns: 1fr; }
+      #detail-body, #stamp-detail-body, #monopoly-detail-body { padding: 0 16px 16px; }
+      .modal-simple-body { padding: 0 16px 4px; }
+      .modal-footer { padding: 12px 16px 28px; border-radius: 0; gap: 8px; }
+      .modal-footer .btn-save, .modal-footer .btn-ghost, .modal-footer .btn-danger {
+        padding: 12px 16px; font-size: 0.9rem;
+      }
+      .modal-footer .btn-save { flex: 1; }
       .image-upload-row { grid-template-columns: 1fr; }
       .detail-images { flex-direction: column; }
       .detail-fields { grid-template-columns: 1fr; }
@@ -1024,6 +1055,7 @@
       <div class="modal-title" id="import-modal-title">Import from CSV</div>
       <button class="modal-close" onclick="closeModal('modal-import')">×</button>
     </div>
+    <div class="modal-simple-body">
     <p style="font-size:0.875rem;color:var(--muted);margin-bottom:16px;line-height:1.6">
       Upload a CSV file to add multiple items at once. Download the template to see the exact column names expected — column order doesn't matter and you can leave columns blank.
     </p>
@@ -1036,6 +1068,7 @@
       <input type="file" id="import-file-input" accept=".csv,text/csv" onchange="handleImportFile(this)" class="form-input" style="padding:7px;">
     </div>
     <div id="import-preview"></div>
+    </div>
     <div class="modal-footer">
       <button class="btn-ghost" onclick="closeModal('modal-import')">Cancel</button>
       <button class="btn-save" id="btn-confirm-import" onclick="confirmImport()" style="display:none">Import</button>
@@ -1051,6 +1084,7 @@
       <div class="modal-title">Set up AI Image Analysis</div>
       <button class="modal-close" onclick="closeModal('modal-apikey')">×</button>
     </div>
+    <div class="modal-simple-body">
     <p style="font-size:0.875rem;color:var(--muted);margin-bottom:12px;line-height:1.6">
       AI fill uses Claude (Anthropic) to read your image and fill in the form. Your key is saved in your browser only.
     </p>
@@ -1060,6 +1094,7 @@
     <div class="form-group" style="margin-bottom:6px;">
       <label class="form-label">Anthropic API Key</label>
       <input type="password" id="apikey-input" class="form-input" placeholder="sk-ant-…">
+    </div>
     </div>
     <div class="modal-footer">
       <button class="btn-ghost" onclick="closeModal('modal-apikey')">Cancel</button>
