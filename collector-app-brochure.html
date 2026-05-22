@@ -13,24 +13,28 @@
       font-family: Arial, Helvetica, sans-serif;
       background: #ddd;
       color: #2C3E35;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
 
     .page {
       width: 210mm;
-      min-height: 297mm;
+      height: 297mm;
       background: #fff;
       margin: 0 auto;
-      position: relative;
+      display: flex;
+      flex-direction: column;
       overflow: hidden;
     }
 
     /* ── Header ── */
     .header-band {
       background: linear-gradient(135deg, #1e2a3a 0%, #2A3244 45%, #3d5a50 100%);
-      padding: 14mm 16mm 12mm;
+      padding: 11mm 16mm 10mm;
       color: #fff;
       position: relative;
       overflow: hidden;
+      flex-shrink: 0;
     }
     .header-deco {
       position: absolute; right: -8mm; top: -8mm;
@@ -64,10 +68,11 @@
       background: #e8f0ec;
       display: flex;
       border-bottom: 2px solid #698F80;
+      flex-shrink: 0;
     }
     .pill {
       flex: 1; text-align: center;
-      padding: 4mm 2mm; font-size: 7.5pt; font-weight: 700;
+      padding: 3mm 2mm; font-size: 7.5pt; font-weight: 700;
       color: #4e6e61;
       border-right: 1px solid #c5d8d0;
     }
@@ -75,7 +80,7 @@
     .pill-icon { font-size: 13pt; display: block; margin-bottom: 2px; }
 
     /* ── Section ── */
-    .section { padding: 8mm 16mm; }
+    .section { padding: 6mm 16mm; }
     .section + .section { padding-top: 0; }
 
     .s-label {
@@ -89,21 +94,36 @@
     }
     .s-body { font-size: 9.5pt; line-height: 1.65; color: #3a4a44; }
 
-    .divider { border: none; border-top: 1px solid #e8e4dd; margin: 7mm 16mm; }
+    .divider { border: none; border-top: 1px solid #e8e4dd; margin: 5mm 16mm; }
 
     /* ── Collection type tiles ── */
-    .ctypes { display: flex; gap: 5mm; margin: 5mm 0 2mm; }
+    .ctypes { display: flex; flex-wrap: wrap; gap: 5mm; margin: 5mm 0 2mm; }
     .ctype {
-      flex: 1; background: #F7F5F0;
+      flex: 1 1 28%;
+      min-width: 42mm;
+      background: #F7F5F0;
       border: 1.5px solid #e2ddd6; border-radius: 10px;
       padding: 5mm 4mm; text-align: center;
     }
+    .ctypes.cols-2 .ctype { flex: 1 1 45%; }
+    .ctypes.cols-1 .ctype { flex: 1 1 100%; max-width: 100%; }
     .ctype-icon  { font-size: 20pt; display: block; margin-bottom: 3px; }
     .ctype-name  { font-size: 9.5pt; font-weight: 700; color: #2C3E35; margin-bottom: 3px; }
     .ctype-desc  { font-size: 7.5pt; color: #7a8a84; line-height: 1.45; }
 
+    .ctype-generic {
+      text-align: left;
+      padding: 5mm 6mm;
+    }
+    .ctype-generic ul {
+      margin: 3mm 0 0 4mm;
+      font-size: 7.5pt;
+      color: #7a8a84;
+      line-height: 1.55;
+    }
+
     /* ── Feature grid ── */
-    .fgrid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5mm; margin: 5mm 0; }
+    .fgrid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4mm; margin: 4mm 0; }
     .fcard {
       background: #F7F5F0; border-radius: 9px;
       padding: 4.5mm 4mm; border-left: 3px solid #698F80;
@@ -174,10 +194,11 @@
     /* ── Footer CTA band ── */
     .footer-band {
       background: linear-gradient(135deg, #1e2a3a, #2A3244, #3d5a50);
-      padding: 8mm 16mm;
+      padding: 7mm 16mm;
       display: flex; align-items: center; justify-content: space-between; gap: 10mm;
       color: #fff;
-      position: absolute; bottom: 0; left: 0; right: 0;
+      margin-top: auto;
+      flex-shrink: 0;
     }
     .footer-left .ft-title { font-size: 12pt; font-weight: 700; margin-bottom: 3px; }
     .footer-left .ft-sub   { font-size: 8.5pt; color: rgba(255,255,255,0.68); }
@@ -186,13 +207,36 @@
     .footer-right .fc-row span { color: #C9A94A; font-weight: 700; }
     .footer-right .fc-note { font-size: 7pt; color: rgba(255,255,255,0.38); margin-top: 5px; }
 
+    .config-hint {
+      display: none;
+      font-size: 7pt;
+      color: #9a8a7a;
+      margin-top: 3mm;
+      padding: 2mm 3mm;
+      background: #faf8f4;
+      border-radius: 6px;
+      border: 1px dashed #e2ddd6;
+    }
+    .config-hint code { font-size: 6.5pt; color: #698F80; }
+
     @media screen {
       body { padding: 10mm 0 20mm; }
       .page { box-shadow: 0 6px 40px rgba(0,0,0,0.3); }
+      .config-hint { display: block; }
     }
     @media print {
-      body { background: #fff; padding: 0; }
-      .page { box-shadow: none; }
+      body { background: #fff; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .page { box-shadow: none; height: 297mm; width: 210mm; }
+      .config-hint { display: none !important; }
+      /* Force background colours and gradients to print */
+      .header-band, .pill-strip, .footer-band,
+      .fcard, .ctype, .callout, .mock-wrap, .mock-inner,
+      .mock-row, .mock-header-bar, .mock-thumb,
+      .mock-line-a, .mock-line-b, .mock-badge,
+      .mb-green, .mb-sage, .mb-gold {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
     }
   </style>
 </head>
@@ -202,16 +246,16 @@
 
   <!-- Header -->
   <div class="header-band">
-    <div class="header-deco">📮</div>
+    <div class="header-deco" id="header-deco">📚</div>
     <div class="logo-row">
-      <div class="logo-badge">📮</div>
+      <div class="logo-badge" id="logo-badge">📚</div>
       <div>
         <div class="logo-name">Collector Tracker</div>
-        <div class="logo-sub">Postcards &nbsp;·&nbsp; Stamps &nbsp;·&nbsp; Monopoly</div>
+        <div class="logo-sub" id="logo-sub">Any collection · One private app</div>
       </div>
     </div>
     <div class="hero-headline">Your entire collection,<br><em>beautifully organised.</em></div>
-    <div class="hero-body">A private, cloud-based app to catalogue, photograph, value and manage your collection — accessible from any phone, tablet or computer, wherever you are.</div>
+    <div class="hero-body" id="hero-body">A private, cloud-based app to catalogue, photograph, value and manage whatever you collect — accessible from any phone, tablet or computer, wherever you are.</div>
   </div>
 
   <!-- Pill strip -->
@@ -232,26 +276,12 @@
 
   <hr class="divider">
 
-  <!-- Collection types -->
+  <!-- Collection types (filled by script) -->
   <div class="section">
-    <div class="s-label">Three collections, one app</div>
-    <div class="ctypes">
-      <div class="ctype">
-        <span class="ctype-icon">📮</span>
-        <div class="ctype-name">Postcards</div>
-        <div class="ctype-desc">Front &amp; back photos, publisher, series number, era, condition grading and research status</div>
-      </div>
-      <div class="ctype">
-        <span class="ctype-icon">🏷️</span>
-        <div class="ctype-name">Stamps</div>
-        <div class="ctype-desc">Stanley Gibbons &amp; Scott numbers, denomination, perforation, country, used or unused</div>
-      </div>
-      <div class="ctype">
-        <span class="ctype-icon">🎩</span>
-        <div class="ctype-name">Monopoly</div>
-        <div class="ctype-desc">Edition, publisher, year, completeness, box condition and estimated value tracking</div>
-      </div>
-    </div>
+    <div class="s-label" id="ctypes-label">Built for any collection</div>
+    <div class="s-title" id="ctypes-title" style="display:none;"></div>
+    <div class="ctypes" id="ctypes"></div>
+    <div class="config-hint" id="config-hint"></div>
   </div>
 
   <hr class="divider">
@@ -271,7 +301,7 @@
           <div class="fcard">
             <span class="fcard-icon">📷</span>
             <div class="fcard-title">Photo Storage</div>
-            <div class="fcard-desc">Store front &amp; back images for every item, uploaded securely to the cloud.</div>
+            <div class="fcard-desc">Attach one or more photos per item, uploaded securely to the cloud.</div>
           </div>
           <div class="fcard">
             <span class="fcard-icon">💷</span>
@@ -281,7 +311,7 @@
           <div class="fcard">
             <span class="fcard-icon">🔍</span>
             <div class="fcard-title">Search &amp; Filter</div>
-            <div class="fcard-desc">Find any piece instantly by caption, country, publisher, condition or your own tags.</div>
+            <div class="fcard-desc">Find any piece instantly by title, country, publisher, condition, tags or your own fields.</div>
           </div>
           <div class="fcard">
             <span class="fcard-icon">🖨</span>
@@ -296,74 +326,14 @@
         </div>
       </div>
 
-      <!-- Mock app screen -->
+      <!-- Mock app screen (filled by script) -->
       <div>
         <div class="mock-wrap">
-          <div class="mock-inner">
-            <div class="mock-header-bar">
-              <div class="mock-app-icon">📮</div>
-              <div class="mock-app-name">Postcards &nbsp;·&nbsp; 847 cards</div>
-              <div class="mock-add-btn">+ Add Card</div>
-            </div>
-            <div class="mock-row">
-              <div class="mock-thumb">📮</div>
-              <div class="mock-lines">
-                <div class="mock-line-a"></div>
-                <div class="mock-line-b"></div>
-              </div>
-              <div class="mock-badge-wrap">
-                <div class="mock-badge mb-green">Mint</div>
-                <div class="mock-badge mb-sage">£12.50</div>
-              </div>
-            </div>
-            <div class="mock-row">
-              <div class="mock-thumb">📮</div>
-              <div class="mock-lines">
-                <div class="mock-line-a" style="width:60%"></div>
-                <div class="mock-line-b" style="width:40%"></div>
-              </div>
-              <div class="mock-badge-wrap">
-                <div class="mock-badge mb-gold">Research</div>
-                <div class="mock-badge mb-sage">£8.00</div>
-              </div>
-            </div>
-            <div class="mock-row">
-              <div class="mock-thumb">🏷️</div>
-              <div class="mock-lines">
-                <div class="mock-line-a" style="width:80%"></div>
-                <div class="mock-line-b" style="width:50%"></div>
-              </div>
-              <div class="mock-badge-wrap">
-                <div class="mock-badge mb-green">Fine</div>
-                <div class="mock-badge mb-sage">£45.00</div>
-              </div>
-            </div>
-            <div class="mock-row">
-              <div class="mock-thumb">🎩</div>
-              <div class="mock-lines">
-                <div class="mock-line-a" style="width:65%"></div>
-                <div class="mock-line-b" style="width:45%"></div>
-              </div>
-              <div class="mock-badge-wrap">
-                <div class="mock-badge mb-green">Complete</div>
-                <div class="mock-badge mb-sage">£95.00</div>
-              </div>
-            </div>
-            <div class="mock-row" style="background:#f7f5f0;border-style:dashed;">
-              <div class="mock-thumb" style="background:#f0ebe3;">📮</div>
-              <div class="mock-lines">
-                <div class="mock-line-a" style="width:50%;background:#e8e4dd"></div>
-                <div class="mock-line-b" style="width:35%;background:#f0ebe3"></div>
-              </div>
-              <div class="mock-badge-wrap">
-                <div class="mock-badge" style="background:#f0ebe3;color:#aaa;">Unknown</div>
-              </div>
-            </div>
-          </div>
+          <div class="mock-inner" id="mock-inner"></div>
         </div>
 
         <div class="callout">
-          <div class="callout-text">"I can finally see my whole collection properly — know what I have, what condition it's in, and what it's worth. The print report alone is worth it for insurance."</div>
+          <div class="callout-text" id="callout-text">"I can finally see my whole collection properly — know what I have, what condition it's in, and what it's worth. The print report alone is worth it for insurance."</div>
           <div class="callout-attr">— Collector Tracker user</div>
         </div>
       </div>
@@ -384,6 +354,253 @@
   </div>
 
 </div>
+
+<script>
+(function () {
+  /* Known collection types — add more here as you build them in the app */
+  var REGISTRY = {
+    postcards: {
+      icon: '📮',
+      name: 'Postcards',
+      desc: 'Front & back photos, publisher, series number, era, condition grading and research status',
+      count: 847,
+      unit: 'cards',
+      addLabel: 'Add Card',
+      rows: [
+        { wA: 75, wB: 55, badge1: 'Mint', b1: 'mb-green', badge2: '£12.50', b2: 'mb-sage' },
+        { wA: 60, wB: 40, badge1: 'Research', b1: 'mb-gold', badge2: '£8.00', b2: 'mb-sage' }
+      ]
+    },
+    stamps: {
+      icon: '🏷️',
+      name: 'Stamps',
+      desc: 'Catalogue numbers, denomination, perforation, country, used or unused, and album location',
+      count: 312,
+      unit: 'stamps',
+      addLabel: 'Add Stamp',
+      rows: [
+        { wA: 80, wB: 50, badge1: 'Fine', b1: 'mb-green', badge2: '£45.00', b2: 'mb-sage' },
+        { wA: 65, wB: 42, badge1: 'Mint', b1: 'mb-green', badge2: '£18.00', b2: 'mb-sage' }
+      ]
+    },
+    monopoly: {
+      icon: '🎩',
+      name: 'Monopoly',
+      desc: 'Edition, publisher, year, completeness, box condition and estimated value tracking',
+      count: 24,
+      unit: 'editions',
+      addLabel: 'Add Edition',
+      rows: [
+        { wA: 65, wB: 45, badge1: 'Complete', b1: 'mb-green', badge2: '£95.00', b2: 'mb-sage' },
+        { wA: 70, wB: 48, badge1: 'Good', b1: 'mb-green', badge2: '£32.00', b2: 'mb-sage' }
+      ]
+    }
+  };
+
+  var GENERIC_EXAMPLES = [
+    { icon: '📮', name: 'Postcards & ephemera', desc: 'Photos, publisher, era, condition and provenance' },
+    { icon: '🏷️', name: 'Stamps & philately', desc: 'Catalogue refs, country, denomination and grading' },
+    { icon: '🪙', name: 'Coins & medals', desc: 'Year, mint, metal, grade and estimated value' },
+    { icon: '📚', name: 'Books & comics', desc: 'Edition, imprint, completeness and storage location' },
+    { icon: '💿', name: 'Vinyl & music', desc: 'Label, pressing, sleeve condition and catalogue numbers' },
+    { icon: '🧸', name: 'Toys & memorabilia', desc: 'Manufacturer, series, box condition and rarity notes' }
+  ];
+
+  function parseParams() {
+    var q = new URLSearchParams(window.location.search);
+    var raw = (q.get('collections') || q.get('types') || '').trim();
+    var names = (q.get('names') || '').trim();
+    var mode = (q.get('mode') || '').trim().toLowerCase();
+    return { raw: raw, names: names, mode: mode };
+  }
+
+  function slug(s) {
+    return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+
+  function resolveCollections(params) {
+    if (params.mode === 'generic') return [];
+    if (params.raw) {
+      return params.raw.split(/[,;|]+/).map(function (k) {
+        k = k.trim().toLowerCase();
+        if (!k) return null;
+        if (REGISTRY[k]) return REGISTRY[k];
+        return {
+          icon: '📦',
+          name: k.charAt(0).toUpperCase() + k.slice(1),
+          desc: 'Custom fields, photos, values and tags tailored to your items',
+          count: 120,
+          unit: 'items',
+          addLabel: 'Add Item',
+          rows: [{ wA: 70, wB: 45, badge1: 'Good', b1: 'mb-green', badge2: '£25.00', b2: 'mb-sage' }]
+        };
+      }).filter(Boolean);
+    }
+    if (params.names) {
+      return params.names.split(/[,;|]+/).map(function (n) {
+        n = n.trim();
+        if (!n) return null;
+        var key = slug(n);
+        if (REGISTRY[key]) return REGISTRY[key];
+        return {
+          icon: '📦',
+          name: n,
+          desc: 'Photos, condition, values, tags and searchable records for every piece',
+          count: 80,
+          unit: 'items',
+          addLabel: 'Add Item',
+          rows: [{ wA: 68, wB: 44, badge1: 'Logged', b1: 'mb-green', badge2: '—', b2: 'mb-sage' }]
+        };
+      }).filter(Boolean);
+    }
+    return [];
+  }
+
+  function joinNames(cols) {
+    if (!cols.length) return '';
+    if (cols.length === 1) return cols[0].name;
+    if (cols.length === 2) return cols[0].name + ' & ' + cols[1].name;
+    return cols.slice(0, -1).map(function (c) { return c.name; }).join(', ') + ' & ' + cols[cols.length - 1].name;
+  }
+
+  function renderTiles(cols) {
+    var wrap = document.getElementById('ctypes');
+    var label = document.getElementById('ctypes-label');
+    var title = document.getElementById('ctypes-title');
+    wrap.innerHTML = '';
+
+    if (!cols.length) {
+      label.textContent = 'Built for any collection';
+      title.style.display = 'none';
+      wrap.className = 'ctypes';
+      var generic = document.createElement('div');
+      generic.className = 'ctype ctype-generic';
+      generic.style.flex = '1 1 100%';
+      generic.innerHTML =
+        '<span class="ctype-icon">📚</span>' +
+        '<div class="ctype-name">Whatever you collect</div>' +
+        '<div class="ctype-desc">Each collection type gets its own tailored fields — photos, condition, values, tags and printable reports. Examples collectors use today:</div>' +
+        '<ul>' + GENERIC_EXAMPLES.map(function (e) {
+          return '<li><strong>' + e.name + '</strong> — ' + e.desc + '</li>';
+        }).join('') + '</ul>';
+      wrap.appendChild(generic);
+      return;
+    }
+
+    label.textContent = cols.length === 1 ? 'Your collection' : 'Your collections';
+    title.textContent = joinNames(cols);
+    title.style.display = 'block';
+    wrap.className = 'ctypes' + (cols.length === 1 ? ' cols-1' : cols.length === 2 ? ' cols-2' : '');
+
+    cols.forEach(function (c) {
+      var el = document.createElement('div');
+      el.className = 'ctype';
+      el.innerHTML =
+        '<span class="ctype-icon">' + c.icon + '</span>' +
+        '<div class="ctype-name">' + c.name + '</div>' +
+        '<div class="ctype-desc">' + c.desc + '</div>';
+      wrap.appendChild(el);
+    });
+  }
+
+  function renderMock(cols) {
+    var inner = document.getElementById('mock-inner');
+    var primary = cols[0] || null;
+    var icon = primary ? primary.icon : '📚';
+    var headerName = primary
+      ? primary.name + ' · ' + primary.count + ' ' + primary.unit
+      : 'My Collection · 1,203 items';
+    var addLabel = primary ? primary.addLabel : '+ Add Item';
+
+    var rows = [];
+    if (cols.length) {
+      cols.forEach(function (c) {
+        (c.rows || []).forEach(function (r) {
+          rows.push({ icon: c.icon, wA: r.wA, wB: r.wB, badge1: r.badge1, b1: r.b1, badge2: r.badge2, b2: r.b2 });
+        });
+      });
+    } else {
+      rows = [
+        { icon: '📮', wA: 75, wB: 55, badge1: 'Mint', b1: 'mb-green', badge2: '£12.50', b2: 'mb-sage' },
+        { icon: '🪙', wA: 62, wB: 38, badge1: 'VF', b1: 'mb-green', badge2: '£85.00', b2: 'mb-sage' },
+        { icon: '📚', wA: 70, wB: 48, badge1: 'Research', b1: 'mb-gold', badge2: '£22.00', b2: 'mb-sage' }
+      ];
+    }
+    while (rows.length > 4) rows.length = 4;
+    if (rows.length < 3) {
+      rows.push({ icon: icon, wA: 50, wB: 35, badge1: 'Unknown', b1: '', badge2: '', b2: '', dashed: true });
+    }
+
+    var html =
+      '<div class="mock-header-bar">' +
+        '<div class="mock-app-icon">' + icon + '</div>' +
+        '<div class="mock-app-name">' + headerName + '</div>' +
+        '<div class="mock-add-btn">' + addLabel + '</div>' +
+      '</div>';
+
+    rows.forEach(function (r, i) {
+      var dashed = r.dashed || (i === rows.length - 1 && rows.length >= 3);
+      html +=
+        '<div class="mock-row"' + (dashed ? ' style="background:#f7f5f0;border-style:dashed;"' : '') + '>' +
+          '<div class="mock-thumb"' + (dashed ? ' style="background:#f0ebe3;"' : '') + '>' + r.icon + '</div>' +
+          '<div class="mock-lines">' +
+            '<div class="mock-line-a" style="width:' + r.wA + '%' + (dashed ? ';background:#e8e4dd' : '') + '"></div>' +
+            '<div class="mock-line-b" style="width:' + r.wB + '%' + (dashed ? ';background:#f0ebe3' : '') + '"></div>' +
+          '</div>' +
+          '<div class="mock-badge-wrap">';
+      if (r.badge1) {
+        html += '<div class="mock-badge ' + (r.b1 || '') + '"' + (dashed && !r.b1 ? ' style="background:#f0ebe3;color:#aaa;"' : '') + '>' + r.badge1 + '</div>';
+      }
+      if (r.badge2) {
+        html += '<div class="mock-badge ' + (r.b2 || 'mb-sage') + '">' + r.badge2 + '</div>';
+      }
+      html += '</div></div>';
+    });
+
+    inner.innerHTML = html;
+  }
+
+  function applyBranding(cols) {
+    var icon = cols.length === 1 ? cols[0].icon : '📚';
+    document.getElementById('logo-badge').textContent = icon;
+    document.getElementById('header-deco').textContent = icon;
+
+    var sub = document.getElementById('logo-sub');
+    if (!cols.length) {
+      sub.textContent = 'Any collection · One private app';
+    } else if (cols.length <= 3) {
+      sub.textContent = cols.map(function (c) { return c.name; }).join(' · ');
+    } else {
+      sub.textContent = cols.length + ' collections · One private app';
+    }
+
+    if (cols.length === 1) {
+      document.getElementById('callout-text').textContent =
+        '"I can finally see my whole ' + cols[0].name.toLowerCase() + ' collection properly — know what I have, what condition it\'s in, and what it\'s worth. The print report alone is worth it for insurance."';
+    }
+  }
+
+  function showConfigHint(cols) {
+    var hint = document.getElementById('config-hint');
+    if (cols.length) {
+      hint.innerHTML = 'Showing: <strong>' + joinNames(cols) + '</strong>. ' +
+        'Tailor for a client: <code>?collections=postcards,stamps</code> or <code>?names=Vinyl Records,Comics</code>. ' +
+        'Generic brochure: <code>?mode=generic</code> or open with no parameters.';
+    } else {
+      hint.innerHTML = 'Generic brochure (all collection types). ' +
+        'Highlight yours: <code>?collections=postcards,stamps</code> · ' +
+        'Custom labels: <code>?names=Postcards,Stamps</code>';
+    }
+  }
+
+  var params = parseParams();
+  var cols = resolveCollections(params);
+  renderTiles(cols);
+  renderMock(cols);
+  applyBranding(cols);
+  showConfigHint(cols);
+})();
+</script>
 
 </body>
 </html>
