@@ -14,6 +14,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -373,8 +374,9 @@
     appId:             '1:271810785275:web:e44be9608f17386ae4e55e'
   });
 
-  var portalAuth = firebase.auth();
-  var portalDb   = firebase.database();
+  var portalAuth      = firebase.auth();
+  var portalDb        = firebase.database();
+  var portalFirestore = firebase.firestore();
   var ALLOWED = [
     'stephrawlingscreations@gmail.com',
     'sdr22ie@gmail.com',
@@ -394,7 +396,7 @@
     renderPortalReminders();
   }
 
-  function renderMorningDigest() {
+  async function renderMorningDigest() {
     try {
       var today    = new Date().toISOString().split('T')[0];
       var sections = [];
@@ -449,9 +451,10 @@
       }
 
       /* ── Renewals expiring within 30 days ── */
-      var renewRaw = localStorage.getItem('renewals_items');
-      if (renewRaw) {
-        var renewItems = Object.values(JSON.parse(renewRaw));
+      var renewSnap  = await portalDb.ref('renewals').once('value').catch(function() { return null; });
+      var renewData  = renewSnap ? renewSnap.val() : null;
+      if (renewData && typeof renewData === 'object') {
+        var renewItems = Object.values(renewData);
         var soon = renewItems.filter(function(r) {
           if (!r.expiryDate) return false;
           var d = new Date(r.expiryDate); d.setHours(0,0,0,0);
@@ -529,21 +532,36 @@
     var d  = new Date();
     var ds = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 
-    var trackers = [
-      { path: 'focusflow/steph',  file: 'focusflow-backup-' + ds + '.json' },
-      { path: 'householdAdmin',   file: 'household-backup-' + ds + '.json' },
-      { path: 'iptv',             file: 'tv-tracker-backup-' + ds + '.json' },
-      { path: 'grassPortal',      file: 'grass-cutting-backup-' + ds + '.json' },
-      { path: 'stephCreations',        file: 'steph-rawlings-backup-' + ds + '.json' },
-      { path: 'focusflow/steph/training',  file: 'training-backup-' + ds + '.json' },
-      { path: 'clientOnboardingTracker',   file: 'client-onboarding-backup-' + ds + '.json' }
+    var rtdbTrackers = [
+      { path: 'focusflow/steph',           file: 'focusflow-backup-'        + ds + '.json' },
+      { path: 'householdAdmin',            file: 'household-backup-'        + ds + '.json' },
+      { path: 'iptv',                      file: 'tv-tracker-backup-'       + ds + '.json' },
+      { path: 'grassPortal',               file: 'grass-cutting-backup-'    + ds + '.json' },
+      { path: 'stephCreations',            file: 'steph-rawlings-backup-'   + ds + '.json' },
+      { path: 'focusflow/steph/training',  file: 'training-backup-'         + ds + '.json' },
+      { path: 'clientOnboardingTracker',   file: 'client-onboarding-backup-'+ ds + '.json' }
     ];
 
-    Promise.all(trackers.map(function(t) {
+    var rtdbPromises = rtdbTrackers.map(function(t) {
       return portalDb.ref(t.path).once('value').then(function(snap) {
         return { file: t.file, data: snap.val() };
       });
-    })).then(function(results) {
+    });
+
+    // Postcard Collector uses Firestore (postcards, stamps, monopoly collections)
+    var postcardsPromise = Promise.all([
+      portalFirestore.collection('postcards').get(),
+      portalFirestore.collection('stamps').get(),
+      portalFirestore.collection('monopoly').get()
+    ]).then(function(snaps) {
+      var data = { postcards: {}, stamps: {}, monopoly: {} };
+      snaps[0].forEach(function(doc) { data.postcards[doc.id] = doc.data(); });
+      snaps[1].forEach(function(doc) { data.stamps[doc.id]    = doc.data(); });
+      snaps[2].forEach(function(doc) { data.monopoly[doc.id]  = doc.data(); });
+      return { file: 'postcards-backup-' + ds + '.json', data: data };
+    });
+
+    Promise.all(rtdbPromises.concat([postcardsPromise])).then(function(results) {
       var count = 0;
       results.forEach(function(r, i) {
         if (!r.data) return;
