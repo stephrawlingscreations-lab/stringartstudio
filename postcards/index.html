@@ -563,6 +563,7 @@
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;">
         <button class="btn-ghost" onclick="printReport('postcards')" style="font-size:0.8rem;padding:7px 12px;">🖨 Print Report</button>
+        <button class="btn-ghost" onclick="exportCSV('postcards')" style="font-size:0.8rem;padding:7px 12px;">⬇ Export CSV</button>
         <button class="btn-ghost" onclick="openImportModal('postcards')" style="font-size:0.8rem;padding:7px 12px;">⬆ Import CSV</button>
       </div>
       <div class="controls">
@@ -607,6 +608,7 @@
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;">
         <button class="btn-ghost" onclick="printReport('stamps')" style="font-size:0.8rem;padding:7px 12px;">🖨 Print Report</button>
+        <button class="btn-ghost" onclick="exportCSV('stamps')" style="font-size:0.8rem;padding:7px 12px;">⬇ Export CSV</button>
         <button class="btn-ghost" onclick="openImportModal('stamps')" style="font-size:0.8rem;padding:7px 12px;">⬆ Import CSV</button>
       </div>
       <div class="controls">
@@ -652,6 +654,7 @@
       </div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;">
         <button class="btn-ghost" onclick="printReport('monopoly')" style="font-size:0.8rem;padding:7px 12px;">🖨 Print Report</button>
+        <button class="btn-ghost" onclick="exportCSV('monopoly')" style="font-size:0.8rem;padding:7px 12px;">⬇ Export CSV</button>
         <button class="btn-ghost" onclick="openImportModal('monopoly')" style="font-size:0.8rem;padding:7px 12px;">⬆ Import CSV</button>
       </div>
       <div class="controls">
@@ -2593,6 +2596,50 @@ function applyAIResult(data, type) {
 }
 
 // ── Print Reports ──
+
+function exportCSV(view) {
+  var rows, headers, filename;
+
+  function csvCell(v) {
+    if (v === null || v === undefined) v = '';
+    v = String(v);
+    if (v.includes(',') || v.includes('"') || v.includes('\n')) {
+      v = '"' + v.replace(/"/g, '""') + '"';
+    }
+    return v;
+  }
+
+  if (view === 'stamps') {
+    headers = ['Description','Country','Year','Denomination','Series Name','SG Number','Scott Number','Colour','Perforation','Used/Unused','Condition','Estimated Value','Duplicate Count','Tags','Album Source','Notes'];
+    rows = allStamps.map(function(s) {
+      return [s.description, s.country, s.year, s.denomination, s.seriesName, s.sgNumber, s.scottNumber, s.colour, s.perforation, s.used, s.condition, s.estimatedValue || '', s.duplicateCount || 0, (s.tags||[]).join(', '), s.albumSource, s.notes].map(csvCell).join(',');
+    });
+    filename = 'stamps-export.csv';
+  } else if (view === 'monopoly') {
+    headers = ['Edition Name','Publisher','Year','Country','Completeness','Condition','Estimated Value','Duplicate Count','Tags','Notes'];
+    rows = allMonopoly.map(function(m) {
+      return [m.edition, m.publisher, m.year, m.country, m.completeness, m.condition, m.estimatedValue || '', m.duplicateCount || 0, (m.tags||[]).join(', '), m.notes].map(csvCell).join(',');
+    });
+    filename = 'monopoly-export.csv';
+  } else {
+    headers = ['Caption','Publisher','Series No','Card No','Theme','Era','Original/Reprint','Condition','Research Status','Estimated Value','Duplicate Count','Tags','Album Source','Notes'];
+    rows = allCards.map(function(c) {
+      return [c.caption, c.publisher, c.seriesNumber, c.cardNumber, c.theme, c.era, c.original, c.condition, c.researchStatus, c.estimatedValue || '', c.duplicateCount || 0, (c.tags||[]).join(', '), c.albumSource, c.notes].map(csvCell).join(',');
+    });
+    filename = 'postcards-export.csv';
+  }
+
+  if (!rows.length) { toast('No items to export'); return; }
+
+  var csv = [headers.map(csvCell).join(',')].concat(rows).join('\n');
+  var blob = new Blob([csv], { type: 'text/csv' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('Exported ' + rows.length + ' item' + (rows.length !== 1 ? 's' : '') + ' ✓');
+}
 
 function printReport(view) {
   var now = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });

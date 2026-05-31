@@ -19,12 +19,23 @@
 
     .page {
       width: 210mm;
-      height: 297mm;
+      min-height: 297mm;
       background: #fff;
-      margin: 0 auto;
+      margin: 0 auto 10mm;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      page-break-after: always;
+      break-after: page;
+    }
+    .page:last-child {
+      margin-bottom: 0;
+      page-break-after: auto;
+      break-after: auto;
+    }
+    .page-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
     }
 
     /* ── Header ── */
@@ -40,7 +51,7 @@
       position: absolute; right: -8mm; top: -8mm;
       font-size: 95pt; opacity: 0.07; line-height: 1; pointer-events: none;
     }
-    .logo-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10mm; }
+    .logo-row { display: flex; align-items: center; gap: 10px; margin-bottom: 7mm; }
     .logo-badge {
       width: 46px; height: 46px;
       background: linear-gradient(135deg, #C9A94A, #9a6f28);
@@ -54,8 +65,8 @@
 
     .hero-headline {
       font-family: Georgia, 'Times New Roman', serif;
-      font-size: 28pt; font-weight: 700; line-height: 1.15;
-      margin-bottom: 5mm; color: #fff;
+      font-size: 26pt; font-weight: 700; line-height: 1.15;
+      margin-bottom: 4mm; color: #fff;
     }
     .hero-headline em { color: #C9A94A; font-style: normal; }
     .hero-body {
@@ -115,11 +126,20 @@
       text-align: left;
       padding: 5mm 6mm;
     }
-    .ctype-generic ul {
-      margin: 3mm 0 0 4mm;
-      font-size: 7.5pt;
-      color: #7a8a84;
-      line-height: 1.55;
+    .example-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2.5mm;
+      margin-top: 4mm;
+    }
+    .example-chip {
+      font-size: 7pt;
+      color: #4e6e61;
+      background: #fff;
+      border: 1px solid #d8e4de;
+      border-radius: 20px;
+      padding: 1.5mm 3.5mm;
+      white-space: nowrap;
     }
 
     /* ── Feature grid ── */
@@ -186,9 +206,9 @@
       background: linear-gradient(135deg, #e8f0ec, #f2f6f4);
       border-left: 4px solid #698F80;
       border-radius: 0 10px 10px 0;
-      padding: 5mm 7mm; margin: 6mm 0 0;
+      padding: 4mm 6mm; margin: 4mm 0 0;
     }
-    .callout-text { font-family: Georgia, serif; font-size: 10.5pt; font-style: italic; line-height: 1.6; color: #2C3E35; }
+    .callout-text { font-family: Georgia, serif; font-size: 9.5pt; font-style: italic; line-height: 1.55; color: #2C3E35; }
     .callout-attr { font-size: 8pt; color: #7a8a84; margin-top: 4px; }
 
     /* ── Footer CTA band ── */
@@ -206,6 +226,18 @@
     .footer-right .fc-row  { font-size: 9pt; color: rgba(255,255,255,0.88); margin-bottom: 3px; }
     .footer-right .fc-row span { color: #C9A94A; font-weight: 700; }
     .footer-right .fc-note { font-size: 7pt; color: rgba(255,255,255,0.38); margin-top: 5px; }
+
+    .page2-header {
+      background: linear-gradient(135deg, #1e2a3a, #2A3244, #3d5a50);
+      padding: 5mm 16mm;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .page2-header .logo-name { font-size: 11pt; font-weight: 700; }
+    .page2-header .logo-sub { font-size: 7pt; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.08em; }
 
     .config-hint {
       display: none;
@@ -226,7 +258,7 @@
     }
     @media print {
       body { background: #fff; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .page { box-shadow: none; height: 297mm; width: 210mm; }
+      .page { box-shadow: none; height: 297mm; min-height: 297mm; width: 210mm; margin: 0; }
       .config-hint { display: none !important; }
       /* Force background colours and gradients to print */
       .header-band, .pill-strip, .footer-band,
@@ -242,6 +274,7 @@
 </head>
 <body>
 
+<!-- Page 1: intro & collection types -->
 <div class="page">
 
   <!-- Header -->
@@ -284,12 +317,23 @@
     <div class="config-hint" id="config-hint"></div>
   </div>
 
-  <hr class="divider">
+</div>
 
-  <!-- Features + mock screen -->
-  <div class="section">
+<!-- Page 2: features, preview & contact -->
+<div class="page">
+  <div class="page2-header">
+    <div>
+      <div class="logo-name">Collector Tracker</div>
+      <div class="logo-sub" id="page2-sub">Key features &amp; preview</div>
+    </div>
+    <div class="logo-badge" id="page2-badge" style="width:36px;height:36px;font-size:18px;border-radius:10px;">📚</div>
+  </div>
+  <div class="page-body">
+
+  <div class="section" style="padding-top:6mm;">
     <div class="s-label">Key features</div>
-    <div class="two-col" style="margin-top:4mm;">
+    <div class="s-title" style="font-size:13pt;margin-bottom:3mm;">Everything you need to manage a collection</div>
+    <div class="two-col" style="margin-top:2mm;">
 
       <div>
         <div class="fgrid">
@@ -339,6 +383,8 @@
       </div>
 
     </div>
+  </div>
+
   </div>
 
   <!-- Footer CTA -->
@@ -398,12 +444,7 @@
   };
 
   var GENERIC_EXAMPLES = [
-    { icon: '📮', name: 'Postcards & ephemera', desc: 'Photos, publisher, era, condition and provenance' },
-    { icon: '🏷️', name: 'Stamps & philately', desc: 'Catalogue refs, country, denomination and grading' },
-    { icon: '🪙', name: 'Coins & medals', desc: 'Year, mint, metal, grade and estimated value' },
-    { icon: '📚', name: 'Books & comics', desc: 'Edition, imprint, completeness and storage location' },
-    { icon: '💿', name: 'Vinyl & music', desc: 'Label, pressing, sleeve condition and catalogue numbers' },
-    { icon: '🧸', name: 'Toys & memorabilia', desc: 'Manufacturer, series, box condition and rarity notes' }
+    '📮 Postcards', '🏷️ Stamps', '🪙 Coins', '📚 Books', '💿 Vinyl', '🧸 Toys', '🎩 Games', '🖼️ Art'
   ];
 
   function parseParams() {
@@ -479,10 +520,10 @@
       generic.innerHTML =
         '<span class="ctype-icon">📚</span>' +
         '<div class="ctype-name">Whatever you collect</div>' +
-        '<div class="ctype-desc">Each collection type gets its own tailored fields — photos, condition, values, tags and printable reports. Examples collectors use today:</div>' +
-        '<ul>' + GENERIC_EXAMPLES.map(function (e) {
-          return '<li><strong>' + e.name + '</strong> — ' + e.desc + '</li>';
-        }).join('') + '</ul>';
+        '<div class="ctype-desc">Each collection gets its own tailored fields — photos, condition, values, tags and printable reports.</div>' +
+        '<div class="example-chips">' + GENERIC_EXAMPLES.map(function (e) {
+          return '<span class="example-chip">' + e + '</span>';
+        }).join('') + '</div>';
       wrap.appendChild(generic);
       return;
     }
@@ -526,7 +567,7 @@
         { icon: '📚', wA: 70, wB: 48, badge1: 'Research', b1: 'mb-gold', badge2: '£22.00', b2: 'mb-sage' }
       ];
     }
-    while (rows.length > 4) rows.length = 4;
+    while (rows.length > 3) rows.length = 3;
     if (rows.length < 3) {
       rows.push({ icon: icon, wA: 50, wB: 35, badge1: 'Unknown', b1: '', badge2: '', b2: '', dashed: true });
     }
@@ -564,15 +605,19 @@
     var icon = cols.length === 1 ? cols[0].icon : '📚';
     document.getElementById('logo-badge').textContent = icon;
     document.getElementById('header-deco').textContent = icon;
+    document.getElementById('page2-badge').textContent = icon;
 
     var sub = document.getElementById('logo-sub');
+    var subText;
     if (!cols.length) {
-      sub.textContent = 'Any collection · One private app';
+      subText = 'Any collection · One private app';
     } else if (cols.length <= 3) {
-      sub.textContent = cols.map(function (c) { return c.name; }).join(' · ');
+      subText = cols.map(function (c) { return c.name; }).join(' · ');
     } else {
-      sub.textContent = cols.length + ' collections · One private app';
+      subText = cols.length + ' collections · One private app';
     }
+    sub.textContent = subText;
+    document.getElementById('page2-sub').textContent = subText;
 
     if (cols.length === 1) {
       document.getElementById('callout-text').textContent =
