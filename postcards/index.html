@@ -476,6 +476,38 @@
     .import-count { font-size: 0.875rem; color: var(--muted); margin-bottom: 8px; }
     .import-count strong { color: var(--sage-dk); }
 
+    /* ── View toggle ── */
+    .view-toggle { display: flex; gap: 4px; }
+    .view-btn {
+      background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+      padding: 7px 10px; cursor: pointer; color: var(--muted); line-height: 1;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .view-btn.active { background: var(--sage-lt); border-color: var(--sage); color: var(--sage-dk); }
+    .view-btn:hover:not(.active) { background: var(--bg); }
+
+    /* ── List view table ── */
+    .list-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+    .list-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .list-table th {
+      background: var(--bg); padding: 9px 12px; text-align: left;
+      font-weight: 700; color: var(--muted); font-size: 0.67rem;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      position: sticky; top: 0; border-bottom: 1px solid var(--border);
+      white-space: nowrap; cursor: pointer; user-select: none;
+    }
+    .list-table th:hover { color: var(--sage-dk); }
+    .list-table th .sort-arrow { opacity: 0.35; margin-left: 3px; }
+    .list-table th.sorted .sort-arrow { opacity: 1; color: var(--sage-dk); }
+    .list-table td {
+      padding: 9px 12px; border-top: 1px solid var(--border);
+      max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      vertical-align: middle;
+    }
+    .list-table td.td-wrap { white-space: normal; word-break: break-word; }
+    .list-table tr:hover td { background: var(--sage-lt); cursor: pointer; }
+    .list-table .td-badge { display: flex; gap: 4px; flex-wrap: wrap; }
+
     /* ── Responsive ── */
     @media (max-width: 580px) {
       header { padding: 12px 14px; }
@@ -593,10 +625,19 @@
           <option value="value_low">Lowest value</option>
           <option value="publisher">Publisher A–Z</option>
         </select>
+        <div class="view-toggle">
+          <button class="view-btn active" id="view-btn-grid-postcards" onclick="setView('postcards','grid')" title="Gallery view">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="0" y="0" width="6" height="6" rx="1"/><rect x="8" y="0" width="6" height="6" rx="1"/><rect x="0" y="8" width="6" height="6" rx="1"/><rect x="8" y="8" width="6" height="6" rx="1"/></svg>
+          </button>
+          <button class="view-btn" id="view-btn-list-postcards" onclick="setView('postcards','list')" title="List view">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="0" y="1" width="14" height="2" rx="1"/><rect x="0" y="6" width="14" height="2" rx="1"/><rect x="0" y="11" width="14" height="2" rx="1"/></svg>
+          </button>
+        </div>
       </div>
       <div class="gallery-grid" id="gallery-grid">
         <div class="empty-state"><div class="empty-icon">📮</div><p>Loading your collection…</p></div>
       </div>
+      <div id="list-postcards" style="display:none"></div>
     </div>
 
     <!-- Stamps section -->
@@ -639,10 +680,19 @@
           <option value="country">Country A–Z</option>
           <option value="year">Year</option>
         </select>
+        <div class="view-toggle">
+          <button class="view-btn active" id="view-btn-grid-stamps" onclick="setView('stamps','grid')" title="Gallery view">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="0" y="0" width="6" height="6" rx="1"/><rect x="8" y="0" width="6" height="6" rx="1"/><rect x="0" y="8" width="6" height="6" rx="1"/><rect x="8" y="8" width="6" height="6" rx="1"/></svg>
+          </button>
+          <button class="view-btn" id="view-btn-list-stamps" onclick="setView('stamps','list')" title="List view">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="0" y="1" width="14" height="2" rx="1"/><rect x="0" y="6" width="14" height="2" rx="1"/><rect x="0" y="11" width="14" height="2" rx="1"/></svg>
+          </button>
+        </div>
       </div>
       <div class="stamp-grid" id="stamp-grid">
         <div class="empty-state"><div class="empty-icon">🏷️</div><p>Loading your stamps…</p></div>
       </div>
+      <div id="list-stamps" style="display:none"></div>
     </div>
 
     <!-- Monopoly section -->
@@ -685,10 +735,19 @@
           <option value="year">Year</option>
           <option value="edition">Edition A–Z</option>
         </select>
+        <div class="view-toggle">
+          <button class="view-btn active" id="view-btn-grid-monopoly" onclick="setView('monopoly','grid')" title="Gallery view">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="0" y="0" width="6" height="6" rx="1"/><rect x="8" y="0" width="6" height="6" rx="1"/><rect x="0" y="8" width="6" height="6" rx="1"/><rect x="8" y="8" width="6" height="6" rx="1"/></svg>
+          </button>
+          <button class="view-btn" id="view-btn-list-monopoly" onclick="setView('monopoly','list')" title="List view">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="0" y="1" width="14" height="2" rx="1"/><rect x="0" y="6" width="14" height="2" rx="1"/><rect x="0" y="11" width="14" height="2" rx="1"/></svg>
+          </button>
+        </div>
       </div>
       <div class="stamp-grid" id="monopoly-grid">
         <div class="empty-state"><div class="empty-icon">🎩</div><p>Loading your Monopoly collection…</p></div>
       </div>
+      <div id="list-monopoly" style="display:none"></div>
     </div>
 
   </main>
@@ -1298,6 +1357,7 @@ function filterAndRenderMonopoly() {
   });
 
   renderMonopolyGallery(filtered);
+  if (viewMode.monopoly === 'list') renderListMonopoly(filtered);
 }
 
 function tsM(m) {
@@ -1593,6 +1653,7 @@ function filterAndRender() {
   });
 
   renderGallery(filtered);
+  if (viewMode.postcards === 'list') renderListPostcards(filtered);
 }
 
 function ts(card) {
@@ -1666,6 +1727,7 @@ function filterAndRenderStamps() {
   });
 
   renderStampGallery(filtered);
+  if (viewMode.stamps === 'list') renderListStamps(filtered);
 }
 
 function tsS(st) {
@@ -2596,6 +2658,115 @@ function applyAIResult(data, type) {
 }
 
 // ── Print Reports ──
+
+// ── View toggle (grid / list) ──
+
+var viewMode = { postcards: 'grid', stamps: 'grid', monopoly: 'grid' };
+
+function setView(tab, mode) {
+  viewMode[tab] = mode;
+  document.getElementById('view-btn-grid-' + tab).classList.toggle('active', mode === 'grid');
+  document.getElementById('view-btn-list-' + tab).classList.toggle('active', mode === 'list');
+
+  if (tab === 'postcards') {
+    document.getElementById('gallery-grid').style.display  = mode === 'grid' ? '' : 'none';
+    document.getElementById('list-postcards').style.display = mode === 'list' ? '' : 'none';
+    filterAndRender();
+  } else if (tab === 'stamps') {
+    document.getElementById('stamp-grid').style.display  = mode === 'grid' ? '' : 'none';
+    document.getElementById('list-stamps').style.display = mode === 'list' ? '' : 'none';
+    filterAndRenderStamps();
+  } else {
+    document.getElementById('monopoly-grid').style.display  = mode === 'grid' ? '' : 'none';
+    document.getElementById('list-monopoly').style.display  = mode === 'list' ? '' : 'none';
+    filterAndRenderMonopoly();
+  }
+}
+
+function renderListPostcards(items) {
+  var el = document.getElementById('list-postcards');
+  if (!items.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><h3>No postcards match</h3><p>Try different search terms or filters.</p></div>';
+    return;
+  }
+  var rows = items.map(function(c) {
+    var val = c.estimatedValue ? '£' + parseFloat(c.estimatedValue).toFixed(2) : '—';
+    var cond = c.condition ? '<span class="badge badge-' + escAttr(c.condition) + '">' + escHtml(c.condition) + '</span>' : '—';
+    var res  = c.researchStatus ? '<span class="badge badge-needed">' + escHtml(c.researchStatus.replace('_',' ')) + '</span>' : '—';
+    return '<tr onclick="openDetail(\'' + esc(c.id) + '\')">' +
+      '<td class="td-wrap">' + escHtml(c.caption || '—') + '</td>' +
+      '<td>' + escHtml(c.publisher || '—') + '</td>' +
+      '<td>' + escHtml(c.era || '—') + '</td>' +
+      '<td>' + escHtml(c.theme || '—') + '</td>' +
+      '<td><div class="td-badge">' + cond + '</div></td>' +
+      '<td>' + val + '</td>' +
+      '<td>' + escHtml(c.albumSource || '—') + '</td>' +
+      '<td><div class="td-badge">' + res + '</div></td>' +
+    '</tr>';
+  });
+  el.innerHTML = '<div class="list-wrap"><table class="list-table">' +
+    '<thead><tr>' +
+      '<th>Caption</th><th>Publisher</th><th>Era</th><th>Theme</th>' +
+      '<th>Condition</th><th>Value</th><th>Album / Box</th><th>Research</th>' +
+    '</tr></thead><tbody>' + rows.join('') + '</tbody></table></div>';
+}
+
+function renderListStamps(items) {
+  var el = document.getElementById('list-stamps');
+  if (!items.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><h3>No stamps match</h3><p>Try different search terms or filters.</p></div>';
+    return;
+  }
+  var rows = items.map(function(s) {
+    var val  = s.estimatedValue ? '£' + parseFloat(s.estimatedValue).toFixed(2) : '—';
+    var cond = s.condition ? '<span class="badge badge-' + escAttr(s.condition) + '">' + escHtml(s.condition) + '</span>' : '—';
+    var used = s.used ? '<span class="badge badge-' + escAttr(s.used) + '">' + escHtml(s.used) + '</span>' : '—';
+    return '<tr onclick="openStampDetail(\'' + esc(s.id) + '\')">' +
+      '<td class="td-wrap">' + escHtml(s.description || '—') + '</td>' +
+      '<td>' + escHtml(s.country || '—') + '</td>' +
+      '<td>' + escHtml(s.year || '—') + '</td>' +
+      '<td>' + escHtml(s.denomination || '—') + '</td>' +
+      '<td>' + escHtml(s.sgNumber || '—') + '</td>' +
+      '<td><div class="td-badge">' + cond + '</div></td>' +
+      '<td><div class="td-badge">' + used + '</div></td>' +
+      '<td>' + val + '</td>' +
+      '<td>' + escHtml(s.albumSource || '—') + '</td>' +
+    '</tr>';
+  });
+  el.innerHTML = '<div class="list-wrap"><table class="list-table">' +
+    '<thead><tr>' +
+      '<th>Description</th><th>Country</th><th>Year</th><th>Denomination</th>' +
+      '<th>SG No.</th><th>Condition</th><th>Used</th><th>Value</th><th>Album / Box</th>' +
+    '</tr></thead><tbody>' + rows.join('') + '</tbody></table></div>';
+}
+
+function renderListMonopoly(items) {
+  var el = document.getElementById('list-monopoly');
+  if (!items.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><h3>No editions match</h3><p>Try different search terms or filters.</p></div>';
+    return;
+  }
+  var rows = items.map(function(m) {
+    var val  = m.estimatedValue ? '£' + parseFloat(m.estimatedValue).toFixed(2) : '—';
+    var cond = m.condition ? '<span class="badge badge-' + escAttr(m.condition) + '">' + escHtml(m.condition) + '</span>' : '—';
+    var comp = m.completeness ? '<span class="badge badge-' + (m.completeness === 'Complete' ? 'Mint' : m.completeness === 'Near-Complete' ? 'Fair' : 'Poor') + '">' + escHtml(m.completeness) + '</span>' : '—';
+    return '<tr onclick="openMonopolyDetail(\'' + esc(m.id) + '\')">' +
+      '<td class="td-wrap">' + escHtml(m.edition || '—') + '</td>' +
+      '<td>' + escHtml(m.publisher || '—') + '</td>' +
+      '<td>' + escHtml(m.year || '—') + '</td>' +
+      '<td>' + escHtml(m.country || '—') + '</td>' +
+      '<td><div class="td-badge">' + comp + '</div></td>' +
+      '<td><div class="td-badge">' + cond + '</div></td>' +
+      '<td>' + val + '</td>' +
+      '<td>' + escHtml((m.tags||[]).join(', ') || '—') + '</td>' +
+    '</tr>';
+  });
+  el.innerHTML = '<div class="list-wrap"><table class="list-table">' +
+    '<thead><tr>' +
+      '<th>Edition</th><th>Publisher</th><th>Year</th><th>Country</th>' +
+      '<th>Completeness</th><th>Condition</th><th>Value</th><th>Tags</th>' +
+    '</tr></thead><tbody>' + rows.join('') + '</tbody></table></div>';
+}
 
 function exportCSV(view) {
   var rows, headers, filename;
