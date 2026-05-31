@@ -476,6 +476,64 @@
     .import-count { font-size: 0.875rem; color: var(--muted); margin-bottom: 8px; }
     .import-count strong { color: var(--sage-dk); }
 
+    /* ── Bulk select ── */
+    .stamp-tile.selected,
+    .list-table tr.selected td { background: #e8f5ed !important; outline: 2px solid var(--sage); outline-offset: -2px; }
+    .stamp-tile.select-mode { cursor: pointer; }
+    .tile-check {
+      position: absolute; top: 6px; left: 6px; z-index: 5;
+      width: 20px; height: 20px;
+      background: #fff; border: 2px solid var(--border); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .stamp-tile.selected .tile-check { background: var(--sage); border-color: var(--sage-dk); }
+    .tile-check svg { display: none; }
+    .stamp-tile.selected .tile-check svg { display: block; }
+    .stamp-thumb { position: relative; }
+
+    .bulk-bar {
+      display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      z-index: 80; background: #2C3E35; color: #fff;
+      border-radius: 14px; padding: 12px 18px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      align-items: center; gap: 14px; white-space: nowrap;
+      min-width: 260px; justify-content: space-between;
+    }
+    .bulk-bar.open { display: flex; }
+    .bulk-count { font-size: 0.9rem; font-weight: 600; }
+    .bulk-count span { color: #C9A94A; }
+    .bulk-actions { display: flex; gap: 8px; }
+    .btn-bulk-select-all {
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+      color: #fff; border-radius: 8px; padding: 7px 12px;
+      font-size: 0.8rem; cursor: pointer; font-family: inherit;
+      transition: background 0.15s;
+    }
+    .btn-bulk-select-all:hover { background: rgba(255,255,255,0.22); }
+    .btn-bulk-delete {
+      background: #c0392b; border: none; color: #fff; border-radius: 8px;
+      padding: 7px 14px; font-size: 0.8rem; font-weight: 600;
+      cursor: pointer; font-family: inherit; transition: background 0.15s;
+    }
+    .btn-bulk-delete:hover    { background: #a93226; }
+    .btn-bulk-delete:disabled { opacity: 0.6; cursor: default; }
+    .btn-bulk-cancel {
+      background: none; border: 1px solid rgba(255,255,255,0.25); color: rgba(255,255,255,0.7);
+      border-radius: 8px; padding: 7px 12px; font-size: 0.8rem;
+      cursor: pointer; font-family: inherit; transition: background 0.15s;
+    }
+    .btn-bulk-cancel:hover { background: rgba(255,255,255,0.1); }
+    .btn-select-mode {
+      background: none; border: 1px solid var(--border); border-radius: 10px;
+      padding: 7px 12px; font-size: 0.8rem; color: var(--text);
+      cursor: pointer; font-family: inherit; transition: background 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+    .btn-select-mode:hover     { background: var(--bg); }
+    .btn-select-mode.selecting { background: var(--sage-lt); border-color: var(--sage); color: var(--sage-dk); font-weight: 600; }
+
     /* ── View toggle ── */
     .view-toggle { display: flex; gap: 4px; }
     .view-btn {
@@ -648,7 +706,8 @@
         <div class="stat-pill">Est. value <strong id="s-stat-value">£0.00</strong></div>
         <div class="stat-pill">Countries <strong id="s-stat-countries">0</strong></div>
       </div>
-      <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+        <button class="btn-select-mode" id="btn-stamp-select" onclick="toggleStampSelectMode()">☑ Select</button>
         <button class="btn-ghost" onclick="printReport('stamps')" style="font-size:0.8rem;padding:7px 12px;">🖨 Print Report</button>
         <button class="btn-ghost" onclick="exportCSV('stamps')" style="font-size:0.8rem;padding:7px 12px;">⬇ Export CSV</button>
         <button class="btn-ghost" onclick="openImportModal('stamps')" style="font-size:0.8rem;padding:7px 12px;">⬆ Import CSV</button>
@@ -1376,6 +1435,16 @@
 </div>
 
 
+<!-- Bulk action bar (stamps) -->
+<div class="bulk-bar" id="bulk-bar">
+  <div class="bulk-count"><span id="bulk-count-num">0</span> selected</div>
+  <div class="bulk-actions">
+    <button class="btn-bulk-select-all" onclick="stampSelectAll()">All</button>
+    <button class="btn-bulk-delete" id="btn-bulk-delete" onclick="deleteSelectedStamps()">🗑 Delete</button>
+    <button class="btn-bulk-cancel" onclick="exitStampSelectMode()">Cancel</button>
+  </div>
+</div>
+
 <!-- Lightbox -->
 <div id="lightbox" onclick="closeLightbox()">
   <img id="lightbox-img" src="" alt="">
@@ -1978,9 +2047,17 @@ function renderStampGallery(stamps) {
     var valBadge = st.estimatedValue
       ? '<span class="badge badge-value">£' + parseFloat(st.estimatedValue).toFixed(2) + '</span>' : '';
     var meta = [st.country, st.year].filter(Boolean).join(' · ');
+    var isSel  = selectedStampIds.has(st.id);
+    var selClass = (stampSelectMode ? ' select-mode' : '') + (isSel ? ' selected' : '');
+    var checkHtml = stampSelectMode
+      ? '<div class="tile-check"><svg width="11" height="9" viewBox="0 0 11 9" fill="none"><polyline points="1,4.5 4,7.5 10,1" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'
+      : '';
+    var clickFn = stampSelectMode
+      ? 'toggleStampSelection(\'' + esc(st.id) + '\')'
+      : 'openStampDetail(\'' + esc(st.id) + '\')';
 
-    return '<div class="stamp-tile" onclick="openStampDetail(\'' + esc(st.id) + '\')">' +
-      '<div class="stamp-thumb">' + thumb + '</div>' +
+    return '<div class="stamp-tile' + selClass + '" data-stamp-id="' + escAttr(st.id) + '" onclick="' + clickFn + '">' +
+      '<div class="stamp-thumb">' + checkHtml + thumb + '</div>' +
       '<div class="stamp-body">' +
         '<div class="stamp-denom">' + escHtml(st.denomination || '—') + '</div>' +
         '<div class="stamp-meta">' + escHtml(meta) + '</div>' +
@@ -2914,6 +2991,102 @@ function applyAIResult(data, type) {
 
 // ── Print Reports ──
 
+// ── Stamp bulk select ──
+
+var stampSelectMode = false;
+var selectedStampIds = new Set();
+
+function toggleStampSelectMode() {
+  if (stampSelectMode) {
+    exitStampSelectMode();
+  } else {
+    stampSelectMode = true;
+    selectedStampIds.clear();
+    document.getElementById('btn-stamp-select').classList.add('selecting');
+    document.getElementById('btn-stamp-select').textContent = '✕ Cancel select';
+    filterAndRenderStamps();
+    updateBulkBar();
+  }
+}
+
+function exitStampSelectMode() {
+  stampSelectMode = false;
+  selectedStampIds.clear();
+  document.getElementById('btn-stamp-select').classList.remove('selecting');
+  document.getElementById('btn-stamp-select').textContent = '☑ Select';
+  document.getElementById('bulk-bar').classList.remove('open');
+  filterAndRenderStamps();
+}
+
+function toggleStampSelection(id) {
+  if (selectedStampIds.has(id)) {
+    selectedStampIds.delete(id);
+  } else {
+    selectedStampIds.add(id);
+  }
+  // update tile appearance without full re-render
+  var tile = document.querySelector('[data-stamp-id="' + id + '"]');
+  if (tile) tile.classList.toggle('selected', selectedStampIds.has(id));
+  // update list row too
+  var row = document.querySelector('tr[data-stamp-id="' + id + '"]');
+  if (row) row.classList.toggle('selected', selectedStampIds.has(id));
+  updateBulkBar();
+}
+
+function stampSelectAll() {
+  var allVisible = Array.from(document.querySelectorAll('[data-stamp-id]'));
+  var ids = allVisible.map(function(el){ return el.getAttribute('data-stamp-id'); });
+  var allSelected = ids.every(function(id){ return selectedStampIds.has(id); });
+  if (allSelected) {
+    ids.forEach(function(id){ selectedStampIds.delete(id); });
+  } else {
+    ids.forEach(function(id){ selectedStampIds.add(id); });
+  }
+  allVisible.forEach(function(el){
+    el.classList.toggle('selected', selectedStampIds.has(el.getAttribute('data-stamp-id')));
+  });
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  var n = selectedStampIds.size;
+  document.getElementById('bulk-count-num').textContent = n;
+  var bar = document.getElementById('bulk-bar');
+  bar.classList.toggle('open', stampSelectMode);
+  var delBtn = document.getElementById('btn-bulk-delete');
+  delBtn.disabled = n === 0;
+  delBtn.textContent = n > 0 ? '🗑 Delete ' + n : '🗑 Delete';
+}
+
+function deleteSelectedStamps() {
+  var ids = Array.from(selectedStampIds);
+  if (!ids.length) return;
+  if (!confirm('Permanently delete ' + ids.length + ' stamp' + (ids.length !== 1 ? 's' : '') + '? This cannot be undone.')) return;
+
+  var btn = document.getElementById('btn-bulk-delete');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Deleting…';
+
+  var CHUNK = 400;
+  var batches = [];
+  for (var i = 0; i < ids.length; i += CHUNK) {
+    var batch = db.batch();
+    ids.slice(i, i + CHUNK).forEach(function(id) {
+      batch.delete(db.collection('stamps').doc(id));
+    });
+    batches.push(batch.commit());
+  }
+
+  Promise.all(batches).then(function() {
+    toast('Deleted ' + ids.length + ' stamp' + (ids.length !== 1 ? 's' : '') + ' ✓');
+    exitStampSelectMode();
+  }).catch(function(err) {
+    toast('Delete failed — ' + err.message);
+    btn.disabled = false;
+    btn.textContent = '🗑 Delete ' + ids.length;
+  });
+}
+
 // ── Coins ──
 
 var COIN_FIELD_MAP = {
@@ -3326,7 +3499,15 @@ function renderListStamps(items) {
     var val  = s.estimatedValue ? '£' + parseFloat(s.estimatedValue).toFixed(2) : '—';
     var cond = s.condition ? '<span class="badge badge-' + escAttr(s.condition) + '">' + escHtml(s.condition) + '</span>' : '—';
     var used = s.used ? '<span class="badge badge-' + escAttr(s.used) + '">' + escHtml(s.used) + '</span>' : '—';
-    return '<tr onclick="openStampDetail(\'' + esc(s.id) + '\')">' +
+    var isSel = selectedStampIds.has(s.id);
+    var clickFn = stampSelectMode
+      ? 'toggleStampSelection(\'' + esc(s.id) + '\')'
+      : 'openStampDetail(\'' + esc(s.id) + '\')';
+    var checkCell = stampSelectMode
+      ? '<td style="width:28px;text-align:center;">' + (isSel ? '✅' : '⬜') + '</td>'
+      : '';
+    return '<tr data-stamp-id="' + escAttr(s.id) + '" class="' + (isSel ? 'selected' : '') + '" onclick="' + clickFn + '">' +
+      checkCell +
       '<td class="td-wrap">' + escHtml(s.description || '—') + '</td>' +
       '<td>' + escHtml(s.country || '—') + '</td>' +
       '<td>' + escHtml(s.year || '—') + '</td>' +
@@ -3338,8 +3519,9 @@ function renderListStamps(items) {
       '<td>' + escHtml(s.albumSource || '—') + '</td>' +
     '</tr>';
   });
+  var checkTh = stampSelectMode ? '<th style="width:28px;"></th>' : '';
   el.innerHTML = '<div class="list-wrap"><table class="list-table">' +
-    '<thead><tr>' +
+    '<thead><tr>' + checkTh +
       '<th>Description</th><th>Country</th><th>Year</th><th>Denomination</th>' +
       '<th>SG No.</th><th>Condition</th><th>Used</th><th>Value</th><th>Album / Box</th>' +
     '</tr></thead><tbody>' + rows.join('') + '</tbody></table></div>';
