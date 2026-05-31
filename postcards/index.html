@@ -582,6 +582,7 @@
     <button class="tab-btn active" id="tab-postcards" onclick="switchView('postcards')">📮 Postcards</button>
     <button class="tab-btn"        id="tab-stamps"    onclick="switchView('stamps')">🏷️ Stamps</button>
     <button class="tab-btn"        id="tab-monopoly"  onclick="switchView('monopoly')">🎩 Monopoly</button>
+    <button class="tab-btn"        id="tab-coins"     onclick="switchView('coins')">🪙 Coins</button>
   </div>
 
   <main>
@@ -748,6 +749,66 @@
         <div class="empty-state"><div class="empty-icon">🎩</div><p>Loading your Monopoly collection…</p></div>
       </div>
       <div id="list-monopoly" style="display:none"></div>
+    </div>
+
+    <!-- Coins section -->
+    <div id="section-coins" style="display:none">
+      <div class="stats-bar">
+        <div class="stat-pill">Total <strong id="c-stat-total">0</strong></div>
+        <div class="stat-pill">Est. value <strong id="c-stat-value">£0.00</strong></div>
+        <div class="stat-pill">Countries <strong id="c-stat-countries">0</strong></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;">
+        <button class="btn-ghost" onclick="printReport('coins')" style="font-size:0.8rem;padding:7px 12px;">🖨 Print Report</button>
+        <button class="btn-ghost" onclick="exportCSV('coins')" style="font-size:0.8rem;padding:7px 12px;">⬇ Export CSV</button>
+        <button class="btn-ghost" onclick="openImportModal('coins')" style="font-size:0.8rem;padding:7px 12px;">⬆ Import CSV</button>
+      </div>
+      <div class="controls">
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="c-search-input" class="search-input" placeholder="Search name, country, denomination, monarch…" oninput="filterAndRenderCoins()">
+        </div>
+        <select class="filter-select" id="c-filter-circulated" onchange="filterAndRenderCoins()">
+          <option value="">Circulated &amp; uncirculated</option>
+          <option value="circulated">Circulated</option>
+          <option value="uncirculated">Uncirculated</option>
+        </select>
+        <select class="filter-select" id="c-filter-condition" onchange="filterAndRenderCoins()">
+          <option value="">All grades</option>
+          <option value="Proof">Proof</option>
+          <option value="BU">BU</option>
+          <option value="UNC">UNC</option>
+          <option value="AU">AU</option>
+          <option value="EF">EF</option>
+          <option value="VF">VF</option>
+          <option value="Fine">Fine</option>
+          <option value="Fair">Fair</option>
+          <option value="Poor">Poor</option>
+        </select>
+        <select class="filter-select" id="c-sort-by" onchange="filterAndRenderCoins()">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="value_high">Highest value</option>
+          <option value="value_low">Lowest value</option>
+          <option value="year">Year</option>
+          <option value="country">Country A–Z</option>
+          <option value="name">Name A–Z</option>
+        </select>
+        <div class="view-toggle">
+          <button class="view-btn active" id="view-btn-grid-coins" onclick="setView('coins','grid')" title="Gallery view">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="0" y="0" width="6" height="6" rx="1"/><rect x="8" y="0" width="6" height="6" rx="1"/><rect x="0" y="8" width="6" height="6" rx="1"/><rect x="8" y="8" width="6" height="6" rx="1"/></svg>
+          </button>
+          <button class="view-btn" id="view-btn-list-coins" onclick="setView('coins','list')" title="List view">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="0" y="1" width="14" height="2" rx="1"/><rect x="0" y="6" width="14" height="2" rx="1"/><rect x="0" y="11" width="14" height="2" rx="1"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="stamp-grid" id="coin-grid">
+        <div class="empty-state"><div class="empty-icon">🪙</div><p>Loading your coins…</p></div>
+      </div>
+      <div id="list-coins" style="display:none"></div>
     </div>
 
   </main>
@@ -1113,6 +1174,151 @@
 </div>
 
 
+<!-- MODAL: Add / Edit Coin -->
+<div class="modal-overlay" id="modal-coin-form">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="coin-form-title">Add Coin</div>
+      <button class="modal-close" onclick="closeModal('modal-coin-form')">×</button>
+    </div>
+    <input type="hidden" id="co-id">
+    <div class="form-grid">
+      <div class="form-section-divider">Coin Details</div>
+      <div class="form-group form-full">
+        <label class="form-label">Name / Description</label>
+        <input type="text" id="co-name" class="form-input" placeholder="e.g. Half Crown, Penny Black, Florin">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Country</label>
+        <input type="text" id="co-country" class="form-input" placeholder="e.g. Great Britain">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Year</label>
+        <input type="text" id="co-year" class="form-input" placeholder="e.g. 1887">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Denomination</label>
+        <input type="text" id="co-denomination" class="form-input" placeholder="e.g. 2/6, 1d, 50p">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Monarch / Issuer</label>
+        <input type="text" id="co-monarch" class="form-input" placeholder="e.g. Victoria, George V">
+      </div>
+      <div class="form-section-divider">Physical Details</div>
+      <div class="form-group">
+        <label class="form-label">Metal / Composition</label>
+        <input type="text" id="co-metal" class="form-input" placeholder="e.g. Silver, Copper, Bronze">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mint</label>
+        <input type="text" id="co-mint" class="form-input" placeholder="e.g. Royal Mint, Birmingham">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Weight (g)</label>
+        <input type="text" id="co-weight" class="form-input" placeholder="e.g. 14.14">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Diameter (mm)</label>
+        <input type="text" id="co-diameter" class="form-input" placeholder="e.g. 32.3">
+      </div>
+      <div class="form-section-divider">Catalogue References</div>
+      <div class="form-group">
+        <label class="form-label">Spink No.</label>
+        <input type="text" id="co-spink" class="form-input" placeholder="e.g. S3889">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Other Ref.</label>
+        <input type="text" id="co-ref" class="form-input" placeholder="e.g. KM#774">
+      </div>
+      <div class="form-section-divider">Condition &amp; Status</div>
+      <div class="form-group">
+        <label class="form-label">Circulated</label>
+        <select id="co-circulated" class="form-select">
+          <option value="">Unknown</option>
+          <option value="circulated">Circulated</option>
+          <option value="uncirculated">Uncirculated</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Grade / Condition</label>
+        <select id="co-condition" class="form-select">
+          <option value="">Unknown</option>
+          <option value="Proof">Proof</option>
+          <option value="BU">BU – Brilliant Uncirculated</option>
+          <option value="UNC">UNC – Uncirculated</option>
+          <option value="AU">AU – About Uncirculated</option>
+          <option value="EF">EF – Extremely Fine</option>
+          <option value="VF">VF – Very Fine</option>
+          <option value="Fine">Fine</option>
+          <option value="Fair">Fair</option>
+          <option value="Poor">Poor</option>
+        </select>
+      </div>
+      <div class="form-section-divider">Value &amp; Storage</div>
+      <div class="form-group">
+        <label class="form-label">Estimated Value (£)</label>
+        <input type="number" id="co-value" class="form-input" placeholder="0.00" step="0.01" min="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Duplicate Count</label>
+        <input type="number" id="co-dupes" class="form-input" placeholder="0" min="0">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Tags (comma-separated)</label>
+        <input type="text" id="co-tags" class="form-input" placeholder="e.g. silver, Victorian, error coin">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Box / Album Source</label>
+        <input type="text" id="co-album" class="form-input" placeholder="e.g. Box 3, Album 1 Page 2">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Notes</label>
+        <textarea id="co-notes" class="form-textarea" placeholder="Toning, strike quality, provenance, any interesting details…"></textarea>
+      </div>
+      <div class="form-section-divider">Images</div>
+      <div class="form-full">
+        <div class="image-upload-row">
+          <div class="image-upload-box">
+            <input type="file" id="co-img-obverse" accept="image/*" onchange="previewImage(this,'prev-co-obverse','lbl-co-obverse')">
+            <img id="prev-co-obverse" class="upload-preview" alt="">
+            <div class="upload-label" id="lbl-co-obverse">📷 Obverse (heads)<br><small>Tap to choose</small></div>
+          </div>
+          <div class="image-upload-box">
+            <input type="file" id="co-img-reverse" accept="image/*" onchange="previewImage(this,'prev-co-reverse','lbl-co-reverse')">
+            <img id="prev-co-reverse" class="upload-preview" alt="">
+            <div class="upload-label" id="lbl-co-reverse">📷 Reverse (tails)<br><small>Tap to choose</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="form-full" style="padding-top:4px;">
+        <button type="button" class="btn-ai" id="btn-ai-coin" onclick="fillFromImage('coin')">✨ Fill form from image</button>
+        <div class="ai-hint">Uses AI to read the coin and pre-fill the fields above &nbsp;·&nbsp; <button type="button" onclick="changeApiKey()" style="background:none;border:none;color:var(--muted);font-size:0.75rem;cursor:pointer;padding:0;text-decoration:underline">Change API key</button></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-danger" id="btn-delete-coin" onclick="deleteCoin()" style="display:none">Delete</button>
+      <button class="btn-ghost" onclick="closeModal('modal-coin-form')">Cancel</button>
+      <button class="btn-save" id="btn-save-coin" onclick="saveCoin()">Save Coin</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL: Coin Detail -->
+<div class="modal-overlay" id="modal-coin-detail">
+  <div class="modal" style="max-width:660px;">
+    <div class="modal-header">
+      <div class="modal-title" id="coin-detail-title">Coin</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn-edit" onclick="editCurrentCoin()">Edit</button>
+        <button class="modal-close" onclick="closeModal('modal-coin-detail')">×</button>
+      </div>
+    </div>
+    <div id="coin-detail-body"></div>
+  </div>
+</div>
+
+
 <!-- MODAL: CSV Import -->
 <div class="modal-overlay" id="modal-import">
   <div class="modal" style="max-width:680px;">
@@ -1206,6 +1412,9 @@ var currentDetailStampId = null;
 var allMonopoly        = [];
 var editingMonopolyId  = null;
 var currentDetailMonopolyId = null;
+var allCoins           = [];
+var editingCoinId      = null;
+var currentDetailCoinId = null;
 var currentView        = 'postcards';
 
 // ── Auth ──
@@ -1241,6 +1450,7 @@ auth.onAuthStateChanged(function(user) {
     loadCards();
     loadStamps();
     loadMonopoly();
+    loadCoins();
   } else {
     currentUser = null;
     document.getElementById('login-screen').style.display = 'flex';
@@ -1259,9 +1469,11 @@ function switchView(view) {
   document.getElementById('tab-postcards').classList.toggle('active', view === 'postcards');
   document.getElementById('tab-stamps').classList.toggle('active',    view === 'stamps');
   document.getElementById('tab-monopoly').classList.toggle('active',  view === 'monopoly');
+  document.getElementById('tab-coins').classList.toggle('active',     view === 'coins');
   document.getElementById('section-postcards').style.display = view === 'postcards' ? '' : 'none';
   document.getElementById('section-stamps').style.display    = view === 'stamps'    ? '' : 'none';
   document.getElementById('section-monopoly').style.display  = view === 'monopoly'  ? '' : 'none';
+  document.getElementById('section-coins').style.display     = view === 'coins'     ? '' : 'none';
 
   if (view === 'postcards') {
     document.getElementById('header-icon').textContent  = '📮';
@@ -1275,12 +1487,18 @@ function switchView(view) {
     document.getElementById('btn-add-main').innerHTML   = '+ <span class="btn-label">Add Stamp</span>';
     document.getElementById('btn-add-main').onclick     = openAddStampModal;
     updateStampSubtitle();
-  } else {
+  } else if (view === 'monopoly') {
     document.getElementById('header-icon').textContent  = '🎩';
     document.getElementById('header-title').textContent = 'Monopoly';
     document.getElementById('btn-add-main').innerHTML   = '+ <span class="btn-label">Add Edition</span>';
     document.getElementById('btn-add-main').onclick     = openAddMonopolyModal;
     updateMonopolySubtitle();
+  } else {
+    document.getElementById('header-icon').textContent  = '🪙';
+    document.getElementById('header-title').textContent = 'Coins';
+    document.getElementById('btn-add-main').innerHTML   = '+ <span class="btn-label">Add Coin</span>';
+    document.getElementById('btn-add-main').onclick     = openAddCoinModal;
+    updateCoinSubtitle();
   }
 }
 
@@ -2165,7 +2383,7 @@ function closeModal(id) {
   document.body.style.overflow = '';
 }
 
-['modal-form','modal-detail','modal-stamp-form','modal-stamp-detail','modal-monopoly-form','modal-monopoly-detail','modal-import','modal-apikey'].forEach(function(id) {
+['modal-form','modal-detail','modal-stamp-form','modal-stamp-detail','modal-monopoly-form','modal-monopoly-detail','modal-coin-form','modal-coin-detail','modal-import','modal-apikey'].forEach(function(id) {
   document.getElementById(id).addEventListener('click', function(e) {
     if (e.target === this) closeModal(id);
   });
@@ -2247,7 +2465,7 @@ var STAMP_FIELD_MAP = {
 function openImportModal(type) {
   importType = type;
   importRecords = [];
-  var label = type === 'stamps' ? 'Stamps' : type === 'monopoly' ? 'Monopoly Editions' : 'Postcards';
+  var label = type === 'stamps' ? 'Stamps' : type === 'monopoly' ? 'Monopoly Editions' : type === 'coins' ? 'Coins' : 'Postcards';
   document.getElementById('import-modal-title').textContent = 'Import ' + label + ' from CSV';
   document.getElementById('import-file-input').value = '';
   document.getElementById('import-preview').innerHTML = '';
@@ -2263,6 +2481,9 @@ function downloadTemplate() {
   } else if (importType === 'monopoly') {
     headers = 'Edition Name,Publisher,Year,Country,Completeness,Condition,Estimated Value,Duplicate Count,Tags,Notes';
     name = 'monopoly-template.csv';
+  } else if (importType === 'coins') {
+    headers = 'Name,Country,Year,Denomination,Monarch,Metal,Mint,Weight (g),Diameter (mm),Spink No,Other Ref,Circulated,Condition,Estimated Value,Duplicate Count,Tags,Box Source,Notes';
+    name = 'coins-template.csv';
   } else {
     headers = 'Caption,Publisher,Series No,Card No,Theme,Era,Original/Reprint,Condition,Research Status,Estimated Value,Duplicate Count,Tags,Album Source,Notes';
     name = 'postcards-template.csv';
@@ -2284,7 +2505,7 @@ function handleImportFile(input) {
       var rows = parseCSV(e.target.result);
       if (rows.length < 2) { showImportError('File appears to be empty.'); return; }
       var headers = rows[0].map(function(h) { return h.trim(); });
-      var fieldMap = importType === 'stamps' ? STAMP_FIELD_MAP : importType === 'monopoly' ? MONOPOLY_FIELD_MAP : POSTCARD_FIELD_MAP;
+      var fieldMap = importType === 'stamps' ? STAMP_FIELD_MAP : importType === 'monopoly' ? MONOPOLY_FIELD_MAP : importType === 'coins' ? COIN_FIELD_MAP : POSTCARD_FIELD_MAP;
 
       importRecords = [];
       for (var i = 1; i < rows.length; i++) {
@@ -2324,12 +2545,16 @@ function renderImportPreview() {
     ? ['description','country','denomination','condition']
     : importType === 'monopoly'
       ? ['edition','publisher','year','completeness']
-      : ['caption','publisher','condition','estimatedValue'];
+      : importType === 'coins'
+        ? ['name','country','year','condition']
+        : ['caption','publisher','condition','estimatedValue'];
   var labels = importType === 'stamps'
     ? ['Description','Country','Denomination','Condition']
     : importType === 'monopoly'
       ? ['Edition','Publisher','Year','Completeness']
-      : ['Caption','Publisher','Condition','Value'];
+      : importType === 'coins'
+        ? ['Name','Country','Year','Condition']
+        : ['Caption','Publisher','Condition','Value'];
 
   var rows = importRecords.slice(0, 8);
   var thead = '<tr>' + labels.map(function(l){ return '<th>' + l + '</th>'; }).join('') + '</tr>';
@@ -2357,7 +2582,7 @@ function confirmImport() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Importing…';
 
-  var col = importType === 'stamps' ? 'stamps' : importType === 'monopoly' ? 'monopoly' : 'postcards';
+  var col = importType === 'stamps' ? 'stamps' : importType === 'monopoly' ? 'monopoly' : importType === 'coins' ? 'coins' : 'postcards';
   var CHUNK = 400;
   var batches = [];
 
@@ -2417,6 +2642,22 @@ function collectAIImages(type) {
       if (st) u = st.imageUrl || null;
     }
     if (f || u) images.push({ file: f, url: u });
+  } else if (type === 'coin') {
+    var of_ = document.getElementById('co-img-obverse').files[0] || null;
+    var ou  = null;
+    if (editingCoinId) {
+      var cx = allCoins.find(function(c){ return c.id === editingCoinId; });
+      if (cx) ou = cx.obverseImageUrl || null;
+    }
+    if (of_ || ou) images.push({ file: of_, url: ou });
+
+    var rvf = document.getElementById('co-img-reverse').files[0] || null;
+    var rvu = null;
+    if (editingCoinId) {
+      var cx2 = allCoins.find(function(c){ return c.id === editingCoinId; });
+      if (cx2) rvu = cx2.reverseImageUrl || null;
+    }
+    if (rvf || rvu) images.push({ file: rvf, url: rvu });
   } else if (type === 'monopoly') {
     var mf = document.getElementById('m-img-box').files[0] || null;
     var mu = null;
@@ -2558,7 +2799,7 @@ function imgToBase64(src) {
 }
 
 function runAIFill(type, images, apiKey) {
-  var btnId = type === 'stamp' ? 'btn-ai-stamp' : type === 'monopoly' ? 'btn-ai-monopoly' : 'btn-ai-postcard';
+  var btnId = type === 'stamp' ? 'btn-ai-stamp' : type === 'monopoly' ? 'btn-ai-monopoly' : type === 'coin' ? 'btn-ai-coin' : 'btn-ai-postcard';
   var btn = document.getElementById(btnId);
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Analysing…';
@@ -2570,6 +2811,8 @@ function runAIFill(type, images, apiKey) {
       ? 'Analyse this postage stamp image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: description, country, year, denomination, colour, condition (one of: Mint Fine Good Fair Poor), used (one of: used unused), estimatedValue (estimated GBP value as a number, e.g. 2.50 — leave as empty string if you cannot estimate). Leave fields as empty string if uncertain.'
       : type === 'monopoly'
         ? 'Analyse this Monopoly board game image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: edition (the edition or version name, e.g. "Classic UK Edition", "Here & Now"), publisher (e.g. Waddingtons, Parker Brothers, Hasbro, Winning Moves), year (year of manufacture if visible), country (e.g. UK, US), completeness (one of: Complete Near-Complete Incomplete — if visible), condition (one of: Mint Good Fair Poor — based on box condition), notes (any interesting details about the edition), estimatedValue (estimated GBP collector value as a number, e.g. 25.00 — leave as empty string if uncertain). Leave fields as empty string if uncertain.'
+      : type === 'coin'
+        ? 'Analyse this coin image. The first image may be the obverse (heads) and the second the reverse (tails). Return ONLY a JSON object (no markdown) with these fields where you can determine them: name (common name, e.g. "Half Crown", "Penny"), country (issuing country), year (year on coin), denomination (face value, e.g. "2/6", "1d", "50p"), monarch (monarch or ruler shown, e.g. "Victoria", "George V"), metal (composition, e.g. "Silver", "Copper", "Bronze", "Cupro-Nickel"), mint (mint if identifiable), condition (one of: Proof BU UNC AU EF VF Fine Fair Poor), circulated (one of: circulated uncirculated), spinkNo (Spink catalogue number if identifiable, else empty string), estimatedValue (estimated GBP collector value as a number, e.g. 12.50 — leave as empty string if uncertain). Leave fields as empty string if uncertain.'
       : hasBoth
         ? 'Analyse this vintage postcard. The first image is the front (picture side); the second is the back which may show the publisher, printed caption, series number, card number, postmarks and any written message. Return ONLY a JSON object (no markdown) with these fields where you can determine them: caption, publisher, seriesNo, cardNo, theme, era, condition (one of: Mint Good Fair Poor), isOriginal (one of: original reprint), notes (postmarks, message, or anything interesting), estimatedValue (estimated GBP value as a number, e.g. 2.50 — leave as empty string if you cannot estimate). Leave fields as empty string if uncertain.'
         : 'Analyse this vintage postcard image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: caption, publisher, theme, era, condition (one of: Mint Good Fair Poor), isOriginal (one of: original reprint), notes (any interesting details), estimatedValue (estimated GBP value as a number, e.g. 2.50 — leave as empty string if you cannot estimate). Leave fields as empty string if uncertain.';
@@ -2645,6 +2888,18 @@ function applyAIResult(data, type) {
     set('m-condition',    data.condition);
     set('m-notes',        data.notes);
     set('m-value',        data.estimatedValue);
+  } else if (type === 'coin') {
+    set('co-name',        data.name);
+    set('co-country',     data.country);
+    set('co-year',        data.year);
+    set('co-denomination',data.denomination);
+    set('co-monarch',     data.monarch);
+    set('co-metal',       data.metal);
+    set('co-mint',        data.mint);
+    set('co-condition',   data.condition);
+    set('co-circulated',  data.circulated);
+    set('co-spink',       data.spinkNo);
+    set('co-value',       data.estimatedValue);
   } else {
     set('s-description', data.description);
     set('s-country',     data.country);
@@ -2659,9 +2914,355 @@ function applyAIResult(data, type) {
 
 // ── Print Reports ──
 
+// ── Coins ──
+
+var COIN_FIELD_MAP = {
+  name:'name', description:'name',
+  country:'country',
+  year:'year',
+  denomination:'denomination',
+  monarch:'monarch', issuer:'monarch',
+  metal:'metal', composition:'metal',
+  mint:'mint',
+  weightg:'weight', weight:'weight',
+  diametermm:'diameter', diameter:'diameter',
+  spinkno:'spinkNo', spink:'spinkNo',
+  otherref:'otherRef', ref:'otherRef',
+  circulated:'circulated',
+  condition:'condition', grade:'condition',
+  estimatedvalue:'estimatedValue', value:'estimatedValue',
+  duplicatecount:'duplicateCount', duplicates:'duplicateCount',
+  tags:'tags',
+  boxsource:'albumSource', albumsource:'albumSource', album:'albumSource', box:'albumSource',
+  notes:'notes'
+};
+
+function loadCoins() {
+  db.collection('coins')
+    .where('userId', '==', currentUser.uid)
+    .onSnapshot(function(snap) {
+      allCoins = [];
+      snap.forEach(function(doc) { allCoins.push(Object.assign({ id: doc.id }, doc.data())); });
+      updateCoinStats();
+      filterAndRenderCoins();
+    }, function(err) {
+      document.getElementById('coin-grid').innerHTML =
+        '<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Could not load coins</h3>' +
+        '<p style="font-size:0.8rem;max-width:340px;margin:0 auto">' + escHtml(err.message) + '</p></div>';
+    });
+}
+
+function updateCoinStats() {
+  var total     = allCoins.length;
+  var value     = allCoins.reduce(function(s, c) { return s + (parseFloat(c.estimatedValue) || 0); }, 0);
+  var countries = new Set(allCoins.map(function(c) { return c.country; }).filter(Boolean)).size;
+  document.getElementById('c-stat-total').textContent     = total;
+  document.getElementById('c-stat-value').textContent     = '£' + value.toFixed(2);
+  document.getElementById('c-stat-countries').textContent = countries;
+  if (currentView === 'coins') updateCoinSubtitle();
+}
+
+function updateCoinSubtitle() {
+  var n = allCoins.length;
+  document.getElementById('header-sub').textContent = n + ' coin' + (n !== 1 ? 's' : '');
+}
+
+function filterAndRenderCoins() {
+  var q        = (document.getElementById('c-search-input').value || '').toLowerCase().trim();
+  var circFilt = document.getElementById('c-filter-circulated').value;
+  var condFilt = document.getElementById('c-filter-condition').value;
+  var sortBy   = document.getElementById('c-sort-by').value;
+
+  var filtered = allCoins.filter(function(c) {
+    if (circFilt && c.circulated !== circFilt) return false;
+    if (condFilt && c.condition  !== condFilt) return false;
+    if (q) {
+      var hay = [c.name, c.country, c.year, c.denomination, c.monarch,
+                 c.metal, c.mint, c.spinkNo, (c.tags||[]).join(' '), c.notes].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  filtered.sort(function(a, b) {
+    if (sortBy === 'oldest')     return tsC(a) - tsC(b);
+    if (sortBy === 'value_high') return (parseFloat(b.estimatedValue)||0) - (parseFloat(a.estimatedValue)||0);
+    if (sortBy === 'value_low')  return (parseFloat(a.estimatedValue)||0) - (parseFloat(b.estimatedValue)||0);
+    if (sortBy === 'year')       return (parseInt(a.year)||0) - (parseInt(b.year)||0);
+    if (sortBy === 'country')    return (a.country||'').localeCompare(b.country||'');
+    if (sortBy === 'name')       return (a.name||'').localeCompare(b.name||'');
+    return tsC(b) - tsC(a);
+  });
+
+  renderCoinGallery(filtered);
+  if (viewMode.coins === 'list') renderListCoins(filtered);
+}
+
+function tsC(c) {
+  return (c.createdAt && c.createdAt.seconds) ? c.createdAt.seconds : 0;
+}
+
+function renderCoinGallery(items) {
+  var grid = document.getElementById('coin-grid');
+  if (allCoins.length === 0) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🪙</div>' +
+      '<h3>No coins yet</h3><p>Add your first coin to get started.</p>' +
+      '<button class="btn-primary" onclick="openAddCoinModal()">+ Add First Coin</button></div>';
+    return;
+  }
+  if (items.length === 0) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div>' +
+      '<h3>No coins match</h3><p>Try different search terms or filters.</p></div>';
+    return;
+  }
+  grid.innerHTML = items.map(function(c) {
+    var thumb = c.obverseImageUrl
+      ? '<img src="' + escAttr(c.obverseImageUrl) + '" alt="" loading="lazy">'
+      : '<div class="stamp-thumb-placeholder">🪙</div>';
+    var condBadge = c.condition
+      ? '<span class="badge badge-' + (
+          ['Proof','BU','UNC'].includes(c.condition) ? 'Mint' :
+          ['AU','EF','VF'].includes(c.condition) ? 'Fine' :
+          c.condition === 'Fine' ? 'Good' :
+          c.condition === 'Fair' ? 'Fair' : 'Poor'
+        ) + '">' + escHtml(c.condition) + '</span>' : '';
+    var circBadge = c.circulated
+      ? '<span class="badge badge-' + (c.circulated === 'uncirculated' ? 'unused' : 'used') + '">' +
+        (c.circulated === 'uncirculated' ? 'UNC' : 'Circ') + '</span>' : '';
+    var valBadge = c.estimatedValue
+      ? '<span class="badge badge-value">£' + parseFloat(c.estimatedValue).toFixed(2) + '</span>' : '';
+    var meta = [c.country, c.year].filter(Boolean).join(' · ');
+    return '<div class="stamp-tile" onclick="openCoinDetail(\'' + esc(c.id) + '\')">' +
+      '<div class="stamp-thumb">' + thumb + '</div>' +
+      '<div class="stamp-body">' +
+        '<div class="stamp-denom">' + escHtml(c.denomination || '—') + '</div>' +
+        '<div class="stamp-meta">' + escHtml(meta) + '</div>' +
+        '<div class="stamp-desc">' + escHtml(c.name || '') + '</div>' +
+        '<div class="tile-badges">' + condBadge + circBadge + valBadge + '</div>' +
+      '</div></div>';
+  }).join('');
+}
+
+function renderListCoins(items) {
+  var el = document.getElementById('list-coins');
+  if (!items.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><h3>No coins match</h3><p>Try different search terms or filters.</p></div>';
+    return;
+  }
+  var rows = items.map(function(c) {
+    var val  = c.estimatedValue ? '£' + parseFloat(c.estimatedValue).toFixed(2) : '—';
+    var grade = c.condition || '—';
+    var circ  = c.circulated ? (c.circulated === 'uncirculated' ? 'Uncirculated' : 'Circulated') : '—';
+    return '<tr onclick="openCoinDetail(\'' + esc(c.id) + '\')">' +
+      '<td class="td-wrap">' + escHtml(c.name || '—') + '</td>' +
+      '<td>' + escHtml(c.country || '—') + '</td>' +
+      '<td>' + escHtml(c.year || '—') + '</td>' +
+      '<td>' + escHtml(c.denomination || '—') + '</td>' +
+      '<td>' + escHtml(c.monarch || '—') + '</td>' +
+      '<td>' + escHtml(c.metal || '—') + '</td>' +
+      '<td>' + escHtml(grade) + '</td>' +
+      '<td>' + escHtml(circ) + '</td>' +
+      '<td>' + val + '</td>' +
+      '<td>' + escHtml(c.albumSource || '—') + '</td>' +
+    '</tr>';
+  });
+  el.innerHTML = '<div class="list-wrap"><table class="list-table">' +
+    '<thead><tr>' +
+      '<th>Name</th><th>Country</th><th>Year</th><th>Denomination</th>' +
+      '<th>Monarch</th><th>Metal</th><th>Grade</th><th>Circulated</th><th>Value</th><th>Box / Album</th>' +
+    '</tr></thead><tbody>' + rows.join('') + '</tbody></table></div>';
+}
+
+function openCoinDetail(id) {
+  var c = allCoins.find(function(x) { return x.id === id; });
+  if (!c) return;
+  currentDetailCoinId = id;
+  document.getElementById('coin-detail-title').textContent = c.name || '(no name)';
+
+  function df(label, val, full) {
+    var v = val || '';
+    return '<div class="' + (full ? 'detail-field detail-field-full' : 'detail-field') + '">' +
+      '<div class="detail-field-label">' + label + '</div>' +
+      '<div class="detail-field-value' + (v ? '' : ' empty') + '">' + escHtml(v || '—') + '</div></div>';
+  }
+
+  var obvImg = c.obverseImageUrl
+    ? '<img src="' + escAttr(c.obverseImageUrl) + '" alt="Obverse" onclick="openLightbox(\'' + escAttr(c.obverseImageUrl) + '\')">'
+    : '<div class="detail-img-placeholder">🪙</div>';
+  var revImg = c.reverseImageUrl
+    ? '<img src="' + escAttr(c.reverseImageUrl) + '" alt="Reverse" onclick="openLightbox(\'' + escAttr(c.reverseImageUrl) + '\')">'
+    : '<div class="detail-img-placeholder">🪙</div>';
+
+  var tagsText = (c.tags && c.tags.length) ? c.tags.join(', ') : '';
+  var circText = c.circulated === 'circulated' ? 'Circulated' : c.circulated === 'uncirculated' ? 'Uncirculated' : '';
+
+  document.getElementById('coin-detail-body').innerHTML =
+    '<div class="detail-images">' +
+      '<div class="detail-img-slot">' + obvImg + '<div class="detail-img-label">Obverse</div></div>' +
+      '<div class="detail-img-slot">' + revImg + '<div class="detail-img-label">Reverse</div></div>' +
+    '</div>' +
+    '<div class="detail-fields">' +
+      df('Country',      c.country) +
+      df('Year',         c.year) +
+      df('Denomination', c.denomination) +
+      df('Monarch',      c.monarch) +
+      df('Metal',        c.metal) +
+      df('Mint',         c.mint) +
+      df('Weight',       c.weight ? c.weight + ' g' : '') +
+      df('Diameter',     c.diameter ? c.diameter + ' mm' : '') +
+      df('Spink No.',    c.spinkNo) +
+      df('Other Ref.',   c.otherRef) +
+      df('Circulated',   circText) +
+      df('Grade',        c.condition) +
+      df('Est. Value',   c.estimatedValue ? '£' + parseFloat(c.estimatedValue).toFixed(2) : '') +
+      df('Duplicates',   c.duplicateCount ? String(c.duplicateCount) : '0') +
+      df('Box / Album',  c.albumSource) +
+      df('Tags',         tagsText) +
+      (c.notes ? df('Notes', c.notes, true) : '') +
+    '</div>';
+
+  openModal('modal-coin-detail');
+}
+
+function editCurrentCoin() {
+  closeModal('modal-coin-detail');
+  openEditCoinModal(currentDetailCoinId);
+}
+
+function openAddCoinModal() {
+  editingCoinId = null;
+  document.getElementById('coin-form-title').textContent = 'Add Coin';
+  document.getElementById('btn-delete-coin').style.display = 'none';
+  clearCoinForm();
+  openModal('modal-coin-form');
+}
+
+function openEditCoinModal(id) {
+  var c = allCoins.find(function(x) { return x.id === id; });
+  if (!c) return;
+  editingCoinId = id;
+  document.getElementById('coin-form-title').textContent = 'Edit Coin';
+  document.getElementById('btn-delete-coin').style.display = '';
+  populateCoinForm(c);
+  openModal('modal-coin-form');
+}
+
+function clearCoinForm() {
+  ['co-name','co-country','co-year','co-denomination','co-monarch',
+   'co-metal','co-mint','co-weight','co-diameter','co-spink','co-ref',
+   'co-tags','co-album','co-notes'].forEach(function(id) {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('co-value').value      = '';
+  document.getElementById('co-dupes').value      = '';
+  document.getElementById('co-circulated').value = '';
+  document.getElementById('co-condition').value  = '';
+  document.getElementById('co-img-obverse').value = '';
+  document.getElementById('co-img-reverse').value = '';
+  resetPreview('prev-co-obverse', 'lbl-co-obverse', '📷 Obverse (heads)<br><small>Tap to choose</small>');
+  resetPreview('prev-co-reverse', 'lbl-co-reverse', '📷 Reverse (tails)<br><small>Tap to choose</small>');
+}
+
+function populateCoinForm(c) {
+  document.getElementById('co-name').value        = c.name          || '';
+  document.getElementById('co-country').value     = c.country       || '';
+  document.getElementById('co-year').value        = c.year          || '';
+  document.getElementById('co-denomination').value= c.denomination  || '';
+  document.getElementById('co-monarch').value     = c.monarch       || '';
+  document.getElementById('co-metal').value       = c.metal         || '';
+  document.getElementById('co-mint').value        = c.mint          || '';
+  document.getElementById('co-weight').value      = c.weight        || '';
+  document.getElementById('co-diameter').value    = c.diameter      || '';
+  document.getElementById('co-spink').value       = c.spinkNo       || '';
+  document.getElementById('co-ref').value         = c.otherRef      || '';
+  document.getElementById('co-circulated').value  = c.circulated    || '';
+  document.getElementById('co-condition').value   = c.condition     || '';
+  document.getElementById('co-value').value       = c.estimatedValue|| '';
+  document.getElementById('co-dupes').value       = c.duplicateCount|| '';
+  document.getElementById('co-tags').value        = (c.tags||[]).join(', ');
+  document.getElementById('co-notes').value       = c.notes         || '';
+  document.getElementById('co-album').value       = c.albumSource   || '';
+  if (c.obverseImageUrl) showExistingPreview('prev-co-obverse', 'lbl-co-obverse', c.obverseImageUrl, 'Obverse ✓');
+  else resetPreview('prev-co-obverse', 'lbl-co-obverse', '📷 Obverse (heads)<br><small>Tap to change</small>');
+  if (c.reverseImageUrl) showExistingPreview('prev-co-reverse', 'lbl-co-reverse', c.reverseImageUrl, 'Reverse ✓');
+  else resetPreview('prev-co-reverse', 'lbl-co-reverse', '📷 Reverse (tails)<br><small>Tap to change</small>');
+}
+
+function saveCoin() {
+  var btn = document.getElementById('btn-save-coin');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Saving…';
+
+  var tags = document.getElementById('co-tags').value.split(',').map(function(t){return t.trim();}).filter(Boolean);
+  var data = {
+    userId:         currentUser.uid,
+    name:           document.getElementById('co-name').value.trim(),
+    country:        document.getElementById('co-country').value.trim(),
+    year:           document.getElementById('co-year').value.trim(),
+    denomination:   document.getElementById('co-denomination').value.trim(),
+    monarch:        document.getElementById('co-monarch').value.trim(),
+    metal:          document.getElementById('co-metal').value.trim(),
+    mint:           document.getElementById('co-mint').value.trim(),
+    weight:         document.getElementById('co-weight').value.trim(),
+    diameter:       document.getElementById('co-diameter').value.trim(),
+    spinkNo:        document.getElementById('co-spink').value.trim(),
+    otherRef:       document.getElementById('co-ref').value.trim(),
+    circulated:     document.getElementById('co-circulated').value,
+    condition:      document.getElementById('co-condition').value,
+    estimatedValue: parseFloat(document.getElementById('co-value').value) || 0,
+    duplicateCount: parseInt(document.getElementById('co-dupes').value)   || 0,
+    tags:           tags,
+    notes:          document.getElementById('co-notes').value.trim(),
+    albumSource:    document.getElementById('co-album').value.trim(),
+    updatedAt:      firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  var obvFile  = document.getElementById('co-img-obverse').files[0];
+  var revFile  = document.getElementById('co-img-reverse').files[0];
+  var coinId   = editingCoinId || db.collection('coins').doc().id;
+  var existing = editingCoinId ? allCoins.find(function(x) { return x.id === editingCoinId; }) : null;
+
+  data.obverseImageUrl = existing ? (existing.obverseImageUrl || '') : '';
+  data.reverseImageUrl = existing ? (existing.reverseImageUrl || '') : '';
+  if (!editingCoinId) data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+
+  var uploads = [];
+  var uid = currentUser.uid;
+  if (obvFile) {
+    var oRef = storage.ref('users/' + uid + '/coins/' + coinId + '/obverse.' + ext(obvFile));
+    uploads.push(oRef.put(obvFile).then(function(){ return oRef.getDownloadURL(); }).then(function(url){ data.obverseImageUrl = url; }));
+  }
+  if (revFile) {
+    var rRef = storage.ref('users/' + uid + '/coins/' + coinId + '/reverse.' + ext(revFile));
+    uploads.push(rRef.put(revFile).then(function(){ return rRef.getDownloadURL(); }).then(function(url){ data.reverseImageUrl = url; }));
+  }
+
+  Promise.all(uploads).then(function() {
+    var ref = db.collection('coins').doc(coinId);
+    return editingCoinId ? ref.update(data) : ref.set(data);
+  }).then(function() {
+    closeModal('modal-coin-form');
+    toast(editingCoinId ? 'Coin updated ✓' : 'Coin added to collection ✓');
+  }).catch(function(err) {
+    toast('Save failed — ' + err.message);
+  }).finally(function() {
+    btn.disabled = false;
+    btn.innerHTML = 'Save Coin';
+  });
+}
+
+function deleteCoin() {
+  if (!editingCoinId) return;
+  if (!confirm('Delete this coin? This cannot be undone.')) return;
+  db.collection('coins').doc(editingCoinId).delete().then(function() {
+    closeModal('modal-coin-form');
+    toast('Coin deleted');
+  }).catch(function(err) { toast('Delete failed — ' + err.message); });
+}
+
 // ── View toggle (grid / list) ──
 
-var viewMode = { postcards: 'grid', stamps: 'grid', monopoly: 'grid' };
+var viewMode = { postcards: 'grid', stamps: 'grid', monopoly: 'grid', coins: 'grid' };
 
 function setView(tab, mode) {
   viewMode[tab] = mode;
@@ -2676,10 +3277,14 @@ function setView(tab, mode) {
     document.getElementById('stamp-grid').style.display  = mode === 'grid' ? '' : 'none';
     document.getElementById('list-stamps').style.display = mode === 'list' ? '' : 'none';
     filterAndRenderStamps();
-  } else {
+  } else if (tab === 'monopoly') {
     document.getElementById('monopoly-grid').style.display  = mode === 'grid' ? '' : 'none';
     document.getElementById('list-monopoly').style.display  = mode === 'list' ? '' : 'none';
     filterAndRenderMonopoly();
+  } else {
+    document.getElementById('coin-grid').style.display  = mode === 'grid' ? '' : 'none';
+    document.getElementById('list-coins').style.display = mode === 'list' ? '' : 'none';
+    filterAndRenderCoins();
   }
 }
 
@@ -2792,6 +3397,12 @@ function exportCSV(view) {
       return [m.edition, m.publisher, m.year, m.country, m.completeness, m.condition, m.estimatedValue || '', m.duplicateCount || 0, (m.tags||[]).join(', '), m.notes].map(csvCell).join(',');
     });
     filename = 'monopoly-export.csv';
+  } else if (view === 'coins') {
+    headers = ['Name','Country','Year','Denomination','Monarch','Metal','Mint','Weight (g)','Diameter (mm)','Spink No','Other Ref','Circulated','Condition','Estimated Value','Duplicate Count','Tags','Box Source','Notes'];
+    rows = allCoins.map(function(c) {
+      return [c.name, c.country, c.year, c.denomination, c.monarch, c.metal, c.mint, c.weight, c.diameter, c.spinkNo, c.otherRef, c.circulated, c.condition, c.estimatedValue || '', c.duplicateCount || 0, (c.tags||[]).join(', '), c.albumSource, c.notes].map(csvCell).join(',');
+    });
+    filename = 'coins-export.csv';
   } else {
     headers = ['Caption','Publisher','Series No','Card No','Theme','Era','Original/Reprint','Condition','Research Status','Estimated Value','Duplicate Count','Tags','Album Source','Notes'];
     rows = allCards.map(function(c) {
@@ -2884,6 +3495,41 @@ function printReport(view) {
       return row([(i+1), st.description||'—', st.country||'—', st.year||'—', st.denomination||'—',
                   st.catalogueSG||'—', st.condition||'—', usedTxt,
                   st.estimatedValue?'£'+parseFloat(st.estimatedValue).toFixed(2):'—']);
+    }).join('');
+
+  } else if (view === 'coins') {
+    var cq       = (document.getElementById('c-search-input').value || '').toLowerCase().trim();
+    var ccircFilt= document.getElementById('c-filter-circulated').value;
+    var ccondFilt= document.getElementById('c-filter-condition').value;
+    var csortBy  = document.getElementById('c-sort-by').value;
+    isFiltered   = !!(cq || ccircFilt || ccondFilt);
+    filtered = allCoins.filter(function(c) {
+      if (ccircFilt && c.circulated !== ccircFilt) return false;
+      if (ccondFilt && c.condition  !== ccondFilt) return false;
+      if (cq) {
+        var hay = [c.name,c.country,c.year,c.denomination,c.monarch,c.metal,c.mint,c.spinkNo,(c.tags||[]).join(' '),c.notes].join(' ').toLowerCase();
+        if (!hay.includes(cq)) return false;
+      }
+      return true;
+    });
+    filtered.sort(function(a,b) {
+      if (csortBy==='oldest')     return tsC(a)-tsC(b);
+      if (csortBy==='value_high') return (parseFloat(b.estimatedValue)||0)-(parseFloat(a.estimatedValue)||0);
+      if (csortBy==='value_low')  return (parseFloat(a.estimatedValue)||0)-(parseFloat(b.estimatedValue)||0);
+      if (csortBy==='year')       return (parseInt(a.year)||0)-(parseInt(b.year)||0);
+      if (csortBy==='country')    return (a.country||'').localeCompare(b.country||'');
+      if (csortBy==='name')       return (a.name||'').localeCompare(b.name||'');
+      return tsC(b)-tsC(a);
+    });
+    title = 'Coin Collection Report'; icon = '🪙';
+    var cVal     = filtered.reduce(function(s,c){return s+(parseFloat(c.estimatedValue)||0);},0);
+    var cCntries = new Set(filtered.map(function(c){return (c.country||'').trim().toLowerCase();}).filter(Boolean)).size;
+    statsHtml = stat('Items', filtered.length) + stat('Est. Value', '£'+cVal.toFixed(2)) + stat('Countries', cCntries);
+    theadHtml = row(['#','Name','Country','Year','Denomination','Monarch','Metal','Grade','Est. Value'], true);
+    tbodyHtml = filtered.map(function(c,i) {
+      return row([(i+1), c.name||'—', c.country||'—', c.year||'—', c.denomination||'—',
+                  c.monarch||'—', c.metal||'—', c.condition||'—',
+                  c.estimatedValue?'£'+parseFloat(c.estimatedValue).toFixed(2):'—']);
     }).join('');
 
   } else {
