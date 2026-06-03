@@ -214,6 +214,41 @@ select {
 .del-btn { font-size: 12px; padding: 1px 5px; margin-left: 6px; color: var(--red); background: transparent; border: 1px solid transparent; cursor: pointer; border-radius: 3px; opacity: 0.4; vertical-align: middle; line-height: 1; }
 .del-btn:hover { opacity: 1; border-color: var(--red); background: rgba(200,50,50,0.08); }
 
+.balance-check {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 0.75fr);
+  gap: 14px; margin-bottom: 14px;
+}
+.balance-check-panel {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 1rem 1.1rem;
+}
+.balance-check-title {
+  font-family: var(--font-display); font-size: 1.05rem; font-weight: 600; color: var(--forest-deep);
+  margin-bottom: 4px;
+}
+.balance-check-sub { font-size: 12px; color: var(--muted); line-height: 1.45; margin-bottom: 12px; }
+.balance-count-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.count-field label {
+  display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--muted); margin-bottom: 6px;
+}
+.count-field input { font-variant-numeric: tabular-nums; }
+.balance-result-grid { display: grid; gap: 8px; }
+.balance-result {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 9px 10px; border-radius: var(--radius-sm); background: var(--surface-2); border: 1px solid var(--line);
+}
+.balance-result span:first-child { color: var(--muted); font-size: 12px; font-weight: 600; }
+.balance-result span:last-child { font-family: var(--font-display); font-size: 1.05rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.balance-result.is-main { background: var(--mint); border-color: rgba(45, 122, 79, 0.2); }
+.balance-check-note { margin-top: 9px; color: var(--muted); font-size: 11px; line-height: 1.45; }
+.method-check-table { margin-top: 12px; }
+.method-check-table table { font-size: 12px; }
+.method-check-table td:nth-child(2), .method-check-table td:nth-child(3), .method-check-table td:nth-child(4),
+.method-check-table th:nth-child(2), .method-check-table th:nth-child(3), .method-check-table th:nth-child(4) {
+  text-align: right; font-variant-numeric: tabular-nums;
+}
+
 #saveStatus { font-size: 12px; font-weight: 600; min-height: 1.2em; }
 
 #auth-loading {
@@ -262,6 +297,8 @@ select {
   .tab { padding: 10px 12px; font-size: 13px; }
   .tab .tab-emoji { display: none; }
   .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .balance-check { grid-template-columns: 1fr; }
+  .balance-count-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .table-shell { overflow-x: auto; }
   .table-shell table { min-width: 680px; }
 }
@@ -366,6 +403,38 @@ select {
 <div id="balance" class="section">
   <div class="card-toolbar">
     <button class="btn" onclick="openAddCutting()">+ Log grass cutting</button>
+    <button class="btn" onclick="saveBalanceCheck()">Save balance check</button>
+  </div>
+  <div class="balance-check">
+    <div class="balance-check-panel">
+      <div class="balance-check-title">Cash / card balance check</div>
+      <p class="balance-check-sub">Enter what is actually in cash, Revolut, card/bank and other accounts. The app compares it with payments recorded and grass cutting costs.</p>
+      <div class="balance-count-grid">
+        <div class="count-field">
+          <label for="bcCash">Cash</label>
+          <input id="bcCash" type="number" step="0.01" inputmode="decimal" oninput="renderBalanceCheck()" />
+        </div>
+        <div class="count-field">
+          <label for="bcRevolut">Revolut</label>
+          <input id="bcRevolut" type="number" step="0.01" inputmode="decimal" oninput="renderBalanceCheck()" />
+        </div>
+        <div class="count-field">
+          <label for="bcCard">Card / bank</label>
+          <input id="bcCard" type="number" step="0.01" inputmode="decimal" oninput="renderBalanceCheck()" />
+        </div>
+        <div class="count-field">
+          <label for="bcOther">Other</label>
+          <input id="bcOther" type="number" step="0.01" inputmode="decimal" oninput="renderBalanceCheck()" />
+        </div>
+      </div>
+      <div class="method-check-table" id="methodCheck"></div>
+    </div>
+    <div class="balance-check-panel">
+      <div class="balance-check-title">Reconciliation</div>
+      <p class="balance-check-sub" id="balanceCheckSaved">Not saved yet</p>
+      <div class="balance-result-grid" id="balanceCheckResults"></div>
+      <p class="balance-check-note">Method rows show takings by payment type. The overall missing/over figure uses total collected minus logged grass cutting costs.</p>
+    </div>
   </div>
   <div class="table-shell">
   <table class="balance-table">
@@ -411,6 +480,7 @@ select {
       <select id="pMethod">
         <option value="Cash">Cash</option>
         <option value="Revolut">Revolut</option>
+        <option value="Card">Card</option>
         <option value="Bank transfer">Bank transfer</option>
         <option value="Other">Other</option>
       </select>
@@ -581,6 +651,7 @@ async function saveToFile() {
     residents: state.residents,
     payments: state.payments,
     cuttings: state.cuttings,
+    balanceCheck: state.balanceCheck,
   }).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
 
   try {
@@ -643,6 +714,7 @@ async function loadGrassPayloadFromDisk() {
             residents: p.residents.length ? p.residents : DEFAULT_RESIDENTS,
             payments: p.payments || DEFAULT_PAYMENTS,
             cuttings: p.cuttings || DEFAULT_CUTTINGS,
+            balanceCheck: p.balanceCheck || {},
           };
         }
       } catch(e) {}
@@ -653,11 +725,13 @@ async function loadGrassPayloadFromDisk() {
     const r = localStorage.getItem('grassPortal.residents');
     const p = localStorage.getItem('grassPortal.payments');
     const c = localStorage.getItem('grassPortal.cuttings');
-    if (r || p || c) {
+    const b = localStorage.getItem('grassPortal.balanceCheck');
+    if (r || p || c || b) {
       return {
         residents: r ? JSON.parse(r) : DEFAULT_RESIDENTS,
         payments: p ? JSON.parse(p) : DEFAULT_PAYMENTS,
         cuttings: c ? JSON.parse(c) : DEFAULT_CUTTINGS,
+        balanceCheck: b ? JSON.parse(b) : {},
       };
     }
   } catch(e) {}
@@ -666,6 +740,7 @@ async function loadGrassPayloadFromDisk() {
     residents: DEFAULT_RESIDENTS,
     payments: DEFAULT_PAYMENTS,
     cuttings: DEFAULT_CUTTINGS,
+    balanceCheck: {},
   };
 }
 
@@ -676,6 +751,7 @@ function persistGrassLocal() {
     localStorage.setItem('grassPortal.residents', JSON.stringify(state.residents));
     localStorage.setItem('grassPortal.payments', JSON.stringify(state.payments));
     localStorage.setItem('grassPortal.cuttings', JSON.stringify(state.cuttings));
+    localStorage.setItem('grassPortal.balanceCheck', JSON.stringify(state.balanceCheck || {}));
   } catch(e) {}
 }
 
@@ -688,6 +764,7 @@ async function save() {
       residents: state.residents,
       payments: state.payments,
       cuttings: state.cuttings,
+      balanceCheck: state.balanceCheck || {},
     });
     setSaveStatus('saved');
   } catch(e) {
@@ -704,6 +781,7 @@ async function bootstrapGrassFromCloudOrLocal() {
         residents: cloud.residents,
         payments: Array.isArray(cloud.payments) ? cloud.payments : [],
         cuttings: Array.isArray(cloud.cuttings) ? cloud.cuttings : [],
+        balanceCheck: cloud.balanceCheck || {},
       };
       persistGrassLocal();
       return;
@@ -716,6 +794,7 @@ async function bootstrapGrassFromCloudOrLocal() {
         residents: state.residents,
         payments: state.payments,
         cuttings: state.cuttings,
+        balanceCheck: state.balanceCheck || {},
       });
     } catch(e) {}
   }
@@ -773,7 +852,7 @@ function signOutGrass() {
 
 // ── App state & rendering ─────────────────────────────────────────────────────
 
-let state = { residents: [], payments: [], cuttings: [] };
+let state = { residents: [], payments: [], cuttings: [], balanceCheck: {} };
 let editingResident = null;
 
 function fmtDate(iso) {
@@ -802,6 +881,99 @@ function badgeHtml(status) {
 }
 
 function fmt(n) { return '€' + n.toFixed(2); }
+
+function getMethodBreakdown() {
+  return state.payments.reduce((totals, p) => {
+    const method = (p.method || 'Other').toLowerCase();
+    const amount = p.amount || 0;
+    if (method === 'cash') totals.cash += amount;
+    else if (method === 'revolut') totals.revolut += amount;
+    else if (method === 'card' || method === 'bank transfer') totals.card += amount;
+    else totals.other += amount;
+    return totals;
+  }, {cash: 0, revolut: 0, card: 0, other: 0});
+}
+
+function getBalanceCheckValues() {
+  return {
+    cash: parseFloat(document.getElementById('bcCash')?.value) || 0,
+    revolut: parseFloat(document.getElementById('bcRevolut')?.value) || 0,
+    card: parseFloat(document.getElementById('bcCard')?.value) || 0,
+    other: parseFloat(document.getElementById('bcOther')?.value) || 0,
+  };
+}
+
+function setBalanceCheckInputs() {
+  const check = state.balanceCheck || {};
+  [['bcCash','cash'], ['bcRevolut','revolut'], ['bcCard','card'], ['bcOther','other']].forEach(([id, key]) => {
+    const el = document.getElementById(id);
+    if (el && document.activeElement !== el) el.value = check[key] || check[key] === 0 ? check[key] : '';
+  });
+}
+
+function diffClass(n) {
+  return Math.abs(n) < 0.005 ? 'positive' : n < 0 ? 'negative' : 'positive';
+}
+
+function diffLabel(n) {
+  if (Math.abs(n) < 0.005) return 'Balanced';
+  return n < 0 ? `${fmt(Math.abs(n))} missing` : `${fmt(n)} over`;
+}
+
+function renderBalanceCheck() {
+  const totals = getMethodBreakdown();
+  const counted = getBalanceCheckValues();
+  const totalPaid = state.payments.reduce((s,p)=>s+p.amount,0);
+  const totalCost = state.cuttings.reduce((s,c)=>s+c.cost,0);
+  const expectedRemaining = totalPaid - totalCost;
+  const countedTotal = counted.cash + counted.revolut + counted.card + counted.other;
+  const overallDiff = countedTotal - expectedRemaining;
+
+  const results = document.getElementById('balanceCheckResults');
+  if (results) {
+    results.innerHTML = `
+      <div class="balance-result is-main"><span>Expected remaining</span><span>${fmt(expectedRemaining)}</span></div>
+      <div class="balance-result"><span>Counted total</span><span>${fmt(countedTotal)}</span></div>
+      <div class="balance-result"><span>Missing / over</span><span class="${diffClass(overallDiff)}">${diffLabel(overallDiff)}</span></div>
+    `;
+  }
+
+  const methodRows = [
+    ['Cash', totals.cash, counted.cash],
+    ['Revolut', totals.revolut, counted.revolut],
+    ['Card / bank', totals.card, counted.card],
+    ['Other', totals.other, counted.other],
+  ].map(([label, expected, actual]) => {
+    const diff = actual - expected;
+    return `<tr><td>${label}</td><td>${fmt(expected)}</td><td>${fmt(actual)}</td><td class="${diffClass(diff)}">${diffLabel(diff)}</td></tr>`;
+  }).join('');
+
+  const methodCheck = document.getElementById('methodCheck');
+  if (methodCheck) {
+    methodCheck.innerHTML = `
+      <table>
+        <thead><tr><th>Method</th><th>Taken</th><th>Counted</th><th>Check</th></tr></thead>
+        <tbody>${methodRows}</tbody>
+      </table>
+    `;
+  }
+
+  const saved = document.getElementById('balanceCheckSaved');
+  if (saved) {
+    saved.textContent = state.balanceCheck?.updatedAt
+      ? `Last saved ${new Date(state.balanceCheck.updatedAt).toLocaleString('en-GB')}`
+      : 'Not saved yet';
+  }
+}
+
+function saveBalanceCheck() {
+  state.balanceCheck = {
+    ...getBalanceCheckValues(),
+    updatedAt: new Date().toISOString(),
+  };
+  save();
+  renderBalanceCheck();
+}
 
 function renderSummary() {
   const active = state.residents.filter(r=>!r.na);
@@ -864,6 +1036,7 @@ function renderPayments() {
 }
 
 function renderBalance() {
+  setBalanceCheckInputs();
   const totalPaid = state.payments.reduce((s,p)=>s+p.amount,0);
   const events = [];
   events.push({date:'',desc:'Total payments collected',cost:0,type:'open',amount:totalPaid});
@@ -885,6 +1058,7 @@ function renderBalance() {
   });
   document.getElementById('balanceBody').innerHTML = rows;
   document.getElementById('balanceFoot').innerHTML = `<tr style="border-top:2px solid var(--line);background:var(--surface-2)"><td colspan="3" style="font-weight:700;padding:12px 14px;font-family:var(--font-display)">Current balance</td><td style="text-align:right;font-weight:700;padding:12px 14px;font-variant-numeric:tabular-nums" class="${bal>=0?'positive':'negative'}">${fmt(bal)}</td></tr>`;
+  renderBalanceCheck();
 }
 
 function showTab(name) {
@@ -960,7 +1134,7 @@ function savePayment() {
   state.payments.push({date,houseNo,name:r?r.name:'',amount,method,notes});
   save();
   closeModal('paymentModal');
-  renderResidents(); renderSummary(); renderPayments();
+  renderResidents(); renderSummary(); renderPayments(); renderBalanceCheck();
 }
 
 function openAddCutting() {
@@ -1121,7 +1295,8 @@ function exportData() {
     exportedAt: new Date().toISOString(),
     residents: state.residents,
     payments: state.payments,
-    cuttings: state.cuttings
+    cuttings: state.cuttings,
+    balanceCheck: state.balanceCheck || {}
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -1148,7 +1323,8 @@ function importData(event) {
       state = {
         residents: parsed.residents,
         payments: parsed.payments,
-        cuttings: parsed.cuttings
+        cuttings: parsed.cuttings,
+        balanceCheck: parsed.balanceCheck || {}
       };
       save();
       renderSummary();
@@ -1189,7 +1365,7 @@ fbAuth.onAuthStateChanged(user => {
     });
   } else {
     currentUser = null;
-    state = { residents: [], payments: [], cuttings: [] };
+    state = { residents: [], payments: [], cuttings: [], balanceCheck: {} };
     if (pendingDisallowGrass && le) {
       le.textContent = pendingDisallowGrass;
       pendingDisallowGrass = '';
