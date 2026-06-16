@@ -255,6 +255,15 @@
       grid-column: 1 / -1; text-align: center;
       padding: 60px 20px; color: var(--muted);
     }
+    .list-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px;
+      display: grid; grid-template-columns: minmax(0,1fr) auto auto;
+      gap: 14px; align-items: center; cursor: pointer;
+      margin-bottom: 12px;
+    }
+    .list-card:hover { box-shadow: 0 8px 20px rgba(105,143,128,0.12); }
+    .detail-field-value { color: var(--muted); font-size: 0.9rem; }
     .empty-icon { font-size: 3rem; margin-bottom: 12px; opacity: 0.35; }
     .empty-state h3 { font-size: 1.05rem; color: var(--text); margin-bottom: 6px; }
     .empty-state p  { font-size: 0.875rem; margin-bottom: 20px; }
@@ -380,6 +389,13 @@
     .upload-preview {
       width: 100%; max-height: 90px; object-fit: contain;
       border-radius: 6px; margin-bottom: 4px; display: none;
+    }
+    .multi-preview {
+      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 8px;
+    }
+    .tool-thumb {
+      width: 80px; height: 80px; object-fit: cover;
+      border-radius: 10px; border: 1px solid var(--border);
     }
     .upload-label { font-size: 0.75rem; color: var(--muted); pointer-events: none; line-height: 1.5; }
 
@@ -641,6 +657,7 @@
     <button class="tab-btn"        id="tab-stamps"    onclick="switchView('stamps')">🏷️ Stamps</button>
     <button class="tab-btn"        id="tab-monopoly"  onclick="switchView('monopoly')">🎩 Monopoly</button>
     <button class="tab-btn"        id="tab-coins"     onclick="switchView('coins')">🪙 Coins</button>
+    <button class="tab-btn"        id="tab-tools"     onclick="switchView('tools')">🛠️ Tools</button>
   </div>
 
   <main>
@@ -868,6 +885,54 @@
         <div class="empty-state"><div class="empty-icon">🪙</div><p>Loading your coins…</p></div>
       </div>
       <div id="list-coins" style="display:none"></div>
+    </div>
+
+    <!-- Tools section -->
+    <div id="section-tools" style="display:none">
+      <div class="stats-bar">
+        <div class="stat-pill">Total <strong id="t-stat-total">0</strong></div>
+        <div class="stat-pill">Est. value <strong id="t-stat-value">£0.00</strong></div>
+        <div class="stat-pill">Categories <strong id="t-stat-categories">0</strong></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+        <button class="btn-ghost" onclick="printReport('tools')" style="font-size:0.8rem;padding:7px 12px;">🖨 Print Report</button>
+        <button class="btn-ghost" onclick="exportCSV('tools')" style="font-size:0.8rem;padding:7px 12px;">⬇ Export CSV</button>
+      </div>
+      <div class="controls">
+        <div class="search-wrap">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input type="text" id="t-search-input" class="search-input" placeholder="Search item, brand, category, notes…" oninput="filterAndRenderTools()">
+        </div>
+        <select class="filter-select" id="t-filter-condition" onchange="filterAndRenderTools()">
+          <option value="">All conditions</option>
+          <option value="New">New</option>
+          <option value="Good">Good</option>
+          <option value="Fair">Fair</option>
+          <option value="Poor">Poor</option>
+        </select>
+        <select class="filter-select" id="t-sort-by" onchange="filterAndRenderTools()">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="value_high">Highest value</option>
+          <option value="value_low">Lowest value</option>
+          <option value="category">Category A–Z</option>
+          <option value="name">Name A–Z</option>
+        </select>
+        <div class="view-toggle">
+          <button class="view-btn active" id="view-btn-grid-tools" onclick="setView('tools','grid')" title="Gallery view">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="0" y="0" width="6" height="6" rx="1"/><rect x="8" y="0" width="6" height="6" rx="1"/><rect x="0" y="8" width="6" height="6" rx="1"/><rect x="8" y="8" width="6" height="6" rx="1"/></svg>
+          </button>
+          <button class="view-btn" id="view-btn-list-tools" onclick="setView('tools','list')" title="List view">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="0" y="1" width="14" height="2" rx="1"/><rect x="0" y="6" width="14" height="2" rx="1"/><rect x="0" y="11" width="14" height="2" rx="1"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="stamp-grid" id="tool-grid">
+        <div class="empty-state"><div class="empty-icon">🛠️</div><p>Loading your tools…</p></div>
+      </div>
+      <div id="list-tools" style="display:none"></div>
     </div>
 
   </main>
@@ -1378,6 +1443,90 @@
 </div>
 
 
+<!-- MODAL: Add / Edit Tool -->
+<div class="modal-overlay" id="modal-tool-form">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="tool-form-title">Add Tool</div>
+      <button class="modal-close" onclick="closeModal('modal-tool-form')">×</button>
+    </div>
+    <input type="hidden" id="t-id">
+    <div class="form-grid">
+      <div class="form-section-divider">Tool Details</div>
+      <div class="form-group form-full">
+        <label class="form-label">Item name / description</label>
+        <input type="text" id="t-name" class="form-input" placeholder="e.g. Cordless drill, Allen key set, Hammer">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Brand / Model</label>
+        <input type="text" id="t-brand" class="form-input" placeholder="e.g. Makita, Stanley">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <input type="text" id="t-category" class="form-input" placeholder="e.g. Power tools, Fasteners, Accessories">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Location</label>
+        <input type="text" id="t-location" class="form-input" placeholder="e.g. Shed shelf A, Box 2">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Condition</label>
+        <select id="t-condition" class="form-select">
+          <option value="">Unknown</option>
+          <option value="New">New</option>
+          <option value="Good">Good</option>
+          <option value="Fair">Fair</option>
+          <option value="Poor">Poor</option>
+        </select>
+      </div>
+      <div class="form-section-divider">Value & Notes</div>
+      <div class="form-group">
+        <label class="form-label">Estimated value (£)</label>
+        <input type="number" id="t-value" class="form-input" placeholder="0.00" step="0.01" min="0">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Tags (comma-separated)</label>
+        <input type="text" id="t-tags" class="form-input" placeholder="e.g. drill, set, cordless">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Notes</label>
+        <textarea id="t-notes" class="form-textarea" placeholder="Condition notes, accessories, missing bits, sale value sources…"></textarea>
+      </div>
+      <div class="form-section-divider">Photo</div>
+      <div class="form-full">
+        <div class="image-upload-row" style="grid-template-columns:1fr;">
+          <div class="image-upload-box" style="min-height:110px;">
+            <input type="file" id="t-img" accept="image/*" multiple onchange="previewMultipleImages(this,'tool-preview','lbl-t')">
+            <div id="tool-preview" class="multi-preview"></div>
+            <div class="upload-label" id="lbl-t">📷 Tool photos<br><small>Tap to choose up to 4 images</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-danger" id="btn-delete-tool" onclick="deleteTool()" style="display:none">Delete</button>
+      <button class="btn-ghost" onclick="closeModal('modal-tool-form')">Cancel</button>
+      <button class="btn-save" id="btn-save-tool" onclick="saveTool()">Save Tool</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL: Tool Detail -->
+<div class="modal-overlay" id="modal-tool-detail">
+  <div class="modal" style="max-width:660px;">
+    <div class="modal-header">
+      <div class="modal-title" id="tool-detail-title">Tool</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn-edit" onclick="editCurrentTool()">Edit</button>
+        <button class="modal-close" onclick="closeModal('modal-tool-detail')">×</button>
+      </div>
+    </div>
+    <div id="tool-detail-body"></div>
+  </div>
+</div>
+
+
 <!-- MODAL: CSV Import -->
 <div class="modal-overlay" id="modal-import">
   <div class="modal" style="max-width:680px;">
@@ -1484,6 +1633,9 @@ var currentDetailMonopolyId = null;
 var allCoins           = [];
 var editingCoinId      = null;
 var currentDetailCoinId = null;
+var allTools           = [];
+var editingToolId      = null;
+var currentDetailToolId = null;
 var currentView        = 'postcards';
 
 // ── Auth ──
@@ -1520,6 +1672,7 @@ auth.onAuthStateChanged(function(user) {
     loadStamps();
     loadMonopoly();
     loadCoins();
+    loadTools();
   } else {
     currentUser = null;
     document.getElementById('login-screen').style.display = 'flex';
@@ -1539,10 +1692,12 @@ function switchView(view) {
   document.getElementById('tab-stamps').classList.toggle('active',    view === 'stamps');
   document.getElementById('tab-monopoly').classList.toggle('active',  view === 'monopoly');
   document.getElementById('tab-coins').classList.toggle('active',     view === 'coins');
+  document.getElementById('tab-tools').classList.toggle('active',     view === 'tools');
   document.getElementById('section-postcards').style.display = view === 'postcards' ? '' : 'none';
   document.getElementById('section-stamps').style.display    = view === 'stamps'    ? '' : 'none';
   document.getElementById('section-monopoly').style.display  = view === 'monopoly'  ? '' : 'none';
   document.getElementById('section-coins').style.display     = view === 'coins'     ? '' : 'none';
+  document.getElementById('section-tools').style.display     = view === 'tools'     ? '' : 'none';
 
   if (view === 'postcards') {
     document.getElementById('header-icon').textContent  = '📮';
@@ -1562,6 +1717,12 @@ function switchView(view) {
     document.getElementById('btn-add-main').innerHTML   = '+ <span class="btn-label">Add Edition</span>';
     document.getElementById('btn-add-main').onclick     = openAddMonopolyModal;
     updateMonopolySubtitle();
+  } else if (view === 'tools') {
+    document.getElementById('header-icon').textContent  = '🛠️';
+    document.getElementById('header-title').textContent = 'Tools';
+    document.getElementById('btn-add-main').innerHTML   = '+ <span class="btn-label">Add Tool</span>';
+    document.getElementById('btn-add-main').onclick     = openAddToolModal;
+    updateToolSubtitle();
   } else {
     document.getElementById('header-icon').textContent  = '🪙';
     document.getElementById('header-title').textContent = 'Coins';
@@ -1586,7 +1747,269 @@ function updateMonopolySubtitle() {
   document.getElementById('header-sub').textContent = n + ' edition' + (n !== 1 ? 's' : '');
 }
 
-// ── Load Monopoly ──
+function updateToolSubtitle() {
+  var n = allTools.length;
+  document.getElementById('header-sub').textContent = n + ' item' + (n !== 1 ? 's' : '');
+}
+
+function loadTools() {
+  db.collection('tools')
+    .where('userId', '==', currentUser.uid)
+    .onSnapshot(function(snap) {
+      allTools = [];
+      snap.forEach(function(doc) { allTools.push(Object.assign({ id: doc.id }, doc.data())); });
+      updateToolStats();
+      filterAndRenderTools();
+    }, function(err) {
+      document.getElementById('tool-grid').innerHTML =
+        '<div class="empty-state"><div class="empty-icon">⚠️</div><h3>Could not load tools</h3>' +
+        '<p style="font-size:0.8rem;max-width:340px;margin:0 auto">' + escHtml(err.message) + '</p></div>';
+    });
+}
+
+function updateToolStats() {
+  var total      = allTools.length;
+  var value      = allTools.reduce(function(s, t) { return s + (parseFloat(t.estimatedValue) || 0); }, 0);
+  var categories = new Set(allTools.map(function(t) { return (t.category || '').trim().toLowerCase(); }).filter(Boolean)).size;
+  document.getElementById('t-stat-total').textContent      = total;
+  document.getElementById('t-stat-value').textContent      = '£' + value.toFixed(2);
+  document.getElementById('t-stat-categories').textContent = categories;
+  if (currentView === 'tools') updateToolSubtitle();
+}
+
+function filterAndRenderTools() {
+  var q      = (document.getElementById('t-search-input').value || '').toLowerCase().trim();
+  var cond   = document.getElementById('t-filter-condition').value;
+  var sortBy = document.getElementById('t-sort-by').value;
+
+  var filtered = allTools.filter(function(item) {
+    if (cond && item.condition !== cond) return false;
+    if (q) {
+      var hay = [item.name, item.brand, item.category, item.location, item.tags && item.tags.join(' '), item.notes].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  filtered.sort(function(a,b) {
+    if (sortBy === 'oldest')     return ts(a) - ts(b);
+    if (sortBy === 'value_high') return (parseFloat(b.estimatedValue) || 0) - (parseFloat(a.estimatedValue) || 0);
+    if (sortBy === 'value_low')  return (parseFloat(a.estimatedValue) || 0) - (parseFloat(b.estimatedValue) || 0);
+    if (sortBy === 'category')   return (a.category || '').localeCompare(b.category || '');
+    if (sortBy === 'name')       return (a.name || '').localeCompare(b.name || '');
+    return ts(b) - ts(a);
+  });
+
+  renderToolGallery(filtered);
+  if (viewMode.tools === 'list') renderListTools(filtered);
+}
+
+function renderToolGallery(items) {
+  var grid = document.getElementById('tool-grid');
+  if (allTools.length === 0) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🛠️</div>' +
+      '<h3>No tools yet</h3><p>Add your first tool to get started.</p>' +
+      '<button class="btn-primary" onclick="openAddToolModal()">+ Add First Tool</button></div>';
+    return;
+  }
+  if (!items.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div>' +
+      '<h3>No tools match</h3><p>Try different search terms or filters.</p></div>';
+    return;
+  }
+
+  grid.innerHTML = items.map(function(item) {
+    var thumb = item.imageUrls && item.imageUrls.length
+      ? '<img src="' + escAttr(item.imageUrls[0]) + '" alt="" loading="lazy">'
+      : '<div class="tile-thumb-placeholder">🛠️</div>';
+    var condBadge = item.condition
+      ? '<span class="badge badge-' + escAttr(item.condition) + '">' + escHtml(item.condition) + '</span>' : '';
+    var valBadge = item.estimatedValue
+      ? '<span class="badge badge-value">£' + parseFloat(item.estimatedValue).toFixed(2) + '</span>' : '';
+
+    return '<div class="postcard-tile" onclick="openToolDetail(\'' + esc(item.id) + '\')">' +
+      '<div class="tile-thumb">' + thumb + '</div>' +
+      '<div class="tile-body">' +
+        '<div class="tile-caption">' + escHtml(item.name || '(no name)') + '</div>' +
+        '<div class="tile-publisher">' + escHtml(item.brand || item.category || '') + '</div>' +
+        '<div class="tile-badges">' + condBadge + valBadge + '</div>' +
+      '</div></div>';
+  }).join('');
+}
+
+function renderListTools(items) {
+  var el = document.getElementById('list-tools');
+  if (!items.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><h3>No tools match</h3><p>Try different search terms or filters.</p></div>';
+    return;
+  }
+  el.innerHTML = items.map(function(item) {
+    return '<div class="list-card" onclick="openToolDetail(\'' + esc(item.id) + '\')">' +
+      '<div><strong>' + escHtml(item.name || '(no name)') + '</strong><br>' +
+      escHtml(item.brand || '') + '</div>' +
+      '<div class="detail-field-value">' + escHtml(item.category || '') + '</div>' +
+      '<div class="detail-field-value">' + (item.estimatedValue ? '£' + parseFloat(item.estimatedValue).toFixed(2) : '—') + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+function openToolDetail(id) {
+  var item = allTools.find(function(t) { return t.id === id; });
+  if (!item) return;
+  currentDetailToolId = id;
+  document.getElementById('tool-detail-title').textContent = item.name || 'Tool';
+
+  var images = (item.imageUrls || []).map(function(url) {
+    return '<div class="detail-img-slot"><img src="' + escAttr(url) + '" alt="" onclick="openLightbox(\'' + escAttr(url) + '\')"></div>';
+  }).join('') || '<div class="detail-img-slot"><div class="detail-img-placeholder">🛠️</div></div>';
+
+  function df(label, val) {
+    return '<div class="detail-field"><div class="detail-field-label">' + label + '</div>' +
+           '<div class="detail-field-value' + (val ? '' : ' empty') + '">' + escHtml(val || '—') + '</div></div>';
+  }
+
+  document.getElementById('tool-detail-body').innerHTML =
+    '<div class="detail-images">' + images + '</div>' +
+    '<div class="detail-fields">' +
+      df('Brand / Model', item.brand) +
+      df('Category', item.category) +
+      df('Location', item.location) +
+      df('Condition', item.condition) +
+      df('Est. Value', item.estimatedValue ? '£' + parseFloat(item.estimatedValue).toFixed(2) : '') +
+      df('Tags', (item.tags || []).join(', ')) +
+      (item.notes ? '<div class="detail-field detail-field-full"><div class="detail-field-label">Notes</div><div class="detail-field-value">' + escHtml(item.notes) + '</div></div>' : '') +
+    '</div>';
+  openModal('modal-tool-detail');
+}
+
+function editCurrentTool() {
+  closeModal('modal-tool-detail');
+  openEditToolModal(currentDetailToolId);
+}
+
+function openAddToolModal() {
+  editingToolId = null;
+  document.getElementById('tool-form-title').textContent = 'Add Tool';
+  document.getElementById('btn-delete-tool').style.display = 'none';
+  clearToolForm();
+  openModal('modal-tool-form');
+}
+
+function openEditToolModal(id) {
+  var item = allTools.find(function(t) { return t.id === id; });
+  if (!item) return;
+  editingToolId = id;
+  document.getElementById('tool-form-title').textContent = 'Edit Tool';
+  document.getElementById('btn-delete-tool').style.display = '';
+  populateToolForm(item);
+  openModal('modal-tool-form');
+}
+
+function clearToolForm() {
+  ['t-name','t-brand','t-category','t-location','t-tags','t-notes'].forEach(function(id) {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('t-condition').value = '';
+  document.getElementById('t-value').value = '';
+  document.getElementById('t-img').value = '';
+  document.getElementById('tool-preview').innerHTML = '';
+  document.getElementById('lbl-t').innerHTML = '📷 Tool photos<br><small>Tap to choose up to 4 images</small>';
+}
+
+function populateToolForm(item) {
+  document.getElementById('t-name').value     = item.name || '';
+  document.getElementById('t-brand').value    = item.brand || '';
+  document.getElementById('t-category').value = item.category || '';
+  document.getElementById('t-location').value = item.location || '';
+  document.getElementById('t-condition').value= item.condition || '';
+  document.getElementById('t-value').value    = item.estimatedValue || '';
+  document.getElementById('t-tags').value     = (item.tags || []).join(', ');
+  document.getElementById('t-notes').value    = item.notes || '';
+  document.getElementById('t-img').value      = '';
+  document.getElementById('tool-preview').innerHTML = (item.imageUrls || []).map(function(url) {
+    return '<img src="' + escAttr(url) + '" class="tool-thumb" alt="">';
+  }).join('');
+  document.getElementById('lbl-t').innerHTML = '📷 Tool photos<br><small>Tap to change</small>';
+}
+
+function previewMultipleImages(input, previewId, labelId) {
+  var files = Array.prototype.slice.call(input.files || []).slice(0, 4);
+  var container = document.getElementById(previewId);
+  container.innerHTML = '';
+  if (!files.length) return;
+
+  files.forEach(function(file) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var img = document.createElement('img');
+      img.src = e.target.result;
+      img.className = 'tool-thumb';
+      container.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById(labelId).textContent = files.length + ' photo' + (files.length !== 1 ? 's' : '');
+}
+
+function saveTool() {
+  var btn = document.getElementById('btn-save-tool');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Saving…';
+
+  var tags = document.getElementById('t-tags').value.split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+  var data = {
+    userId:         currentUser.uid,
+    name:           document.getElementById('t-name').value.trim(),
+    brand:          document.getElementById('t-brand').value.trim(),
+    category:       document.getElementById('t-category').value.trim(),
+    location:       document.getElementById('t-location').value.trim(),
+    condition:      document.getElementById('t-condition').value,
+    estimatedValue: parseFloat(document.getElementById('t-value').value) || 0,
+    tags:           tags,
+    notes:          document.getElementById('t-notes').value.trim(),
+    updatedAt:      firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  var files = Array.prototype.slice.call(document.getElementById('t-img').files || []).slice(0, 4);
+  var toolId = editingToolId || db.collection('tools').doc().id;
+  var existing = editingToolId ? allTools.find(function(t) { return t.id === editingToolId; }) : null;
+
+  data.imageUrls = existing ? (existing.imageUrls || []) : [];
+  if (!editingToolId) data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+
+  var uploads = [];
+  var uid = currentUser.uid;
+  files.forEach(function(file, index) {
+    var ref = storage.ref('users/' + uid + '/tools/' + toolId + '/image-' + index + '.' + ext(file));
+    uploads.push(ref.put(file).then(function() { return ref.getDownloadURL(); }).then(function(url) {
+      data.imageUrls[index] = url;
+    }));
+  });
+
+  Promise.all(uploads).then(function() {
+    var ref = db.collection('tools').doc(toolId);
+    return editingToolId ? ref.update(data) : ref.set(data);
+  }).then(function() {
+    closeModal('modal-tool-form');
+    toast(editingToolId ? 'Tool updated ✓' : 'Tool added ✓');
+  }).catch(function(err) {
+    toast('Save failed — ' + err.message);
+  }).finally(function() {
+    btn.disabled = false;
+    btn.innerHTML = 'Save Tool';
+  });
+}
+
+function deleteTool() {
+  if (!editingToolId) return;
+  if (!confirm('Delete this tool? This cannot be undone.')) return;
+  db.collection('tools').doc(editingToolId).delete().then(function() {
+    closeModal('modal-tool-form');
+    toast('Tool deleted');
+  }).catch(function(err) { toast('Delete failed — ' + err.message); });
+}
+
+// ── Load postcards ──
 
 function loadMonopoly() {
   db.collection('monopoly')
@@ -2460,7 +2883,7 @@ function closeModal(id) {
   document.body.style.overflow = '';
 }
 
-['modal-form','modal-detail','modal-stamp-form','modal-stamp-detail','modal-monopoly-form','modal-monopoly-detail','modal-coin-form','modal-coin-detail','modal-import','modal-apikey'].forEach(function(id) {
+['modal-form','modal-detail','modal-stamp-form','modal-stamp-detail','modal-monopoly-form','modal-monopoly-detail','modal-coin-form','modal-coin-detail','modal-tool-form','modal-tool-detail','modal-import','modal-apikey'].forEach(function(id) {
   document.getElementById(id).addEventListener('click', function(e) {
     if (e.target === this) closeModal(id);
   });
@@ -3435,7 +3858,7 @@ function deleteCoin() {
 
 // ── View toggle (grid / list) ──
 
-var viewMode = { postcards: 'grid', stamps: 'grid', monopoly: 'grid', coins: 'grid' };
+var viewMode = { postcards: 'grid', stamps: 'grid', monopoly: 'grid', coins: 'grid', tools: 'grid' };
 
 function setView(tab, mode) {
   viewMode[tab] = mode;
@@ -3454,6 +3877,10 @@ function setView(tab, mode) {
     document.getElementById('monopoly-grid').style.display  = mode === 'grid' ? '' : 'none';
     document.getElementById('list-monopoly').style.display  = mode === 'list' ? '' : 'none';
     filterAndRenderMonopoly();
+  } else if (tab === 'tools') {
+    document.getElementById('tool-grid').style.display  = mode === 'grid' ? '' : 'none';
+    document.getElementById('list-tools').style.display = mode === 'list' ? '' : 'none';
+    filterAndRenderTools();
   } else {
     document.getElementById('coin-grid').style.display  = mode === 'grid' ? '' : 'none';
     document.getElementById('list-coins').style.display = mode === 'list' ? '' : 'none';
@@ -3585,6 +4012,12 @@ function exportCSV(view) {
       return [c.name, c.country, c.year, c.denomination, c.monarch, c.metal, c.mint, c.weight, c.diameter, c.spinkNo, c.otherRef, c.circulated, c.condition, c.estimatedValue || '', c.duplicateCount || 0, (c.tags||[]).join(', '), c.albumSource, c.notes].map(csvCell).join(',');
     });
     filename = 'coins-export.csv';
+  } else if (view === 'tools') {
+    headers = ['Name','Brand','Category','Location','Condition','Estimated Value','Tags','Notes'];
+    rows = allTools.map(function(t) {
+      return [t.name, t.brand, t.category, t.location, t.condition, t.estimatedValue || '', (t.tags||[]).join(', '), t.notes].map(csvCell).join(',');
+    });
+    filename = 'tools-export.csv';
   } else {
     headers = ['Caption','Publisher','Series No','Card No','Theme','Era','Original/Reprint','Condition','Research Status','Estimated Value','Duplicate Count','Tags','Album Source','Notes'];
     rows = allCards.map(function(c) {
@@ -3712,6 +4145,37 @@ function printReport(view) {
       return row([(i+1), c.name||'—', c.country||'—', c.year||'—', c.denomination||'—',
                   c.monarch||'—', c.metal||'—', c.condition||'—',
                   c.estimatedValue?'£'+parseFloat(c.estimatedValue).toFixed(2):'—']);
+    }).join('');
+
+  } else if (view === 'tools') {
+    var tq      = (document.getElementById('t-search-input').value || '').toLowerCase().trim();
+    var tcond   = document.getElementById('t-filter-condition').value;
+    var tsortBy = document.getElementById('t-sort-by').value;
+    isFiltered  = !!(tq || tcond);
+    filtered = allTools.filter(function(t) {
+      if (tcond && t.condition !== tcond) return false;
+      if (tq) {
+        var hay = [t.name,t.brand,t.category,t.location,(t.tags||[]).join(' '),t.notes].join(' ').toLowerCase();
+        if (!hay.includes(tq)) return false;
+      }
+      return true;
+    });
+    filtered.sort(function(a,b) {
+      if (tsortBy==='oldest')     return ts(a)-ts(b);
+      if (tsortBy==='value_high') return (parseFloat(b.estimatedValue)||0)-(parseFloat(a.estimatedValue)||0);
+      if (tsortBy==='value_low')  return (parseFloat(a.estimatedValue)||0)-(parseFloat(b.estimatedValue)||0);
+      if (tsortBy==='category')   return (a.category||'').localeCompare(b.category||'');
+      if (tsortBy==='name')       return (a.name||'').localeCompare(b.name||'');
+      return ts(b)-ts(a);
+    });
+    title = 'Tools Inventory Report'; icon = '🛠️';
+    var tVal = filtered.reduce(function(s,t){return s+(parseFloat(t.estimatedValue)||0);},0);
+    var tCats = new Set(filtered.map(function(t){return (t.category||'').trim().toLowerCase();}).filter(Boolean)).size;
+    statsHtml = stat('Items', filtered.length) + stat('Est. Value', '£'+tVal.toFixed(2)) + stat('Categories', tCats);
+    theadHtml = row(['#','Name','Brand','Category','Location','Condition','Est. Value'], true);
+    tbodyHtml = filtered.map(function(t,i) {
+      return row([(i+1), t.name||'—', t.brand||'—', t.category||'—', t.location||'—', t.condition||'—',
+                  t.estimatedValue?'£'+parseFloat(t.estimatedValue).toFixed(2):'—']);
     }).join('');
 
   } else {
