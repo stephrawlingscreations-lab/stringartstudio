@@ -1502,6 +1502,10 @@
           </div>
         </div>
       </div>
+      <div class="form-full" style="padding-top:4px;">
+        <button type="button" class="btn-ai" id="btn-ai-tools" onclick="fillFromImage('tools')">✨ Fill form from image</button>
+        <div class="ai-hint">Uses AI to read the tool photo and pre-fill the fields above &nbsp;·&nbsp; <button type="button" onclick="changeApiKey()" style="background:none;border:none;color:var(--muted);font-size:0.75rem;cursor:pointer;padding:0;text-decoration:underline">Change API key</button></div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn-danger" id="btn-delete-tool" onclick="deleteTool()" style="display:none">Delete</button>
@@ -3174,6 +3178,15 @@ function collectAIImages(type) {
       if (mx2) cu = mx2.contentsImageUrl || null;
     }
     if (cf || cu) images.push({ file: cf, url: cu });
+  } else if (type === 'tools') {
+    var tfiles = Array.prototype.slice.call(document.getElementById('t-img').files || []);
+    var toolUrls = [];
+    if (editingToolId) {
+      var tx = allTools.find(function(t){ return t.id === editingToolId; });
+      if (tx && Array.isArray(tx.imageUrls)) toolUrls = tx.imageUrls.slice(0, 4);
+    }
+    tfiles.forEach(function(file) { images.push({ file: file, url: null }); });
+    toolUrls.forEach(function(url) { images.push({ file: null, url: url }); });
   } else {
     var ff = document.getElementById('f-img-front').files[0] || null;
     var fu = null;
@@ -3299,7 +3312,7 @@ function imgToBase64(src) {
 }
 
 function runAIFill(type, images, apiKey) {
-  var btnId = type === 'stamp' ? 'btn-ai-stamp' : type === 'monopoly' ? 'btn-ai-monopoly' : type === 'coin' ? 'btn-ai-coin' : 'btn-ai-postcard';
+  var btnId = type === 'stamp' ? 'btn-ai-stamp' : type === 'monopoly' ? 'btn-ai-monopoly' : type === 'coin' ? 'btn-ai-coin' : type === 'tools' ? 'btn-ai-tools' : 'btn-ai-postcard';
   var btn = document.getElementById(btnId);
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Analysing…';
@@ -3313,6 +3326,8 @@ function runAIFill(type, images, apiKey) {
         ? 'Analyse this Monopoly board game image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: edition (the edition or version name, e.g. "Classic UK Edition", "Here & Now"), publisher (e.g. Waddingtons, Parker Brothers, Hasbro, Winning Moves), year (year of manufacture if visible), country (e.g. UK, US), completeness (one of: Complete Near-Complete Incomplete — if visible), condition (one of: Mint Good Fair Poor — based on box condition), notes (any interesting details about the edition), estimatedValue (estimated GBP collector value as a number, e.g. 25.00 — leave as empty string if uncertain). Leave fields as empty string if uncertain.'
       : type === 'coin'
         ? 'Analyse this coin image. The first image may be the obverse (heads) and the second the reverse (tails). Return ONLY a JSON object (no markdown) with these fields where you can determine them: name (common name, e.g. "Half Crown", "Penny"), country (issuing country), year (year on coin), denomination (face value, e.g. "2/6", "1d", "50p"), monarch (monarch or ruler shown, e.g. "Victoria", "George V"), metal (composition, e.g. "Silver", "Copper", "Bronze", "Cupro-Nickel"), mint (mint if identifiable), condition (one of: Proof BU UNC AU EF VF Fine Fair Poor), circulated (one of: circulated uncirculated), spinkNo (Spink catalogue number if identifiable, else empty string), estimatedValue (estimated GBP collector value as a number, e.g. 12.50 — leave as empty string if uncertain). Leave fields as empty string if uncertain.'
+      : type === 'tools'
+        ? 'Analyse this tool image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: name (tool name or description), brand, category, location, condition (one of: New Good Fair Poor), estimatedValue (estimated GBP value as a number, e.g. 25.00 — leave as empty string if uncertain), notes (any details such as accessories, missing parts, or special features). Leave fields as empty string if uncertain.'
       : hasBoth
         ? 'Analyse this vintage postcard. The first image is the front (picture side); the second is the back which may show the publisher, printed caption, series number, card number, postmarks and any written message. Return ONLY a JSON object (no markdown) with these fields where you can determine them: caption, publisher, seriesNo, cardNo, theme, era, condition (one of: Mint Good Fair Poor), isOriginal (one of: original reprint), notes (postmarks, message, or anything interesting), estimatedValue (estimated GBP value as a number, e.g. 2.50 — leave as empty string if you cannot estimate). Leave fields as empty string if uncertain.'
         : 'Analyse this vintage postcard image. Return ONLY a JSON object (no markdown) with these fields where you can determine them: caption, publisher, theme, era, condition (one of: Mint Good Fair Poor), isOriginal (one of: original reprint), notes (any interesting details), estimatedValue (estimated GBP value as a number, e.g. 2.50 — leave as empty string if you cannot estimate). Leave fields as empty string if uncertain.';
@@ -3400,6 +3415,14 @@ function applyAIResult(data, type) {
     set('co-circulated',  data.circulated);
     set('co-spink',       data.spinkNo);
     set('co-value',       data.estimatedValue);
+  } else if (type === 'tools') {
+    set('t-name',        data.name);
+    set('t-brand',       data.brand);
+    set('t-category',    data.category);
+    set('t-location',    data.location);
+    set('t-condition',   data.condition);
+    set('t-value',       data.estimatedValue);
+    set('t-notes',       data.notes);
   } else {
     set('s-description', data.description);
     set('s-country',     data.country);
