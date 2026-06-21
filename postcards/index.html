@@ -1550,6 +1550,10 @@
       <label class="form-label" style="display:block;margin-bottom:6px;">Choose Excel file (.xlsx)</label>
       <input type="file" id="tool-excel-file-input" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onchange="handleToolExcelFile(this)" class="form-input" style="padding:7px;">
       <div id="tool-excel-preview" style="margin-top:14px;"></div>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:0.875rem;cursor:pointer;">
+        <input type="checkbox" id="tool-excel-replace" style="width:16px;height:16px;cursor:pointer;">
+        <span><strong>Replace all existing tools</strong> — deletes your current tools list before importing</span>
+      </label>
     </div>
     <div class="modal-footer">
       <button class="btn-ghost" onclick="closeModal('modal-tool-excel-import')">Cancel</button>
@@ -3057,26 +3061,43 @@ function handleToolExcelFile(input) {
 function confirmToolExcelImport() {
   if (!toolExcelRecords.length) return;
   var btn = document.getElementById('btn-confirm-excel-import');
+  var replace = document.getElementById('tool-excel-replace').checked;
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>Importing…';
+  btn.innerHTML = '<span class="spinner"></span>' + (replace ? 'Replacing…' : 'Importing…');
 
-  var CHUNK = 400;
-  var batches = [];
-  for (var i = 0; i < toolExcelRecords.length; i += CHUNK) {
-    var batch = db.batch();
-    toolExcelRecords.slice(i, i + CHUNK).forEach(function(rec) {
-      batch.set(db.collection('tools').doc(), Object.assign({}, rec, {
-        userId: currentUser.uid,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }));
-    });
-    batches.push(batch.commit());
-  }
+  var doImport = function() {
+    var CHUNK = 400;
+    var batches = [];
+    for (var i = 0; i < toolExcelRecords.length; i += CHUNK) {
+      var batch = db.batch();
+      toolExcelRecords.slice(i, i + CHUNK).forEach(function(rec) {
+        batch.set(db.collection('tools').doc(), Object.assign({}, rec, {
+          userId: currentUser.uid,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }));
+      });
+      batches.push(batch.commit());
+    }
+    return Promise.all(batches);
+  };
 
-  Promise.all(batches).then(function() {
+  var run = replace
+    ? db.collection('tools').where('userId','==',currentUser.uid).get().then(function(snap) {
+        var delBatches = [];
+        var ids = snap.docs.map(function(d){ return d.id; });
+        for (var i = 0; i < ids.length; i += 400) {
+          var b = db.batch();
+          ids.slice(i, i + 400).forEach(function(id){ b.delete(db.collection('tools').doc(id)); });
+          delBatches.push(b.commit());
+        }
+        return Promise.all(delBatches);
+      }).then(doImport)
+    : doImport();
+
+  run.then(function() {
     closeModal('modal-tool-excel-import');
-    toast('Imported ' + toolExcelRecords.length + ' tool' + (toolExcelRecords.length !== 1 ? 's' : '') + ' ✓');
+    toast((replace ? 'Replaced all tools — ' : '') + 'Imported ' + toolExcelRecords.length + ' tool' + (toolExcelRecords.length !== 1 ? 's' : '') + ' ✓');
     toolExcelRecords = [];
     loadTools();
   }).catch(function(err) {
