@@ -13,6 +13,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -897,6 +898,7 @@
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
         <button class="btn-ghost" onclick="printReport('tools')" style="font-size:0.8rem;padding:7px 12px;">🖨 Print Report</button>
         <button class="btn-ghost" onclick="exportCSV('tools')" style="font-size:0.8rem;padding:7px 12px;">⬇ Export CSV</button>
+        <button class="btn-ghost" onclick="openToolExcelImport()" style="font-size:0.8rem;padding:7px 12px;">⬆ Import Excel</button>
       </div>
       <div class="controls">
         <div class="search-wrap">
@@ -1527,6 +1529,32 @@
       </div>
     </div>
     <div id="tool-detail-body"></div>
+  </div>
+</div>
+
+
+<!-- MODAL: Excel Import (Tools) -->
+<div class="modal-overlay" id="modal-tool-excel-import">
+  <div class="modal" style="max-width:700px;">
+    <div class="modal-header">
+      <div class="modal-title">Import Tools from Excel</div>
+      <button class="modal-close" onclick="closeModal('modal-tool-excel-import')">×</button>
+    </div>
+    <div class="modal-simple-body">
+      <p style="font-size:0.875rem;color:var(--muted);margin-bottom:16px;line-height:1.6">
+        Upload your Excel file (.xlsx). Each <strong>sheet</strong> becomes the tool category (e.g. "Brown – Tray 1 – Reamers").
+        Each <strong>row</strong> with a header row becomes one tool.<br>
+        Expected columns (any order, spelling flexible): <em>Name, Description, Brand, Model, Category, Location, Condition, Value, Tags, Notes</em>.
+        If no header row is detected the sheet name is used as category and column A as the tool name.
+      </p>
+      <label class="form-label" style="display:block;margin-bottom:6px;">Choose Excel file (.xlsx)</label>
+      <input type="file" id="tool-excel-file-input" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onchange="handleToolExcelFile(this)" class="form-input" style="padding:7px;">
+      <div id="tool-excel-preview" style="margin-top:14px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modal-tool-excel-import')">Cancel</button>
+      <button class="btn-save" id="btn-confirm-excel-import" onclick="confirmToolExcelImport()" style="display:none">Import</button>
+    </div>
   </div>
 </div>
 
@@ -2887,7 +2915,7 @@ function closeModal(id) {
   document.body.style.overflow = '';
 }
 
-['modal-form','modal-detail','modal-stamp-form','modal-stamp-detail','modal-monopoly-form','modal-monopoly-detail','modal-coin-form','modal-coin-detail','modal-tool-form','modal-tool-detail','modal-import','modal-apikey'].forEach(function(id) {
+['modal-form','modal-detail','modal-stamp-form','modal-stamp-detail','modal-monopoly-form','modal-monopoly-detail','modal-coin-form','modal-coin-detail','modal-tool-form','modal-tool-detail','modal-import','modal-apikey','modal-tool-excel-import'].forEach(function(id) {
   document.getElementById(id).addEventListener('click', function(e) {
     if (e.target === this) closeModal(id);
   });
@@ -2911,6 +2939,151 @@ function toast(msg) {
   el.textContent = msg;
   document.getElementById('toast-container').appendChild(el);
   setTimeout(function() { el.remove(); }, 3000);
+}
+
+// ── Excel Import (Tools) ──
+
+var toolExcelRecords = [];
+
+var TOOL_EXCEL_FIELD_MAP = {
+  name:'name', itemname:'name', item:'name', description:'name', tool:'name',
+  brand:'brand', manufacturer:'brand', make:'brand',
+  model:'model',
+  category:'category', type:'category', tray:'category',
+  location:'location', storage:'location', position:'location', slot:'location',
+  condition:'condition',
+  estimatedvalue:'estimatedValue', value:'estimatedValue', price:'estimatedValue',
+  tags:'tags',
+  notes:'notes', comments:'notes', details:'notes'
+};
+
+function openToolExcelImport() {
+  toolExcelRecords = [];
+  document.getElementById('tool-excel-file-input').value = '';
+  document.getElementById('tool-excel-preview').innerHTML = '';
+  document.getElementById('btn-confirm-excel-import').style.display = 'none';
+  openModal('modal-tool-excel-import');
+}
+
+function handleToolExcelFile(input) {
+  var file = input.files[0];
+  if (!file) return;
+  if (typeof XLSX === 'undefined') {
+    document.getElementById('tool-excel-preview').innerHTML =
+      '<p style="color:#c0392b;font-size:0.875rem;">⚠️ Excel library not loaded yet — please try again in a moment.</p>';
+    return;
+  }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var wb = XLSX.read(e.target.result, { type: 'array' });
+      toolExcelRecords = [];
+
+      wb.SheetNames.forEach(function(sheetName) {
+        var ws = wb.Sheets[sheetName];
+        var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+        if (!rows.length) return;
+
+        // Detect if first non-empty row looks like a header row
+        var firstRow = rows[0].map(function(c) { return String(c).trim(); });
+        var hasHeader = firstRow.some(function(h) {
+          return TOOL_EXCEL_FIELD_MAP[h.toLowerCase().replace(/[^a-z0-9]/g, '')] !== undefined;
+        });
+
+        if (hasHeader) {
+          var headers = firstRow;
+          for (var i = 1; i < rows.length; i++) {
+            var row = rows[i];
+            if (row.every(function(c) { return String(c).trim() === ''; })) continue;
+            var rec = { category: sheetName };
+            headers.forEach(function(h, idx) {
+              var key = TOOL_EXCEL_FIELD_MAP[h.toLowerCase().replace(/[^a-z0-9]/g, '')];
+              if (!key) return;
+              var val = String(row[idx] || '').trim();
+              if (key === 'estimatedValue') val = parseFloat(val) || 0;
+              else if (key === 'tags') val = val ? val.split(/[,;]/).map(function(t){return t.trim();}).filter(Boolean) : [];
+              rec[key] = val;
+            });
+            if (!rec.name) rec.name = 'Unnamed tool';
+            if (!rec.tags) rec.tags = [];
+            toolExcelRecords.push(rec);
+          }
+        } else {
+          // No header: column A = slot number, column B = name (if present), sheet name = category
+          for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            var slotNum = String(row[0] || '').trim();
+            var toolName = String(row[1] || '').trim();
+            if (!toolName && !slotNum) continue;
+            toolExcelRecords.push({
+              name: toolName || ('Slot ' + slotNum),
+              category: sheetName,
+              location: slotNum ? sheetName + ', Slot ' + slotNum : sheetName,
+              tags: [],
+              estimatedValue: 0
+            });
+          }
+        }
+      });
+
+      if (!toolExcelRecords.length) {
+        document.getElementById('tool-excel-preview').innerHTML =
+          '<p style="color:#c0392b;font-size:0.875rem;">⚠️ No tool rows found. Make sure the sheet has data rows.</p>';
+        return;
+      }
+
+      var preview = toolExcelRecords.slice(0, 8);
+      var thead = '<tr><th>Name</th><th>Category / Tray</th><th>Location</th><th>Condition</th></tr>';
+      var tbody = preview.map(function(r) {
+        return '<tr><td>' + escHtml(r.name||'') + '</td><td>' + escHtml(r.category||'') +
+               '</td><td>' + escHtml(r.location||'') + '</td><td>' + escHtml(r.condition||'') + '</td></tr>';
+      }).join('');
+      var more = toolExcelRecords.length > 8 ? ' (showing first 8)' : '';
+      document.getElementById('tool-excel-preview').innerHTML =
+        '<p class="import-count">Found <strong>' + toolExcelRecords.length + ' tools</strong>' + escHtml(more) + '</p>' +
+        '<div class="import-table-wrap"><table class="import-table"><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table></div>';
+
+      var btn = document.getElementById('btn-confirm-excel-import');
+      btn.style.display = '';
+      btn.textContent = 'Import ' + toolExcelRecords.length + ' tool' + (toolExcelRecords.length !== 1 ? 's' : '');
+    } catch(err) {
+      document.getElementById('tool-excel-preview').innerHTML =
+        '<p style="color:#c0392b;font-size:0.875rem;">⚠️ Could not read file: ' + escHtml(err.message) + '</p>';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function confirmToolExcelImport() {
+  if (!toolExcelRecords.length) return;
+  var btn = document.getElementById('btn-confirm-excel-import');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Importing…';
+
+  var CHUNK = 400;
+  var batches = [];
+  for (var i = 0; i < toolExcelRecords.length; i += CHUNK) {
+    var batch = db.batch();
+    toolExcelRecords.slice(i, i + CHUNK).forEach(function(rec) {
+      batch.set(db.collection('tools').doc(), Object.assign({}, rec, {
+        userId: currentUser.uid,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }));
+    });
+    batches.push(batch.commit());
+  }
+
+  Promise.all(batches).then(function() {
+    closeModal('modal-tool-excel-import');
+    toast('Imported ' + toolExcelRecords.length + ' tool' + (toolExcelRecords.length !== 1 ? 's' : '') + ' ✓');
+    toolExcelRecords = [];
+    loadTools();
+  }).catch(function(err) {
+    toast('Import failed — ' + err.message);
+    btn.disabled = false;
+    btn.textContent = 'Import ' + toolExcelRecords.length + ' tool' + (toolExcelRecords.length !== 1 ? 's' : '');
+  });
 }
 
 // ── CSV Import ──
