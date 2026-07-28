@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Grounds Maintenance Tracker — Portfolio Demo | Steph Rawlings Creations</title>
+<meta name="description" content="Interactive demo of a client portal for grounds maintenance — customers, sites, jobs, invoices and payments." />
+<style>
+.portfolio-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 12px 16px; background: #10281f; color: #fff; font-size: 0.85rem;
+}
+.portfolio-bar a { color: #fff; text-decoration: none; font-weight: 600; opacity: 0.92; }
+.portfolio-bar a:hover { opacity: 1; text-decoration: underline; }
+.demo-badge {
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 5px 10px; border-radius: 999px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+}
+:root {
+  --font: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --ink: #10281f;
+  --muted: #61786d;
+  --line: rgba(16, 40, 31, 0.12);
+  --panel: #ffffff;
+  --panel-soft: #f3faf6;
+  --green: #1f6b4a;
+  --green-2: #2f8f63;
+  --amber: #8a6409;
+  --red: #9d2f2f;
+  --shadow: 0 8px 28px rgba(16, 40, 31, 0.09);
+  --radius: 14px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  color: var(--ink);
+  min-height: 100vh;
+  background:
+    radial-gradient(900px 540px at 6% -12%, rgba(47, 143, 99, 0.18), transparent 58%),
+    radial-gradient(850px 540px at 100% 0, rgba(31, 107, 74, 0.14), transparent 55%),
+    linear-gradient(180deg, #eff8f2 0%, #e6f3ea 58%, #dceddf 100%);
+}
+.app { max-width: 1160px; margin: 0 auto; padding: 1.2rem 1rem 2.2rem; }
+.hero {
+  background: linear-gradient(135deg, #153d2e 0%, #1f6b4a 55%, #2b815b 100%);
+  color: #fff; border-radius: var(--radius); padding: 1.2rem 1.35rem; box-shadow: var(--shadow);
+  display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;
+}
+.hero h1 { font-size: 1.3rem; margin-bottom: 0.2rem; }
+.hero p { opacity: 0.9; font-size: 0.9rem; }
+.hero .pill { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; padding: 7px 10px; border: 1px solid rgba(255,255,255,0.25); border-radius: 999px; height: fit-content; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px,1fr)); gap: 12px; margin-bottom: 1rem; }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 0.85rem 0.95rem; box-shadow: var(--shadow); }
+.stat-label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; font-weight: 700; }
+.stat-value { font-size: 1.35rem; font-weight: 700; }
+.tabs { display: flex; gap: 6px; padding: 6px; border-radius: 999px; background: var(--panel); border: 1px solid var(--line); margin-bottom: 1rem; box-shadow: var(--shadow); flex-wrap: wrap; }
+.tab { border: 0; background: transparent; color: var(--muted); font-weight: 700; padding: 10px 14px; border-radius: 999px; cursor: pointer; }
+.tab.active { color: #fff; background: linear-gradient(135deg, var(--green) 0%, var(--green-2) 100%); }
+.toolbar { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px; margin-bottom: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.section { display: none; }
+.section.active { display: block; }
+.table-wrap { background: var(--panel); border-radius: var(--radius); border: 1px solid var(--line); overflow: auto; box-shadow: var(--shadow); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 740px; }
+th { text-align: left; background: var(--panel-soft); color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; padding: 11px 12px; border-bottom: 1px solid var(--line); }
+td { padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tbody tr:last-child td { border-bottom: none; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.btn { border: 1px solid var(--line); background: var(--panel); border-radius: 10px; padding: 8px 12px; font-weight: 700; cursor: pointer; color: var(--ink); }
+.btn.primary { background: linear-gradient(135deg, var(--green) 0%, var(--green-2) 100%); color: #fff; border: 0; }
+.btn.small { font-size: 12px; padding: 6px 10px; }
+input, select {
+  border: 1px solid var(--line); border-radius: 10px; background: var(--panel-soft); color: var(--ink);
+  font: inherit; font-size: 13px; padding: 8px 10px;
+}
+input:focus, select:focus { outline: none; border-color: var(--green-2); }
+.badge { border-radius: 999px; padding: 4px 9px; font-size: 11px; font-weight: 700; display: inline-block; }
+.ok { background: #daf1e4; color: #1e673f; }
+.part { background: #f8edd7; color: var(--amber); }
+.late { background: #f8dddd; color: var(--red); }
+.modal-bg { display: none; position: fixed; inset: 0; background: rgba(10, 18, 14, 0.42); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 1rem; }
+.modal-bg.open { display: flex; }
+.modal { width: 100%; max-width: 440px; background: #fff; border-radius: var(--radius); border: 1px solid var(--line); box-shadow: 0 14px 40px rgba(8,20,14,.2); padding: 1.2rem; }
+.modal h3 { margin-bottom: 0.8rem; }
+.row { margin-bottom: 10px; }
+.row label { display: block; margin-bottom: 5px; font-size: 12px; color: var(--muted); font-weight: 700; }
+.row input, .row select { width: 100%; }
+.actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+#saveStatus { font-size: 12px; color: var(--muted); font-weight: 700; margin-left: auto; }
+</style>
+</head>
+<body>
+
+<div class="portfolio-bar">
+  <a href="../index.html#projects">← Back to portfolio</a>
+  <span class="demo-badge">Interactive demo · try the tabs</span>
+</div>
+
+<div class="app">
+  <header class="hero">
+    <div>
+      <h1>JT Garden & Grounds Maintenance</h1>
+      <p>Client portal demo for tracking customers, sites, cuts/jobs, invoices and payments.</p>
+    </div>
+    <span class="pill">Tipperary • Limerick • Cork</span>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('customers')">Customers</button>
+    <button class="tab" onclick="showTab('sites')">Sites</button>
+    <button class="tab" onclick="showTab('jobs')">Cuts/Jobs + Invoices</button>
+    <button class="tab" onclick="showTab('payments')">Payments</button>
+  </div>
+
+  <section id="customers" class="section active">
+    <div class="toolbar">
+      <button class="btn" onclick="openCustomer()">+ Add customer</button>
+      <input id="customerSearch" type="text" placeholder="Search customer..." oninput="renderCustomers()" />
+      <button class="btn" onclick="exportData()">Export data</button>
+      <button class="btn" onclick="document.getElementById('importData').click()">Import data</button>
+      <input id="importData" type="file" accept="application/json" style="display:none" onchange="importDataFile(event)" />
+      <span id="saveStatus"></span>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Sites</th><th class="num">Amount owed</th><th></th></tr></thead>
+      <tbody id="customerRows"></tbody>
+    </table></div>
+  </section>
+
+  <section id="sites" class="section">
+    <div class="toolbar"><button class="btn" onclick="openSite()">+ Add site</button></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Site</th><th>Customer</th><th>Address</th><th>Frequency</th><th>Next cut due</th><th class="num">Rate/cut</th></tr></thead>
+      <tbody id="siteRows"></tbody>
+    </table></div>
+  </section>
+
+  <section id="jobs" class="section">
+    <div class="toolbar"><button class="btn" onclick="openJob()">+ Log cut/job</button></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Date</th><th>Invoice</th><th>Site</th><th>Crew</th><th>Status</th><th class="num">Charge</th><th>Notes</th></tr></thead>
+      <tbody id="jobRows"></tbody>
+    </table></div>
+  </section>
+
+  <section id="payments" class="section">
+    <div class="toolbar"><button class="btn" onclick="openPayment()">+ Record payment</button></div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Date</th><th>Customer</th><th>Invoice</th><th>Method</th><th class="num">Amount</th><th>Reference</th></tr></thead>
+      <tbody id="paymentRows"></tbody>
+    </table></div>
+  </section>
+</div>
+
+<div id="customerModal" class="modal-bg"><div class="modal">
+  <h3>Add customer</h3>
+  <div class="row"><label>Name</label><input id="cName" type="text" /></div>
+  <div class="row"><label>Phone</label><input id="cPhone" type="text" /></div>
+  <div class="row"><label>Email</label><input id="cEmail" type="text" /></div>
+  <div class="actions"><button class="btn" onclick="closeModal('customerModal')">Cancel</button><button class="btn primary" onclick="saveCustomer()">Save</button></div>
+</div></div>
+
+<div id="siteModal" class="modal-bg"><div class="modal">
+  <h3>Add site</h3>
+  <div class="row"><label>Site name</label><input id="sName" type="text" /></div>
+  <div class="row"><label>Customer</label><select id="sCustomer"></select></div>
+  <div class="row"><label>Address</label><input id="sAddress" type="text" /></div>
+  <div class="row"><label>Cut frequency</label><select id="sFreq"><option>Weekly</option><option>Fortnightly</option><option>Monthly</option></select></div>
+  <div class="row"><label>Rate per cut (EUR)</label><input id="sRate" type="number" /></div>
+  <div class="row"><label>Next cut due</label><input id="sNextDue" type="date" /></div>
+  <div class="actions"><button class="btn" onclick="closeModal('siteModal')">Cancel</button><button class="btn primary" onclick="saveSite()">Save</button></div>
+</div></div>
+
+<div id="jobModal" class="modal-bg"><div class="modal">
+  <h3>Log cut/job</h3>
+  <div class="row"><label>Date</label><input id="jDate" type="date" /></div>
+  <div class="row"><label>Site</label><select id="jSite"></select></div>
+  <div class="row"><label>Crew/member</label><input id="jCrew" type="text" /></div>
+  <div class="row"><label>Status</label><select id="jStatus"><option value="Done">Done</option><option value="Part complete">Part complete</option><option value="Needs revisit">Needs revisit</option></select></div>
+  <div class="row"><label>Invoice number</label><input id="jInvoiceNo" type="text" placeholder="e.g. JT-2026-001" /></div>
+  <div class="row"><label>Charge (EUR)</label><input id="jCharge" type="number" /></div>
+  <div class="row"><label>Notes</label><input id="jNotes" type="text" /></div>
+  <div class="actions"><button class="btn" onclick="closeModal('jobModal')">Cancel</button><button class="btn primary" onclick="saveJob()">Save</button></div>
+</div></div>
+
+<div id="paymentModal" class="modal-bg"><div class="modal">
+  <h3>Record payment</h3>
+  <div class="row"><label>Date</label><input id="pDate" type="date" /></div>
+  <div class="row"><label>Customer</label><select id="pCustomer"></select></div>
+  <div class="row"><label>Method</label><select id="pMethod"><option>Bank transfer</option><option>Cash</option><option>Card</option></select></div>
+  <div class="row"><label>Invoice number</label><input id="pInvoiceNo" type="text" placeholder="Optional" /></div>
+  <div class="row"><label>Amount (EUR)</label><input id="pAmount" type="number" /></div>
+  <div class="row"><label>Reference</label><input id="pRef" type="text" /></div>
+  <div class="actions"><button class="btn" onclick="closeModal('paymentModal')">Cancel</button><button class="btn primary" onclick="savePayment()">Save</button></div>
+</div></div>
+
+<script>
+const LS_KEY = "groundsTrackerDemo.v2";
+const defaultState = {
+  customers: [
+    { id: 1, name: "Tipperary Business Park", phone: "087 768 1005", email: "facilities@tbp.ie" },
+    { id: 2, name: "Lakeside Apartments", phone: "087 445 9912", email: "hoa@lakeside.ie" }
+  ],
+  sites: [
+    { id: 1, customerId: 1, name: "Main Entrance Beds", address: "Tipperary Town", frequency: "Weekly", nextCutDue: "2026-05-08", rate: 120 },
+    { id: 2, customerId: 2, name: "Block A + B Lawns", address: "Lakeside Ave", frequency: "Fortnightly", nextCutDue: "2026-05-16", rate: 180 }
+  ],
+  jobs: [
+    { date: "2026-05-01", invoiceNo: "JT-2026-101", siteId: 1, crew: "John", status: "Done", charge: 120, notes: "Strim edges + tidy" },
+    { date: "2026-05-02", invoiceNo: "JT-2026-102", siteId: 2, crew: "Mike", status: "Part complete", charge: 90, notes: "Rain delay on rear lawn" }
+  ],
+  payments: [
+    { date: "2026-05-03", customerId: 1, invoiceNo: "JT-2026-101", method: "Bank transfer", amount: 120, ref: "BACS-83442" }
+  ]
+};
+
+let state = normalizeState(loadState());
+
+function euro(n) { return "EUR " + Number(n || 0).toFixed(2); }
+function customerById(id) { return state.customers.find(c => c.id === id); }
+function siteById(id) { return state.sites.find(s => s.id === id); }
+function fmtUkDate(iso) {
+  if (!iso || typeof iso !== "string" || !iso.includes("-")) return iso || "";
+  const [y, m, d] = iso.split("-");
+  if (!y || !m || !d) return iso;
+  return `${d}/${m}/${y}`;
+}
+
+function loadState() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(LS_KEY) || "");
+    if (parsed && parsed.customers && parsed.sites && parsed.jobs && parsed.payments) return parsed;
+  } catch (e) {}
+  return JSON.parse(JSON.stringify(defaultState));
+}
+function normalizeState(raw) {
+  return {
+    customers: Array.isArray(raw.customers) ? raw.customers : [],
+    sites: (Array.isArray(raw.sites) ? raw.sites : []).map(s => ({ ...s, nextCutDue: s.nextCutDue || "" })),
+    jobs: (Array.isArray(raw.jobs) ? raw.jobs : []).map(j => ({ ...j, invoiceNo: j.invoiceNo || "" })),
+    payments: (Array.isArray(raw.payments) ? raw.payments : []).map(p => ({ ...p, invoiceNo: p.invoiceNo || "" }))
+  };
+}
+function persist() {
+  localStorage.setItem(LS_KEY, JSON.stringify(state));
+  const el = document.getElementById("saveStatus");
+  el.textContent = "Saved";
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.textContent = ""; }, 1600);
+}
+function showTab(id) {
+  document.querySelectorAll(".tab").forEach((t, i) => t.classList.toggle("active", ["customers","sites","jobs","payments"][i] === id));
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  // Re-render on tab switch so data doesn't appear stale after navigation.
+  renderAll();
+}
+function badge(status) {
+  if (status === "Done") return '<span class="badge ok">Done</span>';
+  if (status === "Part complete") return '<span class="badge part">Part complete</span>';
+  return '<span class="badge late">Needs revisit</span>';
+}
+function calculateCustomerTotals(customerId) {
+  const totalJobs = state.jobs.reduce((sum, j) => {
+    const site = siteById(j.siteId);
+    return site && site.customerId === customerId ? sum + Number(j.charge || 0) : sum;
+  }, 0);
+  const totalPayments = state.payments.filter(p => p.customerId === customerId).reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  return totalJobs - totalPayments;
+}
+
+function renderStats() {
+  const totalCustomers = state.customers.length;
+  const totalSites = state.sites.length;
+  const jobsThisMonth = state.jobs.filter(j => j.date && j.date.slice(0, 7) === new Date().toISOString().slice(0, 7)).length;
+  const totalInvoiced = state.jobs.reduce((sum, j) => sum + Number(j.charge || 0), 0);
+  const totalPaid = state.payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  const outstanding = totalInvoiced - totalPaid;
+  document.getElementById("stats").innerHTML = `
+    <div class="stat"><div class="stat-label">Customers</div><div class="stat-value">${totalCustomers}</div></div>
+    <div class="stat"><div class="stat-label">Sites</div><div class="stat-value">${totalSites}</div></div>
+    <div class="stat"><div class="stat-label">Cuts/jobs this month</div><div class="stat-value">${jobsThisMonth}</div></div>
+    <div class="stat"><div class="stat-label">Invoiced</div><div class="stat-value">${euro(totalInvoiced)}</div></div>
+    <div class="stat"><div class="stat-label">Outstanding</div><div class="stat-value" style="color:${outstanding > 0 ? "var(--amber)" : "var(--green)"}">${euro(outstanding)}</div></div>
+  `;
+}
+function renderCustomers() {
+  const q = (document.getElementById("customerSearch").value || "").trim().toLowerCase();
+  const rows = state.customers.filter(c => !q || c.name.toLowerCase().includes(q) || c.phone.toLowerCase().includes(q) || c.email.toLowerCase().includes(q)).map(c => {
+    const sites = state.sites.filter(s => s.customerId === c.id).length;
+    const owed = calculateCustomerTotals(c.id);
+    return `<tr><td>${c.name}</td><td>${c.phone}</td><td>${c.email}</td><td>${sites}</td><td class="num">${euro(owed)}</td><td></td></tr>`;
+  }).join("");
+  document.getElementById("customerRows").innerHTML = rows;
+}
+function renderSites() {
+  document.getElementById("siteRows").innerHTML = state.sites.map(s => `
+    <tr><td>${s.name}</td><td>${customerById(s.customerId)?.name || ""}</td><td>${s.address}</td><td>${s.frequency}</td><td>${s.nextCutDue ? fmtUkDate(s.nextCutDue) : "-"}</td><td class="num">${euro(s.rate)}</td></tr>
+  `).join("");
+}
+function renderJobs() {
+  document.getElementById("jobRows").innerHTML = [...state.jobs].sort((a,b) => b.date.localeCompare(a.date)).map(j => `
+    <tr><td>${fmtUkDate(j.date)}</td><td>${j.invoiceNo || "-"}</td><td>${siteById(j.siteId)?.name || ""}</td><td>${j.crew}</td><td>${badge(j.status)}</td><td class="num">${euro(j.charge)}</td><td>${j.notes || ""}</td></tr>
+  `).join("");
+}
+function renderPayments() {
+  document.getElementById("paymentRows").innerHTML = [...state.payments].sort((a,b) => b.date.localeCompare(a.date)).map(p => `
+    <tr><td>${fmtUkDate(p.date)}</td><td>${customerById(p.customerId)?.name || ""}</td><td>${p.invoiceNo || "-"}</td><td>${p.method}</td><td class="num">${euro(p.amount)}</td><td>${p.ref || ""}</td></tr>
+  `).join("");
+}
+function renderAll() {
+  renderStats();
+  renderCustomers();
+  renderSites();
+  renderJobs();
+  renderPayments();
+}
+
+function refreshFromStorage() {
+  state = normalizeState(loadState());
+  renderAll();
+}
+
+function openModal(id) { document.getElementById(id).classList.add("open"); }
+function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+
+function openCustomer() {
+  document.getElementById("cName").value = "";
+  document.getElementById("cPhone").value = "";
+  document.getElementById("cEmail").value = "";
+  openModal("customerModal");
+}
+function saveCustomer() {
+  const name = document.getElementById("cName").value.trim();
+  const phone = document.getElementById("cPhone").value.trim();
+  const email = document.getElementById("cEmail").value.trim();
+  if (!name) return;
+  state.customers.push({ id: Date.now(), name, phone, email });
+  closeModal("customerModal");
+  persist(); renderAll();
+}
+
+function openSite() {
+  const sel = document.getElementById("sCustomer");
+  sel.innerHTML = state.customers.map(c => `<option value="${c.id}">${c.name}</option>`).join("");
+  document.getElementById("sName").value = "";
+  document.getElementById("sAddress").value = "";
+  document.getElementById("sRate").value = "";
+  document.getElementById("sNextDue").value = "";
+  openModal("siteModal");
+}
+function saveSite() {
+  const customerId = Number(document.getElementById("sCustomer").value);
+  const name = document.getElementById("sName").value.trim();
+  const address = document.getElementById("sAddress").value.trim();
+  const frequency = document.getElementById("sFreq").value;
+  const rate = Number(document.getElementById("sRate").value || 0);
+  const nextCutDue = document.getElementById("sNextDue").value;
+  if (!customerId || !name) return;
+  state.sites.push({ id: Date.now(), customerId, name, address, frequency, nextCutDue, rate });
+  closeModal("siteModal");
+  persist(); renderAll();
+}
+
+function openJob() {
+  const sel = document.getElementById("jSite");
+  sel.innerHTML = state.sites.map(s => `<option value="${s.id}">${s.name}</option>`).join("");
+  document.getElementById("jDate").value = new Date().toISOString().slice(0, 10);
+  document.getElementById("jCrew").value = "";
+  document.getElementById("jInvoiceNo").value = `JT-${new Date().getFullYear()}-${String(state.jobs.length + 101).padStart(3, "0")}`;
+  document.getElementById("jCharge").value = "";
+  document.getElementById("jNotes").value = "";
+  openModal("jobModal");
+}
+function saveJob() {
+  const date = document.getElementById("jDate").value;
+  const siteId = Number(document.getElementById("jSite").value);
+  const crew = document.getElementById("jCrew").value.trim();
+  const status = document.getElementById("jStatus").value;
+  const invoiceNo = document.getElementById("jInvoiceNo").value.trim();
+  const charge = Number(document.getElementById("jCharge").value || 0);
+  const notes = document.getElementById("jNotes").value.trim();
+  if (!date || !siteId || !crew) return;
+  state.jobs.push({ date, invoiceNo, siteId, crew, status, charge, notes });
+  closeModal("jobModal");
+  persist(); renderAll();
+}
+
+function openPayment() {
+  const sel = document.getElementById("pCustomer");
+  sel.innerHTML = state.customers.map(c => `<option value="${c.id}">${c.name}</option>`).join("");
+  document.getElementById("pDate").value = new Date().toISOString().slice(0, 10);
+  document.getElementById("pInvoiceNo").value = "";
+  document.getElementById("pAmount").value = "";
+  document.getElementById("pRef").value = "";
+  openModal("paymentModal");
+}
+function savePayment() {
+  const date = document.getElementById("pDate").value;
+  const customerId = Number(document.getElementById("pCustomer").value);
+  const method = document.getElementById("pMethod").value;
+  const invoiceNo = document.getElementById("pInvoiceNo").value.trim();
+  const amount = Number(document.getElementById("pAmount").value || 0);
+  const ref = document.getElementById("pRef").value.trim();
+  if (!date || !customerId || !amount) return;
+  state.payments.push({ date, customerId, invoiceNo, method, amount, ref });
+  closeModal("paymentModal");
+  persist(); renderAll();
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "grounds-maintenance-tracker-backup.json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+function importDataFile(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (!data.customers || !data.sites || !data.jobs || !data.payments) throw new Error("Invalid");
+      state = normalizeState(data);
+      persist();
+      renderAll();
+    } catch (e) {
+      alert("Invalid import file.");
+    } finally {
+      event.target.value = "";
+    }
+  };
+  reader.readAsText(file, "UTF-8");
+}
+
+renderAll();
+
+// Refresh when browser restores page from back/forward cache.
+window.addEventListener("pageshow", () => {
+  refreshFromStorage();
+});
+
+// Refresh when user returns to this tab/window.
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) refreshFromStorage();
+});
+</script>
+</body>
+</html>

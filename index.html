@@ -366,9 +366,10 @@
       .service-card p { font-size: 0.94rem; color: var(--muted); line-height: 1.68; }
       .projects-grid {
         display: grid;
-        grid-template-columns: 1.2fr 1fr 1fr;
+        grid-template-columns: 1fr 1fr;
         gap: 20px;
       }
+      .projects-grid--two { max-width: 900px; margin: 0 auto; }
       .project-card {
         border-radius: var(--r-md);
         overflow: hidden;
@@ -655,37 +656,22 @@
         <div class="container">
           <div class="eyebrow" style="text-align:center;margin-bottom:14px;">Selected work</div>
           <h2 class="section-title">Projects I've <em>shipped</em></h2>
-          <p class="section-sub">Real tools in use — including one I built for myself that grew into a product.</p>
+          <p class="section-sub">Click any project to explore an interactive demo with sample data.</p>
 
-          <div class="projects-grid">
-            <a class="project-card project-card--featured" href="string-art/">
-              <div class="project-thumb">
-                <span class="project-badge">Featured · Live product</span>
-                <picture>
-                  <source srcset="gallery/rainbow-arch-finished.webp" type="image/webp">
-                  <img src="gallery/rainbow-arch-finished.jpeg" alt="Finished string art piece created with the String Art Designer" loading="lazy">
-                </picture>
-              </div>
-              <div class="project-body">
-                <h3>String Art Designer</h3>
-                <p>A full browser-based design tool I built from scratch — nail placement, thread sequences, printable build guides, and a Pro pack. Used by crafters worldwide, with real paying customers.</p>
-                <span class="project-link">Explore the string art tools →</span>
-              </div>
-            </a>
-
-            <div class="project-card">
+          <div class="projects-grid projects-grid--two">
+            <a class="project-card" href="work/grounds-maintenance.html">
               <div class="project-thumb" style="background:linear-gradient(135deg,#eff8f2,#dceddf);">
                 <span class="project-badge">Client portal</span>
                 <div style="padding:24px;text-align:center;color:#1f6b4a;font-size:2.5rem;">🌿</div>
               </div>
               <div class="project-body">
                 <h3>Grounds Maintenance Tracker</h3>
-                <p>A job and site management portal for a grounds maintenance business — tracking visits, schedules, and client sites in one place.</p>
-                <span class="project-link" style="color:var(--muted);">Private client project</span>
+                <p>A job and site management portal for a grounds maintenance business — tracking customers, sites, cuts, invoices and payments in one place.</p>
+                <span class="project-link">Try the interactive demo →</span>
               </div>
-            </div>
+            </a>
 
-            <div class="project-card">
+            <a class="project-card" href="work/sales-inventory.html">
               <div class="project-thumb" style="background:linear-gradient(135deg,#f0f2f8,#e8ebf5);">
                 <span class="project-badge">Business tool</span>
                 <div style="padding:24px;text-align:center;font-size:2.5rem;">📊</div>
@@ -693,9 +679,9 @@
               <div class="project-body">
                 <h3>Sales &amp; Inventory Tracker</h3>
                 <p>A cloud-synced app for tracking artwork inventory, sales, expenses, and payments — built for a creative business managing stock across multiple channels.</p>
-                <span class="project-link" style="color:var(--muted);">Private client project</span>
+                <span class="project-link">Try the interactive demo →</span>
               </div>
-            </div>
+            </a>
           </div>
         </div>
       </section>
@@ -708,14 +694,14 @@
           </picture>
           <div>
             <div class="eyebrow" style="margin-bottom:20px;">About Steph</div>
-            <h2>A maker who learned to <em>build the tools</em></h2>
+            <h2>I build tools that fit <em>how you work</em></h2>
             <p>
-              I started as a string art maker frustrated by the lack of proper planning tools —
-              so I taught myself to build software and created the designer I couldn't find anywhere else.
+              I'm a software builder based in Ireland, focused on practical web apps for small businesses —
+              the kind of tools that replace spreadsheets, paper records, and guesswork.
             </p>
             <p>
-              That same approach drives how I work with clients: understand the real problem first,
-              then build something practical that fits how you actually operate.
+              Every project starts with understanding your actual workflow, then building something
+              you can use every day from any device — no app store, no unnecessary complexity.
             </p>
             <a class="btn btn-primary" href="about.html" style="margin-top:8px;">Read my story</a>
           </div>
@@ -729,7 +715,7 @@
           <p>Whether it's a website, a client portal, or a tool you've been putting off — I'd love to hear about it.</p>
           <div class="cta-actions">
             <a class="btn btn-primary" href="contact.html">Get in touch</a>
-            <a class="btn btn-outline" href="string-art/">Browse string art tools</a>
+            <a class="btn btn-outline" href="#projects">View project demos</a>
           </div>
         </div>
       </section>
@@ -743,9 +729,10 @@
           <div class="footer-copy">© 2026 · Software & Creative Tools</div>
         </div>
         <div class="footer-links">
-          <a href="string-art/">String Art</a>
+          <a href="#projects">Work</a>
           <a href="about.html">About</a>
           <a href="contact.html">Contact</a>
+          <a href="string-art/" style="opacity:0.7;">String art (personal)</a>
           <a href="policies/privacy-policy.html">Privacy</a>
         </div>
       </div>
