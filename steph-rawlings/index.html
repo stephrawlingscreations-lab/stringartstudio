@@ -724,29 +724,17 @@
     </div>
 
     <div class="settings-card">
-      <div class="settings-card-title">Commission Rates</div>
-      <div style="display:flex;flex-direction:column;gap:1rem;">
-        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
-          <span style="font-size:0.85rem;color:var(--ink-mid);min-width:80px;">Shop</span>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <input type="number" id="commission-rate" style="width:90px;" min="0" max="100" step="0.5" value="25"/>
-            <span style="color:var(--ink-mid);">%</span>
-          </div>
+      <div class="settings-card-title">Tarts Commission Rate</div>
+      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" id="tarts-commission-rate" style="width:90px;" min="0" max="100" step="0.5" value="20"/>
+          <span style="color:var(--ink-mid);">%</span>
         </div>
-        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
-          <span style="font-size:0.85rem;color:var(--ink-mid);min-width:80px;">Tarts</span>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <input type="number" id="tarts-commission-rate" style="width:90px;" min="0" max="100" step="0.5" value="20"/>
-            <span style="color:var(--ink-mid);">%</span>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
-          <button class="btn btn-primary btn-sm" onclick="saveCommission()">Save</button>
-          <span id="commission-saved" style="font-size:0.85rem;color:var(--green);display:none;font-weight:700;">✓ Saved!</span>
-        </div>
+        <button class="btn btn-primary btn-sm" onclick="saveCommission()">Save</button>
+        <span id="commission-saved" style="font-size:0.85rem;color:var(--green);display:none;font-weight:700;">✓ Saved!</span>
       </div>
       <p style="font-size:0.82rem;color:var(--ink-lt);margin-top:0.8rem;line-height:1.6;">
-        Shop and Tarts take these percentages from each sale through them. Your net earnings are calculated automatically.
+        Tarts takes this percentage from each sale automatically. Shop commission is entered manually per sale.
       </p>
     </div>
 
@@ -1008,12 +996,12 @@
         </div>
         <div class="form-group">
           <label>Sold For (€)</label>
-          <input type="number" id="f-sold-price" min="0" step="0.01" placeholder="0.00" oninput="autoCommission()"/>
+          <input type="number" id="f-sold-price" min="0" step="0.01" placeholder="0.00" oninput="updateCommissionUI('f')"/>
         </div>
       </div>
       <div class="form-group">
         <label>Sale Channel</label>
-        <select id="f-sale-channel" onchange="autoCommission()">
+        <select id="f-sale-channel" onchange="updateCommissionUI('f')">
           <option value="shop">Shop</option>
           <option value="tarts">Tarts</option>
           <option value="private">Private Sale</option>
@@ -1021,7 +1009,11 @@
           <option value="online">Online</option>
         </select>
       </div>
-      <input type="hidden" id="f-commission-paid"/>
+      <div class="form-group" id="f-commission-group" style="display:none;">
+        <label id="f-commission-label">Commission (€)</label>
+        <input type="number" id="f-commission-paid" min="0" step="0.01" placeholder="0.00"/>
+        <p id="f-commission-hint" style="font-size:0.78rem;color:var(--ink-lt);margin-top:0.35rem;line-height:1.5;"></p>
+      </div>
     </div>
 
     <hr class="form-divider"/>
@@ -1210,7 +1202,7 @@
     <input type="hidden" id="qsell-type"/>
     <div class="form-group">
       <label>Sold Price (€)</label>
-      <input type="number" id="qsell-price" min="0" step="0.01" placeholder="0.00"/>
+      <input type="number" id="qsell-price" min="0" step="0.01" placeholder="0.00" oninput="updateCommissionUI('qsell')"/>
     </div>
     <div class="form-group">
       <label>Date Sold</label>
@@ -1218,13 +1210,18 @@
     </div>
     <div class="form-group">
       <label>Sale Channel</label>
-      <select id="qsell-channel">
+      <select id="qsell-channel" onchange="updateCommissionUI('qsell')">
         <option value="shop">Shop</option>
         <option value="tarts">Tarts</option>
         <option value="private">Private Sale</option>
         <option value="market">Market / Fair</option>
         <option value="online">Online</option>
       </select>
+    </div>
+    <div class="form-group" id="qsell-commission-group" style="display:none;">
+      <label id="qsell-commission-label">Commission (€)</label>
+      <input type="number" id="qsell-commission" min="0" step="0.01" placeholder="0.00"/>
+      <p id="qsell-commission-hint" style="font-size:0.78rem;color:var(--ink-lt);margin-top:0.35rem;line-height:1.5;"></p>
     </div>
     <div class="form-group" id="qsell-notes-group" style="display:none;">
       <label>Payment Notes</label>
@@ -1277,9 +1274,7 @@ function loadSettings() { return {}; }
 function saveSettings(s){ if(currentUser) fbDb.ref('stephCreations/settings').set(s).catch(()=>{}); }
 
 let works = loadWorks();
-let commissionRate = loadSettings().commissionRate || 25;
 let tartsCommissionRate = loadSettings().tartsCommissionRate || 20;
-document.getElementById('commission-rate').value = commissionRate;
 document.getElementById('tarts-commission-rate').value = tartsCommissionRate;
 
 let editingId = null, pendingPhotoData = null, detailId = null;
@@ -1317,19 +1312,51 @@ function statusBadge(s) {
 }
 
 function commRateFor(channel) {
-  if (channel === 'shop') return commissionRate;
   if (channel === 'tarts') return tartsCommissionRate;
   return 0;
 }
-function commAmt(sp, channel) { return sp * (commRateFor(channel || 'shop') / 100); }
-function netAmt(sp, channel) { return sp * (1 - commRateFor(channel || 'shop') / 100); }
+function commAmt(sp, channel) { return sp * (commRateFor(channel) / 100); }
 function workComm(w) {
   const sp = w.soldPrice || 0;
   const channel = w.saleChannel || 'shop';
-  if (channel !== 'shop' && channel !== 'tarts') return 0;
-  return w.commissionPaid != null ? w.commissionPaid : commAmt(sp, channel);
+  if (channel === 'shop') return w.commissionPaid != null ? w.commissionPaid : 0;
+  if (channel === 'tarts') return w.commissionPaid != null ? w.commissionPaid : commAmt(sp, 'tarts');
+  return 0;
 }
 const SALE_CHANNELS = { shop:'🏪 Shop', tarts:'🥧 Tarts', private:'🤝 Private', market:'🛍️ Market', online:'🌐 Online' };
+
+function updateCommissionUI(prefix) {
+  const channelEl = document.getElementById(prefix === 'qsell' ? 'qsell-channel' : 'f-sale-channel');
+  const group = document.getElementById(prefix + '-commission-group');
+  const input = document.getElementById(prefix === 'qsell' ? 'qsell-commission' : 'f-commission-paid');
+  const label = document.getElementById(prefix + '-commission-label');
+  const hint = document.getElementById(prefix + '-commission-hint');
+  const priceEl = document.getElementById(prefix === 'qsell' ? 'qsell-price' : 'f-sold-price');
+  if (!channelEl || !group || !input) return;
+
+  const channel = channelEl.value || 'shop';
+  const sp = parseFloat(priceEl?.value) || 0;
+
+  if (channel === 'shop') {
+    group.style.display = '';
+    if (label) label.textContent = 'Shop Commission (€)';
+    input.readOnly = false;
+    input.style.background = '';
+    if (hint) hint.textContent = 'Enter commission manually if the shop charges one. Leave at 0 if none.';
+    if (prefix === 'qsell' && input.value === '') input.value = '0';
+  } else if (channel === 'tarts') {
+    group.style.display = '';
+    if (label) label.textContent = 'Tarts Commission (€)';
+    input.readOnly = true;
+    input.style.background = '#f5f5f5';
+    input.value = sp > 0 ? commAmt(sp, 'tarts').toFixed(2) : '0.00';
+    if (hint) hint.textContent = `Calculated automatically at ${tartsCommissionRate}%.`;
+  } else {
+    group.style.display = 'none';
+    input.value = '';
+    if (hint) hint.textContent = '';
+  }
+}
 
 function imgEl(w) {
   return w.photoData
@@ -1634,9 +1661,7 @@ function restoreBackup(event) {
       saveClasses(classes);
       if(data.settings) {
         saveSettings(data.settings);
-        commissionRate=data.settings.commissionRate||25;
         tartsCommissionRate=data.settings.tartsCommissionRate||20;
-        document.getElementById('commission-rate').value=commissionRate;
         document.getElementById('tarts-commission-rate').value=tartsCommissionRate;
       }
       refreshAll();
@@ -1654,10 +1679,8 @@ function restoreBackup(event) {
 
 // Commission save
 function saveCommission() {
-  commissionRate=parseFloat(document.getElementById('commission-rate').value)||25;
   tartsCommissionRate=parseFloat(document.getElementById('tarts-commission-rate').value)||20;
   const s=loadSettings();
-  s.commissionRate=commissionRate;
   s.tartsCommissionRate=tartsCommissionRate;
   saveSettings(s);
   const msg=document.getElementById('commission-saved');
@@ -1713,6 +1736,7 @@ function openAddModal(id=null) {
     syncLinkedCostsEmpty();
   }
   handleStatusChange();
+  updateCommissionUI('f');
   document.getElementById('modal-add').classList.add('open');
 }
 
@@ -1730,12 +1754,7 @@ function handleStatusChange(){
     else if(status==='in_shop') dateLabel.textContent='Date Placed in Shop';
     else dateLabel.textContent='Date Placed';
   }
-}
-
-function autoCommission(){
-  const sp=parseFloat(document.getElementById('f-sold-price').value)||0;
-  const channel=document.getElementById('f-sale-channel')?.value||'shop';
-  if(sp>0) document.getElementById('f-commission-paid').value=(commRateFor(channel)>0?commAmt(sp,channel):0).toFixed(2);
+  if (isSold) updateCommissionUI('f');
 }
 
 function resizeImage(dataUrl, callback) {
@@ -1766,7 +1785,7 @@ function saveWork(){
   const commRaw=document.getElementById('f-commission-paid').value;
   const channel=document.getElementById('f-sale-channel')?.value||'shop';
   const isSoldStatus=['sold','sold_installments'].includes(status);
-  const commPaid=commRaw!==''?parseFloat(commRaw):(isSoldStatus?(commRateFor(channel)>0?commAmt(sp,channel):0):null);
+  const commPaid=isSoldStatus ? (channel==='tarts' ? commAmt(sp, 'tarts') : (commRaw!=='' ? parseFloat(commRaw) : 0)) : null;
   const w={
     title:document.getElementById('f-title').value.trim(),
     idNumber:document.getElementById('f-id-number').value.trim(),
@@ -1859,6 +1878,7 @@ function openQuickSell(id, type, defaultChannel) {
   const channel=defaultChannel||(w.status==='in_tarts'?'tarts':w.saleChannel||'shop');
   document.getElementById('qsell-channel').value=channel;
   document.getElementById('qsell-notes-group').style.display=type==='installments'?'':'none';
+  updateCommissionUI('qsell');
   document.getElementById('modal-quick-sell').classList.add('open');
 }
 
@@ -1871,13 +1891,14 @@ function confirmQuickSell() {
   const date=document.getElementById('qsell-date').value;
   const notes=document.getElementById('qsell-notes').value.trim();
   const channel=document.getElementById('qsell-channel').value||'shop';
+  const commRaw=document.getElementById('qsell-commission').value;
   const idx=works.findIndex(x=>x.id===id); if(idx<0) return;
   const w={...works[idx]};
   w.status=type==='installments'?'sold_installments':'sold';
   w.soldPrice=sp;
   w.dateSold=date;
   w.saleChannel=channel;
-  w.commissionPaid=commRateFor(channel)>0?commAmt(sp,channel):0;
+  w.commissionPaid=channel==='tarts'?commAmt(sp,'tarts'):(commRaw!==''?parseFloat(commRaw):0);
   if(notes) w.notes=(w.notes?w.notes+'\n':'')+notes;
   works[idx]=w;
   saveWorks(works);
@@ -2418,9 +2439,7 @@ fbAuth.onAuthStateChanged(user => {
       if (data.classes != null) classes = toArr(data.classes);
       if (data.settings) {
         const s = data.settings;
-        commissionRate = s.commissionRate || 25;
         tartsCommissionRate = s.tartsCommissionRate || 20;
-        document.getElementById('commission-rate').value = commissionRate;
         document.getElementById('tarts-commission-rate').value = tartsCommissionRate;
       }
       refreshAll();
