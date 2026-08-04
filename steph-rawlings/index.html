@@ -724,17 +724,29 @@
     </div>
 
     <div class="settings-card">
-      <div class="settings-card-title">Shop Commission Rate</div>
-      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <input type="number" id="commission-rate" style="width:90px;" min="0" max="100" step="0.5" value="25"/>
-          <span style="color:var(--ink-mid);">%</span>
+      <div class="settings-card-title">Commission Rates</div>
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+          <span style="font-size:0.85rem;color:var(--ink-mid);min-width:80px;">Shop</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="number" id="commission-rate" style="width:90px;" min="0" max="100" step="0.5" value="25"/>
+            <span style="color:var(--ink-mid);">%</span>
+          </div>
         </div>
-        <button class="btn btn-primary btn-sm" onclick="saveCommission()">Save</button>
-        <span id="commission-saved" style="font-size:0.85rem;color:var(--green);display:none;font-weight:700;">✓ Saved!</span>
+        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+          <span style="font-size:0.85rem;color:var(--ink-mid);min-width:80px;">Tarts</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="number" id="tarts-commission-rate" style="width:90px;" min="0" max="100" step="0.5" value="20"/>
+            <span style="color:var(--ink-mid);">%</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" onclick="saveCommission()">Save</button>
+          <span id="commission-saved" style="font-size:0.85rem;color:var(--green);display:none;font-weight:700;">✓ Saved!</span>
+        </div>
       </div>
       <p style="font-size:0.82rem;color:var(--ink-lt);margin-top:0.8rem;line-height:1.6;">
-        The shop takes this percentage from each sale. Your net earnings are calculated automatically.
+        Shop and Tarts take these percentages from each sale through them. Your net earnings are calculated automatically.
       </p>
     </div>
 
@@ -1003,6 +1015,7 @@
         <label>Sale Channel</label>
         <select id="f-sale-channel" onchange="autoCommission()">
           <option value="shop">Shop</option>
+          <option value="tarts">Tarts</option>
           <option value="private">Private Sale</option>
           <option value="market">Market / Fair</option>
           <option value="online">Online</option>
@@ -1207,6 +1220,7 @@
       <label>Sale Channel</label>
       <select id="qsell-channel">
         <option value="shop">Shop</option>
+        <option value="tarts">Tarts</option>
         <option value="private">Private Sale</option>
         <option value="market">Market / Fair</option>
         <option value="online">Online</option>
@@ -1264,7 +1278,9 @@ function saveSettings(s){ if(currentUser) fbDb.ref('stephCreations/settings').se
 
 let works = loadWorks();
 let commissionRate = loadSettings().commissionRate || 25;
+let tartsCommissionRate = loadSettings().tartsCommissionRate || 20;
 document.getElementById('commission-rate').value = commissionRate;
+document.getElementById('tarts-commission-rate').value = tartsCommissionRate;
 
 let editingId = null, pendingPhotoData = null, detailId = null;
 
@@ -1300,9 +1316,20 @@ function statusBadge(s) {
   return `<span class="status-badge ${cls}">${lbl}</span>`;
 }
 
-function commAmt(sp){ return sp*(commissionRate/100); }
-function netAmt(sp) { return sp*(1-commissionRate/100); }
-function workComm(w){ if(w.saleChannel!=='shop') return 0; const sp=w.soldPrice||0; return w.commissionPaid!=null?w.commissionPaid:commAmt(sp); }
+function commRateFor(channel) {
+  if (channel === 'shop') return commissionRate;
+  if (channel === 'tarts') return tartsCommissionRate;
+  return 0;
+}
+function commAmt(sp, channel) { return sp * (commRateFor(channel || 'shop') / 100); }
+function netAmt(sp, channel) { return sp * (1 - commRateFor(channel || 'shop') / 100); }
+function workComm(w) {
+  const sp = w.soldPrice || 0;
+  const channel = w.saleChannel || 'shop';
+  if (channel !== 'shop' && channel !== 'tarts') return 0;
+  return w.commissionPaid != null ? w.commissionPaid : commAmt(sp, channel);
+}
+const SALE_CHANNELS = { shop:'🏪 Shop', tarts:'🥧 Tarts', private:'🤝 Private', market:'🛍️ Market', online:'🌐 Online' };
 
 function imgEl(w) {
   return w.photoData
@@ -1333,8 +1360,8 @@ function inventoryCard(w, location='shop') {
       </div>
     </div>
     <div style="display:flex;gap:0.5rem;padding:0.75rem 1rem;border-top:1px solid #f0f0f0;">
-      <button class="btn btn-sm" style="flex:1;background:var(--green-lt);color:var(--green);border:2px solid var(--green);font-weight:700;" onclick="event.stopPropagation();openQuickSell('${w.id}','sold')">✓ Sold</button>
-      <button class="btn btn-sm" style="flex:1;background:#e8f0fe;color:#1a56c4;border:2px solid #a8c4f0;font-weight:700;" onclick="event.stopPropagation();openQuickSell('${w.id}','installments')">💳 Installments</button>
+      <button class="btn btn-sm" style="flex:1;background:var(--green-lt);color:var(--green);border:2px solid var(--green);font-weight:700;" onclick="event.stopPropagation();openQuickSell('${w.id}','sold','${location}')">✓ Sold</button>
+      <button class="btn btn-sm" style="flex:1;background:#e8f0fe;color:#1a56c4;border:2px solid #a8c4f0;font-weight:700;" onclick="event.stopPropagation();openQuickSell('${w.id}','installments','${location}')">💳 Installments</button>
     </div>
   </div>`;
 }
@@ -1357,8 +1384,8 @@ function artworkCard(w) {
       </div>
     </div>
     ${notSold ? `<div style="display:flex;gap:0.5rem;padding:0.75rem 1rem;border-top:1px solid #f0f0f0;">
-      <button class="btn btn-sm" style="flex:1;background:var(--green-lt);color:var(--green);border:2px solid var(--green);font-weight:700;" onclick="event.stopPropagation();openQuickSell('${w.id}','sold')">✓ Sold</button>
-      <button class="btn btn-sm" style="flex:1;background:#e8f0fe;color:#1a56c4;border:2px solid #a8c4f0;font-weight:700;" onclick="event.stopPropagation();openQuickSell('${w.id}','installments')">💳 Installments</button>
+      <button class="btn btn-sm" style="flex:1;background:var(--green-lt);color:var(--green);border:2px solid var(--green);font-weight:700;" onclick="event.stopPropagation();openQuickSell('${w.id}','sold','${w.status==='in_tarts'?'tarts':'shop'}')">✓ Sold</button>
+      <button class="btn btn-sm" style="flex:1;background:#e8f0fe;color:#1a56c4;border:2px solid #a8c4f0;font-weight:700;" onclick="event.stopPropagation();openQuickSell('${w.id}','installments','${w.status==='in_tarts'?'tarts':'shop'}')">💳 Installments</button>
     </div>` : ''}
   </div>`;
 }
@@ -1491,8 +1518,7 @@ function renderSales() {
   const tbody=document.getElementById('sales-tbody');
   tbody.innerHTML=f.length
     ?f.map(w=>{ const sp=w.soldPrice||0, comm=workComm(w), net=sp-comm;
-      const chLabels={shop:'🏪 Shop',private:'🤝 Private',market:'🛍️ Market',online:'🌐 Online'};
-      const ch=chLabels[w.saleChannel]||chLabels.shop;
+      const ch=SALE_CHANNELS[w.saleChannel]||SALE_CHANNELS.shop;
       return `<tr><td><strong>${w.title||'Untitled'}</strong>${w.medium?`<br/><span style="font-size:0.78rem;color:var(--ink-lt);">${w.medium}</span>`:''}</td><td>${fmtDate(w.datePlaced)}</td><td>${fmtDate(w.dateSold)}</td><td style="font-size:0.82rem;">${ch}</td><td>${fmt(w.price)}</td><td>${fmt(sp)}</td><td style="color:var(--rose);">${fmt(comm)}</td><td style="font-weight:700;color:var(--green);">${fmt(net)}</td><td style="font-size:0.8rem;color:var(--ink-lt);max-width:160px;">${w.notes||'—'}</td></tr>`;
     }).join('')
     :'<tr><td colspan="9" style="text-align:center;color:var(--ink-lt);padding:2rem;">No sales for this period.</td></tr>';
@@ -1606,7 +1632,13 @@ function restoreBackup(event) {
       saveExpenses(expenses);
       savePayments(payments);
       saveClasses(classes);
-      if(data.settings) { saveSettings(data.settings); commissionRate=data.settings.commissionRate||25; document.getElementById('commission-rate').value=commissionRate; }
+      if(data.settings) {
+        saveSettings(data.settings);
+        commissionRate=data.settings.commissionRate||25;
+        tartsCommissionRate=data.settings.tartsCommissionRate||20;
+        document.getElementById('commission-rate').value=commissionRate;
+        document.getElementById('tarts-commission-rate').value=tartsCommissionRate;
+      }
       refreshAll();
       msgEl.style.display='';
       msgEl.style.cssText='display:block;margin-top:1rem;padding:0.75rem 1rem;border-radius:var(--radius-sm);font-size:0.88rem;font-weight:700;background:var(--green-lt);color:var(--green);border:1px solid #b2dcc2;';
@@ -1622,8 +1654,12 @@ function restoreBackup(event) {
 
 // Commission save
 function saveCommission() {
-  commissionRate=parseFloat(document.getElementById('commission-rate').value)||30;
-  const s=loadSettings(); s.commissionRate=commissionRate; saveSettings(s);
+  commissionRate=parseFloat(document.getElementById('commission-rate').value)||25;
+  tartsCommissionRate=parseFloat(document.getElementById('tarts-commission-rate').value)||20;
+  const s=loadSettings();
+  s.commissionRate=commissionRate;
+  s.tartsCommissionRate=tartsCommissionRate;
+  saveSettings(s);
   const msg=document.getElementById('commission-saved');
   msg.style.display='inline'; setTimeout(()=>msg.style.display='none',2500);
   refreshAll();
@@ -1699,7 +1735,7 @@ function handleStatusChange(){
 function autoCommission(){
   const sp=parseFloat(document.getElementById('f-sold-price').value)||0;
   const channel=document.getElementById('f-sale-channel')?.value||'shop';
-  if(sp>0) document.getElementById('f-commission-paid').value=(channel==='shop'?commAmt(sp):0).toFixed(2);
+  if(sp>0) document.getElementById('f-commission-paid').value=(commRateFor(channel)>0?commAmt(sp,channel):0).toFixed(2);
 }
 
 function resizeImage(dataUrl, callback) {
@@ -1730,7 +1766,7 @@ function saveWork(){
   const commRaw=document.getElementById('f-commission-paid').value;
   const channel=document.getElementById('f-sale-channel')?.value||'shop';
   const isSoldStatus=['sold','sold_installments'].includes(status);
-  const commPaid=commRaw!==''?parseFloat(commRaw):(isSoldStatus?(channel==='shop'?commAmt(sp):0):null);
+  const commPaid=commRaw!==''?parseFloat(commRaw):(isSoldStatus?(commRateFor(channel)>0?commAmt(sp,channel):0):null);
   const w={
     title:document.getElementById('f-title').value.trim(),
     idNumber:document.getElementById('f-id-number').value.trim(),
@@ -1782,7 +1818,7 @@ function openDetail(id){
     <div style="margin-top:1rem;">
       ${drow('Item Number',w.itemNumber)}${drow('Code Number',w.idNumber)}${drow('Medium',w.medium)}${drow('Size',w.size)}${drow('Asking Price',fmt(w.price))}${drow('Date Placed',fmtDate(w.datePlaced))}
       ${w.status==='sold'?drow('Date Sold',fmtDate(w.dateSold)):''}
-      ${w.status==='sold'?drow('Sale Channel',{shop:'🏪 Shop',private:'🤝 Private',market:'🛍️ Market',online:'🌐 Online'}[w.saleChannel]||'🏪 Shop'):''}
+      ${(w.status==='sold'||w.status==='sold_installments')?drow('Sale Channel',SALE_CHANNELS[w.saleChannel]||SALE_CHANNELS.shop):''}
       ${w.status==='sold'?drow('Sold For',fmt(sp)):''}
       ${w.status==='sold'?drow('Commission',fmt(comm),'color:var(--rose)'):''}
       ${w.status==='sold'?drow('Net to Steph',fmt(net),'color:var(--green);font-weight:700;'):''}
@@ -1812,7 +1848,7 @@ document.getElementById('modal-add').addEventListener('click',e=>{ if(e.target==
 document.getElementById('modal-detail').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeDetailModal(); });
 document.getElementById('modal-quick-sell').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeQuickSell(); });
 
-function openQuickSell(id, type) {
+function openQuickSell(id, type, defaultChannel) {
   const w=works.find(x=>x.id===id); if(!w) return;
   document.getElementById('qsell-id').value=id;
   document.getElementById('qsell-type').value=type;
@@ -1820,7 +1856,8 @@ function openQuickSell(id, type) {
   document.getElementById('qsell-price').value=w.price||'';
   document.getElementById('qsell-date').value=new Date().toISOString().slice(0,10);
   document.getElementById('qsell-notes').value='';
-  document.getElementById('qsell-channel').value=w.saleChannel||'shop';
+  const channel=defaultChannel||(w.status==='in_tarts'?'tarts':w.saleChannel||'shop');
+  document.getElementById('qsell-channel').value=channel;
   document.getElementById('qsell-notes-group').style.display=type==='installments'?'':'none';
   document.getElementById('modal-quick-sell').classList.add('open');
 }
@@ -1840,7 +1877,7 @@ function confirmQuickSell() {
   w.soldPrice=sp;
   w.dateSold=date;
   w.saleChannel=channel;
-  w.commissionPaid=commAmt(sp);
+  w.commissionPaid=commRateFor(channel)>0?commAmt(sp,channel):0;
   if(notes) w.notes=(w.notes?w.notes+'\n':'')+notes;
   works[idx]=w;
   saveWorks(works);
@@ -2062,8 +2099,8 @@ let editingPayId = null;
 
 function renderPayments() {
   const totalOwed = works
-    .filter(w => w.status==='sold' || w.status==='sold_installments')
-    .reduce((a, w) => a + netAmt(w.soldPrice||0), 0);
+    .filter(w => (w.status==='sold' || w.status==='sold_installments') && (w.saleChannel||'shop')==='shop')
+    .reduce((a, w) => a + ((w.soldPrice||0) - workComm(w)), 0);
   const totalReceived = payments.reduce((a, p) => a + (p.amount||0), 0);
   const outstanding = totalOwed - totalReceived;
 
@@ -2382,7 +2419,9 @@ fbAuth.onAuthStateChanged(user => {
       if (data.settings) {
         const s = data.settings;
         commissionRate = s.commissionRate || 25;
+        tartsCommissionRate = s.tartsCommissionRate || 20;
         document.getElementById('commission-rate').value = commissionRate;
+        document.getElementById('tarts-commission-rate').value = tartsCommissionRate;
       }
       refreshAll();
     }
