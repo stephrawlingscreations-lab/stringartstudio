@@ -282,6 +282,7 @@
   }
 
   .badge-shop    { background: var(--gold-lt);  color: #8a6a10; }
+  .badge-tarts   { background: #fde8d8;         color: #a0522d; }
   .badge-sold    { background: var(--green-lt);  color: var(--green); }
   .badge-home    { background: var(--periwinkle);color: var(--navy); }
   .badge-consign { background: #ede8f7;          color: #5030a0; }
@@ -556,6 +557,7 @@
 <div class="nav-tabs">
   <div class="nav-tab active" data-page="dashboard"><span class="tab-icon">🏠</span>Home</div>
   <div class="nav-tab" data-page="inventory"><span class="tab-icon">🏪</span>In Shop</div>
+  <div class="nav-tab" data-page="tarts"><span class="tab-icon">🥧</span>In Tarts</div>
   <div class="nav-tab" data-page="all-works"><span class="tab-icon">🎨</span>All Works</div>
   <div class="nav-tab" data-page="sales"><span class="tab-icon">💰</span>Sales</div>
   <div class="nav-tab" data-page="reports"><span class="tab-icon">📊</span>Reports</div>
@@ -572,6 +574,10 @@
       <div class="stat-card" onclick="document.querySelector('.nav-tab[data-page=inventory]').click()" style="cursor:pointer;" title="View items in shop">
         <div class="stat-val" id="stat-in-shop">0</div>
         <div class="stat-lbl">In Shop Now</div>
+      </div>
+      <div class="stat-card" onclick="document.querySelector('.nav-tab[data-page=tarts]').click()" style="cursor:pointer;" title="View items in tarts">
+        <div class="stat-val" id="stat-in-tarts">0</div>
+        <div class="stat-lbl">In Tarts Now</div>
       </div>
       <div class="stat-card green-top">
         <div class="stat-val" id="stat-this-month">€0</div>
@@ -612,6 +618,29 @@
     <div class="artwork-grid" id="inventory-grid"></div>
   </div>
 
+  <!-- IN TARTS -->
+  <div class="page" id="page-tarts">
+    <div class="section-header">
+      <div class="section-title">Currently In Tarts</div>
+      <button class="btn btn-outline btn-sm no-print" onclick="window.print()">🖨 Print</button>
+    </div>
+    <div class="filter-bar no-print">
+      <input type="text" id="tarts-search" placeholder="Search by title, medium…" oninput="renderTarts()"/>
+      <select id="tarts-sort" onchange="renderTarts()">
+        <option value="date_desc">Newest First</option>
+        <option value="date_asc">Oldest First</option>
+        <option value="price_desc">Price High–Low</option>
+        <option value="price_asc">Price Low–High</option>
+        <option value="days_desc">Longest in Tarts</option>
+      </select>
+    </div>
+    <div id="tarts-summary" style="display:none;background:var(--gold-lt);border:1px solid var(--gold);border-radius:var(--radius-sm);padding:0.75rem 1.25rem;margin-bottom:1rem;font-size:0.9rem;display:flex;gap:1.5rem;flex-wrap:wrap;align-items:center;">
+      <span id="tarts-summary-count" style="color:var(--ink-mid);"></span>
+      <span id="tarts-summary-value" style="font-weight:700;color:var(--gold);font-size:1.05rem;"></span>
+    </div>
+    <div class="artwork-grid" id="tarts-grid"></div>
+  </div>
+
   <!-- ALL WORKS -->
   <div class="page" id="page-all-works">
     <div class="section-header">
@@ -623,6 +652,7 @@
       <select id="all-status" onchange="renderAllWorks()">
         <option value="">All Statuses</option>
         <option value="in_shop">In Shop</option>
+        <option value="in_tarts">In Tarts</option>
         <option value="sold">Sold</option>
         <option value="sold_installments">Installments</option>
         <option value="at_home">At Home</option>
@@ -633,7 +663,7 @@
         <option value="date_added_asc">Oldest First</option>
         <option value="price_desc">Price High–Low</option>
         <option value="price_asc">Price Low–High</option>
-        <option value="days_in_shop_desc">Longest in Shop</option>
+        <option value="days_in_shop_desc">Longest Placed</option>
       </select>
     </div>
     <div class="artwork-grid" id="all-works-grid"></div>
@@ -942,6 +972,7 @@
         <label>Status</label>
         <select id="f-status" onchange="handleStatusChange()">
           <option value="in_shop">In Shop</option>
+          <option value="in_tarts">In Tarts</option>
           <option value="at_home">At Home</option>
           <option value="consignment">Commission</option>
           <option value="sold">Sold</option>
@@ -1264,7 +1295,7 @@ function fmtDate(s) {
 }
 
 function statusBadge(s) {
-  const map={in_shop:['badge-shop','🏪 In Shop'],sold:['badge-sold','✓ Sold'],at_home:['badge-home','🏠 At Home'],consignment:['badge-consign','📦 Commission'],sold_installments:['badge-install','💳 Installments']};
+  const map={in_shop:['badge-shop','🏪 In Shop'],in_tarts:['badge-tarts','🥧 In Tarts'],sold:['badge-sold','✓ Sold'],at_home:['badge-home','🏠 At Home'],consignment:['badge-consign','📦 Commission'],sold_installments:['badge-install','💳 Installments']};
   const [cls,lbl]=map[s]||['badge-home',s];
   return `<span class="status-badge ${cls}">${lbl}</span>`;
 }
@@ -1279,17 +1310,17 @@ function imgEl(w) {
     : `<span style="font-size:3rem;">🎨</span>`;
 }
 
-function daysInShopBadge(w) {
+function daysPlacedBadge(w, location='shop') {
   if(!w.datePlaced) return '';
   const days = Math.floor((Date.now() - new Date(w.datePlaced).getTime()) / 86400000);
   if(days < 0) return '';
   let bg='#e8e8e8', color='#777';
   if(days >= 60) { bg='#fde8e8'; color='var(--rose)'; }
   else if(days >= 30) { bg='#fff3e0'; color='#b36200'; }
-  return `<span style="display:inline-block;margin-top:0.4rem;padding:2px 8px;border-radius:20px;font-size:0.68rem;font-weight:700;background:${bg};color:${color};">${days}d in shop</span>`;
+  return `<span style="display:inline-block;margin-top:0.4rem;padding:2px 8px;border-radius:20px;font-size:0.68rem;font-weight:700;background:${bg};color:${color};">${days}d in ${location}</span>`;
 }
 
-function inventoryCard(w) {
+function inventoryCard(w, location='shop') {
   return `<div class="artwork-card">
     <div onclick="openDetail('${w.id}')" style="cursor:pointer;">
       <div class="artwork-img">${imgEl(w)}</div>
@@ -1298,7 +1329,7 @@ function inventoryCard(w) {
         <div class="artwork-price">${fmt(w.price)}</div>
         <div class="artwork-meta">${w.medium?w.medium+'<br/>':''}${w.size?w.size:''}${(w.itemNumber||w.idNumber)?`<br/><span style="font-size:0.7rem;color:var(--ink-lt);">${[w.itemNumber?'#'+w.itemNumber:'',w.idNumber?w.idNumber:''].filter(Boolean).join(' · ')}</span>`:''}</div>
         ${statusBadge(w.status)}
-        ${daysInShopBadge(w)}
+        ${daysPlacedBadge(w, location)}
       </div>
     </div>
     <div style="display:flex;gap:0.5rem;padding:0.75rem 1rem;border-top:1px solid #f0f0f0;">
@@ -1322,7 +1353,7 @@ function artworkCard(w) {
           ${(w.itemNumber||w.idNumber)?`<br/><span style="font-size:0.7rem;color:var(--ink-lt);">${[w.itemNumber?'#'+w.itemNumber:'',w.idNumber?w.idNumber:''].filter(Boolean).join(' · ')}</span>`:''}
         </div>
         ${statusBadge(w.status)}
-        ${w.status==='in_shop' ? daysInShopBadge(w) : ''}
+        ${(w.status==='in_shop'||w.status==='in_tarts') ? daysPlacedBadge(w, w.status==='in_tarts'?'tarts':'shop') : ''}
       </div>
     </div>
     ${notSold ? `<div style="display:flex;gap:0.5rem;padding:0.75rem 1rem;border-top:1px solid #f0f0f0;">
@@ -1345,13 +1376,14 @@ function showToast(msg) {
 }
 
 function refreshAll() {
-  [renderDashboard, renderInventory, renderAllWorks, renderSales, renderReports, renderExpenses, renderPayments, renderClasses]
+  [renderDashboard, renderInventory, renderTarts, renderAllWorks, renderSales, renderReports, renderExpenses, renderPayments, renderClasses]
     .forEach(fn => { try { fn(); } catch(e) { console.error(fn.name + ':', e); } });
 }
 
 // Dashboard
 function renderDashboard() {
   const inShop = works.filter(w=>w.status==='in_shop');
+  const inTarts = works.filter(w=>w.status==='in_tarts');
   const sold   = works.filter(w=>w.status==='sold'||w.status==='sold_installments');
   const net    = sold.reduce((a,w)=>{ const sp=w.soldPrice||0; return a+sp-workComm(w); },0);
   const now=new Date(), tm=now.getMonth(), ty=now.getFullYear();
@@ -1363,6 +1395,7 @@ function renderDashboard() {
   const profitTM = netTM - expTM;
 
   document.getElementById('stat-in-shop').textContent    = inShop.length;
+  document.getElementById('stat-in-tarts').textContent   = inTarts.length;
   document.getElementById('stat-this-month').textContent = fmt(netTM);
   document.getElementById('stat-net').textContent        = fmt(net);
   document.getElementById('stat-stock-value').textContent= fmt(stockValue);
@@ -1397,7 +1430,30 @@ function renderInventory() {
     if(sort==='days_desc')  return (a.datePlaced||'').localeCompare(b.datePlaced||'');
     return (b.datePlaced||'').localeCompare(a.datePlaced||'');
   });
-  document.getElementById('inventory-grid').innerHTML=items.length?items.map(inventoryCard).join(''):emptyState('Nothing in the shop right now.');
+  document.getElementById('inventory-grid').innerHTML=items.length?items.map(w=>inventoryCard(w,'shop')).join(''):emptyState('Nothing in the shop right now.');
+}
+
+// Tarts inventory
+function renderTarts() {
+  const q=    (document.getElementById('tarts-search')?.value||'').toLowerCase();
+  const sort= document.getElementById('tarts-sort')?.value||'date_desc';
+  let items=works.filter(w=>w.status==='in_tarts');
+  const totalValue=items.reduce((a,w)=>a+(w.price||0),0);
+  const sumEl=document.getElementById('tarts-summary');
+  if(sumEl){
+    sumEl.style.display=items.length?'flex':'none';
+    document.getElementById('tarts-summary-count').textContent=items.length+' item'+(items.length!==1?'s':'')+' in tarts';
+    document.getElementById('tarts-summary-value').textContent='Total asking value: '+fmt(totalValue);
+  }
+  if(q) items=items.filter(w=>[w.title,w.medium,w.size,w.idNumber,w.itemNumber].some(v=>(v||'').toLowerCase().includes(q)));
+  items.sort((a,b)=>{
+    if(sort==='price_desc') return (b.price||0)-(a.price||0);
+    if(sort==='price_asc')  return (a.price||0)-(b.price||0);
+    if(sort==='date_asc')   return (a.datePlaced||'').localeCompare(b.datePlaced||'');
+    if(sort==='days_desc')  return (a.datePlaced||'').localeCompare(b.datePlaced||'');
+    return (b.datePlaced||'').localeCompare(a.datePlaced||'');
+  });
+  document.getElementById('tarts-grid').innerHTML=items.length?items.map(w=>inventoryCard(w,'tarts')).join(''):emptyState('Nothing in tarts right now.');
 }
 
 // All works
@@ -1631,7 +1687,13 @@ function handleStatusChange(){
   const isSold=['sold','sold_installments'].includes(status);
   document.getElementById('sold-fields').style.display=isSold?'':'none';
   document.getElementById('sold-divider').style.display=isSold?'':'none';
-  document.getElementById('date-placed-group').style.display=status==='in_shop'?'':'none';
+  document.getElementById('date-placed-group').style.display=(status==='in_shop'||status==='in_tarts')?'':'none';
+  const dateLabel=document.querySelector('#date-placed-group label');
+  if(dateLabel){
+    if(status==='in_tarts') dateLabel.textContent='Date Placed in Tarts';
+    else if(status==='in_shop') dateLabel.textContent='Date Placed in Shop';
+    else dateLabel.textContent='Date Placed';
+  }
 }
 
 function autoCommission(){
