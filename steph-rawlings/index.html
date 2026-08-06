@@ -970,7 +970,7 @@
       </div>
       <div class="form-group">
         <label>Status</label>
-        <select id="f-status" onchange="handleStatusChange()">
+        <select id="f-status" onchange="handleStatusChange(true)">
           <option value="in_shop">In Shop</option>
           <option value="in_tarts">In Tarts</option>
           <option value="at_home">At Home</option>
@@ -1742,17 +1742,23 @@ function openAddModal(id=null) {
 
 function closeAddModal(){ document.getElementById('modal-add').classList.remove('open'); editingId=null; pendingPhotoData=null; }
 
-function handleStatusChange(){
+function handleStatusChange(fromUser){
   const status=document.getElementById('f-status').value;
   const isSold=['sold','sold_installments'].includes(status);
+  const isPlaced=status==='in_shop'||status==='in_tarts';
   document.getElementById('sold-fields').style.display=isSold?'':'none';
   document.getElementById('sold-divider').style.display=isSold?'':'none';
-  document.getElementById('date-placed-group').style.display=(status==='in_shop'||status==='in_tarts')?'':'none';
+  document.getElementById('date-placed-group').style.display=isPlaced?'':'none';
   const dateLabel=document.querySelector('#date-placed-group label');
   if(dateLabel){
     if(status==='in_tarts') dateLabel.textContent='Date Placed in Tarts';
     else if(status==='in_shop') dateLabel.textContent='Date Placed in Shop';
     else dateLabel.textContent='Date Placed';
+  }
+  // When the user moves an item into Shop/Tarts, default the placed date to today
+  // (instead of keeping an older date from when the piece was made/created).
+  if(fromUser && isPlaced){
+    document.getElementById('f-date-placed').value=new Date().toISOString().slice(0,10);
   }
   if (isSold) updateCommissionUI('f');
 }
