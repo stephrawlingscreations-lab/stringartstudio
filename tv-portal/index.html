@@ -570,41 +570,20 @@ function signOutApp() {
   if (confirm('Sign out?')) fbAuth.signOut();
 }
 
-// DATA
-const PRELOADED = [
-  {id:'1',service:'jungle',name:'Loretta Brother',user:'Steph98765',pass:'TabftHCapK',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
-  {id:'2',service:'jungle',name:'Geraldine Ronan',user:'Gearldneronan',pass:'WRBK8HAskvm',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
-  {id:'3',service:'jungle',name:'John D no 36',user:'Johndonnelly9',pass:'8ufKeRzPy7',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
-  {id:'4',service:'jungle',name:'Jason Holmes',user:'Jasonholmes9',pass:'3ksHhxwNvZ',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
-  {id:'5',service:'jungle',name:'Amanda D',user:'AmandaD9',pass:'mNz7DzVEvr',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
-  {id:'6',service:'jungle',name:'Mikey Ohalloran',user:'Mikeyohalloran',pass:'Np5hNutvN3',tvs:2,price:120,start:'',renewal:'',months:12,phone:'',notes:'2 TVs'},
-  {id:'7',service:'jungle',name:'Paul Hay',user:'Paulhay26',pass:'5KtNRqzJhK',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
-  {id:'8',service:'jungle',name:'Sheila Alli',user:'Sheliaalli',pass:'Nj8j9bYVh5',tvs:1,price:60,start:'2026-03-25',renewal:'2027-03-25',months:12,phone:'',notes:''},
-  {id:'9',service:'jungle',name:'Steph Daly',user:'Stephdaly',pass:'mjP77M5hAk',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
-  {id:'10',service:'jungle',name:'John Meyler',user:'Johnmeyler',pass:'bzVKjEbbjz',tvs:1,price:60,start:'2026-03-09',renewal:'2027-03-09',months:12,phone:'',notes:''},
-  {id:'11',service:'jungle',name:'Sinead Allis',user:'Sineadallis',pass:'5PTVXnBRVD',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
-  {id:'12',service:'jungle',name:'Katarina Sebekova',user:'Katarinasebekova',pass:'sgbnrmG4Gy',tvs:1,price:60,start:'2026-02-18',renewal:'2027-02-18',months:12,phone:'',notes:''},
-  {id:'13',service:'jungle',name:'Jason Donn',user:'Jasondonn26',pass:'qCN58bREJJ',tvs:1,price:60,start:'2026-01-30',renewal:'2027-01-30',months:12,phone:'',notes:''},
-  {id:'14',service:'jungle',name:'Mary P',user:'Maryp2026',pass:'sxEUJpzcTk',tvs:1,price:60,start:'2026-01-30',renewal:'2027-01-30',months:12,phone:'',notes:''},
-  {id:'15',service:'jungle',name:'Chris Rawlings',user:'Chrisrawlings26',pass:'8c7gVAyqWu',tvs:1,price:60,start:'2026-01-27',renewal:'2027-01-27',months:12,phone:'',notes:''},
-  {id:'16',service:'jungle',name:"Robert O'Brien",user:'Robertobrien',pass:'DMHkJCSkrd',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
-  {id:'17',service:'jungle',name:'Donnacha',user:'Donnacha2025',pass:'Tdz9WeP88J',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
-  {id:'18',service:'jungle',name:'Kieran Ryan',user:'Kieranryan9',pass:'AU4una4m7c',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
-  {id:'19',service:'jungle',name:'Steph Rawlings',user:'Stephrawlings',pass:'PJvg7CFe6z',tvs:2,price:120,start:'2026-01-12',renewal:'2027-01-12',months:12,phone:'',notes:'2 TVs'},
-  {id:'20',service:'jungle',name:'Catherine Crowe',user:'Catherinecrowe',pass:'7qp7dDty22',tvs:1,price:60,start:'',renewal:'',months:12,phone:'',notes:''},
-  {id:'21',service:'jungle',name:'Conor H',user:'Conorh2025',pass:'tU8mbCXsrm',tvs:1,price:60,start:'2025-12-09',renewal:'2026-12-09',months:12,phone:'',notes:''},
-];
-
+// DATA — subscriber records live in Firebase (iptv) after Hub login.
+// Never ship credentials in this public HTML file.
 function loadData() {
   const saved = localStorage.getItem(STORE_KEY);
-  if (saved) {
-    // Migrate older records that don't have a phone field
+  if (!saved) return [];
+  try {
     const parsed = JSON.parse(saved);
+    if (!Array.isArray(parsed)) return [];
+    // Migrate older records that don't have a phone field
     parsed.forEach(e => { if (e.phone === undefined) e.phone = ''; });
     return parsed;
+  } catch (e) {
+    return [];
   }
-  localStorage.setItem(STORE_KEY, JSON.stringify(PRELOADED));
-  return JSON.parse(JSON.stringify(PRELOADED));
 }
 
 let data = [];
@@ -628,8 +607,13 @@ function refreshFromCloud() {
     if (cloud && Array.isArray(cloud) && cloud.length > 0) {
       data = migratePhoneRows(JSON.parse(JSON.stringify(cloud)));
       localStorage.setItem(STORE_KEY, JSON.stringify(data));
-    } else {
-      data = loadData();
+      return;
+    }
+    // Cloud empty: keep device cache if present, and upload that once.
+    // Do not seed from hardcoded defaults (those were removed for security).
+    const local = loadData();
+    data = local;
+    if (local.length > 0) {
       return fbDb.ref('iptv').set(data).catch(() => {});
     }
   });

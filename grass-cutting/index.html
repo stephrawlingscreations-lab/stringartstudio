@@ -534,49 +534,9 @@ const ALLOWED_GRASS_EMAILS = [
 let currentUser = null;
 let pendingDisallowGrass = '';
 
-const DEFAULT_RESIDENTS = [
-  {houseNo:11,name:"Paula Kenny",owed:115,na:false},
-  {houseNo:12,name:"Sarah Sheridan",owed:115,na:false},
-  {houseNo:13,name:"Tracey Ailis",owed:115,na:false},
-  {houseNo:14,name:"Aileen O'Dwyer",owed:115,na:false},
-  {houseNo:15,name:"Price (vacant)",owed:0,na:true},
-  {houseNo:16,name:"Shauna/Davy Redmond",owed:115,na:false},
-  {houseNo:17,name:"Siobhan O'Sullivan",owed:115,na:false},
-  {houseNo:18,name:"Tommy (won't pay)",owed:0,na:true},
-  {houseNo:19,name:"Reggie",owed:115,na:false},
-  {houseNo:20,name:"Trisha O'Rawe",owed:115,na:false},
-  {houseNo:21,name:"Natasha O'Keeffe",owed:115,na:false},
-  {houseNo:22,name:"Siobhan O'Brien",owed:115,na:false},
-  {houseNo:23,name:"Josephine Duggan",owed:115,na:false},
-  {houseNo:24,name:"Karen/Francis Shiels",owed:115,na:false},
-  {houseNo:25,name:"Lesley Jade",owed:115,na:false},
-  {houseNo:26,name:"Sanu",owed:115,na:false},
-  {houseNo:27,name:"Cheila McGrath",owed:115,na:false},
-  {houseNo:28,name:"Jack/Tracie O'Sullivan",owed:115,na:false},
-  {houseNo:29,name:"Mary Corcoran",owed:115,na:false},
-  {houseNo:30,name:"Ciara Barry",owed:115,na:false},
-  {houseNo:31,name:"Steph Daly",owed:115,na:false},
-  {houseNo:32,name:"Steph Rawlings",owed:0,na:true},
-  {houseNo:33,name:"Mike/Michelle O'Regan",owed:115,na:false},
-  {houseNo:34,name:"Terrie Burke",owed:115,na:false},
-  {houseNo:35,name:"Benson/Tariasi Nkhoma",owed:115,na:false},
-  {houseNo:36,name:"John Donnelly",owed:115,na:false},
-];
-
-const DEFAULT_PAYMENTS = [
-  {date:"2026-03-20",houseNo:14,name:"Aileen O'Dwyer",amount:115,method:"Cash",notes:""},
-  {date:"2026-03-20",houseNo:20,name:"Trisha O'Rawe",amount:115,method:"Cash",notes:""},
-  {date:"2026-03-20",houseNo:25,name:"Lesley Jade",amount:115,method:"Revolut",notes:""},
-  {houseNo:28,name:"Jack/Tracie O'Sullivan",date:"2026-03-20",amount:115,method:"Revolut",notes:""},
-  {date:"2026-03-20",houseNo:33,name:"Mike/Michelle O'Regan",amount:115,method:"Cash",notes:""},
-  {date:"2026-03-25",houseNo:13,name:"Tracey Ailis",amount:10,method:"Cash",notes:""},
-  {date:"2026-04-01",houseNo:24,name:"Karen/Francis Shiels",amount:50,method:"Cash",notes:""},
-  {date:"2026-04-27",houseNo:30,name:"Ciara Barry",amount:100,method:"Cash",notes:""},
-];
-
-const DEFAULT_CUTTINGS = [
-  {date:"2026-03-20",desc:"WE 20/03/26 — grass cutting",cost:0},
-];
+// Resident / payment records live in Firebase (grassPortal) after Hub login.
+// Never ship neighbour names or balances in this public HTML file.
+const EMPTY_GRASS = { residents: [], payments: [], cuttings: [], balanceCheck: {} };
 
 // ── Persistent file-based saving ──────────────────────────────────────────────
 
@@ -702,25 +662,25 @@ async function saveToFile() {
 // ── Data loading ──────────────────────────────────────────────────────────────
 
 async function loadGrassPayloadFromDisk() {
-  // 1. Data embedded in this file (set by saveToFile)
+  // 1. Data embedded in this file (set by saveToFile on a private local copy)
   const el = document.getElementById('app-data');
   if (el) {
     const text = el.textContent.trim();
     if (text && text !== 'null') {
       try {
         const p = JSON.parse(text);
-        if (p && Array.isArray(p.residents)) {
+        if (p && Array.isArray(p.residents) && p.residents.length) {
           return {
-            residents: p.residents.length ? p.residents : DEFAULT_RESIDENTS,
-            payments: p.payments || DEFAULT_PAYMENTS,
-            cuttings: p.cuttings || DEFAULT_CUTTINGS,
+            residents: p.residents,
+            payments: Array.isArray(p.payments) ? p.payments : [],
+            cuttings: Array.isArray(p.cuttings) ? p.cuttings : [],
             balanceCheck: p.balanceCheck || {},
           };
         }
       } catch(e) {}
     }
   }
-  // 2. localStorage (migration path from previous version)
+  // 2. localStorage cache from a previous signed-in session on this device
   try {
     const r = localStorage.getItem('grassPortal.residents');
     const p = localStorage.getItem('grassPortal.payments');
@@ -728,20 +688,15 @@ async function loadGrassPayloadFromDisk() {
     const b = localStorage.getItem('grassPortal.balanceCheck');
     if (r || p || c || b) {
       return {
-        residents: r ? JSON.parse(r) : DEFAULT_RESIDENTS,
-        payments: p ? JSON.parse(p) : DEFAULT_PAYMENTS,
-        cuttings: c ? JSON.parse(c) : DEFAULT_CUTTINGS,
+        residents: r ? JSON.parse(r) : [],
+        payments: p ? JSON.parse(p) : [],
+        cuttings: c ? JSON.parse(c) : [],
         balanceCheck: b ? JSON.parse(b) : {},
       };
     }
   } catch(e) {}
-  // 3. Defaults
-  return {
-    residents: DEFAULT_RESIDENTS,
-    payments: DEFAULT_PAYMENTS,
-    cuttings: DEFAULT_CUTTINGS,
-    balanceCheck: {},
-  };
+  // 3. Empty — cloud is the source of truth
+  return { ...EMPTY_GRASS };
 }
 
 const FB_GRASS_PATH = 'grassPortal';

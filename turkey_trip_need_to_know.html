@@ -465,69 +465,8 @@
   var tripReady = false;
   var converterStarted = false;
 
-  // Private trip payload — written to Firebase on first allowed login,
-  // then loaded from Firebase thereafter (unauthenticated reads are denied).
-  var SEED = {
-    title: 'Turkey trip — need to know',
-    meta: 'Marmaris · 7–15 September 2026 · Steph & Caz',
-    flyDate: '2026-09-07',
-    emergency: {
-      note: 'For anything serious, try Cigna first (better direct-billing network abroad). MAWDY covers what Cigna doesn\'t — dual insurance means no double payout.',
-      rows: [
-        { label: 'MAWDY emergency assistance', tel: '+35391560637', display: '+353 91 560 637' },
-        { label: 'MAWDY travel claims', tel: '+35391560638', display: '+353 91 560 638' },
-        { label: 'Cigna MBA 24/7 service', tel: '+18002431348', display: '+1 800 243 1348' },
-        { label: 'Cigna MBA (collect calls)', tel: '+13027973535', display: '+1 302 797 3535' }
-      ]
-    },
-    flights: {
-      outboundLabel: 'Outbound — Mon 7 Sept',
-      outboundCode: 'Ryanair FR4620',
-      outboundRoute: 'Dublin T1 → Dalaman',
-      outboundTimes: '15:05 → 21:40 local',
-      returnLabel: 'Return — Mon 14 / Tue 15 Sept',
-      returnCode: 'Ryanair FR4621',
-      returnRoute: 'Dalaman → Dublin T1',
-      returnTimes: '22:15 → 01:10 (+1)',
-      bookingRef: 'PU1Q3P',
-      note: 'Turkey is UTC+3 in September. Arrival times above are local.'
-    },
-    hotel: {
-      name: 'Pasa Bey, Marmaris',
-      board: 'All Inclusive, 7 nights',
-      room: 'Double, balcony',
-      tuiRef: '31858947',
-      transfer: 'Shared coach, allow 2–3h',
-      mapQuery: 'Pasa+Bey+Hotel+Marmaris'
-    },
-    parking: {
-      provider: 'Park2Travel (APCOA)',
-      bookingRef: '8267058',
-      carReg: '251T1729',
-      entry: '07/09/26, 11:00',
-      exit: '15/09/26, 02:30',
-      address: 'Cloghran Road, Swords, K67 CY68',
-      pickup: 'Shuttle Bus Zone 9, outside T1',
-      mapQuery: 'Park2Travel+Cloghran+Road+Swords+K67+CY68'
-    },
-    insurance: {
-      atiCert: 'ATIIFMUC100742',
-      atiCover: 'Europe, Super, up to €20m medical',
-      cignaAccount: 'Apple Inc. — MBA',
-      cignaCover: 'Worldwide, direct billing'
-    },
-    esim: {
-      provider: 'Holafly',
-      steph: 'Installed',
-      caz: 'Install before travel',
-      note: 'Install and connect before flying — some eSIM provider sites are blocked once inside Turkey. Enable data roaming and set as primary data line after landing.'
-    },
-    dogs: [
-      { label: '7–12 Sept', value: 'Steph (neighbour) — 12 pâté packets' },
-      { label: '12–15 Sept', value: 'Mum — 6 pâté packets' },
-      { label: '15 Sept', value: 'You collect & take over feeding' }
-    ]
-  };
+  // Trip details live only in Firebase (turkeyTrip) after Hub login.
+  // Never ship booking refs / personal details in this public HTML file.
 
   function isAllowed(email) {
     return ALLOWED.some(function (a) {
@@ -721,8 +660,26 @@
     var snap = await fbDb.ref(FB_PATH).once('value');
     var cloud = snap.val();
     if (cloud && cloud.flights) return cloud;
-    await fbDb.ref(FB_PATH).set(SEED);
-    return SEED;
+    return null;
+  }
+
+  function renderEmptyTrip() {
+    document.getElementById('trip-root').innerHTML =
+      '<a href="/portal/" class="hub-back-btn">← Hub</a>' +
+      '<header>' +
+        '<h1>Turkey trip — need to know</h1>' +
+        '<p class="meta">Private Hub page</p>' +
+      '</header>' +
+      '<section class="card">' +
+        '<h2>No trip details in the cloud yet</h2>' +
+        '<p class="note" style="margin-top:0">Sign-in worked, but Firebase has no saved trip payload. ' +
+        'If you opened this page while signed in before the security update, try refreshing. ' +
+        'Otherwise restore from a Hub backup or ask to re-import the trip details into Firebase.</p>' +
+        '<div class="btn-row" style="margin-top:14px">' +
+          '<a class="btn" href="/portal/">Back to Hub</a>' +
+          '<a class="btn secondary" href="/currency_converter.html">Open converter</a>' +
+        '</div>' +
+      '</section>';
   }
 
   function startConverter() {
@@ -979,7 +936,8 @@
         if (!tripReady) {
           showPhase('loading');
           var data = await loadTripData();
-          renderTrip(data);
+          if (data) renderTrip(data);
+          else renderEmptyTrip();
           tripReady = true;
         }
         showPhase('app');
