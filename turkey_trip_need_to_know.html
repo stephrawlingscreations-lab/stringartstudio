@@ -9,7 +9,6 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#F7F3E9">
 <meta name="robots" content="noindex, nofollow">
-<meta name="description" content="Marmaris trip essentials for Steph &amp; Caz — flights, hotel, insurance, parking, eSIM, and live currency converter.">
 <title>Turkey Trip — Need to Know</title>
 <link rel="icon" href="images/logo.png">
 <style>
@@ -32,14 +31,69 @@
     background: var(--cream);
     color: var(--dark);
     margin: 0;
+    min-height: 100vh;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #auth-loading, #login-screen {
+    position: fixed; inset: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+    background: linear-gradient(145deg, #1B2A4A 0%, #2f4468 55%, #B8912F 140%);
+  }
+  #login-screen { display: none; }
+  .login-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 40px 32px;
+    max-width: 360px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  }
+  .login-logo {
+    width: 64px; height: 64px;
+    background: linear-gradient(135deg, #1B2A4A, #B8912F);
+    border-radius: 18px;
+    margin: 0 auto 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px;
+  }
+  .login-card h1 { font-size: 1.4rem; font-weight: 700; color: var(--navy); margin: 0 0 6px; }
+  .login-card p { font-size: 0.9rem; color: var(--muted); margin: 0 0 28px; }
+  .btn-google {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 14px 20px;
+    background: #fff; border: 2px solid var(--border);
+    border-radius: 12px; cursor: pointer;
+    font-size: 0.95rem; font-weight: 600; color: var(--navy);
+    font-family: inherit;
+  }
+  .btn-google:active { background: var(--cream); }
+  .btn-google svg { width: 20px; height: 20px; flex-shrink: 0; }
+  #login-error {
+    margin-top: 14px; font-size: 0.85rem; color: var(--err); min-height: 20px;
+  }
+  .auth-spinner {
+    width: 36px; height: 36px;
+    border: 3px solid rgba(255,255,255,0.25);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #trip-app { display: none; }
+  #trip-app.is-ready { display: block; }
+  .wrap {
+    max-width: 560px;
+    margin: 0 auto;
     padding:
       calc(16px + var(--safe-top))
       14px
       calc(48px + var(--safe-bottom));
-    -webkit-text-size-adjust: 100%;
-    -webkit-tap-highlight-color: transparent;
   }
-  .wrap { max-width: 560px; margin: 0 auto; }
 
   .hub-back-btn {
     display: inline-block;
@@ -108,7 +162,6 @@
     border-radius: 999px;
     white-space: nowrap;
   }
-  .jump a:active { background: #f0ebe0; }
 
   .quick {
     display: grid;
@@ -132,7 +185,6 @@
     color: var(--navy);
     border: 1.5px solid var(--navy);
   }
-  .quick a:active { opacity: 0.88; }
 
   .card {
     background: #fff;
@@ -196,7 +248,6 @@
     background: #efe8d4;
     border-radius: 6px;
     padding: 2px 6px;
-    letter-spacing: 0.02em;
   }
   .copyable.copied .chip {
     background: #dcead9;
@@ -234,7 +285,6 @@
     color: var(--navy);
     border: 1.5px solid var(--navy);
   }
-  .btn:active { opacity: 0.88; }
 
   .note {
     font-size: 0.78rem;
@@ -260,7 +310,6 @@
     line-height: 1.5;
   }
 
-  /* Converter */
   .conv-row {
     display: flex;
     align-items: center;
@@ -316,7 +365,6 @@
     appearance: none;
   }
   .conv-refresh:disabled { opacity: 0.55; }
-  .conv-refresh:active { opacity: 0.85; }
   .conv-manual-toggle {
     text-align: center;
     margin-top: 12px;
@@ -365,436 +413,594 @@
 </style>
 </head>
 <body>
-<div class="wrap">
 
-  <a href="/portal/" class="hub-back-btn">← Hub</a>
+<div id="auth-loading"><div class="auth-spinner" aria-label="Loading"></div></div>
 
-  <header>
-    <h1>Turkey trip — need to know</h1>
-    <p class="meta">Marmaris · 7–15 September 2026 · Steph &amp; Caz</p>
-    <div class="countdown" id="countdown">Counting down…</div>
-  </header>
-
-  <nav class="jump" aria-label="Jump to section">
-    <a href="#emergency">Emergency</a>
-    <a href="#converter">Currency</a>
-    <a href="#flights">Flights</a>
-    <a href="#hotel">Hotel</a>
-    <a href="#parking">Parking</a>
-    <a href="#insurance">Insurance</a>
-    <a href="#esim">eSIM</a>
-    <a href="#dogs">Dogs</a>
-  </nav>
-
-  <div class="quick">
-    <a href="tel:+18002431348">Call Cigna</a>
-    <a class="secondary" href="https://www.ryanair.com/ie/en/lp/check-in" target="_blank" rel="noopener">Ryanair check-in</a>
-    <a class="secondary" href="https://www.tui.ie/managemybooking" target="_blank" rel="noopener">TUI booking</a>
-    <a href="tel:+35391560637">Call MAWDY</a>
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">🇹🇷</div>
+    <h1>Turkey Trip</h1>
+    <p>Sign in with your Hub Google account to open this private page</p>
+    <button type="button" class="btn-google" id="btnSignIn">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Continue with Google
+    </button>
+    <div id="login-error"></div>
   </div>
-
-  <!-- Emergency numbers -->
-  <section class="card emergency-card" id="emergency">
-    <h2><span class="emoji" aria-hidden="true">🚨</span>Emergency numbers</h2>
-    <div class="detail-row"><span class="label">MAWDY emergency assistance</span><span class="value"><a href="tel:+35391560637">+353 91 560 637</a></span></div>
-    <div class="detail-row"><span class="label">MAWDY travel claims</span><span class="value"><a href="tel:+35391560638">+353 91 560 638</a></span></div>
-    <div class="detail-row"><span class="label">Cigna MBA 24/7 service</span><span class="value"><a href="tel:+18002431348">+1 800 243 1348</a></span></div>
-    <div class="detail-row"><span class="label">Cigna MBA (collect calls)</span><span class="value"><a href="tel:+13027973535">+1 302 797 3535</a></span></div>
-    <div class="note">For anything serious, try Cigna first (better direct-billing network abroad). MAWDY covers what Cigna doesn't — dual insurance means no double payout.</div>
-  </section>
-
-  <!-- Currency Converter -->
-  <section class="card" id="converter">
-    <h2><span class="emoji" aria-hidden="true">💱</span>Currency converter</h2>
-    <div id="app"></div>
-    <a class="conv-full" href="/currency_converter.html">Open full-screen converter →</a>
-  </section>
-
-  <!-- Flights -->
-  <section class="card" id="flights">
-    <h2><span class="emoji" aria-hidden="true">✈️</span>Flights</h2>
-    <div class="subhead">Outbound — Mon 7 Sept</div>
-    <div class="detail-row"><span class="label">Ryanair FR4620</span><span class="value">Dublin T1 → Dalaman</span></div>
-    <div class="detail-row"><span class="label">Departs / arrives</span><span class="value">15:05 → 21:40 local</span></div>
-    <div class="subhead">Return — Mon 14 / Tue 15 Sept</div>
-    <div class="detail-row"><span class="label">Ryanair FR4621</span><span class="value">Dalaman → Dublin T1</span></div>
-    <div class="detail-row"><span class="label">Departs / arrives</span><span class="value">22:15 → 01:10 (+1)</span></div>
-    <div class="detail-row">
-      <span class="label">Booking ref</span>
-      <span class="value">
-        <button type="button" class="copyable" data-copy="PU1Q3P" aria-label="Copy booking ref PU1Q3P">
-          PU1Q3P <span class="chip">Copy</span>
-        </button>
-      </span>
-    </div>
-    <div class="btn-row">
-      <a class="btn" href="https://www.ryanair.com/ie/en/lp/check-in" target="_blank" rel="noopener">Check in</a>
-      <a class="btn secondary" href="https://www.dublinairport.com/flight-information/departures" target="_blank" rel="noopener">Dublin departures</a>
-    </div>
-    <div class="note">Turkey is UTC+3 in September. Arrival times above are local.</div>
-  </section>
-
-  <!-- Hotel / TUI -->
-  <section class="card" id="hotel">
-    <h2><span class="emoji" aria-hidden="true">🏨</span>Hotel &amp; transfer</h2>
-    <div class="detail-row"><span class="label">Hotel</span><span class="value">Pasa Bey, Marmaris</span></div>
-    <div class="detail-row"><span class="label">Board</span><span class="value">All Inclusive, 7 nights</span></div>
-    <div class="detail-row"><span class="label">Room</span><span class="value">Double, balcony</span></div>
-    <div class="detail-row">
-      <span class="label">TUI booking ref</span>
-      <span class="value">
-        <button type="button" class="copyable" data-copy="31858947" aria-label="Copy TUI booking ref 31858947">
-          31858947 <span class="chip">Copy</span>
-        </button>
-      </span>
-    </div>
-    <div class="detail-row"><span class="label">Transfer</span><span class="value">Shared coach, allow 2–3h</span></div>
-    <div class="btn-row">
-      <a class="btn" href="https://www.tui.ie/managemybooking" target="_blank" rel="noopener">Manage TUI booking</a>
-      <a class="btn secondary" href="https://www.google.com/maps/search/?api=1&query=Pasa+Bey+Hotel+Marmaris" target="_blank" rel="noopener">Map hotel</a>
-    </div>
-  </section>
-
-  <!-- Parking -->
-  <section class="card" id="parking">
-    <h2><span class="emoji" aria-hidden="true">🅿️</span>Dublin Airport parking</h2>
-    <div class="detail-row"><span class="label">Provider</span><span class="value">Park2Travel (APCOA)</span></div>
-    <div class="detail-row">
-      <span class="label">Booking ref</span>
-      <span class="value">
-        <button type="button" class="copyable" data-copy="8267058" aria-label="Copy parking booking ref 8267058">
-          8267058 <span class="chip">Copy</span>
-        </button>
-      </span>
-    </div>
-    <div class="detail-row">
-      <span class="label">Car reg</span>
-      <span class="value">
-        <button type="button" class="copyable" data-copy="251T1729" aria-label="Copy car registration 251T1729">
-          251T1729 <span class="chip">Copy</span>
-        </button>
-      </span>
-    </div>
-    <div class="detail-row"><span class="label">Entry</span><span class="value">07/09/26, 11:00</span></div>
-    <div class="detail-row"><span class="label">Exit</span><span class="value">15/09/26, 02:30</span></div>
-    <div class="detail-row"><span class="label">Address</span><span class="value">Cloghran Road, Swords, K67 CY68</span></div>
-    <div class="detail-row"><span class="label">Return pickup</span><span class="value">Shuttle Bus Zone 9, outside T1</span></div>
-    <div class="btn-row">
-      <a class="btn" href="https://www.google.com/maps/search/?api=1&query=Park2Travel+Cloghran+Road+Swords+K67+CY68" target="_blank" rel="noopener">Directions</a>
-      <a class="btn secondary" href="https://park2travel.ie" target="_blank" rel="noopener">Manage booking</a>
-    </div>
-  </section>
-
-  <!-- Insurance -->
-  <section class="card" id="insurance">
-    <h2><span class="emoji" aria-hidden="true">🛡️</span>Travel insurance</h2>
-    <div class="subhead">ATI / Multitrip.com (MAWDY)</div>
-    <div class="detail-row">
-      <span class="label">Certificate no.</span>
-      <span class="value">
-        <button type="button" class="copyable" data-copy="ATIIFMUC100742" aria-label="Copy certificate ATIIFMUC100742">
-          ATIIFMUC100742 <span class="chip">Copy</span>
-        </button>
-      </span>
-    </div>
-    <div class="detail-row"><span class="label">Cover</span><span class="value">Europe, Super, up to €20m medical</span></div>
-    <div class="subhead">Cigna Global Health Benefits (MBA)</div>
-    <div class="detail-row"><span class="label">Account</span><span class="value">Apple Inc. — MBA</span></div>
-    <div class="detail-row"><span class="label">Cover</span><span class="value">Worldwide, direct billing</span></div>
-    <div class="btn-row">
-      <a class="btn" href="https://www.cignaenvoy.com" target="_blank" rel="noopener">Cigna Envoy</a>
-      <a class="btn secondary" href="https://www.annualtravelinsurance.com" target="_blank" rel="noopener">ATI / Multitrip</a>
-    </div>
-  </section>
-
-  <!-- eSIM -->
-  <section class="card" id="esim">
-    <h2><span class="emoji" aria-hidden="true">📶</span>eSIMs</h2>
-    <div class="detail-row"><span class="label">Provider</span><span class="value">Holafly</span></div>
-    <div class="detail-row"><span class="label">Steph's eSIM</span><span class="value">Installed</span></div>
-    <div class="detail-row"><span class="label">Caz's eSIM</span><span class="value">Install before travel</span></div>
-    <div class="note">Install and connect before flying — some eSIM provider sites are blocked once inside Turkey. Enable data roaming and set as primary data line after landing.</div>
-    <div class="btn-row">
-      <a class="btn" href="https://esim.holafly.com" target="_blank" rel="noopener">Holafly account</a>
-    </div>
-  </section>
-
-  <!-- Dogs -->
-  <section class="card" id="dogs">
-    <h2><span class="emoji" aria-hidden="true">🐾</span>Dog care handover</h2>
-    <div class="detail-row"><span class="label">7–12 Sept</span><span class="value">Steph (neighbour) — 12 pâté packets</span></div>
-    <div class="detail-row"><span class="label">12–15 Sept</span><span class="value">Mum — 6 pâté packets</span></div>
-    <div class="detail-row"><span class="label">15 Sept</span><span class="value">You collect &amp; take over feeding</span></div>
-  </section>
-
-  <footer>
-    Bookmark or Add to Home Screen before you fly.<br>
-    Live rates need internet — last good rates stay cached on this phone.
-  </footer>
-
 </div>
 
+<div id="trip-app">
+  <div class="wrap" id="trip-root"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script>
 (function () {
-  // Countdown to outbound flight day (Dublin local)
-  function updateCountdown() {
-    var el = document.getElementById('countdown');
-    if (!el) return;
-    var start = new Date(2026, 8, 7); // 7 Sept 2026 local
+  firebase.initializeApp({
+    apiKey:            'AIzaSyAcSc-3ejzUfaiods7fAGAH10EuVvZaL6U',
+    authDomain:        'steph-rawlings-creations.firebaseapp.com',
+    databaseURL:       'https://steph-rawlings-creations-default-rtdb.europe-west1.firebasedatabase.app',
+    projectId:         'steph-rawlings-creations',
+    storageBucket:     'steph-rawlings-creations.firebasestorage.app',
+    messagingSenderId: '271810785275',
+    appId:             '1:271810785275:web:e44be9608f17386ae4e55e'
+  });
+
+  var fbAuth = firebase.auth();
+  var fbDb = firebase.database();
+  var FB_PATH = 'turkeyTrip';
+  var ALLOWED = [
+    'stephrawlingscreations@gmail.com',
+    'sdr22ie@gmail.com',
+    'sdr22uk@gmail.com'
+  ];
+  var pendingDisallow = '';
+  var tripReady = false;
+  var converterStarted = false;
+
+  // Private trip payload — written to Firebase on first allowed login,
+  // then loaded from Firebase thereafter (unauthenticated reads are denied).
+  var SEED = {
+    title: 'Turkey trip — need to know',
+    meta: 'Marmaris · 7–15 September 2026 · Steph & Caz',
+    flyDate: '2026-09-07',
+    emergency: {
+      note: 'For anything serious, try Cigna first (better direct-billing network abroad). MAWDY covers what Cigna doesn\'t — dual insurance means no double payout.',
+      rows: [
+        { label: 'MAWDY emergency assistance', tel: '+35391560637', display: '+353 91 560 637' },
+        { label: 'MAWDY travel claims', tel: '+35391560638', display: '+353 91 560 638' },
+        { label: 'Cigna MBA 24/7 service', tel: '+18002431348', display: '+1 800 243 1348' },
+        { label: 'Cigna MBA (collect calls)', tel: '+13027973535', display: '+1 302 797 3535' }
+      ]
+    },
+    flights: {
+      outboundLabel: 'Outbound — Mon 7 Sept',
+      outboundCode: 'Ryanair FR4620',
+      outboundRoute: 'Dublin T1 → Dalaman',
+      outboundTimes: '15:05 → 21:40 local',
+      returnLabel: 'Return — Mon 14 / Tue 15 Sept',
+      returnCode: 'Ryanair FR4621',
+      returnRoute: 'Dalaman → Dublin T1',
+      returnTimes: '22:15 → 01:10 (+1)',
+      bookingRef: 'PU1Q3P',
+      note: 'Turkey is UTC+3 in September. Arrival times above are local.'
+    },
+    hotel: {
+      name: 'Pasa Bey, Marmaris',
+      board: 'All Inclusive, 7 nights',
+      room: 'Double, balcony',
+      tuiRef: '31858947',
+      transfer: 'Shared coach, allow 2–3h',
+      mapQuery: 'Pasa+Bey+Hotel+Marmaris'
+    },
+    parking: {
+      provider: 'Park2Travel (APCOA)',
+      bookingRef: '8267058',
+      carReg: '251T1729',
+      entry: '07/09/26, 11:00',
+      exit: '15/09/26, 02:30',
+      address: 'Cloghran Road, Swords, K67 CY68',
+      pickup: 'Shuttle Bus Zone 9, outside T1',
+      mapQuery: 'Park2Travel+Cloghran+Road+Swords+K67+CY68'
+    },
+    insurance: {
+      atiCert: 'ATIIFMUC100742',
+      atiCover: 'Europe, Super, up to €20m medical',
+      cignaAccount: 'Apple Inc. — MBA',
+      cignaCover: 'Worldwide, direct billing'
+    },
+    esim: {
+      provider: 'Holafly',
+      steph: 'Installed',
+      caz: 'Install before travel',
+      note: 'Install and connect before flying — some eSIM provider sites are blocked once inside Turkey. Enable data roaming and set as primary data line after landing.'
+    },
+    dogs: [
+      { label: '7–12 Sept', value: 'Steph (neighbour) — 12 pâté packets' },
+      { label: '12–15 Sept', value: 'Mum — 6 pâté packets' },
+      { label: '15 Sept', value: 'You collect & take over feeding' }
+    ]
+  };
+
+  function isAllowed(email) {
+    return ALLOWED.some(function (a) {
+      return a.toLowerCase() === String(email || '').toLowerCase();
+    });
+  }
+
+  function showPhase(phase) {
+    document.getElementById('auth-loading').style.display = phase === 'loading' ? 'flex' : 'none';
+    document.getElementById('login-screen').style.display = phase === 'login' ? 'flex' : 'none';
+    var app = document.getElementById('trip-app');
+    if (phase === 'app') app.classList.add('is-ready');
+    else app.classList.remove('is-ready');
+  }
+
+  function esc(str) {
+    return String(str == null ? '' : str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function copyBtn(value) {
+    return '<button type="button" class="copyable" data-copy="' + esc(value) + '" aria-label="Copy ' + esc(value) + '">' +
+      esc(value) + ' <span class="chip">Copy</span></button>';
+  }
+
+  function row(label, valueHtml) {
+    return '<div class="detail-row"><span class="label">' + esc(label) + '</span><span class="value">' + valueHtml + '</span></div>';
+  }
+
+  function countdownText(flyDate) {
+    var parts = String(flyDate || '2026-09-07').split('-');
+    var start = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
     var today = new Date();
     today.setHours(0, 0, 0, 0);
     start.setHours(0, 0, 0, 0);
     var days = Math.round((start - today) / 86400000);
-    if (days > 1) el.textContent = days + ' days until you fly';
-    else if (days === 1) el.textContent = 'Tomorrow — flying day prep';
-    else if (days === 0) el.textContent = 'Flying today — safe travels';
-    else if (days >= -8) el.textContent = 'You\'re away / just back — enjoy';
-    else el.textContent = 'Trip dates: 7–15 Sept 2026';
+    if (days > 1) return days + ' days until you fly';
+    if (days === 1) return 'Tomorrow — flying day prep';
+    if (days === 0) return 'Flying today — safe travels';
+    if (days >= -8) return 'You\'re away / just back — enjoy';
+    return 'Trip dates saved';
   }
-  updateCountdown();
 
-  // Copy booking refs
-  document.querySelectorAll('.copyable').forEach(function (btn) {
-    btn.addEventListener('click', async function () {
-      var text = btn.getAttribute('data-copy') || '';
+  function renderTrip(data) {
+    var e = data.emergency || {};
+    var f = data.flights || {};
+    var h = data.hotel || {};
+    var p = data.parking || {};
+    var i = data.insurance || {};
+    var s = data.esim || {};
+    var dogs = Array.isArray(data.dogs) ? data.dogs : [];
+    var cignaTel = (e.rows && e.rows[2] && e.rows[2].tel) || '+18002431348';
+    var mawdyTel = (e.rows && e.rows[0] && e.rows[0].tel) || '+35391560637';
+
+    var emergencyRows = (e.rows || []).map(function (r) {
+      return row(r.label, '<a href="tel:' + esc(r.tel) + '">' + esc(r.display || r.tel) + '</a>');
+    }).join('');
+
+    var dogRows = dogs.map(function (d) {
+      return row(d.label, esc(d.value));
+    }).join('');
+
+    document.getElementById('trip-root').innerHTML =
+      '<a href="/portal/" class="hub-back-btn">← Hub</a>' +
+      '<header>' +
+        '<h1>' + esc(data.title || 'Turkey trip') + '</h1>' +
+        '<p class="meta">' + esc(data.meta || '') + '</p>' +
+        '<div class="countdown" id="countdown">' + esc(countdownText(data.flyDate)) + '</div>' +
+      '</header>' +
+      '<nav class="jump" aria-label="Jump to section">' +
+        '<a href="#emergency">Emergency</a><a href="#converter">Currency</a><a href="#flights">Flights</a>' +
+        '<a href="#hotel">Hotel</a><a href="#parking">Parking</a><a href="#insurance">Insurance</a>' +
+        '<a href="#esim">eSIM</a><a href="#dogs">Dogs</a>' +
+      '</nav>' +
+      '<div class="quick">' +
+        '<a href="tel:' + esc(cignaTel) + '">Call Cigna</a>' +
+        '<a class="secondary" href="https://www.ryanair.com/ie/en/lp/check-in" target="_blank" rel="noopener">Ryanair check-in</a>' +
+        '<a class="secondary" href="https://www.tui.ie/managemybooking" target="_blank" rel="noopener">TUI booking</a>' +
+        '<a href="tel:' + esc(mawdyTel) + '">Call MAWDY</a>' +
+      '</div>' +
+      '<section class="card emergency-card" id="emergency">' +
+        '<h2><span class="emoji" aria-hidden="true">🚨</span>Emergency numbers</h2>' +
+        emergencyRows +
+        '<div class="note">' + esc(e.note || '') + '</div>' +
+      '</section>' +
+      '<section class="card" id="converter">' +
+        '<h2><span class="emoji" aria-hidden="true">💱</span>Currency converter</h2>' +
+        '<div id="converter-app"></div>' +
+        '<a class="conv-full" href="/currency_converter.html">Open full-screen converter →</a>' +
+      '</section>' +
+      '<section class="card" id="flights">' +
+        '<h2><span class="emoji" aria-hidden="true">✈️</span>Flights</h2>' +
+        '<div class="subhead">' + esc(f.outboundLabel || '') + '</div>' +
+        row(f.outboundCode || 'Flight', esc(f.outboundRoute || '')) +
+        row('Departs / arrives', esc(f.outboundTimes || '')) +
+        '<div class="subhead">' + esc(f.returnLabel || '') + '</div>' +
+        row(f.returnCode || 'Flight', esc(f.returnRoute || '')) +
+        row('Departs / arrives', esc(f.returnTimes || '')) +
+        row('Booking ref', copyBtn(f.bookingRef || '')) +
+        '<div class="btn-row">' +
+          '<a class="btn" href="https://www.ryanair.com/ie/en/lp/check-in" target="_blank" rel="noopener">Check in</a>' +
+          '<a class="btn secondary" href="https://www.dublinairport.com/flight-information/departures" target="_blank" rel="noopener">Dublin departures</a>' +
+        '</div>' +
+        '<div class="note">' + esc(f.note || '') + '</div>' +
+      '</section>' +
+      '<section class="card" id="hotel">' +
+        '<h2><span class="emoji" aria-hidden="true">🏨</span>Hotel &amp; transfer</h2>' +
+        row('Hotel', esc(h.name || '')) +
+        row('Board', esc(h.board || '')) +
+        row('Room', esc(h.room || '')) +
+        row('TUI booking ref', copyBtn(h.tuiRef || '')) +
+        row('Transfer', esc(h.transfer || '')) +
+        '<div class="btn-row">' +
+          '<a class="btn" href="https://www.tui.ie/managemybooking" target="_blank" rel="noopener">Manage TUI booking</a>' +
+          '<a class="btn secondary" href="https://www.google.com/maps/search/?api=1&query=' + esc(h.mapQuery || '') + '" target="_blank" rel="noopener">Map hotel</a>' +
+        '</div>' +
+      '</section>' +
+      '<section class="card" id="parking">' +
+        '<h2><span class="emoji" aria-hidden="true">🅿️</span>Dublin Airport parking</h2>' +
+        row('Provider', esc(p.provider || '')) +
+        row('Booking ref', copyBtn(p.bookingRef || '')) +
+        row('Car reg', copyBtn(p.carReg || '')) +
+        row('Entry', esc(p.entry || '')) +
+        row('Exit', esc(p.exit || '')) +
+        row('Address', esc(p.address || '')) +
+        row('Return pickup', esc(p.pickup || '')) +
+        '<div class="btn-row">' +
+          '<a class="btn" href="https://www.google.com/maps/search/?api=1&query=' + esc(p.mapQuery || '') + '" target="_blank" rel="noopener">Directions</a>' +
+          '<a class="btn secondary" href="https://park2travel.ie" target="_blank" rel="noopener">Manage booking</a>' +
+        '</div>' +
+      '</section>' +
+      '<section class="card" id="insurance">' +
+        '<h2><span class="emoji" aria-hidden="true">🛡️</span>Travel insurance</h2>' +
+        '<div class="subhead">ATI / Multitrip.com (MAWDY)</div>' +
+        row('Certificate no.', copyBtn(i.atiCert || '')) +
+        row('Cover', esc(i.atiCover || '')) +
+        '<div class="subhead">Cigna Global Health Benefits (MBA)</div>' +
+        row('Account', esc(i.cignaAccount || '')) +
+        row('Cover', esc(i.cignaCover || '')) +
+        '<div class="btn-row">' +
+          '<a class="btn" href="https://www.cignaenvoy.com" target="_blank" rel="noopener">Cigna Envoy</a>' +
+          '<a class="btn secondary" href="https://www.annualtravelinsurance.com" target="_blank" rel="noopener">ATI / Multitrip</a>' +
+        '</div>' +
+      '</section>' +
+      '<section class="card" id="esim">' +
+        '<h2><span class="emoji" aria-hidden="true">📶</span>eSIMs</h2>' +
+        row('Provider', esc(s.provider || '')) +
+        row('Steph\'s eSIM', esc(s.steph || '')) +
+        row('Caz\'s eSIM', esc(s.caz || '')) +
+        '<div class="note">' + esc(s.note || '') + '</div>' +
+        '<div class="btn-row"><a class="btn" href="https://esim.holafly.com" target="_blank" rel="noopener">Holafly account</a></div>' +
+      '</section>' +
+      '<section class="card" id="dogs">' +
+        '<h2><span class="emoji" aria-hidden="true">🐾</span>Dog care handover</h2>' +
+        dogRows +
+      '</section>' +
+      '<footer>Private Hub page — sign-in required.<br>Live rates need internet — last good rates stay cached on this phone.</footer>';
+
+    document.querySelectorAll('.copyable').forEach(function (btn) {
+      btn.addEventListener('click', async function () {
+        var text = btn.getAttribute('data-copy') || '';
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(text);
+          } else {
+            var ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+          }
+          btn.classList.add('copied');
+          var chip = btn.querySelector('.chip');
+          if (chip) chip.textContent = 'Copied';
+          setTimeout(function () {
+            btn.classList.remove('copied');
+            if (chip) chip.textContent = 'Copy';
+          }, 1400);
+        } catch (_) { /* ignore */ }
+      });
+    });
+
+    startConverter();
+  }
+
+  async function loadTripData() {
+    var snap = await fbDb.ref(FB_PATH).once('value');
+    var cloud = snap.val();
+    if (cloud && cloud.flights) return cloud;
+    await fbDb.ref(FB_PATH).set(SEED);
+    return SEED;
+  }
+
+  function startConverter() {
+    if (converterStarted) return;
+    var root = document.getElementById('converter-app');
+    if (!root) return;
+    converterStarted = true;
+
+    var STORAGE_KEY = 'liraConverterRates_v1';
+    var RATE_URL = 'https://open.er-api.com/v6/latest/TRY';
+    var currencies = [
+      { code: 'TRY', flag: '\u{1F1F9}\u{1F1F7}', label: 'Turkish Lira' },
+      { code: 'EUR', flag: '\u{1F1EA}\u{1F1FA}', label: 'Euro' },
+      { code: 'GBP', flag: '\u{1F1EC}\u{1F1E7}', label: 'British Pound' }
+    ];
+    var ratesFromTRY = { TRY: 1, EUR: 1 / 55.1, GBP: 1 / 64.4 };
+    var lastUpdated = null;
+    var liveOk = false;
+    var fetching = false;
+    var amounts = { TRY: '1000', EUR: '', GBP: '' };
+    var lastEdited = 'TRY';
+    var manualOpen = false;
+
+    function loadCachedRates() {
       try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(text);
-        } else {
-          var ta = document.createElement('textarea');
-          ta.value = text;
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand('copy');
-          document.body.removeChild(ta);
+        var raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        var data = JSON.parse(raw);
+        if (data && data.rates && data.rates.EUR && data.rates.GBP) {
+          ratesFromTRY = { TRY: 1, EUR: Number(data.rates.EUR), GBP: Number(data.rates.GBP) };
+          if (data.updatedAt) lastUpdated = new Date(data.updatedAt);
         }
-        btn.classList.add('copied');
-        var chip = btn.querySelector('.chip');
-        if (chip) chip.textContent = 'Copied';
-        setTimeout(function () {
-          btn.classList.remove('copied');
-          if (chip) chip.textContent = 'Copy';
-        }, 1400);
       } catch (_) { /* ignore */ }
-    });
-  });
+    }
 
-  // Currency converter
-  var root = document.getElementById('app');
-  var STORAGE_KEY = 'liraConverterRates_v1';
-  var RATE_URL = 'https://open.er-api.com/v6/latest/TRY';
+    function saveCachedRates() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          rates: { EUR: ratesFromTRY.EUR, GBP: ratesFromTRY.GBP },
+          updatedAt: (lastUpdated || new Date()).toISOString()
+        }));
+      } catch (_) { /* ignore */ }
+    }
 
-  var currencies = [
-    { code: 'TRY', flag: '\u{1F1F9}\u{1F1F7}', label: 'Turkish Lira' },
-    { code: 'EUR', flag: '\u{1F1EA}\u{1F1FA}', label: 'Euro' },
-    { code: 'GBP', flag: '\u{1F1EC}\u{1F1E7}', label: 'British Pound' }
-  ];
+    function formatAmount(n) {
+      return n.toLocaleString('en-IE', { maximumFractionDigits: 2 });
+    }
 
-  var ratesFromTRY = { TRY: 1, EUR: 1 / 55.1, GBP: 1 / 64.4 };
-  var lastUpdated = null;
-  var liveOk = false;
-  var fetching = false;
-  var amounts = { TRY: '1000', EUR: '', GBP: '' };
-  var lastEdited = 'TRY';
-  var manualOpen = false;
+    function updateOtherAmounts(editedCode, rawValue) {
+      var val = parseFloat(String(rawValue).replace(/,/g, ''));
+      amounts[editedCode] = rawValue;
+      lastEdited = editedCode;
+      currencies.forEach(function (c) {
+        if (c.code === editedCode) return;
+        var input = root.querySelector('input[data-code="' + c.code + '"]');
+        if (isNaN(val)) {
+          amounts[c.code] = '';
+          if (input) input.value = '';
+          return;
+        }
+        var baseInTRY = val / ratesFromTRY[editedCode];
+        var converted = formatAmount(baseInTRY * ratesFromTRY[c.code]);
+        amounts[c.code] = converted;
+        if (input) input.value = converted;
+      });
+    }
 
-  function loadCachedRates() {
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      var data = JSON.parse(raw);
-      if (data && data.rates && data.rates.EUR && data.rates.GBP) {
-        ratesFromTRY = { TRY: 1, EUR: Number(data.rates.EUR), GBP: Number(data.rates.GBP) };
-        if (data.updatedAt) lastUpdated = new Date(data.updatedAt);
+    function statusText() {
+      if (fetching) return { text: 'Updating live rates\u2026', cls: 'loading' };
+      if (liveOk && lastUpdated) {
+        return {
+          text: '\u2713 Live rates \u00b7 updated ' + lastUpdated.toLocaleString('en-IE', {
+            day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+          }),
+          cls: 'live'
+        };
       }
-    } catch (_) { /* ignore */ }
-  }
-
-  function saveCachedRates() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        rates: { EUR: ratesFromTRY.EUR, GBP: ratesFromTRY.GBP },
-        updatedAt: (lastUpdated || new Date()).toISOString()
-      }));
-    } catch (_) { /* ignore */ }
-  }
-
-  function formatAmount(n) {
-    return n.toLocaleString('en-IE', { maximumFractionDigits: 2 });
-  }
-
-  function updateOtherAmounts(editedCode, rawValue) {
-    var val = parseFloat(String(rawValue).replace(/,/g, ''));
-    amounts[editedCode] = rawValue;
-    lastEdited = editedCode;
-    currencies.forEach(function (c) {
-      if (c.code === editedCode) return;
-      var input = root.querySelector('input[data-code="' + c.code + '"]');
-      if (isNaN(val)) {
-        amounts[c.code] = '';
-        if (input) input.value = '';
-        return;
+      if (lastUpdated) {
+        return {
+          text: '\u26a0 Using rates from ' + lastUpdated.toLocaleString('en-IE', {
+            day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+          }) + ' — tap refresh when online',
+          cls: 'err'
+        };
       }
-      var baseInTRY = val / ratesFromTRY[editedCode];
-      var converted = formatAmount(baseInTRY * ratesFromTRY[c.code]);
-      amounts[c.code] = converted;
-      if (input) input.value = converted;
-    });
-  }
+      return { text: '\u26a0 Using saved approx rates — check connection and tap refresh', cls: 'err' };
+    }
 
-  function statusText() {
-    if (fetching) return { text: 'Updating live rates\u2026', cls: 'loading' };
-    if (liveOk && lastUpdated) {
-      return {
-        text: '\u2713 Live rates \u00b7 updated ' + lastUpdated.toLocaleString('en-IE', {
-          day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
-        }),
-        cls: 'live'
-      };
-    }
-    if (lastUpdated) {
-      return {
-        text: '\u26a0 Using rates from ' + lastUpdated.toLocaleString('en-IE', {
-          day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
-        }) + ' — tap refresh when online',
-        cls: 'err'
-      };
-    }
-    return { text: '\u26a0 Using saved approx rates — check connection and tap refresh', cls: 'err' };
-  }
-
-  function updateStatus() {
-    var st = statusText();
-    var el = root.querySelector('#convStatus');
-    if (el) {
-      el.className = 'conv-status ' + st.cls;
-      el.textContent = st.text;
-    }
-    var btn = root.querySelector('#refreshBtn');
-    if (btn) {
-      btn.disabled = fetching;
-      btn.textContent = fetching ? 'Updating\u2026' : 'Refresh rates';
-    }
-  }
-
-  async function fetchLiveRates() {
-    if (fetching) return;
-    fetching = true;
-    updateStatus();
-    try {
-      var res = await fetch(RATE_URL, { cache: 'no-store' });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      var data = await res.json();
-      if (data && data.rates && data.rates.EUR && data.rates.GBP) {
-        ratesFromTRY = { TRY: 1, EUR: data.rates.EUR, GBP: data.rates.GBP };
-        liveOk = true;
-        lastUpdated = new Date();
-        saveCachedRates();
-        updateOtherAmounts(lastEdited, amounts[lastEdited] || '1000');
-        if (manualOpen) syncManualInputs();
-      } else {
-        throw new Error('bad data');
+    function updateStatus() {
+      var st = statusText();
+      var el = root.querySelector('#convStatus');
+      if (el) {
+        el.className = 'conv-status ' + st.cls;
+        el.textContent = st.text;
       }
-    } catch (e) {
+      var btn = root.querySelector('#refreshBtn');
+      if (btn) {
+        btn.disabled = fetching;
+        btn.textContent = fetching ? 'Updating\u2026' : 'Refresh rates';
+      }
+    }
+
+    async function fetchLiveRates() {
+      if (fetching) return;
+      fetching = true;
+      updateStatus();
+      try {
+        var res = await fetch(RATE_URL, { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        var data = await res.json();
+        if (data && data.rates && data.rates.EUR && data.rates.GBP) {
+          ratesFromTRY = { TRY: 1, EUR: data.rates.EUR, GBP: data.rates.GBP };
+          liveOk = true;
+          lastUpdated = new Date();
+          saveCachedRates();
+          updateOtherAmounts(lastEdited, amounts[lastEdited] || '1000');
+          if (manualOpen) syncManualInputs();
+        } else {
+          throw new Error('bad data');
+        }
+      } catch (e) {
+        liveOk = false;
+      } finally {
+        fetching = false;
+        updateStatus();
+      }
+    }
+
+    function syncManualInputs() {
+      var eurInput = root.querySelector('#manualEUR');
+      var gbpInput = root.querySelector('#manualGBP');
+      if (eurInput) eurInput.value = (1 / ratesFromTRY.EUR).toFixed(2);
+      if (gbpInput) gbpInput.value = (1 / ratesFromTRY.GBP).toFixed(2);
+    }
+
+    function applyManualRate(code, tryPerUnit) {
+      var v = parseFloat(String(tryPerUnit).replace(/,/g, ''));
+      if (isNaN(v) || v <= 0) return;
+      ratesFromTRY[code] = 1 / v;
       liveOk = false;
-    } finally {
-      fetching = false;
+      lastUpdated = new Date();
+      saveCachedRates();
+      updateOtherAmounts(lastEdited, amounts[lastEdited] || '1000');
       updateStatus();
     }
-  }
 
-  function syncManualInputs() {
-    var eurInput = root.querySelector('#manualEUR');
-    var gbpInput = root.querySelector('#manualGBP');
-    if (eurInput) eurInput.value = (1 / ratesFromTRY.EUR).toFixed(2);
-    if (gbpInput) gbpInput.value = (1 / ratesFromTRY.GBP).toFixed(2);
-  }
+    function bindRowInputs() {
+      currencies.forEach(function (c) {
+        var input = root.querySelector('input[data-code="' + c.code + '"]');
+        if (!input) return;
+        input.addEventListener('input', function (e) {
+          updateOtherAmounts(c.code, e.target.value);
+        });
+        input.addEventListener('focus', function (e) {
+          setTimeout(function () { e.target.select(); }, 0);
+        });
+      });
+    }
 
-  function applyManualRate(code, tryPerUnit) {
-    var v = parseFloat(String(tryPerUnit).replace(/,/g, ''));
-    if (isNaN(v) || v <= 0) return;
-    ratesFromTRY[code] = 1 / v;
-    liveOk = false;
-    lastUpdated = new Date();
-    saveCachedRates();
-    updateOtherAmounts(lastEdited, amounts[lastEdited] || '1000');
+    function bindManual() {
+      var eurInput = root.querySelector('#manualEUR');
+      var gbpInput = root.querySelector('#manualGBP');
+      if (!eurInput || !gbpInput) return;
+      eurInput.addEventListener('change', function () { applyManualRate('EUR', eurInput.value); });
+      gbpInput.addEventListener('change', function () { applyManualRate('GBP', gbpInput.value); });
+    }
+
+    function render() {
+      var st = statusText();
+      root.innerHTML =
+        currencies.map(function (c) {
+          return (
+            '<div class="conv-row">' +
+              '<div class="conv-flag" aria-hidden="true">' + c.flag + '</div>' +
+              '<div class="conv-code">' + c.code + '</div>' +
+              '<input class="conv-input" data-code="' + c.code + '" type="text" inputmode="decimal" ' +
+                'enterkeyhint="done" autocomplete="off" spellcheck="false" ' +
+                'value="' + amounts[c.code] + '" placeholder="0" aria-label="' + c.label + '" />' +
+            '</div>'
+          );
+        }).join('') +
+        '<div id="convStatus" class="conv-status ' + st.cls + '">' + st.text + '</div>' +
+        '<button type="button" class="conv-refresh" id="refreshBtn"' +
+          (fetching ? ' disabled' : '') + '>' +
+          (fetching ? 'Updating\u2026' : 'Refresh rates') +
+        '</button>' +
+        '<div class="conv-manual-toggle" id="manualToggle" role="button" tabindex="0">' +
+          (manualOpen ? 'Hide manual rates' : 'Enter rates manually') +
+        '</div>' +
+        (manualOpen
+          ? '<div class="conv-manual-box">' +
+              '<label for="manualEUR">1 EUR = ? TRY</label>' +
+              '<input id="manualEUR" type="text" inputmode="decimal" enterkeyhint="done" ' +
+                'value="' + (1 / ratesFromTRY.EUR).toFixed(2) + '" />' +
+              '<label for="manualGBP">1 GBP = ? TRY</label>' +
+              '<input id="manualGBP" type="text" inputmode="decimal" enterkeyhint="done" ' +
+                'value="' + (1 / ratesFromTRY.GBP).toFixed(2) + '" />' +
+            '</div>'
+          : '');
+
+      bindRowInputs();
+      root.querySelector('#refreshBtn').addEventListener('click', fetchLiveRates);
+      root.querySelector('#manualToggle').addEventListener('click', function () {
+        manualOpen = !manualOpen;
+        render();
+      });
+      if (manualOpen) bindManual();
+    }
+
+    loadCachedRates();
+    render();
+    updateOtherAmounts('TRY', amounts.TRY || '1000');
     updateStatus();
+    fetchLiveRates();
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible' && navigator.onLine) fetchLiveRates();
+    });
+    window.addEventListener('online', fetchLiveRates);
   }
 
-  function bindRowInputs() {
-    currencies.forEach(function (c) {
-      var input = root.querySelector('input[data-code="' + c.code + '"]');
-      if (!input) return;
-      input.addEventListener('input', function (e) {
-        updateOtherAmounts(c.code, e.target.value);
-      });
-      input.addEventListener('focus', function (e) {
-        setTimeout(function () { e.target.select(); }, 0);
-      });
+  function startGoogleSignIn() {
+    var le = document.getElementById('login-error');
+    var provider = new firebase.auth.GoogleAuthProvider();
+    fbAuth.signInWithPopup(provider).catch(function (err) {
+      if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
+        fbAuth.signInWithRedirect(provider).catch(function (e2) {
+          if (le) le.textContent = e2.message;
+        });
+      } else if (le) {
+        le.textContent = err.message;
+      }
     });
   }
 
-  function bindManual() {
-    var eurInput = root.querySelector('#manualEUR');
-    var gbpInput = root.querySelector('#manualGBP');
-    if (!eurInput || !gbpInput) return;
-    eurInput.addEventListener('change', function () { applyManualRate('EUR', eurInput.value); });
-    gbpInput.addEventListener('change', function () { applyManualRate('GBP', gbpInput.value); });
-  }
+  document.getElementById('btnSignIn').addEventListener('click', startGoogleSignIn);
 
-  function render() {
-    var st = statusText();
-    root.innerHTML =
-      currencies.map(function (c) {
-        return (
-          '<div class="conv-row">' +
-            '<div class="conv-flag" aria-hidden="true">' + c.flag + '</div>' +
-            '<div class="conv-code">' + c.code + '</div>' +
-            '<input class="conv-input" data-code="' + c.code + '" type="text" inputmode="decimal" ' +
-              'enterkeyhint="done" autocomplete="off" spellcheck="false" ' +
-              'value="' + amounts[c.code] + '" placeholder="0" aria-label="' + c.label + '" />' +
-          '</div>'
-        );
-      }).join('') +
-      '<div id="convStatus" class="conv-status ' + st.cls + '">' + st.text + '</div>' +
-      '<button type="button" class="conv-refresh" id="refreshBtn"' +
-        (fetching ? ' disabled' : '') + '>' +
-        (fetching ? 'Updating\u2026' : 'Refresh rates') +
-      '</button>' +
-      '<div class="conv-manual-toggle" id="manualToggle" role="button" tabindex="0">' +
-        (manualOpen ? 'Hide manual rates' : 'Enter rates manually') +
-      '</div>' +
-      (manualOpen
-        ? '<div class="conv-manual-box">' +
-            '<label for="manualEUR">1 EUR = ? TRY</label>' +
-            '<input id="manualEUR" type="text" inputmode="decimal" enterkeyhint="done" ' +
-              'value="' + (1 / ratesFromTRY.EUR).toFixed(2) + '" />' +
-            '<label for="manualGBP">1 GBP = ? TRY</label>' +
-            '<input id="manualGBP" type="text" inputmode="decimal" enterkeyhint="done" ' +
-              'value="' + (1 / ratesFromTRY.GBP).toFixed(2) + '" />' +
-          '</div>'
-        : '');
-
-    bindRowInputs();
-    root.querySelector('#refreshBtn').addEventListener('click', fetchLiveRates);
-    var toggle = root.querySelector('#manualToggle');
-    toggle.addEventListener('click', function () {
-      manualOpen = !manualOpen;
-      render();
-    });
-    if (manualOpen) bindManual();
-  }
-
-  loadCachedRates();
-  render();
-  updateOtherAmounts('TRY', amounts.TRY || '1000');
-  updateStatus();
-  fetchLiveRates();
-
-  document.addEventListener('visibilitychange', function () {
-    if (document.visibilityState === 'visible' && navigator.onLine) fetchLiveRates();
+  fbAuth.getRedirectResult().catch(function (err) {
+    var le = document.getElementById('login-error');
+    if (le && err && err.code && err.code !== 'auth/operation-not-supported-in-this-environment') {
+      le.textContent = err.message;
+    }
   });
-  window.addEventListener('online', fetchLiveRates);
+
+  fbAuth.onAuthStateChanged(async function (user) {
+    var le = document.getElementById('login-error');
+    if (user) {
+      if (!isAllowed(user.email)) {
+        pendingDisallow = 'That Google account is not allowed.';
+        fbAuth.signOut();
+        return;
+      }
+      if (le) le.textContent = '';
+      try {
+        if (!tripReady) {
+          showPhase('loading');
+          var data = await loadTripData();
+          renderTrip(data);
+          tripReady = true;
+        }
+        showPhase('app');
+      } catch (err) {
+        if (le) le.textContent = 'Could not load trip details. Check connection and try again.';
+        showPhase('login');
+      }
+    } else {
+      tripReady = false;
+      converterStarted = false;
+      document.getElementById('trip-root').innerHTML = '';
+      document.getElementById('trip-app').classList.remove('is-ready');
+      if (pendingDisallow && le) {
+        le.textContent = pendingDisallow;
+        pendingDisallow = '';
+      } else if (le) {
+        le.textContent = '';
+      }
+      showPhase('login');
+    }
+  });
 })();
 </script>
 </body>
