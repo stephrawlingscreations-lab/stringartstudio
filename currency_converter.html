@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Lira Converter" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#F7F3E9" />
+  <meta name="description" content="Quick TRY / EUR / GBP converter for travel. Live exchange rates when online." />
+  <title>Lira / Euro / Pound Converter</title>
+  <link rel="icon" href="images/logo.png" />
+  <style>
+    :root {
+      --bg: #F7F3E9;
+      --ink: #1B2A4A;
+      --accent: #B8912F;
+      --muted: #6b6b6b;
+      --line: #e4ddc9;
+      --soft: #8a8365;
+      --err: #a34a2f;
+      --white: #ffffff;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      padding:
+        calc(16px + var(--safe-top))
+        16px
+        calc(24px + var(--safe-bottom));
+    }
+
+    .hub-back-btn {
+      display: inline-block;
+      margin: 0 0 14px;
+      background: rgba(27, 42, 74, 0.9);
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 6px 13px;
+      border-radius: 20px;
+      letter-spacing: 0.02em;
+    }
+
+    .hub-back-btn:active { opacity: 0.85; }
+
+    #app {
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin: 0 0 2px;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      color: var(--accent);
+      font-size: 0.85rem;
+      margin: 0 0 18px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--white);
+      border: 1.5px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      min-height: 56px;
+      transition: border-color 0.15s ease;
+    }
+
+    .row:focus-within { border-color: var(--accent); }
+
+    .flag {
+      font-size: 1.4rem;
+      width: 32px;
+      text-align: center;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    .code {
+      font-weight: 700;
+      font-size: 0.9rem;
+      width: 46px;
+      flex-shrink: 0;
+    }
+
+    .amount-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      /* 16px+ avoids iOS Safari zoom-on-focus */
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #2A2A2A;
+      background: transparent;
+      text-align: right;
+      min-width: 0;
+      font-family: inherit;
+      padding: 4px 0;
+    }
+
+    .status {
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 12px;
+      line-height: 1.5;
+      min-height: 2.4em;
+    }
+
+    .status.live { color: var(--ink); }
+    .status.err { color: var(--err); }
+    .status.loading { color: var(--soft); }
+
+    .refresh-btn {
+      display: block;
+      width: 100%;
+      max-width: 220px;
+      margin: 14px auto 0;
+      background: var(--ink);
+      color: var(--bg);
+      border: none;
+      border-radius: 999px;
+      padding: 12px 20px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .refresh-btn:active { opacity: 0.85; }
+    .refresh-btn:disabled {
+      opacity: 0.55;
+      cursor: wait;
+    }
+
+    .manual-toggle {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 0.8rem;
+      color: var(--soft);
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 8px;
+      user-select: none;
+    }
+
+    .manual-box {
+      margin-top: 6px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+
+    .manual-box label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .manual-box input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 1rem;
+      margin-bottom: 10px;
+      font-family: inherit;
+      -webkit-appearance: none;
+      appearance: none;
+      background: var(--white);
+    }
+
+    .manual-box input:last-child { margin-bottom: 0; }
+
+    .hint {
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--soft);
+      margin-top: 18px;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+(function () {
+  const root = document.getElementById('app');
+  const STORAGE_KEY = 'liraConverterRates_v1';
+  const RATE_URL = 'https://open.er-api.com/v6/latest/TRY';
+
+  const currencies = [
+    { code: 'TRY', flag: '\u{1F1F9}\u{1F1F7}', label: 'Turkish Lira' },
+    { code: 'EUR', flag: '\u{1F1EA}\u{1F1FA}', label: 'Euro' },
+    { code: 'GBP', flag: '\u{1F1EC}\u{1F1E7}', label: 'British Pound' }
+  ];
+
+  // Built-in fallback if nothing is cached yet (approx)
+  let ratesFromTRY = {
+    TRY: 1,
+    EUR: 1 / 55.1,
+    GBP: 1 / 64.4
+  };
+
+  let lastUpdated = null;
+  let liveOk = false;
+  let fetching = false;
+  let amounts = { TRY: '1000', EUR: '', GBP: '' };
+  let lastEdited = 'TRY';
+  let manualOpen = false;
+  let built = false;
+
+  function loadCachedRates() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (data && data.rates && data.rates.EUR && data.rates.GBP) {
+        ratesFromTRY = {
+          TRY: 1,
+          EUR: Number(data.rates.EUR),
+          GBP: Number(data.rates.GBP)
+        };
+        if (data.updatedAt) lastUpdated = new Date(data.updatedAt);
+        // Cached rates count as usable until a fresh fetch succeeds
+        liveOk = false;
+      }
+    } catch (_) { /* ignore */ }
+  }
+
+  function saveCachedRates() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        rates: { EUR: ratesFromTRY.EUR, GBP: ratesFromTRY.GBP },
+        updatedAt: (lastUpdated || new Date()).toISOString()
+      }));
+    } catch (_) { /* ignore */ }
+  }
+
+  function formatAmount(n) {
+    return n.toLocaleString('en-IE', { maximumFractionDigits: 2 });
+  }
+
+  function computeFromBase(code, baseAmount) {
+    return baseAmount * ratesFromTRY[code];
+  }
+
+  function updateOtherAmounts(editedCode, rawValue) {
+    const val = parseFloat(String(rawValue).replace(/,/g, ''));
+    amounts[editedCode] = rawValue;
+    lastEdited = editedCode;
+
+    currencies.forEach(function (c) {
+      if (c.code === editedCode) return;
+      const input = root.querySelector('input[data-code="' + c.code + '"]');
+      if (isNaN(val)) {
+        amounts[c.code] = '';
+        if (input) input.value = '';
+        return;
+      }
+      const baseInTRY = val / ratesFromTRY[editedCode];
+      const converted = formatAmount(computeFromBase(c.code, baseInTRY));
+      amounts[c.code] = converted;
+      if (input) input.value = converted;
+    });
+  }
+
+  function recalcAll(editedCode, rawValue) {
+    updateOtherAmounts(editedCode, rawValue);
+    updateStatus();
+  }
+
+  function statusText() {
+    if (fetching) {
+      return { text: 'Updating live rates\u2026', cls: 'loading' };
+    }
+    if (liveOk && lastUpdated) {
+      return {
+        text: '\u2713 Live rates \u00b7 updated ' + lastUpdated.toLocaleString('en-IE', {
+          day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+        }),
+        cls: 'live'
+      };
+    }
+    if (lastUpdated) {
+      return {
+        text: '\u26a0 Offline / no live update \u2014 using rates from ' +
+          lastUpdated.toLocaleString('en-IE', {
+            day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+          }) +
+          '. Tap refresh when you have data.',
+        cls: 'err'
+      };
+    }
+    return {
+      text: '\u26a0 Could not fetch live rates \u2014 using saved approx rates. Check mobile data / Wi\u2011Fi and tap refresh.',
+      cls: 'err'
+    };
+  }
+
+  function updateStatus() {
+    const st = statusText();
+    const el = root.querySelector('#status');
+    if (el) {
+      el.className = 'status ' + st.cls;
+      el.textContent = st.text;
+    }
+    const btn = root.querySelector('#refreshBtn');
+    if (btn) {
+      btn.disabled = fetching;
+      btn.textContent = fetching ? 'Updating\u2026' : 'Refresh rates';
+    }
+  }
+
+  async function fetchLiveRates() {
+    if (fetching) return;
+    fetching = true;
+    updateStatus();
+    try {
+      const res = await fetch(RATE_URL, { cache: 'no-store' });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if (data && data.rates && data.rates.EUR && data.rates.GBP) {
+        ratesFromTRY = { TRY: 1, EUR: data.rates.EUR, GBP: data.rates.GBP };
+        liveOk = true;
+        lastUpdated = new Date();
+        saveCachedRates();
+        updateOtherAmounts(lastEdited, amounts[lastEdited] || '1000');
+        if (manualOpen) syncManualInputs();
+      } else {
+        throw new Error('bad data');
+      }
+    } catch (e) {
+      liveOk = false;
+    } finally {
+      fetching = false;
+      updateStatus();
+    }
+  }
+
+  function syncManualInputs() {
+    const eurInput = root.querySelector('#manualEUR');
+    const gbpInput = root.querySelector('#manualGBP');
+    if (eurInput) eurInput.value = (1 / ratesFromTRY.EUR).toFixed(2);
+    if (gbpInput) gbpInput.value = (1 / ratesFromTRY.GBP).toFixed(2);
+  }
+
+  function applyManualRate(code, tryPerUnit) {
+    const v = parseFloat(String(tryPerUnit).replace(/,/g, ''));
+    if (isNaN(v) || v <= 0) return;
+    ratesFromTRY[code] = 1 / v;
+    liveOk = false;
+    lastUpdated = new Date();
+    saveCachedRates();
+    updateOtherAmounts(lastEdited, amounts[lastEdited] || '1000');
+    updateStatus();
+  }
+
+  function bindRowInputs() {
+    currencies.forEach(function (c) {
+      const input = root.querySelector('input[data-code="' + c.code + '"]');
+      if (!input) return;
+      input.addEventListener('input', function (e) {
+        updateOtherAmounts(c.code, e.target.value);
+      });
+      input.addEventListener('focus', function (e) {
+        // Select all for quick overwrite on phone
+        setTimeout(function () { e.target.select(); }, 0);
+      });
+    });
+  }
+
+  function bindManual() {
+    const eurInput = root.querySelector('#manualEUR');
+    const gbpInput = root.querySelector('#manualGBP');
+    if (!eurInput || !gbpInput) return;
+
+    function onManual(code, el) {
+      applyManualRate(code, el.value);
+    }
+
+    eurInput.addEventListener('change', function () { onManual('EUR', eurInput); });
+    gbpInput.addEventListener('change', function () { onManual('GBP', gbpInput); });
+    eurInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); onManual('EUR', eurInput); eurInput.blur(); }
+    });
+    gbpInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); onManual('GBP', gbpInput); gbpInput.blur(); }
+    });
+  }
+
+  function render() {
+    const st = statusText();
+    root.innerHTML =
+      '<a href="/portal/" class="hub-back-btn">\u2190 Hub</a>' +
+      '<h1 class="title">Lira / Euro / Pound Converter</h1>' +
+      '<p class="subtitle">Type an amount in any currency</p>' +
+      currencies.map(function (c) {
+        return (
+          '<div class="row">' +
+            '<div class="flag" aria-hidden="true">' + c.flag + '</div>' +
+            '<div class="code">' + c.code + '</div>' +
+            '<input class="amount-input" data-code="' + c.code + '" type="text" inputmode="decimal" ' +
+              'enterkeyhint="done" autocomplete="off" autocorrect="off" spellcheck="false" ' +
+              'value="' + amounts[c.code] + '" placeholder="0" aria-label="' + c.label + '" />' +
+          '</div>'
+        );
+      }).join('') +
+      '<div id="status" class="status ' + st.cls + '">' + st.text + '</div>' +
+      '<button type="button" class="refresh-btn" id="refreshBtn"' +
+        (fetching ? ' disabled' : '') + '>' +
+        (fetching ? 'Updating\u2026' : 'Refresh rates') +
+      '</button>' +
+      '<div class="manual-toggle" id="manualToggle" role="button" tabindex="0">' +
+        (manualOpen ? 'Hide manual rates' : 'Enter rates manually') +
+      '</div>' +
+      (manualOpen
+        ? '<div class="manual-box">' +
+            '<label for="manualEUR">1 EUR = ? TRY</label>' +
+            '<input id="manualEUR" type="text" inputmode="decimal" enterkeyhint="done" ' +
+              'value="' + (1 / ratesFromTRY.EUR).toFixed(2) + '" />' +
+            '<label for="manualGBP">1 GBP = ? TRY</label>' +
+            '<input id="manualGBP" type="text" inputmode="decimal" enterkeyhint="done" ' +
+              'value="' + (1 / ratesFromTRY.GBP).toFixed(2) + '" />' +
+          '</div>'
+        : '') +
+      '<p class="hint">Needs internet to refresh live rates. ' +
+        'On iPhone: Safari Share \u2192 Add to Home Screen for one-tap access.</p>';
+
+    bindRowInputs();
+    root.querySelector('#refreshBtn').addEventListener('click', fetchLiveRates);
+
+    const toggle = root.querySelector('#manualToggle');
+    toggle.addEventListener('click', function () {
+      manualOpen = !manualOpen;
+      render();
+    });
+    toggle.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        manualOpen = !manualOpen;
+        render();
+      }
+    });
+
+    if (manualOpen) bindManual();
+    built = true;
+  }
+
+  loadCachedRates();
+  render();
+  updateOtherAmounts('TRY', amounts.TRY || '1000');
+  updateStatus();
+  fetchLiveRates();
+
+  // Re-fetch when returning to the app with a connection
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible' && navigator.onLine) {
+      fetchLiveRates();
+    }
+  });
+  window.addEventListener('online', fetchLiveRates);
+})();
+  </script>
+</body>
+</html>
