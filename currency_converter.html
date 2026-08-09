@@ -44,6 +44,21 @@
         calc(24px + var(--safe-bottom));
     }
 
+    .hub-back-btn {
+      display: inline-block;
+      margin: 0 0 14px;
+      background: rgba(27, 42, 74, 0.9);
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 6px 13px;
+      border-radius: 20px;
+      letter-spacing: 0.02em;
+    }
+
+    .hub-back-btn:active { opacity: 0.85; }
+
     #app {
       max-width: 480px;
       margin: 0 auto;
@@ -405,6 +420,7 @@
   function render() {
     const st = statusText();
     root.innerHTML =
+      '<a href="/portal/" class="hub-back-btn">\u2190 Hub</a>' +
       '<h1 class="title">Lira / Euro / Pound Converter</h1>' +
       '<p class="subtitle">Type an amount in any currency</p>' +
       currencies.map(function (c) {
