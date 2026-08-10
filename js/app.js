@@ -2372,6 +2372,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (el) el.textContent = text;
     const elManual = $('customNailCountManual');
     if (elManual) elManual.textContent = text;
+    updateCanvasCoach();
   }
 
   function generateEdgeNails() {
