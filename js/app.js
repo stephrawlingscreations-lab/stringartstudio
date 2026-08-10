@@ -86,8 +86,17 @@ document.addEventListener("DOMContentLoaded", function () {
   let isDraggingCustom  = false;
   let dragCustomIdx     = null;
   let dragStartPos      = null;
+  // When true, Manual mode edits nail positions. When false, taps draw thread on the custom layout.
+  let manualNailEditing = true;
   let uiMode       = 'beginner';
   let lastCx = 0, lastCy = 0, lastRx = 320, lastRy = 320;
+  const STARTER_PRESET_DEFAULTS = {
+    flower:   { nails: 90,  offset: 10 },
+    web:      { nails: 24,  offset: 0 },
+    cardioid: { nails: 120, offset: 3 },
+    star:     { nails: 40,  offset: 12 },
+    spiral:   { nails: 72,  offset: 15 },
+  };
 
   // ---- Timelapse Animation State ----
   const anim = {
@@ -244,6 +253,7 @@ document.addEventListener("DOMContentLoaded", function () {
     redrawAll();
     updateSeqOutput();
     updateDrawModeSeqMini();
+    updateCanvasCoach();
   }
 
   function closeDrawMode() {
@@ -261,6 +271,105 @@ document.addEventListener("DOMContentLoaded", function () {
     redrawAll();
     updateSeqOutput();
     updateDrawModeSeqMini();
+    updateCanvasCoach();
+  }
+
+  // Expose for designer.html step-flow (mobile Apply → reopen canvas)
+  window.openDrawMode = openDrawMode;
+  window.closeDrawMode = closeDrawMode;
+
+  function designHasThread() {
+    return layers.some((L) => (L.edges && L.edges.length > 0) || (L.seq && L.seq.length > 1));
+  }
+
+  function confirmReplaceDesign(message) {
+    if (!designHasThread()) return true;
+    return confirm(message || "Replace your current design? This cannot be undone from here.");
+  }
+
+  function nailDisplayNumber(idx) {
+    const start = $("numStart")?.value === "1" ? 1 : 0;
+    return idx + start;
+  }
+
+  function updateCanvasCoach() {
+    const els = [$("canvasCoach"), $("drawModeCoach")].filter(Boolean);
+    if (!els.length) return;
+
+    let text = "";
+    let tone = "idle";
+
+    if (nailPlacementMode === "manual" && manualNailEditing) {
+      const count = customNails.length;
+      text = count === 0
+        ? "Manual layout — tap the board to place nails"
+        : `${count} nail${count === 1 ? "" : "s"} placed — tap Start threading when ready`;
+      tone = "manual";
+    } else if (lastNail === null) {
+      text = "Tap a nail to start your thread";
+      tone = "idle";
+    } else {
+      const L = layers[activeLayer];
+      const moves = L?.edges?.length || 0;
+      const nailLabel = nailDisplayNumber(lastNail);
+      if (moves === 0) {
+        text = `Start nail ${nailLabel} selected — tap the next nail`;
+        tone = "active";
+      } else {
+        text = `Nail ${nailLabel} · Layer ${activeLayer + 1} · ${moves} move${moves === 1 ? "" : "s"} — tap next`;
+        tone = "active";
+      }
+    }
+
+    els.forEach((el) => {
+      el.textContent = text;
+      el.dataset.tone = tone;
+    });
+  }
+
+  function updateManualThreadingUI() {
+    const startBtn = $("startThreadingBtn");
+    const editBtn = $("editNailsBtn");
+    const hint = $("manualThreadingHint");
+    const editing = nailPlacementMode === "manual" && manualNailEditing;
+    if (startBtn) startBtn.style.display = editing ? "" : "none";
+    if (editBtn) editBtn.style.display = (!editing && nailPlacementMode === "manual") ? "" : "none";
+    if (hint) {
+      hint.style.display = (!editing && nailPlacementMode === "manual") ? "block" : "none";
+    }
+    if (cv) {
+      cv.style.cursor = editing ? "crosshair" : "";
+    }
+  }
+
+  function startThreadingFromManual() {
+    if (nailPlacementMode !== "manual") return;
+    if (customNails.length < 2) {
+      showToast("Place at least 2 nails before threading.", true);
+      return;
+    }
+    manualNailEditing = false;
+    if ($("nails")) $("nails").value = String(customNails.length);
+    lastNail = null;
+    updateManualThreadingUI();
+    updateCanvasCoach();
+    redrawAll();
+    showToast("Nails locked — tap nails to draw your thread.");
+    if (window.innerWidth < 900 && typeof openDrawMode === "function") {
+      setTimeout(openDrawMode, 60);
+    }
+  }
+
+  function resumeManualNailEditing() {
+    if (nailPlacementMode !== "manual") return;
+    if (designHasThread() && !confirm("Switch back to editing nails? You can keep drawing again afterwards.")) {
+      return;
+    }
+    manualNailEditing = true;
+    lastNail = null;
+    updateManualThreadingUI();
+    updateCanvasCoach();
+    redrawAll();
   }
 
   /* -----------------------------
@@ -696,6 +805,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function clearLayer() {
     ensureLayerExists();
+    const hasContent = (layers[activeLayer]?.edges?.length || 0) > 0 ||
+      (layers[activeLayer]?.seq?.length || 0) > 0;
+    if (hasContent && !confirm("Clear this layer’s thread path? This cannot be undone.")) {
+      return;
+    }
 
     layers[activeLayer] = {
       color: $("color")?.value || "#000000",
@@ -711,6 +825,7 @@ document.addEventListener("DOMContentLoaded", function () {
     redrawAll();
     updateSeqOutput();
     updateDrawModeSeqMini();
+    updateCanvasCoach();
   }
 
   function deleteLayer() {
@@ -718,6 +833,7 @@ document.addEventListener("DOMContentLoaded", function () {
       showToast("Can't delete the only layer — use Clear layer instead.", true);
       return;
     }
+    if (!confirm(`Delete Layer ${activeLayer + 1}? This cannot be undone.`)) return;
     layers.splice(activeLayer, 1);
     activeLayer = Math.min(activeLayer, layers.length - 1);
     lastNail = null;
@@ -726,6 +842,7 @@ document.addEventListener("DOMContentLoaded", function () {
     redrawAll();
     updateSeqOutput();
     updateDrawModeSeqMini();
+    updateCanvasCoach();
   }
 
   function toggleLayerVisibility() {
@@ -762,7 +879,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     el.textContent = lines.length
       ? lines.join("\n\n")
-      : "Nothing yet — click two nails to begin.";
+      : "Nothing yet — tap a nail to start, then tap the next nail.";
+    updateCanvasCoach();
   }
   function updateDrawModeSeqMini() {
     const el = $("drawModeSeqMini");
@@ -774,7 +892,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const start = $("numStart")?.value === "1" ? 1 : 0;
 
     if (!L.seq || L.seq.length === 0) {
-      el.textContent = "Nothing yet — start tapping nails.";
+      el.textContent = lastNail === null
+        ? "Tap a nail to begin."
+        : `Start nail ${nailDisplayNumber(lastNail)} — tap the next nail.`;
+      updateCanvasCoach();
       return;
     }
 
@@ -783,6 +904,7 @@ document.addEventListener("DOMContentLoaded", function () {
       .map((n) => n + start)
       .join(" → ");
     el.textContent = `Layer ${activeLayer + 1}: … ${tail}`;
+    updateCanvasCoach();
   }
   /* -----------------------------
      REDRAW
@@ -885,18 +1007,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
     ctx.stroke();
 
-    // Batch all nail dots into a single fill call
-    ctx.fillStyle = (nailPlacementMode === 'manual')
+    // Larger nail dots on small screens / touch for easier targeting
+    const nailDotR = window.innerWidth < 900 ? 3.2 : 1.8;
+    ctx.fillStyle = (nailPlacementMode === 'manual' && manualNailEditing)
       ? "rgba(184,137,46,0.85)" : "rgba(0,0,0,0.6)";
     ctx.beginPath();
     for (let i = 0; i < pts.length; i++) {
       const [x, y] = pts[i];
-      ctx.moveTo(x + 1.8, y);
-      ctx.arc(x, y, 1.8, 0, Math.PI * 2);
+      ctx.moveTo(x + nailDotR, y);
+      ctx.arc(x, y, nailDotR, 0, Math.PI * 2);
     }
     ctx.fill();
 
-    if (nailPlacementMode === 'manual' && pts.length === 0) {
+    if (nailPlacementMode === 'manual' && manualNailEditing && pts.length === 0) {
       ctx.save();
       ctx.font = '13px Inter, system-ui';
       ctx.fillStyle = 'rgba(0,0,0,0.28)';
@@ -981,7 +1104,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
-    if (lastNail !== null && hoverNail !== null && hoverNail !== lastNail) {
+    if (lastNail !== null && hoverNail !== null && hoverNail !== lastNail && pts[lastNail] && pts[hoverNail]) {
       const [x1, y1] = pts[lastNail];
       const [x2, y2] = pts[hoverNail];
       const L = layers[activeLayer];
@@ -1000,7 +1123,31 @@ document.addEventListener("DOMContentLoaded", function () {
       ctx.shadowBlur = 0;
     }
 
-    if (hoverNail !== null && hoverNail < pts.length) {
+    // Persistently highlight the current thread endpoint
+    if (lastNail !== null && pts[lastNail] && !(nailPlacementMode === "manual" && manualNailEditing)) {
+      const [x, y] = pts[lastNail];
+      ctx.beginPath();
+      ctx.arc(x, y, window.innerWidth < 900 ? 11 : 9, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(184,137,46,0.95)";
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = "rgba(184,137,46,0.45)";
+      ctx.shadowBlur = 8;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(184,137,46,0.95)";
+      ctx.fill();
+
+      ctx.font = "bold 12px system-ui";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+      ctx.fillStyle = "rgba(27,44,66,0.92)";
+      ctx.fillText(String(nailDisplayNumber(lastNail)), x, y - 12);
+    }
+
+    if (hoverNail !== null && hoverNail < pts.length && hoverNail !== lastNail) {
       const [x, y] = pts[hoverNail];
 
       ctx.beginPath();
@@ -1016,20 +1163,15 @@ document.addEventListener("DOMContentLoaded", function () {
       ctx.arc(x, y, 3, 0, Math.PI * 2);
       ctx.fillStyle = "rgba(0,0,0,0.8)";
       ctx.fill();
-    }
-
-    if (hoverNail !== null) {
-      const [x, y] = pts[hoverNail];
-      const start = $("numStart")?.value === "1" ? 1 : 0;
-      const label = `${hoverNail + start}`;
 
       ctx.font = "12px system-ui";
       ctx.textAlign = "center";
       ctx.textBaseline = "bottom";
       ctx.fillStyle = "rgba(0,0,0,0.85)";
-      ctx.fillText(label, x, y - 10);
+      ctx.fillText(String(nailDisplayNumber(hoverNail)), x, y - 10);
     }
 
+    updateCanvasCoach();
     if (!anim.active) debouncedSave();
   }
 
@@ -1063,6 +1205,7 @@ document.addEventListener("DOMContentLoaded", function () {
       lastNail = idx;
     }
     updateDrawModeSeqMini();
+    updateCanvasCoach();
   }
 
   function pushUndoSnapshot() {
@@ -1113,6 +1256,7 @@ document.addEventListener("DOMContentLoaded", function () {
     redrawAll();
     updateSeqOutput();
     updateDrawModeSeqMini();
+    updateCanvasCoach();
     showToast(`Undone ${n} step${n !== 1 ? 's' : ''}.`);
   }
 
@@ -1138,6 +1282,7 @@ document.addEventListener("DOMContentLoaded", function () {
     redrawAll();
     updateSeqOutput();
     updateDrawModeSeqMini();
+    updateCanvasCoach();
     showToast('Redone.');
   }
 
@@ -1160,6 +1305,7 @@ document.addEventListener("DOMContentLoaded", function () {
     redrawAll();
     updateSeqOutput();
     updateDrawModeSeqMini();
+    updateCanvasCoach();
   }
 
   function panDrawModeToLastNail() {
@@ -1183,7 +1329,8 @@ document.addEventListener("DOMContentLoaded", function () {
   ----------------------------- */
 
   function nearestNail(x, y) {
-    const tol = clampInt($("snap")?.value, 6, 100, 22);
+    const defaultTol = window.innerWidth < 900 ? 34 : 22;
+    const tol = clampInt($("snap")?.value, 6, 100, defaultTol);
 
     let bestIdx = null;
     let bestD2 = tol * tol;
@@ -1261,8 +1408,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
       const { x, y } = canvasXYFromPointerEvent(ev);
 
-      if (nailPlacementMode === 'manual') {
+      if (nailPlacementMode === 'manual' && manualNailEditing) {
         handleCustomPointerDown(ev, x, y);
+        updateCanvasCoach();
         return;
       }
 
@@ -1273,6 +1421,7 @@ document.addEventListener("DOMContentLoaded", function () {
       redrawAll();
       updateSeqOutput();
       updateDrawModeSeqMini();
+      updateCanvasCoach();
       panDrawModeToLastNail();
     };
 
@@ -1418,6 +1567,9 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!silent) showToast("No saved design found.", true);
         return false;
       }
+      if (!silent && !confirmReplaceDesign("Load the design saved in this browser? Your current design will be replaced.")) {
+        return false;
+      }
       const state = JSON.parse(raw);
       if (!Array.isArray(state.layers) || state.layers.length === 0)
         return false;
@@ -1457,11 +1609,18 @@ document.addEventListener("DOMContentLoaded", function () {
         if ($('rectHeightCm')) $('rectHeightCm').value = s.rectAspect.h;
       }
       if (Array.isArray(s.customNails)) customNails = s.customNails;
+      manualNailEditing = nailPlacementMode === 'manual';
 
       syncLayerSelect();
       switchLayer(activeLayer);
       updateNailPlacementUI();
+      updateManualThreadingUI();
       updateCustomNailCount();
+      redrawAll();
+      updateSeqOutput();
+      updateDrawModeSeqMini();
+      updateCanvasCoach();
+      window.__sasAdvanceToDesign = true;
       if (!silent) showToast("Design loaded.");
       return true;
     } catch (_) {
@@ -1518,6 +1677,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function importDesignFile(file) {
     if (!file) return;
+    if (!confirmReplaceDesign("Load this design file? Your current design will be replaced.")) {
+      return;
+    }
     const reader = new FileReader();
     reader.onload = function (e) {
       try {
@@ -1560,13 +1722,19 @@ document.addEventListener("DOMContentLoaded", function () {
           if ($('rectHeightCm')) $('rectHeightCm').value = s.rectAspect.h;
         }
         if (Array.isArray(s.customNails)) customNails = s.customNails;
+        manualNailEditing = nailPlacementMode === 'manual';
 
         syncLayerSelect();
         switchLayer(activeLayer);
         updateNailPlacementUI();
+        updateManualThreadingUI();
         updateCustomNailCount();
         redrawAll();
         updateSeqOutput();
+        updateDrawModeSeqMini();
+        updateCanvasCoach();
+        window.__sasAdvanceToDesign = true;
+        if (typeof goToStep === "function") goToStep(2);
         showToast("Design loaded from file.");
       } catch (_) {
         showToast("Could not read file — is it a valid .sas design?", true);
@@ -1615,12 +1783,18 @@ document.addEventListener("DOMContentLoaded", function () {
       if ($('rectHeightCm')) $('rectHeightCm').value = s.rectAspect.h;
     }
     if (Array.isArray(s.customNails)) customNails = s.customNails;
+    manualNailEditing = nailPlacementMode === 'manual';
     syncLayerSelect();
     switchLayer(activeLayer);
     updateNailPlacementUI();
+    updateManualThreadingUI();
     updateCustomNailCount();
     redrawAll();
     updateSeqOutput();
+    updateDrawModeSeqMini();
+    updateCanvasCoach();
+    window.__sasAdvanceToDesign = true;
+    if (typeof goToStep === "function") goToStep(2);
     showToast("Template \u201c" + name + "\u201d loaded.");
   }
 
@@ -1705,6 +1879,12 @@ document.addEventListener("DOMContentLoaded", function () {
         selectedPreset = btn.dataset.preset || "spiral";
         setActivePresetButton(selectedPreset);
 
+        // Starter chips in the designer apply immediately with recommended nail counts
+        if (btn.classList.contains("starter-preset-btn") || btn.closest("#starterPatternsSection")) {
+          applyStarterPreset(selectedPreset);
+          return;
+        }
+
         // Mobile = instant generate
         if (window.innerWidth < 900) {
           const offset = getPresetOffset();
@@ -1721,6 +1901,32 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     setActivePresetButton(selectedPreset);
+  }
+
+  function applyStarterPreset(presetName) {
+    if (!confirmReplaceDesign("Apply this starter pattern? Your current thread path will be replaced.")) {
+      return;
+    }
+
+    const defaults = STARTER_PRESET_DEFAULTS[presetName] || { nails: 120, offset: 10 };
+    if ($("board")) $("board").value = "circle";
+    if ($("nails")) $("nails").value = String(defaults.nails);
+    nailPlacementMode = "perimeter";
+    manualNailEditing = true;
+    customNails = [];
+    updateNailPlacementUI();
+    updateManualThreadingUI();
+
+    ensureLayerExists();
+    redrawAll();
+    generatePreset(presetName, defaults.offset);
+    setActivePresetButton(presetName);
+
+    window.__sasAdvanceToDesign = true;
+    if (typeof goToStep === "function") goToStep(2);
+
+    const name = presetName.charAt(0).toUpperCase() + presetName.slice(1);
+    showToast(name + " starter applied — customise it or export when ready.");
   }
 
   function setActivePresetButton(presetName) {
@@ -1890,6 +2096,7 @@ document.addEventListener("DOMContentLoaded", function () {
     redrawAll();
     updateSeqOutput();
     updateDrawModeSeqMini();
+    updateCanvasCoach();
   }
 
   function gcd(a, b) {
@@ -2209,6 +2416,11 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function switchNailPlacementMode(mode) {
+    if (mode !== nailPlacementMode && designHasThread()) {
+      const ok = confirm("Changing nail layout can break your current thread path. Continue?");
+      if (!ok) return;
+    }
+
     // When switching from perimeter to manual, seed customNails from current pts
     if (mode === 'manual' && nailPlacementMode === 'perimeter' && pts.length > 0) {
       customNails = pts.map(([x, y]) => ({
@@ -2217,9 +2429,13 @@ document.addEventListener("DOMContentLoaded", function () {
       }));
     }
     nailPlacementMode = mode;
+    manualNailEditing = mode === 'manual';
+    lastNail = null;
     updateNailPlacementUI();
+    updateManualThreadingUI();
     updateCustomNailCount();
     redrawAll();
+    updateCanvasCoach();
   }
 
   function updateNailPlacementUI() {
@@ -2255,8 +2471,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if ($('squarePresets')) $('squarePresets').style.display = squareLike     ? 'flex' : 'none';
     if ($('circlePresets')) $('circlePresets').style.display = board === 'circle' ? 'flex' : 'none';
 
-    if (cv) cv.style.cursor = nailPlacementMode === 'manual' ? 'crosshair' : '';
-
+    updateManualThreadingUI();
     updateEdgeToggleVisuals();
   }
 
@@ -2456,14 +2671,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // When board type changes, re-sync the nail placement UI panels
     $('board')?.addEventListener('change', () => {
+      if (designHasThread() && !confirm("Changing board shape can break your current thread path. Continue?")) {
+        return;
+      }
       if (nailPlacementMode === 'partial-edge' || nailPlacementMode === 'manual') {
         customNails = [];
+        manualNailEditing = nailPlacementMode === 'manual';
         updateNailPlacementUI();
         applyEdgeLayout();
       } else {
         updateNailPlacementUI();
       }
+      lastNail = null;
       redrawAll();
+      updateCanvasCoach();
     });
 
     // Manual grid toggle + divisions
@@ -2551,7 +2772,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     $("saveDesignBtn")?.addEventListener("click", () => {
       saveDesign();
-      showToast("Design saved.");
+      showToast("Saved in this browser.");
     });
     $("loadDesignBtn")?.addEventListener("click", () => loadSavedDesign(false));
     $("exportDesignBtn")?.addEventListener("click", exportDesignFile);
@@ -2589,7 +2810,7 @@ document.addEventListener("DOMContentLoaded", function () {
       } else if ((e.ctrlKey || e.metaKey) && e.key === "s") {
         e.preventDefault();
         saveDesign();
-        showToast("Design saved.");
+        showToast("Saved in this browser.");
       } else if (e.key === "+" || e.key === "=") nudgeZoom(1);
       else if (e.key === "-") nudgeZoom(-1);
       else if (e.key === "0" && (e.ctrlKey || e.metaKey)) {
@@ -2600,18 +2821,23 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     $("openDrawMode")?.addEventListener("click", openDrawMode);
-    $("closeDrawMode")?.addEventListener("click", () => { closeDrawMode(); if (typeof goToStep === "function") goToStep(3); });
+    $("closeDrawMode")?.addEventListener("click", () => {
+      closeDrawMode();
+      if (typeof goToStep === "function") goToStep(2);
+      showToast("Keep editing, or tap Export when you're ready.");
+    });
     $("drawModeSettings")?.addEventListener("click", closeDrawMode);
     $("drawUndo")?.addEventListener("click", undo);
     $("drawRedo")?.addEventListener("click", redo);
     $("redo")?.addEventListener("click", redo);
     $("drawZoomIn")?.addEventListener("click", () => nudgeZoom(1));
     $("drawZoomOut")?.addEventListener("click", () => nudgeZoom(-1));
+    $("startThreadingBtn")?.addEventListener("click", startThreadingFromManual);
+    $("editNailsBtn")?.addEventListener("click", resumeManualNailEditing);
 
     getZoomInput()?.addEventListener("change", applyZoomFromUI);
 
     [
-      "nails",
       "radius",
       "snap",
       "showNums",
@@ -2626,7 +2852,21 @@ document.addEventListener("DOMContentLoaded", function () {
         redrawAll();
         updateSeqOutput();
         updateDrawModeSeqMini();
+        updateCanvasCoach();
       });
+    });
+
+    $("nails")?.addEventListener("change", () => {
+      if (designHasThread() && !confirm("Changing nail count can break your current thread path. Continue?")) {
+        // Restore from last rendered points count when possible
+        if (pts.length) $("nails").value = String(pts.length);
+        return;
+      }
+      lastNail = null;
+      redrawAll();
+      updateSeqOutput();
+      updateDrawModeSeqMini();
+      updateCanvasCoach();
     });
 
     $("layerSel")?.addEventListener("change", (e) => {
@@ -2711,6 +2951,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (window.innerWidth <= 900) {
       $("controlsPanel")?.classList.add("hidden");
+      if ($("snap") && Number($("snap").value) <= 22) {
+        $("snap").value = "34";
+      }
     }
 
     let resizeTimer = null;
@@ -2732,19 +2975,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Check for shared design or preset in URL
     if (loadSharedDesign()) {
+      window.__sasAdvanceToDesign = true;
       // loaded from URL param — don't also load saved
     } else if (loadTemplateFromURL()) {
+      window.__sasAdvanceToDesign = true;
       // loaded template from patterns page
     } else if (loadPresetFromURL()) {
+      window.__sasAdvanceToDesign = true;
       // loaded preset from patterns page
     } else if (hasSavedDesign()) {
       loadSavedDesign(true);
+      window.__sasAdvanceToDesign = true;
       showToast("Last design restored.");
     } else {
       redrawAll();
       updateSeqOutput();
       updateDrawModeSeqMini();
+      updateCanvasCoach();
     }
+
+    updateManualThreadingUI();
+    updateCanvasCoach();
   }
 
   /* -----------------------------
@@ -4507,8 +4758,5 @@ document.addEventListener("DOMContentLoaded", function () {
 
   init();
 
-  // Auto-open Draw Mode on mobile so users see the canvas immediately
-  if (window.innerWidth < 900 && $("drawModeOverlay")) {
-    openDrawMode();
-  }
+  // Mobile: stay on board setup first. Draw Mode opens after Apply / Start Drawing.
 });
