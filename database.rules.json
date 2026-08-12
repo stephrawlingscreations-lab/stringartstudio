@@ -1,0 +1,44 @@
+{
+  "rules": {
+    "grassPortal": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "clientOnboardingTracker": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "householdAdmin": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "stephCreations": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "iptv": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "renewals": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "turkeyTrip": {
+      ".read": "auth != null && (auth.token.email === 'sdr22uk@gmail.com' || auth.token.email === 'sdr22ie@gmail.com' || auth.token.email === 'stephrawlingscreations@gmail.com')",
+      ".write": "auth != null && (auth.token.email === 'sdr22uk@gmail.com' || auth.token.email === 'sdr22ie@gmail.com' || auth.token.email === 'stephrawlingscreations@gmail.com')"
+    },
+    "focusflow": {
+      "steph": {
+        ".read": "auth != null && (auth.token.email === 'sdr22uk@gmail.com' || auth.token.email === 'sdr22ie@gmail.com' || auth.token.email === 'stephrawlingscreations@gmail.com')",
+        ".write": "auth != null && (auth.token.email === 'sdr22uk@gmail.com' || auth.token.email === 'sdr22ie@gmail.com' || auth.token.email === 'stephrawlingscreations@gmail.com')"
+      }
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    }
+  }
+}
