@@ -107,9 +107,13 @@
     align-items: center;
     gap: 3px;
     min-width: 60px;
+    flex-shrink: 0;
+    text-align: center;
+    line-height: 1.2;
   }
 
   .nav-tab .tab-icon { font-size: 1.2rem; }
+  .nav-tab .tab-label { display: block; }
   .nav-tab:hover { color: var(--navy); }
   .nav-tab.active { color: var(--navy); border-bottom-color: var(--gold); }
 
@@ -506,8 +510,15 @@
 
   @media (max-width: 600px) {
     .form-row { grid-template-columns: 1fr; }
-    .nav-tab { padding: 0.8rem 0.5rem; font-size: 0.6rem; min-width: 52px; }
+    .nav-tab {
+      padding: 0.7rem 0.45rem;
+      font-size: 0.58rem;
+      letter-spacing: 0.04em;
+      min-width: 52px;
+    }
+    .nav-tab .tab-rest { display: block; }
     .stat-grid { grid-template-columns: 1fr; }
+    .stat-lbl { letter-spacing: 0.06em; word-spacing: 0.12em; }
     .topbar-brand { font-size: 1.2rem; }
     .main { padding: 1rem; }
     .modal { padding: 1.5rem; }
@@ -555,15 +566,15 @@
 </div>
 
 <div class="nav-tabs">
-  <div class="nav-tab active" data-page="dashboard"><span class="tab-icon">🏠</span>Home</div>
-  <div class="nav-tab" data-page="inventory"><span class="tab-icon">🏪</span>In Shop</div>
-  <div class="nav-tab" data-page="tarts"><span class="tab-icon">🥧</span>In Tarts</div>
-  <div class="nav-tab" data-page="all-works"><span class="tab-icon">🎨</span>All Works</div>
-  <div class="nav-tab" data-page="sales"><span class="tab-icon">💰</span>Sales</div>
-  <div class="nav-tab" data-page="reports"><span class="tab-icon">📊</span>Reports</div>
-  <div class="nav-tab" data-page="expenses"><span class="tab-icon">🧾</span>Expenses</div>
-  <div class="nav-tab" data-page="payments"><span class="tab-icon">💳</span>Payments</div>
-  <div class="nav-tab" data-page="classes"><span class="tab-icon">🎓</span>Classes</div>
+  <div class="nav-tab active" data-page="dashboard"><span class="tab-icon">🏠</span><span class="tab-label">Home</span></div>
+  <div class="nav-tab" data-page="inventory"><span class="tab-icon">🏪</span><span class="tab-label">In <span class="tab-rest">Shop</span></span></div>
+  <div class="nav-tab" data-page="tarts"><span class="tab-icon">🥧</span><span class="tab-label">In <span class="tab-rest">Tarts</span></span></div>
+  <div class="nav-tab" data-page="all-works"><span class="tab-icon">🎨</span><span class="tab-label">All <span class="tab-rest">Works</span></span></div>
+  <div class="nav-tab" data-page="sales"><span class="tab-icon">💰</span><span class="tab-label">Sales</span></div>
+  <div class="nav-tab" data-page="reports"><span class="tab-icon">📊</span><span class="tab-label">Reports</span></div>
+  <div class="nav-tab" data-page="expenses"><span class="tab-icon">🧾</span><span class="tab-label">Expenses</span></div>
+  <div class="nav-tab" data-page="payments"><span class="tab-icon">💳</span><span class="tab-label">Payments</span></div>
+  <div class="nav-tab" data-page="classes"><span class="tab-icon">🎓</span><span class="tab-label">Classes</span></div>
 </div>
 
 <div class="main">
