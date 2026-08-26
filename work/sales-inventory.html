@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sales & Inventory Tracker — Portfolio Demo | Steph Rawlings Creations</title>
+  <meta name="description" content="Interactive demo of a cloud-synced sales and inventory tracker for creative businesses — stock, sales, expenses and reports." />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;1,400&family=Poppins:wght@300;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #3558F1;
+      --navy-dark: #2844d4;
+      --cream: #FAF6F1;
+      --gold: #C9A94A;
+      --gold-lt: #F5EDD0;
+      --ink: #2d2d2d;
+      --ink-mid: #666;
+      --ink-lt: #999;
+      --green: #2a7a4f;
+      --white: #fff;
+      --shadow: rgba(53,88,241,0.08);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 300;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+    .portfolio-bar {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+      padding: 12px 16px; background: var(--navy); color: #fff; font-size: 0.85rem;
+    }
+    .portfolio-bar a { color: #fff; text-decoration: none; font-weight: 600; }
+    .portfolio-bar a:hover { text-decoration: underline; }
+    .demo-badge {
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 5px 10px; border-radius: 999px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+    }
+    .topbar {
+      background: var(--navy);
+      padding: 0.9rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 2px 16px rgba(53,88,241,0.25);
+    }
+    .topbar-brand {
+      font-family: 'Lora', serif;
+      font-style: italic;
+      font-size: 1.4rem;
+      color: var(--white);
+    }
+    .topbar-brand span {
+      display: block;
+      font-family: 'Poppins', sans-serif;
+      font-style: normal;
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.6);
+      margin-top: 2px;
+    }
+    .nav-tabs {
+      background: var(--cream);
+      border-bottom: 2px solid var(--gold);
+      display: flex;
+      padding: 0 0.5rem;
+      overflow-x: auto;
+    }
+    .nav-tab {
+      padding: 0.85rem 1rem;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-lt);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      font-weight: 500;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      min-width: 72px;
+      background: none;
+      border-left: none;
+      border-right: none;
+      border-top: none;
+      font-family: inherit;
+    }
+    .nav-tab .tab-icon { font-size: 1.2rem; }
+    .nav-tab.active { color: var(--navy); border-bottom-color: var(--gold); }
+    .main { padding: 1.5rem; max-width: 960px; margin: 0 auto; padding-bottom: 4rem; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--cream);
+      border-radius: var(--radius);
+      padding: 1.5rem 1rem;
+      text-align: center;
+      border: 1px solid var(--gold);
+      border-top: 3px solid var(--gold);
+      box-shadow: 0 2px 8px var(--shadow);
+    }
+    .stat-card.green-top { border-top-color: var(--green); }
+    .stat-val {
+      font-family: 'Lora', serif;
+      font-size: 2rem;
+      color: var(--ink);
+    }
+    .stat-lbl {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--ink-lt);
+      margin-top: 6px;
+    }
+    .section-title {
+      font-weight: 500;
+      font-size: 1.15rem;
+      letter-spacing: 0.05em;
+      color: var(--navy);
+      margin-bottom: 1rem;
+    }
+    .artwork-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .artwork-card {
+      background: var(--white);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 1px solid var(--gold-lt);
+      box-shadow: 0 2px 10px var(--shadow);
+    }
+    .artwork-thumb {
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      font-size: 2.5rem;
+    }
+    .artwork-body { padding: 0.85rem 1rem 1rem; }
+    .artwork-body h4 {
+      font-size: 0.95rem;
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: var(--ink);
+    }
+    .artwork-body p {
+      font-size: 0.8rem;
+      color: var(--ink-mid);
+      line-height: 1.5;
+    }
+    .artwork-price {
+      margin-top: 8px;
+      font-weight: 600;
+      color: var(--gold);
+      font-size: 0.95rem;
+    }
+    .table-wrap {
+      background: var(--white);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--gold-lt);
+      overflow: auto;
+      box-shadow: 0 2px 10px var(--shadow);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      min-width: 640px;
+    }
+    th {
+      text-align: left;
+      background: var(--gold-lt);
+      color: var(--ink-mid);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--gold-lt);
+    }
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #f0ebe3;
+      vertical-align: top;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    .pill {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      background: #eaf5ee;
+      color: var(--green);
+    }
+    .demo-note {
+      margin-top: 2rem;
+      padding: 1rem 1.2rem;
+      border-radius: var(--radius-sm);
+      background: var(--gold-lt);
+      border: 1px solid var(--gold);
+      font-size: 0.88rem;
+      color: var(--ink-mid);
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="portfolio-bar">
+    <a href="../index.html#projects">← Back to portfolio</a>
+    <span class="demo-badge">Interactive demo · sample data</span>
+  </div>
+
+  <div class="topbar">
+    <div class="topbar-brand">
+      Creative Studio Tracker
+      <span>Sales &amp; Inventory Demo</span>
+    </div>
+  </div>
+
+  <div class="nav-tabs">
+    <button class="nav-tab active" type="button" data-page="dashboard"><span class="tab-icon">🏠</span>Home</button>
+    <button class="nav-tab" type="button" data-page="inventory"><span class="tab-icon">🏪</span>In Shop</button>
+    <button class="nav-tab" type="button" data-page="sales"><span class="tab-icon">💰</span>Sales</button>
+    <button class="nav-tab" type="button" data-page="expenses"><span class="tab-icon">🧾</span>Expenses</button>
+  </div>
+
+  <div class="main">
+
+    <div class="page active" id="page-dashboard">
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-val">8</div>
+          <div class="stat-lbl">In Shop Now</div>
+        </div>
+        <div class="stat-card green-top">
+          <div class="stat-val">€640</div>
+          <div class="stat-lbl">Earned This Month</div>
+        </div>
+        <div class="stat-card green-top">
+          <div class="stat-val">€4,280</div>
+          <div class="stat-lbl">All Time Earned</div>
+        </div>
+      </div>
+      <div class="section-title">Recently Added</div>
+      <div class="artwork-grid" id="recent-grid"></div>
+    </div>
+
+    <div class="page" id="page-inventory">
+      <div class="section-title">Currently In Shop</div>
+      <div class="artwork-grid" id="inventory-grid"></div>
+    </div>
+
+    <div class="page" id="page-sales">
+      <div class="section-title">Sales History</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Artwork</th>
+              <th>Date Sold</th>
+              <th>Channel</th>
+              <th>Sold For</th>
+              <th>Net</th>
+            </tr>
+          </thead>
+          <tbody id="sales-rows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="page" id="page-expenses">
+      <div class="section-title">Expenses</div>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-val">€186</div>
+          <div class="stat-lbl">This Month</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">€1,420</div>
+          <div class="stat-lbl">This Year</div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Category</th>
+              <th>Description</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>12/07/2026</td><td>Materials</td><td>Thread &amp; board supplies</td><td>€42.50</td></tr>
+            <tr><td>05/07/2026</td><td>Shop commission</td><td>Gallery July fee</td><td>€85.00</td></tr>
+            <tr><td>28/06/2026</td><td>Packaging</td><td>Gift boxes &amp; tissue</td><td>€24.00</td></tr>
+            <tr><td>15/06/2026</td><td>Tools</td><td>Replacement drill bits</td><td>€18.50</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <p class="demo-note">
+      This is a simplified demo with sample data. The live version syncs to the cloud, tracks photos, installment payments, classes, CSV export, and full profit &amp; loss reports.
+    </p>
+  </div>
+
+  <script>
+    const artworks = [
+      { title: "Coastal Horizon", medium: "String art · 40 cm circle", price: "€120", emoji: "🌊", bg: "linear-gradient(135deg,#d0e8f5,#a8cce8)" },
+      { title: "Wildflower Meadow", medium: "Mixed media · framed", price: "€95", emoji: "🌸", bg: "linear-gradient(135deg,#f5e8d0,#e8d4a8)" },
+      { title: "Geometric Owl", medium: "String art · square board", price: "€85", emoji: "🦉", bg: "linear-gradient(135deg,#e8e0f5,#c8b8e8)" },
+      { title: "Autumn Leaves", medium: "String art · 30 cm", price: "€75", emoji: "🍂", bg: "linear-gradient(135deg,#f5ddd0,#e8b8a0)" },
+      { title: "Minimalist Heart", medium: "String art · gift size", price: "€45", emoji: "💛", bg: "linear-gradient(135deg,#f5f0d0,#e8dfa0)" },
+      { title: "Mountain Sunrise", medium: "String art · large", price: "€150", emoji: "⛰️", bg: "linear-gradient(135deg,#d0f0e8,#a0d8c8)" },
+      { title: "Pet Portrait — Max", medium: "Custom commission", price: "€180", emoji: "🐕", bg: "linear-gradient(135deg,#f0e8d8,#d8c8a8)" },
+      { title: "Rainbow Arch", medium: "String art · nursery", price: "€110", emoji: "🌈", bg: "linear-gradient(135deg,#f5d0e8,#e8a8d0)" }
+    ];
+
+    function cardHtml(item) {
+      return `<div class="artwork-card">
+        <div class="artwork-thumb" style="background:${item.bg}">${item.emoji}</div>
+        <div class="artwork-body">
+          <h4>${item.title}</h4>
+          <p>${item.medium}</p>
+          <div class="artwork-price">${item.price}</div>
+        </div>
+      </div>`;
+    }
+
+    document.getElementById("recent-grid").innerHTML = artworks.slice(0, 4).map(cardHtml).join("");
+    document.getElementById("inventory-grid").innerHTML = artworks.map(cardHtml).join("");
+
+    document.getElementById("sales-rows").innerHTML = [
+      ["Coastal Horizon", "18/07/2026", "Gallery shop", "€120", "€90"],
+      ["Minimalist Heart", "10/07/2026", "Craft fair", "€45", "€45"],
+      ["Geometric Owl", "02/07/2026", "Gallery shop", "€85", "€63.75"],
+      ["Pet Portrait — Max", "22/06/2026", "Direct sale", "€180", "€180"],
+      ["Wildflower Meadow", "08/06/2026", "Gallery shop", "€95", "€71.25"]
+    ].map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td><span class="pill">${r[4]}</span></td></tr>`).join("");
+
+    document.querySelectorAll(".nav-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+        document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById("page-" + tab.dataset.page).classList.add("active");
+      });
+    });
+  </script>
+</body>
+</html>
