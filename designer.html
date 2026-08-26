@@ -2380,6 +2380,94 @@
 
       /* Canvas read-only badge in step 3 */
       .canvas-outer { position: relative; }
+      .canvas-coach {
+        margin: 0 0 10px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(184,137,46,0.28);
+        background: rgba(184,137,46,0.08);
+        color: var(--navy);
+        font-size: 0.88rem;
+        font-weight: 600;
+        line-height: 1.4;
+      }
+      .canvas-coach[data-tone="active"] {
+        border-color: rgba(27,44,66,0.22);
+        background: rgba(27,44,66,0.06);
+      }
+      .canvas-coach[data-tone="manual"] {
+        border-color: rgba(184,137,46,0.35);
+        background: rgba(184,137,46,0.12);
+      }
+      .draw-mode-coach {
+        margin: 0 12px 8px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(184,137,46,0.28);
+        background: #fffdf9;
+        color: var(--navy);
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-align: center;
+      }
+      .starter-patterns-section {
+        margin: 0 0 14px;
+        padding: 12px;
+        border-radius: 14px;
+        border: 1px solid rgba(60,44,28,0.10);
+        background: rgba(255,255,255,0.7);
+      }
+      .starter-patterns-section .layers-section-label {
+        margin-bottom: 4px;
+      }
+      .starter-patterns-hint {
+        margin: 0 0 10px;
+        font-size: 0.78rem;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+      .starter-preset-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .panel .starter-preset-btn {
+        background: #fff;
+        color: var(--text-dark);
+        border: 1px solid rgba(60,44,28,0.14);
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        min-height: 36px;
+      }
+      .panel .starter-preset-btn:hover,
+      .panel .starter-preset-btn.active {
+        border-color: var(--gold);
+        color: var(--gold);
+        background: rgba(184,137,46,0.06);
+      }
+      .panel .start-threading-btn {
+        width: 100%;
+        margin-top: 10px;
+        background: var(--gold);
+        color: #fff;
+        font-weight: 700;
+      }
+      .panel .start-threading-btn:hover {
+        background: #a67928;
+      }
+      .panel .edit-nails-btn {
+        width: 100%;
+        margin-top: 10px;
+      }
+      .manual-threading-hint {
+        display: none;
+        margin: 8px 0 0;
+        font-size: 0.78rem;
+        color: var(--muted);
+        line-height: 1.45;
+      }
       .canvas-step-overlay {
         display: none;
         width: 100%;
@@ -2397,6 +2485,7 @@
       }
       body.step3-active #cv { pointer-events: none; cursor: default; }
       body.step3-active .canvas-step-overlay { display: block; }
+      body.step3-active .canvas-coach { opacity: 0.7; }
 
       /* Mobile step 2 tabs */
       .mobile-step2-tabs { display: none; }
@@ -2729,6 +2818,19 @@
               <button class="board-edit-link" onclick="goToStep(1)">edit</button>
             </div>
 
+            <!-- Starter patterns — remove blank-canvas fear -->
+            <div class="starter-patterns-section" id="starterPatternsSection">
+              <span class="layers-section-label">Starter patterns</span>
+              <p class="starter-patterns-hint">One tap to load a ready pattern, then customise colours and layers.</p>
+              <div class="starter-preset-row">
+                <button type="button" class="starter-preset-btn" data-preset="flower">Flower</button>
+                <button type="button" class="starter-preset-btn" data-preset="web">Web</button>
+                <button type="button" class="starter-preset-btn" data-preset="cardioid">Cardioid</button>
+                <button type="button" class="starter-preset-btn" data-preset="star">Star</button>
+                <button type="button" class="starter-preset-btn" data-preset="spiral">Spiral</button>
+              </div>
+            </div>
+
             <!-- Mobile tabs: Layers | Advanced -->
             <div class="mobile-step2-tabs">
               <button class="mobile-step2-tab active" id="mobileTabLayers">Layers</button>
@@ -2892,6 +2994,9 @@
                 <button id="resetToPerimeter" class="tool-btn btn-ghost">↺ Reset</button>
                 <button id="clearCustomNails" class="tool-btn btn-ghost btn-danger">✕ Clear</button>
               </div>
+              <button type="button" id="startThreadingBtn" class="start-threading-btn">Start threading →</button>
+              <button type="button" id="editNailsBtn" class="edit-nails-btn btn-ghost" style="display:none;">✎ Edit nails</button>
+              <p id="manualThreadingHint" class="manual-threading-hint">Nails are locked. Tap nails on the board to draw your thread path. Use Edit nails if you need to move them.</p>
             </div>
 
             <!-- TEMPLATE / SHAPE panel -->
@@ -2990,30 +3095,14 @@
 
             <button class="back-to-design-btn" onclick="goToStep(2)">← Back to design</button>
 
-            <!-- Pro build guide card — prominent -->
-            <div class="pro-export-card">
-              <div class="pro-export-card-header">
-                <span class="pro-export-card-title">Pro build guide</span>
-                <span class="pro-export-price-badge">€5</span>
-              </div>
-              <ul class="pro-export-checklist">
-                <li>Nail placement template</li>
-                <li>Full numbered sequence</li>
-                <li>Colour &amp; layer guide</li>
-                <li>Thread estimate per layer</li>
-                <li>Print-ready PDF</li>
-              </ul>
-              <button class="pro-export-cta" onclick="openProModal()">Get the full build guide — €5 →</button>
-            </div>
-
-            <!-- Free options — muted, below Pro card -->
-            <div class="free-options-section">
-              <span class="free-options-label">Free options</span>
+            <!-- Free options first so the free designer doesn't feel paywalled -->
+            <div class="free-options-section" style="margin-top:4px;">
+              <span class="free-options-label">Free exports</span>
 
               <!-- Sequence -->
               <div class="seq-export-section">
-                <span class="seq-export-label">Your sequence
-                  <span class="help-tip" style="margin-left:4px;">?<span class="tip-text">The numbered order to visit nails with your thread. Copy or print this to follow at your board.</span></span>
+                <span class="seq-export-label">Your nail sequence
+                  <span class="help-tip" style="margin-left:4px;">?<span class="tip-text">The numbered order to visit nails with your thread. Copy this to follow at your board.</span></span>
                 </span>
                 <div class="seq-out-wrap">
                   <div id="seqOut" class="mono">Tap a nail to start your thread. Then tap another nail to draw a line.</div>
@@ -3023,20 +3112,36 @@
 
               <!-- Free action buttons -->
               <div class="free-options-grid">
-                <button id="downloadPng" class="free-btn">↓ PNG</button>
-                <button id="exportSeq" class="free-btn">⎘ Copy sequence</button>
-                <button id="saveDesignBtn" class="free-btn">💾 Save</button>
-                <button id="shareDesignBtn" class="free-btn">🔗 Share</button>
+                <button id="downloadPng" class="free-btn">↓ Download PNG</button>
+                <button id="exportSeq" class="free-btn">⎘ Copy nail sequence</button>
+                <button id="saveDesignBtn" class="free-btn">💾 Save in browser</button>
+                <button id="shareDesignBtn" class="free-btn">🔗 Share link</button>
               </div>
 
               <!-- File save / load -->
-              <div style="display:flex;gap:6px;margin-top:8px;">
-                <button id="loadDesignBtn" class="free-btn" style="flex:1;">Load saved</button>
-                <button id="exportDesignBtn" class="free-btn" style="flex:1;">Export file</button>
-                <button id="importDesignBtn" class="free-btn" style="flex:1;">Load file</button>
+              <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">
+                <button id="loadDesignBtn" class="free-btn" style="flex:1;min-width:120px;">Load browser save</button>
+                <button id="exportDesignBtn" class="free-btn" style="flex:1;min-width:120px;">Download design file</button>
+                <button id="importDesignBtn" class="free-btn" style="flex:1;min-width:120px;">Open design file</button>
               </div>
               <input type="file" id="importDesignInput" accept=".sas,.json" style="display:none">
-              <p class="layout-hint" style="margin-top:6px;">Export saves your design as a <strong>.sas</strong> file — so you can close the tab and pick up where you left off.</p>
+              <p class="layout-hint" style="margin-top:6px;"><strong>Save in browser</strong> keeps a quick backup on this device. <strong>Download design file</strong> saves a <strong>.sas</strong> file you can reopen later on any device.</p>
+            </div>
+
+            <!-- Pro build guide card -->
+            <div class="pro-export-card" style="margin-top:16px;">
+              <div class="pro-export-card-header">
+                <span class="pro-export-card-title">Printable build guide</span>
+                <span class="pro-export-price-badge">€5</span>
+              </div>
+              <ul class="pro-export-checklist">
+                <li>Nail placement template</li>
+                <li>Full numbered sequence</li>
+                <li>Colour &amp; layer guide</li>
+                <li>Thread estimate per layer</li>
+                <li>Print-ready PDF</li>
+              </ul>
+              <button class="pro-export-cta" onclick="openProModal()">Get the printable build guide — €5 →</button>
             </div>
 
           </div><!-- end #step3Panel -->
@@ -3045,6 +3150,7 @@
         </div><!-- end .panel-wrap -->
 
         <div class="canvas-outer">
+          <div id="canvasCoach" class="canvas-coach" data-tone="idle" role="status" aria-live="polite">Tap a nail to start your thread</div>
           <canvas id="cv" aria-label="String art design canvas"></canvas>
           <div class="canvas-step-overlay">Preview mode</div>
         </div>
@@ -3079,6 +3185,7 @@
         <button id="openDrawMode" class="open-draw-btn">
           ✏ Start Drawing
         </button>
+        <p style="margin:8px 0 0;font-size:0.78rem;color:var(--muted);text-align:center;line-height:1.45;">Set your board above first, then open the drawing canvas.</p>
       </div>
     </div>
 
@@ -3344,6 +3451,8 @@
         <div class="draw-mode-brand">Steph Rawlings <em>Creations</em></div>
         <button id="closeDrawMode" class="draw-mode-exit">✓ Done</button>
       </div>
+
+      <div id="drawModeCoach" class="draw-mode-coach" data-tone="idle" role="status" aria-live="polite">Tap a nail to start your thread</div>
 
       <div id="drawModeSeqMini" class="draw-mode-seq-mini">
         Tap a nail to begin.
@@ -3725,15 +3834,14 @@
       updatePanels();
 
       // Auto-advance to Step 2 when app.js loads a saved/shared/preset design.
-      // We defer with setTimeout(0) so app.js DOMContentLoaded handlers run first
-      // and populate the board/nails fields before we read them.
+      // Prefer the flag set by app.js, because URL params are cleared before this runs.
       setTimeout(function () {
         var params = new URLSearchParams(window.location.search);
         var hasExternalDesign = params.get('d') || params.get('template') || params.get('preset');
+        var shouldAdvance = !!window.__sasAdvanceToDesign || !!hasExternalDesign;
         var hasSaved = false;
         try { hasSaved = !!localStorage.getItem('sas_design_v1'); } catch (_) {}
-        if ((hasExternalDesign || hasSaved) && currentStep === 1) {
-          // Re-read board summary from fields app.js may have updated
+        if ((shouldAdvance || hasSaved) && currentStep === 1) {
           applyBoardSummary(buildBoardSummary());
           goToStep(2);
         }
